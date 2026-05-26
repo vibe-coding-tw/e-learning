@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>環境搭建：VS Code + PlatformIO - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        .code-block {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Quiz */
+        .quiz-question { margin-bottom: 32px; }
+        .quiz-question p { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+        .quiz-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 14px;
+            border: 1px solid #e1dfdd;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background .1s, border-color .1s;
+            font-size: 14px;
+        }
+        .quiz-option:hover { background: #f3f2f1; border-color: #c8c6c4; }
+        .quiz-option input[type=radio] { margin-top: 2px; accent-color: var(--ms-blue); flex-shrink: 0; }
+        .quiz-option.correct { background: #dff6dd; border-color: var(--ms-green); }
+        .quiz-option.wrong { background: #fde7e9; border-color: var(--ms-red); }
+        .quiz-feedback {
+            display: none;
+            margin-top: 8px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .quiz-feedback.correct { background: #dff6dd; color: #107c10; display: block; }
+        .quiz-feedback.wrong { background: #fde7e9; color: #d13438; display: block; }
+        .quiz-submit { margin-top: 16px; }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/basic.html" target="_top" class="nav-label">基礎課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">環境搭建：VS Code + PlatformIO</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>環境搭建：VS Code + PlatformIO</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">基礎 1</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>邁向專業：IntelliSense、版本控制、多環境管理。寫程式不再是寫作業，而是做工程。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>能夠說明 PlatformIO 相較 Arduino IDE 的優勢（IntelliSense、版本管理、多環境編譯），並完成 VS Code + PlatformIO 的安裝配置。</li>
+                    <li>能夠理解 PlatformIO 專案結構（<code>src/</code>、<code>lib/</code>、<code>include/</code>、<code>platformio.ini</code>），並手動加入 <code>#include &lt;Arduino.h&gt;</code> 修正編譯錯誤。</li>
+                    <li>能夠透過 <code>lib_deps</code> 自動管理第三方程式庫依賴，並配置 <code>[env:release]</code> 多環境區塊實現不同燒錄速度。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    Arduino IDE 適合入門，但當專案規模成長——多檔案結構、第三方程式庫管理、跨板型編譯——它的限制就會成為瓶頸。
+                    PlatformIO 搭配 VS Code 提供 IntelliSense 智慧補全、一鍵依賴安裝與多環境配置，讓嵌入式開發從「寫作業」升級為「做工程」。
+                    本單元將帶你完成從零開始的環境建置，確保後續每個模組都能順暢編譯與燒錄。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">情境</div>
+                    小芳在 Arduino IDE 寫了一個 BLE 遙控車程式，程式碼超過 800 行全擠在一個 .ino 檔裡，每次改一個函式就要等 2 分鐘重新編譯。
+                    她想引入 ArduinoJson 來解析手機指令，卻發現要手動下載 ZIP 再解壓到 libraries 資料夾，版本還經常衝突。
+                    當她轉移到 PlatformIO 後，一行 <code>lib_deps</code> 就自動解決了所有依賴，IntelliSense 還能即時提示可用的 API——開發效率瞬間翻倍。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/lm_GUPEFNn8"
+                        title="環境搭建：VS Code + PlatformIO 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>為什麼捨棄 Arduino IDE？</h1>
+                
+                <p>Arduino IDE 是許多人接觸嵌入式開發的第一個工具，它的優點是簡單直覺——打開就能寫、一鍵就能燒。然而，當你的專案開始成長（超過幾百行程式碼、需要引用多個第三方程式庫、或是要同時支援多塊不同的開發板），Arduino IDE 的侷限性就會變成開發瓶頸。</p>
+
+                <p>PlatformIO 搭配 VS Code 是目前嵌入式開發社群中最受歡迎的專業開發組合。它不是取代 Arduino 框架，而是提供一個更強大的「容器」來運行 Arduino 程式碼——你可以繼續使用 <code>setup()</code>、<code>loop()</code>、<code>digitalWrite()</code> 這些熟悉的 API，同時享受現代 IDE 帶來的效率提升。</p>
+
+                <h2>Arduino IDE vs PlatformIO 功能比較</h2>
+
+                <table class="ms-table">
+                    <tr>
+                        <th>功能</th>
+                        <th>Arduino IDE</th>
+                        <th>VS Code + PlatformIO</th>
+                    </tr>
+                    <tr>
+                        <td>代碼智慧補全</td>
+                        <td><span class="cross"><i class="fas fa-times"></i></span> 基本提示</td>
+                        <td><span class="check"><i class="fas fa-check"></i></span> IntelliSense（函式簽章、參數提示、自動補全）</td>
+                    </tr>
+                    <tr>
+                        <td>多檔案專案</td>
+                        <td>所有 <code>.ino</code> 自動合併，難以管理</td>
+                        <td>標準 C++ 專案結構，<code>src/</code>、<code>lib/</code>、<code>include/</code> 分層清晰</td>
+                    </tr>
+                    <tr>
+                        <td>程式庫管理</td>
+                        <td>手動下載 ZIP 或使用內建管理器</td>
+                        <td><code>lib_deps</code> 一行設定，自動下載與版本鎖定</td>
+                    </tr>
+                    <tr>
+                        <td>多環境編譯</td>
+                        <td><span class="cross"><i class="fas fa-times"></i></span> 一次只能選一塊板</td>
+                        <td><span class="check"><i class="fas fa-check"></i></span> <code>[env:dev]</code> + <code>[env:release]</code> 同時配置</td>
+                    </tr>
+                    <tr>
+                        <td>版本控制整合</td>
+                        <td><span class="cross"><i class="fas fa-times"></i></span> 無內建支援</td>
+                        <td><span class="check"><i class="fas fa-check"></i></span> Git 完整整合，左側欄即時顯示變更</td>
+                    </tr>
+                    <tr>
+                        <td>編譯速度</td>
+                        <td>每次全量編譯</td>
+                        <td>增量編譯（只重新編譯修改過的檔案）</td>
+                    </tr>
+                </table>
+
+                <h2>IntelliSense 的價值</h2>
+
+                <p>IntelliSense 是 VS Code 最強大的功能之一。當你輸入 <code>Serial.</code> 後，它會自動列出所有可用的方法（如 <code>begin()</code>、<code>println()</code>、<code>available()</code>），並且顯示每個方法需要的參數類型與說明文件。這不只是方便——它能顯著減少拼寫錯誤，加速學習新的 API。</p>
+
+                <div class="ms-note">
+                    <i class="fas fa-info-circle note-icon"></i>
+                    <div class="note-body">
+                        <strong>關鍵差異</strong>
+                        在 Arduino IDE 中，<code>#include &lt;Arduino.h&gt;</code> 是隱式自動引入的，所以你不需要手動撰寫。但在 PlatformIO 的嚴格 C++ 環境中，你必須在每個 <code>.cpp</code> 檔案的開頭顯式加上 <code>#include &lt;Arduino.h&gt;</code>，否則編譯器會找不到 <code>setup()</code>、<code>loop()</code>、<code>Serial</code> 等核心定義。
+                    </div>
+                </div>
+
+                <h2>依賴管理的革新</h2>
+
+                <p>在 Arduino IDE 中安裝第三方程式庫，你需要手動搜尋、下載 ZIP 檔、解壓到特定資料夾，甚至還要擔心版本衝突。PlatformIO 的 <code>lib_deps</code> 機制徹底解決了這個問題——只需要在 <code>platformio.ini</code> 中加入一行設定：</p>
+
+                <div class="ms-code">
+                    <span class="c-attr">lib_deps</span> <span class="c-white">=</span><br>
+                    <span class="c-str">    bblanchon/ArduinoJson@^7.0.0</span><br>
+                    <span class="c-str">    adafruit/Adafruit NeoPixel@^1.12.0</span>
+                </div>
+
+                <p>編譯時，PlatformIO 會自動下載指定版本的程式庫並放入專案目錄。當你把專案分享給同學或上傳到 GitHub 時，對方只需要 <code>clone</code> 下來就能直接編譯，完全不需要手動安裝任何程式庫。</p>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>安裝與初始化</h1>
+                
+                <p>現在讓我們動手安裝開發環境。整個流程分為三個階段：安裝 VS Code 本體、載入 PlatformIO 擴充套件、以及認識專案的核心配置檔。完成後，你就擁有了一個功能齊全的 ESP32 開發環境。</p>
+
+                <h2>階段一：安裝 VS Code</h2>
+
+                <p>Visual Studio Code（簡稱 VS Code）是微軟開發的免費跨平台程式碼編輯器，目前是全球最受歡迎的開發工具之一。它的強大之處在於豐富的擴充套件生態系——透過安裝不同的擴充套件，VS Code 可以變成任何語言的完整 IDE。</p>
+
+                <div class="ms-steps">
+                    <div class="ms-step">
+                        <div class="ms-step-num">1</div>
+                        <div class="ms-step-body">
+                            <h4>下載 VS Code</h4>
+                            <p>前往 <a href="https://code.visualstudio.com" target="_blank">code.visualstudio.com</a>，點擊首頁的下載按鈕。網站會自動偵測你的作業系統（Windows / macOS / Linux）並提供對應的安裝檔。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">2</div>
+                        <div class="ms-step-body">
+                            <h4>執行安裝</h4>
+                            <p>Windows 用戶執行 <code>.exe</code> 安裝檔，建議勾選「Add to PATH」選項。macOS 用戶將 <code>.app</code> 拖入 Applications 資料夾即可。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">3</div>
+                        <div class="ms-step-body">
+                            <h4>首次啟動</h4>
+                            <p>啟動 VS Code 後，你會看到歡迎頁面。可以先選擇喜歡的色彩主題（推薦深色主題 Dark+ 以減少眼睛疲勞）。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>階段二：安裝 PlatformIO 擴充套件</h2>
+
+                <div class="ms-steps">
+                    <div class="ms-step">
+                        <div class="ms-step-num">1</div>
+                        <div class="ms-step-body">
+                            <h4>開啟擴充套件面板</h4>
+                            <p>點選左側活動列（Activity Bar）的方塊圖示，或使用快捷鍵 <code>Ctrl+Shift+X</code>（macOS 為 <code>Cmd+Shift+X</code>）開啟 Extensions 面板。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">2</div>
+                        <div class="ms-step-body">
+                            <h4>搜尋並安裝 PlatformIO IDE</h4>
+                            <p>在搜尋欄輸入 <code>PlatformIO IDE</code>，找到由 PlatformIO 官方發佈的擴充套件，點擊「Install」按鈕。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">3</div>
+                        <div class="ms-step-body">
+                            <h4>等待初始化</h4>
+                            <p>首次安裝後，PlatformIO 會自動下載 Python 環境與核心工具鏈，這可能需要 5~10 分鐘。完成後，左側活動列會出現一個「外星人」圖示——這就是 PlatformIO 的入口。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ms-tip">
+                    <i class="fas fa-lightbulb note-icon"></i>
+                    <div class="note-body">
+                        <strong>安裝驗證</strong>
+                        安裝完成後，點擊左下角狀態列，你應該會看到 PlatformIO 的小圖示（一個小房子）。點擊它可以開啟 PlatformIO Home 頁面，從這裡你可以建立新專案、管理程式庫、以及更新工具鏈。
+                    </div>
+                </div>
+
+                <h2>階段三：認識 platformio.ini</h2>
+
+                <p>每個 PlatformIO 專案的根目錄都有一個 <code>platformio.ini</code> 檔案，它是整個專案的「大腦」——定義了目標板型、編譯框架、序列監控速率、第三方程式庫依賴等所有配置。以下是一個典型的 ESP32 專案配置：</p>
+
+                <div class="ms-code">
+                    <span class="c-comment">; PlatformIO 專案設定檔</span><br>
+                    <span class="c-tag">[env:esp32dev]</span><br>
+                    <span class="c-attr">platform</span> <span class="c-white">=</span> <span class="c-str">espressif32</span><br>
+                    <span class="c-attr">board</span> <span class="c-white">=</span> <span class="c-str">esp32dev</span><br>
+                    <span class="c-attr">framework</span> <span class="c-white">=</span> <span class="c-str">arduino</span><br>
+                    <span class="c-attr">monitor_speed</span> <span class="c-white">=</span> <span class="c-val">115200</span><br>
+                    <span class="c-attr">upload_speed</span> <span class="c-white">=</span> <span class="c-val">921600</span><br>
+                    <span class="c-attr">lib_deps</span> <span class="c-white">=</span><br>
+                    <span class="c-str">    bblanchon/ArduinoJson@^7.0.0</span>
+                </div>
+
+                <div class="ms-note">
+                    <i class="fas fa-info-circle note-icon"></i>
+                    <div class="note-body">
+                        <strong>重要提醒</strong>
+                        <code>platformio.ini</code> 使用 INI 格式。每個 <code>[env:名稱]</code> 區塊代表一組編譯環境。你可以同時定義多個環境（例如 <code>[env:dev]</code> 和 <code>[env:release]</code>），在編譯或上傳時選擇要使用哪一個。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>專案結構巡禮</h1>
+                
+                <p>了解 PlatformIO 專案的目錄結構是高效開發的基礎。與 Arduino IDE 把所有檔案混在一起的做法不同，PlatformIO 採用清晰的分層架構，每個目錄都有明確的職責。這種結構遵循了 C/C++ 專案的工業標準，也為未來的團隊協作與版本控制奠定了基礎。</p>
+
+                <p>當你用 PlatformIO 建立一個新的 ESP32 專案時，系統會自動生成以下目錄結構：</p>
+
+                <div class="ms-code">
+                    <span class="c-white">my-esp32-project/</span><br>
+                    <span class="c-white">├── </span><span class="c-tag">src/</span><span class="c-comment">          # 原始碼目錄（你的主要程式碼放這裡）</span><br>
+                    <span class="c-white">│   └── </span><span class="c-attr">main.cpp</span><span class="c-comment">   # 程式進入點</span><br>
+                    <span class="c-white">├── </span><span class="c-tag">include/</span><span class="c-comment">      # 標頭檔目錄（.h 宣告檔）</span><br>
+                    <span class="c-white">├── </span><span class="c-tag">lib/</span><span class="c-comment">          # 私有程式庫目錄</span><br>
+                    <span class="c-white">├── </span><span class="c-tag">test/</span><span class="c-comment">         # 測試程式碼目錄</span><br>
+                    <span class="c-white">├── </span><span class="c-tag">.pio/</span><span class="c-comment">         # 編譯暫存區（自動生成，勿手動修改）</span><br>
+                    <span class="c-white">└── </span><span class="c-kw">platformio.ini</span><span class="c-comment"> # 專案配置檔</span>
+                </div>
+
+                <h2>各目錄詳解</h2>
+
+                <table class="ms-table">
+                    <tr>
+                        <th>目錄/檔案</th>
+                        <th>用途</th>
+                        <th>要點</th>
+                    </tr>
+                    <tr>
+                        <td><code>src/</code></td>
+                        <td>存放所有原始碼（<code>.cpp</code> 檔案）</td>
+                        <td>主程式 <code>main.cpp</code> 必須包含 <code>#include &lt;Arduino.h&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>include/</code></td>
+                        <td>存放標頭檔（<code>.h</code> 宣告檔）</td>
+                        <td>與 <code>src/</code> 搭配使用，定義函式與結構體的介面</td>
+                    </tr>
+                    <tr>
+                        <td><code>lib/</code></td>
+                        <td>存放專案私有的程式庫</td>
+                        <td>當專案程式碼超過 500 行時，建議開始拆分模組到此</td>
+                    </tr>
+                    <tr>
+                        <td><code>test/</code></td>
+                        <td>存放單元測試程式碼</td>
+                        <td>PlatformIO 支援在本機或裝置上執行自動化測試</td>
+                    </tr>
+                    <tr>
+                        <td><code>.pio/</code></td>
+                        <td>編譯中間產物暫存區</td>
+                        <td>由系統自動管理，應加入 <code>.gitignore</code> 不納入版本控制</td>
+                    </tr>
+                    <tr>
+                        <td><code>platformio.ini</code></td>
+                        <td>專案核心配置檔</td>
+                        <td>定義板型、框架、波特率、程式庫依賴等所有設定</td>
+                    </tr>
+                </table>
+
+                <h2>為什麼必須 #include &lt;Arduino.h&gt;？</h2>
+
+                <p>這是從 Arduino IDE 轉移到 PlatformIO 時最常遇到的問題。在 Arduino IDE 中，編譯器會在幕後自動將你的 <code>.ino</code> 檔案轉換為合法的 C++ 程式碼，其中就包括隱式插入 <code>#include &lt;Arduino.h&gt;</code>。但 PlatformIO 使用標準的 C++ 編譯器，不會做這種自動轉換——如果你沒有手動引入，編譯器就找不到 <code>setup()</code>、<code>loop()</code>、<code>Serial</code>、<code>digitalWrite()</code> 這些定義，結果就是一整頁的紅色錯誤。</p>
+
+                <div class="ms-code">
+                    <span class="c-comment">// src/main.cpp — PlatformIO 的標準起手式</span><br>
+                    <span class="c-kw">#include</span> <span class="c-str">&lt;Arduino.h&gt;</span><br>
+                    <br>
+                    <span class="c-kw">void</span> <span class="c-tag">setup</span><span class="c-white">() {</span><br>
+                    <span class="c-white">    Serial.</span><span class="c-attr">begin</span><span class="c-white">(</span><span class="c-val">115200</span><span class="c-white">);</span><br>
+                    <span class="c-white">    Serial.</span><span class="c-attr">println</span><span class="c-white">(</span><span class="c-str">"Hello, ESP32!"</span><span class="c-white">);</span><br>
+                    <span class="c-white">}</span><br>
+                    <br>
+                    <span class="c-kw">void</span> <span class="c-tag">loop</span><span class="c-white">() {</span><br>
+                    <span class="c-white">    </span><span class="c-comment">// 你的主程式邏輯</span><br>
+                    <span class="c-white">}</span>
+                </div>
+
+                <div class="ms-warning">
+                    <i class="fas fa-exclamation-triangle note-icon"></i>
+                    <div class="note-body">
+                        <strong>常見錯誤</strong>
+                        如果你在編譯時看到 <code>'setup' was not declared in this scope</code> 或 <code>'Serial' was not declared</code> 的錯誤訊息，十之八九是忘記在檔案開頭加上 <code>#include &lt;Arduino.h&gt;</code>。這是 PlatformIO 新手最常踩的坑。
+                    </div>
+                </div>
+
+                <h2>.gitignore 的重要性</h2>
+
+                <p>當你使用 Git 管理專案時，<code>.pio/</code> 目錄下的編譯暫存檔案不應被追蹤。PlatformIO 通常會自動生成 <code>.gitignore</code> 檔案，但如果沒有，請確保其中至少包含以下內容：</p>
+
+                <div class="ms-code">
+                    <span class="c-comment"># .gitignore</span><br>
+                    <span class="c-white">.pio/</span><br>
+                    <span class="c-white">.vscode/</span><br>
+                    <span class="c-white">*.swp</span>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務：PlatformIO 環境搭建</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    每項任務完成後，請點擊卡片繳交作業。
+                </p>
+
+                <div class="lab-cards-group">
+                    <!-- Task 1-1 -->
+                    <div class="ms-lab-card" onclick="openSubmissionModal('basic-01-setup-1', '【作業 1-1】新環境的首航')">
+                        <div class="ms-lab-badge"><i class="fas fa-ship"></i>&nbsp; 作業 1-1</div>
+                        <span class="ms-lab-time"><i class="far fa-clock"></i> 約 60 分鐘</span>
+                        <h3>PlatformIO 首航與語法修正</h3>
+                        <p style="font-size:14px; color:#323130; margin-bottom:14px;">
+                            目標：建立專案並移入代碼，加上必要標頭檔，解決 C++ 編譯錯誤，完成首次燒錄驗證。
+                        </p>
+                        <ul class="ms-checklist">
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>打開 <code>src/main.cpp</code>，手動引用 <code>Arduino.h</code> 以修正紅字語法報錯</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>點擊下方狀態列 of <code>✔</code> (Compile) 按鈕進行編譯</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>確認終端機編譯結果出現綠色的 <code>SUCCESS</code> 訊息</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>截圖「編譯成功」畫面，存入 <code>assets/</code> 資料夾中</span></li>
+                        </ul>
+                        <div class="ms-note" style="margin-top:12px;">
+                            <i class="fas fa-info-circle note-icon"></i>
+                            <div class="note-body">
+                                <strong>提示說明</strong>
+                                PlatformIO 是嚴格的標準 C++ 編譯環境，與 Arduino IDE 不同，它要求所有原始碼檔案必須顯式 <code>#include &lt;Arduino.h&gt;</code>。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task 1-2 -->
+                    <div class="ms-lab-card" onclick="openSubmissionModal('basic-01-setup-2', '【作業 1-2】函式庫管家')">
+                        <div class="ms-lab-badge"><i class="fas fa-book"></i>&nbsp; 作業 1-2</div>
+                        <span class="ms-lab-time"><i class="far fa-clock"></i> 約 60 分鐘</span>
+                        <h3>自動化依賴管理</h3>
+                        <p style="font-size:14px; color:#323130; margin-bottom:14px;">
+                            目標：編輯設定檔引入 ArduinoJson 第三方庫，體驗 PlatformIO 的依賴庫自動同步。
+                        </p>
+                        <ul class="ms-checklist">
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>編輯 <code>platformio.ini</code>，在 <code>lib_deps</code> 中加入 <code>bblanchon/ArduinoJson</code></span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>取消 <code>src/main.cpp</code> 中 <code>ArduinoJson</code> 相關代碼的註解</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>重新點擊編譯，觀察並確認 PlatformIO 自動下載並安裝庫檔案</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>確認代碼再次順利編譯通過</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>截圖「IntelliSense 提示」或「庫自動下載成功」畫面存入 <code>assets/</code></span></li>
+                        </ul>
+                        <div class="ms-tip" style="margin-top:12px;">
+                            <i class="fas fa-lightbulb note-icon"></i>
+                            <div class="note-body">
+                                <strong>依賴管理優勢</strong>
+                                使用 <code>lib_deps</code> 能讓專案程式庫隨附於設定檔，他人複製你的專案時不需要手動安裝任何庫，環境會自動下載，極大提升專案可移植性。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task 1-3 -->
+                    <div class="ms-lab-card" onclick="openSubmissionModal('basic-01-setup-3', '【作業 1-3】多環境並行配置')">
+                        <div class="ms-lab-badge"><i class="fas fa-cogs"></i>&nbsp; 作業 1-3</div>
+                        <span class="ms-lab-time"><i class="far fa-clock"></i> 約 45 分鐘</span>
+                        <h3>解決亂碼與多環境配置</h3>
+                        <p style="font-size:14px; color:#323130; margin-bottom:14px;">
+                            目標：設定 monitor_speed 解決亂碼，並配置發布環境（release）以提升燒錄速度。
+                        </p>
+                        <ul class="ms-checklist">
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>在 <code>platformio.ini</code> 中設定 <code>monitor_speed = 115200</code> 以解決串口監控器亂碼</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>在 <code>platformio.ini</code> 中建立一個名為 <code>[env:release]</code> 的新區塊</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>在新環境區塊中將 <code>upload_speed</code> 提高到 <code>921600</code> 以加速燒錄</span></li>
+                            <li><div class="check-box" onclick="event.stopPropagation(); toggleCheck(this)"></div><span>完成 <code>docs/ENV_CHECK.md</code> 中所有的檢核項目並提交</span></li>
+                        </ul>
+                        <div class="ms-warning" style="margin-top:12px;">
+                            <i class="fas fa-exclamation-triangle note-icon"></i>
+                            <div class="note-body">
+                                <strong>多環境配置注意</strong>
+                                <code>[env:release]</code> 的參數會覆蓋或獨立於 <code>[env:esp32dev]</code>。上傳時請選擇正確的環境 (Environment) 以免設定未生效。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none">
+                        <i class="fas fa-check"></i> 已完成
+                    </div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+                <p>為每個問題選出最佳答案，確認你對本模組的理解。</p>
+
+                <div id="quiz-form">
+
+                    <!-- Q1 -->
+                    <div class="quiz-question" id="q1">
+                        <p>1. PlatformIO 相較 Arduino IDE 最核心的優勢是什麼？</p>
+                        <label class="quiz-option"><input type="radio" name="q1" value="a"> PlatformIO只支援ESP32</label>
+                        <label class="quiz-option"><input type="radio" name="q1" value="b"> PlatformIO提供IntelliSense智慧補全、lib_deps自動依賴管理與多環境編譯</label>
+                        <label class="quiz-option"><input type="radio" name="q1" value="c"> PlatformIO的編譯速度比Arduino IDE慢但更穩定</label>
+                        <div class="quiz-feedback" id="q1-feedback"></div>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="quiz-question" id="q2">
+                        <p>2. 從Arduino IDE轉移到PlatformIO時，最常遇到的編譯錯誤原因是什麼？</p>
+                        <label class="quiz-option"><input type="radio" name="q2" value="a"> PlatformIO不支援C++語法</label>
+                        <label class="quiz-option"><input type="radio" name="q2" value="b"> 忘記在.cpp檔案開頭加上#include &lt;Arduino.h&gt;</label>
+                        <label class="quiz-option"><input type="radio" name="q2" value="c"> PlatformIO無法識別setup()和loop()函式名稱</label>
+                        <div class="quiz-feedback" id="q2-feedback"></div>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div class="quiz-question" id="q3">
+                        <p>3. platformio.ini中的lib_deps設定項的作用是什麼？</p>
+                        <label class="quiz-option"><input type="radio" name="q3" value="a"> 定義程式碼的縮排格式</label>
+                        <label class="quiz-option"><input type="radio" name="q3" value="b"> 指定編譯時要排除的檔案</label>
+                        <label class="quiz-option"><input type="radio" name="q3" value="c"> 自動下載與管理第三方程式庫依賴</label>
+                        <div class="quiz-feedback" id="q3-feedback"></div>
+                    </div>
+
+                    <!-- Q4 -->
+                    <div class="quiz-question" id="q4">
+                        <p>4. PlatformIO專案中的.pio/目錄應該如何處理？</p>
+                        <label class="quiz-option"><input type="radio" name="q4" value="a"> 手動備份到雲端儲存</label>
+                        <label class="quiz-option"><input type="radio" name="q4" value="b"> 加入.gitignore不納入版本控制，因為它是自動生成的編譯暫存區</label>
+                        <label class="quiz-option"><input type="radio" name="q4" value="c"> 定期清理以釋放Flash空間</label>
+                        <div class="quiz-feedback" id="q4-feedback"></div>
+                    </div>
+
+                    <div class="quiz-submit">
+                        <button class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                        <button class="ms-btn-ghost" onclick="resetQuiz()" style="margin-left:8px; display:none;" id="quiz-reset-btn">重新作答</button>
+                    </div>
+                    <div id="quiz-score" style="display:none; margin-top:16px; padding:16px; background:#f3f2f1; border-radius:4px; font-size:14px;"></div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>環境搭建：VS Code + PlatformIO</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>🚀 為什麼捨棄 Arduino IDE？</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🛠️ 安裝與初始化</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>📂 專案結構巡禮</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="https://www.youtube.com/embed/lm_GUPEFNn8" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://docs.google.com/document/d/e/2PACX-1vRMdgLbF_rP3t_RG1bwgLNUx0bhqV91mFEXd-xVplxFKTOH0DtkUSHlPrc3R8EOliQU2kzbIRKjcX8n/pub?embedded=true" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「環境搭建：VS Code + PlatformIO」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '🚀 為什麼捨棄 Arduino IDE？', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🛠️ 安裝與初始化', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '📂 專案結構巡禮', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',       time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    const QUIZ_ANSWERS = { q1: 'b', q2: 'b', q3: 'c', q4: 'b' };
+    const QUIZ_EXPLANATIONS = {
+        q1: { b: '正確！PlatformIO 提供 IntelliSense 智慧補全、lib_deps 一行設定自動下載程式庫、以及多環境編譯配置，大幅提升嵌入式開發效率。' },
+        q2: { b: '正確！PlatformIO 使用標準 C++ 編譯器，不會像 Arduino IDE 那樣自動插入 #include <Arduino.h>，必須手動加上才能找到 setup()、loop() 等核心定義。' },
+        q3: { c: '正確！lib_deps 讓你只需在設定檔中加入一行，PlatformIO 就會自動下載指定版本的程式庫，不需手動下載 ZIP 檔。' },
+        q4: { b: '正確！.pio/ 目錄是編譯中間產物暫存區，由系統自動管理，應加入 .gitignore 不納入版本控制。' },
+    };
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    /**
+     * 初始化課程播放器，載入側邊欄與課程首頁。
+     */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">測驗</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    /* ───── QUIZ ───── */
+    function submitQuiz() {
+        let correct = 0;
+        let total = Object.keys(QUIZ_ANSWERS).length;
+        let allAnswered = true;
+
+        for (const [qid, answer] of Object.entries(QUIZ_ANSWERS)) {
+            const selected = document.querySelector(`input[name="${qid}"]:checked`);
+            if (!selected) { allAnswered = false; continue; }
+
+            const val = selected.value;
+            const feedbackEl = document.getElementById(`${qid}-feedback`);
+            const options = document.querySelectorAll(`input[name="${qid}"]`);
+
+            options.forEach(opt => {
+                opt.disabled = true;
+                const label = opt.parentElement;
+                if (opt.value === answer) label.classList.add('correct');
+                if (opt.checked && opt.value !== answer) label.classList.add('wrong');
+            });
+
+            if (val === answer) {
+                correct++;
+                feedbackEl.className = 'quiz-feedback correct';
+                feedbackEl.textContent = '✓ ' + QUIZ_EXPLANATIONS[qid][answer];
+            } else {
+                feedbackEl.className = 'quiz-feedback wrong';
+                const exp = QUIZ_EXPLANATIONS[qid][answer];
+                feedbackEl.textContent = '✗ 不正確。' + exp;
+            }
+        }
+
+        if (!allAnswered) { alert('請回答所有問題後再提交。'); return; }
+
+        const scoreEl = document.getElementById('quiz-score');
+        scoreEl.style.display = 'block';
+        const pct = Math.round(correct / total * 100);
+        const pass = pct >= 75;
+        scoreEl.innerHTML = `
+            <span style="font-size:20px;">${pass ? '🎉' : '📖'}</span>
+            <strong style="margin-left:8px;">你答對了 ${correct} / ${total} 題（${pct}%）</strong>
+            <div style="margin-top:6px; color:#605e5c;">${pass ? '通過！你已掌握本模組的核心概念。' : '建議回顧相關單元後再試一次。'}</div>
+        `;
+
+        document.querySelector('.quiz-submit .ms-btn').disabled = true;
+        document.getElementById('quiz-reset-btn').style.display = 'inline-block';
+    }
+
+    function resetQuiz() {
+        document.querySelectorAll('.quiz-option').forEach(el => {
+            el.classList.remove('correct','wrong');
+        });
+        document.querySelectorAll('input[type=radio]').forEach(el => {
+            el.checked = false;
+            el.disabled = false;
+        });
+        document.querySelectorAll('.quiz-feedback').forEach(el => {
+            el.className = 'quiz-feedback';
+            el.textContent = '';
+        });
+        document.getElementById('quiz-score').style.display = 'none';
+        document.querySelector('.quiz-submit .ms-btn').disabled = false;
+        document.getElementById('quiz-reset-btn').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='基礎 01：開發環境建置';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "https://www.youtube.com/embed/lm_GUPEFNn8",
+        doc: "https://docs.google.com/document/d/e/2PACX-1vRMdgLbF_rP3t_RG1bwgLNUx0bhqV91mFEXd-xVplxFKTOH0DtkUSHlPrc3R8EOliQU2kzbIRKjcX8n/pub?embedded=true"
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">Unit: PlatformIO 環境搭建 (學生作業指引)</h1><a aria-label="Permalink: Unit: PlatformIO 環境搭建 (學生作業指引)" class="anchor" href="#unit-platformio-環境搭建-學生作業指引" id="user-content-unit-platformio-環境搭建-學生作業指引"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎使用本程式庫！本單元將帶領你從 Arduino IDE 轉移到專業的 <strong>VS Code + PlatformIO</strong> 開發環境。這不僅是換一個編輯器，更是學習現代軟體工程的專案管理思維。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 作業目標</h2><a aria-label="Permalink: 🎯 作業目標" class="anchor" href="#-作業目標" id="user-content--作業目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>完成本單元後，你應能：</p>
+<ol>
+<li>配置 <code>platformio.ini</code> 以管理硬體環境與第三方程式庫。</li>
+<li>修正 C++ 編譯錯誤並理解 <code>#include</code> 邏輯。</li>
+<li>使用 PlatformIO 的自動化依賴管理功能。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🚀 執行步驟</h2><a aria-label="Permalink: 🚀 執行步驟" class="anchor" href="#-執行步驟" id="user-content--執行步驟"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：修正 <code>src/main.cpp</code>
+</h3><a aria-label="Permalink: 任務 1：修正 src/main.cpp" class="anchor" href="#任務-1修正-srcmaincpp" id="user-content-任務-1修正-srcmaincpp"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>打開 <code>src/main.cpp</code>。</li>
+<li>修正紅字報錯，確保引用了必要的標頭檔（提示：PlatformIO 需要手動引用 <code>Arduino.h</code>）。</li>
+<li>點擊狀態列的 <code>✔</code> (Compile) 確保出現 <code>SUCCESS</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：管理程式庫依賴</h3><a aria-label="Permalink: 任務 2：管理程式庫依賴" class="anchor" href="#任務-2管理程式庫依賴" id="user-content-任務-2管理程式庫依賴"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>編輯 <code>platformio.ini</code>。</li>
+<li>在 <code>lib_deps</code> 中加入 <code>bblanchon/ArduinoJson</code>。</li>
+<li>重新編譯並觀察 PlatformIO 如何自動下載依賴。</li>
+<li>取消 <code>src/main.cpp</code> 中 <code>ArduinoJson</code> 相關代碼的註解並通過編譯。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：解決串口亂碼與進階配置</h3><a aria-label="Permalink: 任務 3：解決串口亂碼與進階配置" class="anchor" href="#任務-3解決串口亂碼與進階配置" id="user-content-任務-3解決串口亂碼與進階配置"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>在 <code>platformio.ini</code> 中設定 <code>monitor_speed = 115200</code>。</li>
+<li>新增一個名為 <code>[env:release]</code> 的區塊，並將 <code>upload_speed</code> 提高到 <code>921600</code>。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交清單</h2><a aria-label="Permalink: 📝 提交清單" class="anchor" href="#-提交清單" id="user-content--提交清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 完成 <code>docs/ENV_CHECK.md</code> 中的所有檢核項目。</li>
+<li>[ ] 將「編譯成功」與「IntelliSense 提示」截圖存入 <code>assets/</code>。</li>
+<li>[ ] 將變更 <code>git commit</code> 並 <code>push</code> 到 GitHub。</li>
+</ul>
+<hr/>
+<p><em>詳細的導師指引請參考 <a href=".github/tutor_guide.md">.github/tutor_guide.md</a></em></p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">Unit: PlatformIO 環境搭建 (VS Code + PlatformIO Setup)</h1><a aria-label="Permalink: Unit: PlatformIO 環境搭建 (VS Code + PlatformIO Setup)" class="anchor" href="#unit-platformio-環境搭建-vs-code--platformio-setup" id="user-content-unit-platformio-環境搭建-vs-code--platformio-setup"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到專業硬體開發的第一步！在本單元中，你將學習如何從 Arduino IDE 轉移到更強大的 <strong>VS Code + PlatformIO</strong> 開發環境。這不僅是換一個編輯器，更是學習現代軟體工程的專案管理思維。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a aria-label="Permalink: 🎯 學習目標" class="anchor" href="#-學習目標" id="user-content--學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>掌握 PlatformIO 的專案結構與 <code>platformio.ini</code> 配置。</li>
+<li>理解 C++ 代碼規範與 <code>#include</code> 邏輯。</li>
+<li>學會使用 <code>lib_deps</code> 自動化管理第三方庫。</li>
+<li>掌握多環境配置與調速技巧。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📂 專案結構說明</h2><a aria-label="Permalink: 📂 專案結構說明" class="anchor" href="#-專案結構說明" id="user-content--專案結構說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>platformio.ini</code>: 核心配置文件，負責硬體定義與依賴管理。</li>
+<li>
+<code>src/main.cpp</code>: 你的原始碼存放在這裡。</li>
+<li>
+<code>docs/ENV_CHECK.md</code>: 你的環境報告書，完成任務後請在此記錄。</li>
+<li>
+<code>assets/</code>: 請將你的實驗截圖存放在此。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務清單</h2><a aria-label="Permalink: 🚀 任務清單" class="anchor" href="#-任務清單" id="user-content--任務清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：PlatformIO 首航與語法修正</h3><a aria-label="Permalink: 任務 1：PlatformIO 首航與語法修正" class="anchor" href="#任務-1platformio-首航與語法修正" id="user-content-任務-1platformio-首航與語法修正"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>打開 <code>src/main.cpp</code>。</li>
+<li>你會發現代碼有紅字報錯。請修正它，讓 PlatformIO 能夠識別 Arduino 的核心函式。</li>
+<li>
+<strong>驗證</strong>：按下下方狀態列的 <code>✔</code> (Compile) 按鈕，直到出現綠色的 <code>SUCCESS</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：自動化依賴管家</h3><a aria-label="Permalink: 任務 2：自動化依賴管家" class="anchor" href="#任務-2自動化依賴管家" id="user-content-任務-2自動化依賴管家"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>在 <code>platformio.ini</code> 中加入 <code>bblanchon/ArduinoJson</code> 庫。</li>
+<li>再次點擊編譯，觀察 PlatformIO 如何自動下載並安裝庫檔案。</li>
+<li>
+<strong>驗證</strong>：取消 <code>src/main.cpp</code> 中關於 <code>ArduinoJson</code> 的註解，確保編譯通過。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：解決亂碼與多環境配置</h3><a aria-label="Permalink: 任務 3：解決亂碼與多環境配置" class="anchor" href="#任務-3解決亂碼與多環境配置" id="user-content-任務-3解決亂碼與多環境配置"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>在 <code>platformio.ini</code> 中設定 <code>monitor_speed = 115200</code> 以解決串口亂碼。</li>
+<li>建立一個名為 <code>[env:release]</code> 的新區塊，並將 <code>upload_speed</code> 提高到 <code>921600</code>。</li>
+<li>
+<strong>驗證</strong>：提交最終的 <code>platformio.ini</code> 檔案。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a aria-label="Permalink: 📝 提交要求" class="anchor" href="#-提交要求" id="user-content--提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>docs/ENV_CHECK.md</code> 中的所有勾選。</li>
+<li>在 <code>assets/</code> 中存入「IntelliSense 常數提示」與「編譯成功」的截圖。</li>
+<li>將所有變更 <code>git commit</code> 並 <code>push</code> 到 GitHub。</li>
+</ol>
+<blockquote>
+<p>「好的工程師，是能配置出最強大武器的人，讓代碼自己去管理依賴，讓環境自己去適應板子。」</p>
+</blockquote>
+</section>
+
+</body>
+</html>

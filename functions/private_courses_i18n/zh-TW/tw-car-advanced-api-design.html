@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>從幾何到代碼：API 封裝設計 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/advanced.html" target="_top" class="nav-label">進階課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">從幾何到代碼：API 封裝設計</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>從幾何到代碼：API 封裝設計</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">單元課程 進階 10</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>釋放運動控制的潛能。將複雜的 ICC 數學封裝為易用的 API，打造直覺且健壯的控制介面。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>📦 1. 為什麼要封裝 API？ (15 min)</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🎛️ 2. 設計良好的控制接口 (20 min)</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>🏗️ 3. 數據結構與返回類型</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    上一個單元我們推導了 ICC 的數學公式，但直接在應用層操作三角函數與 PWM 映射既容易出錯又難以維護。
+                    本模組的核心任務是將這些複雜的運動學計算<strong>封裝成簡潔、直覺且健壯的 API</strong>，
+                    讓上層程式碼只需呼叫 <code>driveArc(radius, speed)</code> 就能精確控制車體軌跡，徹底實現「關注分離」的軟體工程理念。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">學習指引</div>
+                    假設你的隊友需要用你寫的程式庫完成一個「8 字形」繞行任務，但他完全不懂 ICC 公式。如果你的介面設計得好，他只需要兩行程式碼就能搞定；設計得差，他得翻遍原始碼才敢動手。先觀看下方影片，了解如何設計出「自述性 (Self-documenting)」的控制接口。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="從幾何到代碼：API 封裝設計 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>📦 1. 為什麼要封裝 API？ (15 min)</h1>
+
+                <p>
+                    在上一個單元中，我們推導了 ICC 的數學公式，能夠從目標半徑 \(R\) 和速度 \(V\) 計算出左右輪速。
+                    但如果每次需要轉彎時，都得在應用層直接操作三角函數、處理 PWM 映射和邊界條件，
+                    不僅容易出錯，更會讓程式碼變得極難維護。這正是 <strong>API 封裝（API Encapsulation）</strong>的價值所在。
+                </p>
+
+                <h2>資訊隱藏（Information Hiding）的力量</h2>
+                <p>
+                    軟體工程大師 David Parnas 在 1972 年提出的「資訊隱藏」原則指出：模組應該隱藏其內部的設計決策，
+                    只透過穩定的介面與外部溝通。對差速驅動車而言，這意味著上層程式碼不需要知道
+                    \(R = \frac{L}{2} \cdot \frac{V_L + V_R}{V_L - V_R}\) 這個公式怎麼推導的——它只需要呼叫
+                    <code>driveArc(radius, speed)</code> 就能精確控制車體軌跡。
+                </p>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        好的 API 就像方向盤：駕駛者不需要理解齒輪齒條機構或動力輔助泵浦的液壓原理，只需轉動方向盤就能控制車輛方向。
+                        這就是抽象層的精髓——降低使用者的認知負擔。
+                    </div>
+                </div>
+
+                <h2>封裝帶來的三大工程優勢</h2>
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>優勢</th>
+                            <th>未封裝（直接操作 PWM）</th>
+                            <th>封裝後（透過 API）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>可讀性</strong></td>
+                            <td><code>analogWrite(pinL, 200); analogWrite(pinR, 133);</code></td>
+                            <td><code>driveArc(0.5, 100);</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>可維護性</strong></td>
+                            <td>更換馬達驅動板需修改每一處 PWM 呼叫</td>
+                            <td>只需修改 API 內部的硬體抽象層</td>
+                        </tr>
+                        <tr>
+                            <td><strong>安全性</strong></td>
+                            <td>忘記邊界檢查可能導致馬達過載</td>
+                            <td>API 內部自動攔截非法參數</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>一個具體的對比範例</h2>
+                <p>
+                    假設你的隊友需要讓機器人沿著半徑 50 cm 的圓弧行駛。以下是「未封裝」和「封裝後」的程式碼對比：
+                </p>
+
+                <div class="ms-code">
+                    <span class="c-comment">// ❌ 未封裝：隊友必須理解完整的運動學公式</span><br>
+                    <span class="c-kw">float</span> <span class="c-attr">R</span> <span class="c-white">= 0.50;</span>  <span class="c-comment">// 目標半徑 (m)</span><br>
+                    <span class="c-kw">float</span> <span class="c-attr">V</span> <span class="c-white">= 0.20;</span>  <span class="c-comment">// 目標線速度 (m/s)</span><br>
+                    <span class="c-kw">float</span> <span class="c-attr">omega</span> <span class="c-white">=</span> <span class="c-attr">V</span> <span class="c-white">/</span> <span class="c-attr">R</span><span class="c-white">;</span><br>
+                    <span class="c-kw">float</span> <span class="c-attr">V_L</span> <span class="c-white">=</span> <span class="c-attr">omega</span> <span class="c-white">* (</span><span class="c-attr">R</span> <span class="c-white">+</span> <span class="c-attr">L</span><span class="c-white">/2);</span><br>
+                    <span class="c-kw">float</span> <span class="c-attr">V_R</span> <span class="c-white">=</span> <span class="c-attr">omega</span> <span class="c-white">* (</span><span class="c-attr">R</span> <span class="c-white">-</span> <span class="c-attr">L</span><span class="c-white">/2);</span><br>
+                    <span class="c-kw">int</span> <span class="c-attr">pwmL</span> <span class="c-white">= map(</span><span class="c-attr">V_L</span><span class="c-white">, 0, maxV, 0, 255);</span><br>
+                    <span class="c-kw">int</span> <span class="c-attr">pwmR</span> <span class="c-white">= map(</span><span class="c-attr">V_R</span><span class="c-white">, 0, maxV, 0, 255);</span><br>
+                    <span class="c-comment">// 還需自行處理飽和、死區、負值...</span><br>
+                    <br>
+                    <span class="c-comment">// ✅ 封裝後：一行搞定</span><br>
+                    <span class="c-attr">drive</span><span class="c-white">.arc(0.50, 0.20);</span>  <span class="c-comment">// 半徑 50cm，速度 0.2 m/s</span>
+                </div>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        封裝不只是「讓程式碼變短」。API 內部應包含<strong>安全攔截邏輯</strong>：
+                        當輸入的半徑 \(R\) 小於物理可達到的最小值，或速度超過 PWM 上限時，
+                        API 應自動進行 Clamp（箝位）或 Scaling（縮放），而不是讓硬體進入未定義行為。
+                    </div>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        設計 API 時，問自己一個問題：「如果我的隊友完全不懂 ICC 公式，他能不能只看函式名稱和參數就知道怎麼用？」
+                        如果答案是「可以」，那你的 API 就達到了<strong>自述性（Self-documenting）</strong>的標準。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🎛️ 2. 設計良好的控制接口 (20 min)</h1>
+
+                <p>
+                    API 設計不只是「寫個函式」這麼簡單。一個設計良好的控制接口，應該讓使用者在<strong>不閱讀原始碼</strong>的情況下，
+                    僅憑函式名稱和參數就能正確使用。這種品質稱為<strong>自述性（Self-documenting）</strong>——
+                    它是區分業餘程式碼與專業程式庫的關鍵分水嶺。
+                </p>
+
+                <h2>參數層級：幾何 vs. 時間</h2>
+                <p>
+                    在設計差速驅動 API 時，首先要決定的是<strong>參數的語意層級</strong>。
+                    我們可以用不同抽象度的參數來描述同一個動作：
+                </p>
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>層級</th>
+                            <th>參數形式</th>
+                            <th>函式範例</th>
+                            <th>使用者需要理解的知識</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>底層（PWM）</strong></td>
+                            <td>左右 PWM 值</td>
+                            <td><code>setMotors(200, 100)</code></td>
+                            <td>PWM 與馬達的映射關係</td>
+                        </tr>
+                        <tr>
+                            <td><strong>幾何層</strong></td>
+                            <td>半徑 \(R\)、線速度 \(V\)</td>
+                            <td><code>driveArc(0.5, 0.2)</code></td>
+                            <td>基本幾何概念（半徑、速度）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>任務層</strong></td>
+                            <td>角度、距離</td>
+                            <td><code>turnAngle(90, 30)</code></td>
+                            <td>幾乎不需要額外知識</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        良好的 API 應該提供<strong>多個層級的接口</strong>。進階使用者可以直接操作幾何層以獲得最大彈性，
+                        而初學者可以使用任務層快速完成目標。這就是所謂的<strong>漸進式揭露（Progressive Disclosure）</strong>設計原則。
+                    </div>
+                </div>
+
+                <h2>命名規範與一致性</h2>
+                <p>
+                    函式命名是 API 設計中最容易被忽略、卻影響最深遠的決策。以下是差速驅動控制 API 的命名建議：
+                </p>
+                <div class="ms-code">
+                    <span class="c-comment">// ✅ 好的命名：動詞 + 名詞，語意清晰</span><br>
+                    <span class="c-kw">void</span> <span class="c-attr">driveArc</span><span class="c-white">(</span><span class="c-kw">float</span> <span class="c-attr">radius</span><span class="c-white">,</span> <span class="c-kw">float</span> <span class="c-attr">speed</span><span class="c-white">);</span>     <span class="c-comment">// 沿圓弧行駛</span><br>
+                    <span class="c-kw">void</span> <span class="c-attr">driveStraight</span><span class="c-white">(</span><span class="c-kw">float</span> <span class="c-attr">speed</span><span class="c-white">);</span>              <span class="c-comment">// 直線行駛</span><br>
+                    <span class="c-kw">void</span> <span class="c-attr">spinInPlace</span><span class="c-white">(</span><span class="c-kw">float</span> <span class="c-attr">angularVelocity</span><span class="c-white">);</span>    <span class="c-comment">// 原地旋轉</span><br>
+                    <span class="c-kw">void</span> <span class="c-attr">stopGradually</span><span class="c-white">(</span><span class="c-kw">unsigned long</span> <span class="c-attr">ms</span><span class="c-white">);</span>    <span class="c-comment">// 緩減速停車</span><br>
+                    <span class="c-kw">void</span> <span class="c-attr">emergencyStop</span><span class="c-white">();</span>                     <span class="c-comment">// 緊急煞車</span><br>
+                    <br>
+                    <span class="c-comment">// ❌ 壞的命名：模糊、不一致</span><br>
+                    <span class="c-kw">void</span> <span class="c-attr">go</span><span class="c-white">(</span><span class="c-kw">int</span> <span class="c-attr">a</span><span class="c-white">,</span> <span class="c-kw">int</span> <span class="c-attr">b</span><span class="c-white">);</span>        <span class="c-comment">// a 和 b 是什麼？</span><br>
+                    <span class="c-kw">void</span> <span class="c-attr">doThing</span><span class="c-white">(</span><span class="c-kw">float</span> <span class="c-attr">x</span><span class="c-white">);</span>       <span class="c-comment">// 做什麼事？</span><br>
+                    <span class="c-kw">void</span> <span class="c-attr">motor_set_L_R</span><span class="c-white">(...);</span>   <span class="c-comment">// 暴露了硬體細節</span>
+                </div>
+
+                <h2>邊界保護與防禦性設計</h2>
+                <p>
+                    良好的 API 不會讓使用者輕易犯錯。每個公開函式都應包含<strong>參數驗證</strong>邏輯，
+                    在輸入值超出合理範圍時，自動進行箝位（Clamp）或拋出清楚的錯誤訊息。
+                </p>
+                <div class="ms-code">
+                    <span class="c-kw">void</span> <span class="c-attr">driveArc</span><span class="c-white">(</span><span class="c-kw">float</span> <span class="c-attr">radius</span><span class="c-white">,</span> <span class="c-kw">float</span> <span class="c-attr">speed</span><span class="c-white">) {</span><br>
+                    <span class="c-white">    </span><span class="c-comment">// 邊界保護：半徑過小 → 自動切換為原地旋轉</span><br>
+                    <span class="c-white">    </span><span class="c-kw">if</span><span class="c-white"> (abs(</span><span class="c-attr">radius</span><span class="c-white">) &lt; 0.001) {</span><br>
+                    <span class="c-white">        spinInPlace(</span><span class="c-attr">speed</span><span class="c-white"> &gt; 0 ? 1.0 : -1.0);</span><br>
+                    <span class="c-white">        </span><span class="c-kw">return</span><span class="c-white">;</span><br>
+                    <span class="c-white">    }</span><br>
+                    <span class="c-white">    </span><span class="c-comment">// 邊界保護：半徑過大 → 視為直線行駛</span><br>
+                    <span class="c-white">    </span><span class="c-kw">if</span><span class="c-white"> (abs(</span><span class="c-attr">radius</span><span class="c-white">) &gt; 1000) {</span><br>
+                    <span class="c-white">        driveStraight(</span><span class="c-attr">speed</span><span class="c-white">);</span><br>
+                    <span class="c-white">        </span><span class="c-kw">return</span><span class="c-white">;</span><br>
+                    <span class="c-white">    }</span><br>
+                    <span class="c-white">    </span><span class="c-comment">// 正常 ICC 運算...</span><br>
+                    <span class="c-white">}</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        設計 API 時，用這個測試檢驗你的命名品質：把函式簽名（不含實作）列印出來，
+                        拿給一位不懂運動學的同學看。如果他能在 10 秒內猜出每個函式的用途，你的 API 就通過了自述性測試。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🏗️ 3. 數據結構與返回類型</h1>
+
+                <p>
+                    一個成熟的控制 API 不應只是「發出指令然後結束」——它還需要負責<strong>資料的打包與狀態回報</strong>。
+                    透過精心設計的自定義結構體（Struct），我們可以讓 API 同步回傳運動學計算結果、
+                    馬達的實際物理速率、以及執行狀態碼，為上層的 PID 閉環控制或遙測系統提供可靠的數據介面。
+                </p>
+
+                <h2>設計返回結構體</h2>
+                <p>
+                    與其讓函式回傳單一的 <code>void</code> 或 <code>bool</code>，
+                    不如設計一個包含完整運算結果的結構體。以下是差速驅動控制 API 推薦的數據結構設計：
+                </p>
+
+                <div class="ms-code">
+                    <span class="c-comment">// 運動學計算結果結構體</span><br>
+                    <span class="c-kw">struct</span> <span class="c-tag">KinematicsResult</span> <span class="c-white">{</span><br>
+                    <span class="c-white">    </span><span class="c-kw">float</span> <span class="c-attr">left_speed_ms</span><span class="c-white">;</span>   <span class="c-comment">// 左輪目標線速度 (m/s)</span><br>
+                    <span class="c-white">    </span><span class="c-kw">float</span> <span class="c-attr">right_speed_ms</span><span class="c-white">;</span>  <span class="c-comment">// 右輪目標線速度 (m/s)</span><br>
+                    <span class="c-white">    </span><span class="c-kw">int</span>   <span class="c-attr">left_pwm</span><span class="c-white">;</span>        <span class="c-comment">// 左輪 PWM 輸出值 (0-255)</span><br>
+                    <span class="c-white">    </span><span class="c-kw">int</span>   <span class="c-attr">right_pwm</span><span class="c-white">;</span>       <span class="c-comment">// 右輪 PWM 輸出值 (0-255)</span><br>
+                    <span class="c-white">    </span><span class="c-kw">bool</span>  <span class="c-attr">was_clamped</span><span class="c-white">;</span>     <span class="c-comment">// 是否觸發了飽和縮放</span><br>
+                    <span class="c-white">    </span><span class="c-kw">float</span> <span class="c-attr">actual_radius</span><span class="c-white">;</span>   <span class="c-comment">// 經箝位後的實際半徑</span><br>
+                    <span class="c-white">};</span><br>
+                    <br>
+                    <span class="c-comment">// 控制狀態枚舉</span><br>
+                    <span class="c-kw">enum</span> <span class="c-tag">DriveState</span> <span class="c-white">{</span><br>
+                    <span class="c-white">    </span><span class="c-attr">IDLE</span><span class="c-white">,</span>         <span class="c-comment">// 停止中</span><br>
+                    <span class="c-white">    </span><span class="c-attr">DRIVING_ARC</span><span class="c-white">,</span>  <span class="c-comment">// 沿圓弧行駛中</span><br>
+                    <span class="c-white">    </span><span class="c-attr">DRIVING_LINE</span><span class="c-white">,</span> <span class="c-comment">// 直線行駛中</span><br>
+                    <span class="c-white">    </span><span class="c-attr">SPINNING</span><span class="c-white">,</span>     <span class="c-comment">// 原地旋轉中</span><br>
+                    <span class="c-white">    </span><span class="c-attr">TURNING</span>       <span class="c-comment">// 角度轉向中（非阻塞）</span><br>
+                    <span class="c-white">};</span>
+                </div>
+
+                <h2>API 方法總覽</h2>
+                <p>
+                    下表列出了完整的 <code>DriveSystem</code> 類別應該提供的公開方法及其簽名：
+                </p>
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>方法簽名</th>
+                            <th>返回類型</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>driveArc(float R, float V)</code></td>
+                            <td><code>KinematicsResult</code></td>
+                            <td>沿指定半徑的圓弧行駛</td>
+                        </tr>
+                        <tr>
+                            <td><code>driveStraight(float V)</code></td>
+                            <td><code>KinematicsResult</code></td>
+                            <td>直線行駛</td>
+                        </tr>
+                        <tr>
+                            <td><code>spinInPlace(float omega)</code></td>
+                            <td><code>KinematicsResult</code></td>
+                            <td>原地旋轉</td>
+                        </tr>
+                        <tr>
+                            <td><code>turnAngle(float deg, float omega)</code></td>
+                            <td><code>void</code></td>
+                            <td>非阻塞式角度轉向</td>
+                        </tr>
+                        <tr>
+                            <td><code>getState()</code></td>
+                            <td><code>DriveState</code></td>
+                            <td>查詢當前運動狀態</td>
+                        </tr>
+                        <tr>
+                            <td><code>emergencyStop()</code></td>
+                            <td><code>void</code></td>
+                            <td>立即停止所有馬達</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        注意 <code>driveArc()</code> 回傳的 <code>KinematicsResult</code> 包含一個 <code>was_clamped</code> 欄位。
+                        這讓上層程式碼可以得知「系統是否因為 PWM 飽和而進行了速度縮放」，
+                        從而決定是否需要降低整體速度或調整軌跡規劃。
+                    </div>
+                </div>
+
+                <h2>封裝的存取控制</h2>
+                <p>
+                    良好的 C++ 類別設計應嚴格區分 <code>public</code> 和 <code>private</code> 成員。
+                    物理參數（輪距 \(L\)、輪徑、死區值等）應設為 <code>private</code>，
+                    只能透過建構函式初始化，防止外部程式碼意外修改。
+                </p>
+
+                <div class="ms-code">
+                    <span class="c-kw">class</span> <span class="c-tag">DriveSystem</span> <span class="c-white">{</span><br>
+                    <span class="c-kw">public</span><span class="c-white">:</span><br>
+                    <span class="c-white">    </span><span class="c-tag">DriveSystem</span><span class="c-white">(</span><span class="c-kw">float</span> <span class="c-attr">wheelBase</span><span class="c-white">,</span> <span class="c-kw">float</span> <span class="c-attr">wheelDiam</span><span class="c-white">,</span><br>
+                    <span class="c-white">               </span><span class="c-kw">int</span> <span class="c-attr">pinL</span><span class="c-white">,</span> <span class="c-kw">int</span> <span class="c-attr">pinR</span><span class="c-white">);</span><br>
+                    <span class="c-white">    </span><span class="c-tag">KinematicsResult</span> <span class="c-attr">driveArc</span><span class="c-white">(</span><span class="c-kw">float</span> <span class="c-attr">R</span><span class="c-white">,</span> <span class="c-kw">float</span> <span class="c-attr">V</span><span class="c-white">);</span><br>
+                    <span class="c-white">    </span><span class="c-kw">void</span> <span class="c-attr">emergencyStop</span><span class="c-white">();</span><br>
+                    <br>
+                    <span class="c-kw">private</span><span class="c-white">:</span><br>
+                    <span class="c-white">    </span><span class="c-kw">float</span> <span class="c-attr">_wheelBase</span><span class="c-white">;</span>    <span class="c-comment">// 外部無法直接修改</span><br>
+                    <span class="c-white">    </span><span class="c-kw">float</span> <span class="c-attr">_wheelDiam</span><span class="c-white">;</span>    <span class="c-comment">// 只能透過建構函式設定</span><br>
+                    <span class="c-white">    </span><span class="c-kw">int</span>   <span class="c-attr">_deadZoneL</span><span class="c-white">,</span> <span class="c-attr">_deadZoneR</span><span class="c-white">;</span><br>
+                    <span class="c-white">    </span><span class="c-kw">void</span>  <span class="c-attr">_applyPWM</span><span class="c-white">(</span><span class="c-kw">int</span> <span class="c-attr">left</span><span class="c-white">,</span> <span class="c-kw">int</span> <span class="c-attr">right</span><span class="c-white">);</span><br>
+                    <span class="c-white">};</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        在你的 <code>DriveSystem.h</code> 標頭檔中，只放置公開介面的宣告。
+                        所有實作細節都放在 <code>DriveSystem.cpp</code> 中。
+                        這就是 C++ 的<strong>介面與實作分離</strong>原則——讓使用者只看到「能做什麼」，
+                        而不需要關心「怎麼做」。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-10-api-encapsulation', '【作業 2-1】封裝「運動大腦」：Kinematics 類別設計 (API Abstraction Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-1</div>
+                            <h3 class="text-lg font-bold mb-2">運動大腦</h3>
+                            <p class="text-xs text-gray-600 mb-4">將 ICC 公式封裝進 C++ 類別。實作 calculateIK(radius, speed)，並處理 $R=\infty$ (直線) 與 $R \to 0$ (自轉) 的邊界數學情境。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 🧠 60 min 【作業 2-1】 「運動大腦」 將 ICC 公式封裝進 C++ 類別。實作 calculateIK(radius, speed)，並處理 $R=\infty$ (直線) 與 $R \to 0$ (自轉) 的邊界數學情境。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-10-api-figure8', '【作業 2-2】API 調用挑戰：畫出「8 字形」軌跡 (API Sequence Challenge)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-2</div>
+                            <h3 class="text-lg font-bold mb-2">8 字型執法官</h3>
+                            <p class="text-xs text-gray-600 mb-4">嚴禁操作 PWM！僅限調用自研 API 組合指令。由左轉半圓與右轉半圓交替，挑戰回到初始座標的精準度，檢驗 API 的穩定度。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ ♾️ 60 min 【作業 2-2】 「8 字型執法官」 嚴禁操作 PWM！僅限調用自研 API 組合指令。由左轉半圓與右轉半圓交替，挑戰回到初始座標的精準度，檢驗 API 的穩定度。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-10-api-angle', '【作業 2-3】擴充 API：目標角度轉向控制 (VUI-FSM Architecture)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-3</div>
+                            <h3 class="text-lg font-bold mb-2">角度精確接口</h3>
+                            <p class="text-xs text-gray-600 mb-4">結合時間與角速度。實作 turnAngle(degree, speed)。讓車子能精準轉向 90 度後主動停止，嘗試導入「非阻塞式」計時設計。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 📐 45 min 【作業 2-3】 「角度精確接口」 結合時間與角速度。實作 turnAngle(degree, speed)。讓車子能精準轉向 90 度後主動停止，嘗試導入「非阻塞式」計時設計。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+
+                <p>測試你對本模組核心概念的掌握程度。請選出每題的最佳答案，提交後可查看詳細解析。</p>
+
+                <form id="quiz-form" onsubmit="return false;">
+                    <div class="quiz-question" style="background:#faf9f8;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;font-size:15px;">1. 封裝 API 的主要目的是什麼？</p>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q1" value="A" style="margin-right:8px;"> A. 讓程式碼更長</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q1" value="B" style="margin-right:8px;"> B. 隱藏複雜的實作細節，對外提供簡潔一致的操作接口</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q1" value="C" style="margin-right:8px;"> C. 增加系統延遲</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q1" value="D" style="margin-right:8px;"> D. 減少程式碼的可讀性</label>
+                        <div id="exp-1" style="display:none;margin-top:12px;padding:10px 14px;border-radius:4px;font-size:13px;border-left:4px solid transparent;"></div>
+                    </div>
+
+                    <div class="quiz-question" style="background:#faf9f8;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;font-size:15px;">2. 良好的函式命名應遵循什麼原則？</p>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q2" value="A" style="margin-right:8px;"> A. 越短越好，最好用單字母</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q2" value="B" style="margin-right:8px;"> B. 動詞 + 名詞的語意化組合，如 setSpeed()、getPosition()</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q2" value="C" style="margin-right:8px;"> C. 使用隨機的代號</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q2" value="D" style="margin-right:8px;"> D. 統一使用 func1、func2 編號</label>
+                        <div id="exp-2" style="display:none;margin-top:12px;padding:10px 14px;border-radius:4px;font-size:13px;border-left:4px solid transparent;"></div>
+                    </div>
+
+                    <div class="quiz-question" style="background:#faf9f8;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;font-size:15px;">3. 函式返回值使用物件 (Object) 而非多個獨立變數的好處是什麼？</p>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q3" value="A" style="margin-right:8px;"> A. 執行速度更快</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q3" value="B" style="margin-right:8px;"> B. 擴展性佳——新增欄位不破壞現有呼叫端，且屬性命名清晰</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q3" value="C" style="margin-right:8px;"> C. 佔用更少記憶體</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q3" value="D" style="margin-right:8px;"> D. 只有 JavaScript 支援這種做法</label>
+                        <div id="exp-3" style="display:none;margin-top:12px;padding:10px 14px;border-radius:4px;font-size:13px;border-left:4px solid transparent;"></div>
+                    </div>
+
+                    <div class="quiz-question" style="background:#faf9f8;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;font-size:15px;">4. 控制接口設計中，參數驗證 (Validation) 的目的是什麼？</p>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q4" value="A" style="margin-right:8px;"> A. 讓程式碼看起來更多</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q4" value="B" style="margin-right:8px;"> B. 防止無效輸入（如超出範圍的值）導致系統異常或硬體損壞</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q4" value="C" style="margin-right:8px;"> C. 增加函式的執行時間</label>
+                        <label style="display:block;padding:8px 12px;margin:4px 0;border:1px solid #e1dfdd;border-radius:4px;cursor:pointer;font-size:14px;transition:background .1s;"><input type="radio" name="q4" value="D" style="margin-right:8px;"> D. 限制 API 的使用次數</label>
+                        <div id="exp-4" style="display:none;margin-top:12px;padding:10px 14px;border-radius:4px;font-size:13px;border-left:4px solid transparent;"></div>
+                    </div>
+                </form>
+
+                <div style="display:flex;gap:12px;margin-top:24px;">
+                    <button class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                    <button class="ms-btn-ghost" onclick="resetQuiz()">重新作答</button>
+                </div>
+                <div id="quiz-result" style="display:none;margin-top:20px;padding:16px;border-radius:6px;font-size:14px;"></div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>從幾何到代碼：API 封裝設計</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>📦 1. 為什麼要封裝 API？ (15 min)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🎛️ 2. 設計良好的控制接口 (20 min)</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>🏗️ 3. 數據結構與返回類型</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「從幾何到代碼：API 封裝設計」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '📦 1. 為什麼要封裝 API？ (15 min)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🎛️ 2. 設計良好的控制接口 (20 min)', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '🏗️ 3. 數據結構與返回類型', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',       time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">QUIZ</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+
+    /* ─── QUIZ ─── */
+    const QUIZ_ANSWERS = { q1: 'B', q2: 'B', q3: 'B', q4: 'B' };
+    const QUIZ_EXPLANATIONS = { q1: 'API 封裝的核心價值是「抽象化」——使用者只需知道「怎麼用」，不需了解底層複雜的數學計算或硬體操作。', q2: '語意化命名（如 setSpeed、calculateAngle）讓使用者一看函式名就知道用途，大幅降低學習成本與錯誤率。', q3: '返回物件如 { speed, angle, timestamp } 比回傳三個獨立值更具自我描述性，且未來新增欄位不會破壞既有的解構語法。', q4: '參數驗證確保輸入值在合法範圍內（如 PWM 0–255），避免因極端值導致馬達過載、電路損壞等安全問題。' };
+
+    function submitQuiz() {
+        let score = 0;
+        const total = Object.keys(QUIZ_ANSWERS).length;
+        for (const [q, correct] of Object.entries(QUIZ_ANSWERS)) {
+            const selected = document.querySelector(`input[name="${q}"]:checked`);
+            const idx = q.slice(1);
+            const exp = document.getElementById(`exp-${idx}`);
+            if (!selected) continue;
+            if (selected.value === correct) {
+                score++;
+                exp.style.display = 'block';
+                exp.style.background = '#dff6dd';
+                exp.style.borderLeftColor = '#107c10';
+                exp.innerHTML = '<i class="fas fa-check-circle" style="color:#107c10;margin-right:6px;"></i>' + QUIZ_EXPLANATIONS[q];
+                selected.parentElement.style.background = '#dff6dd';
+                selected.parentElement.style.borderColor = '#107c10';
+            } else {
+                exp.style.display = 'block';
+                exp.style.background = '#fde7e9';
+                exp.style.borderLeftColor = '#d13438';
+                exp.innerHTML = '<i class="fas fa-times-circle" style="color:#d13438;margin-right:6px;"></i>正確答案是 ' + correct + '。' + QUIZ_EXPLANATIONS[q];
+                selected.parentElement.style.background = '#fde7e9';
+                selected.parentElement.style.borderColor = '#d13438';
+            }
+        }
+        const resultEl = document.getElementById('quiz-result');
+        resultEl.style.display = 'block';
+        if (score === total) {
+            resultEl.style.background = '#dff6dd';
+            resultEl.innerHTML = '<strong style="color:#107c10;">🎉 滿分！' + score + ' / ' + total + '</strong><br>你完全掌握了本模組的核心概念！';
+            markDone(6);
+        } else {
+            resultEl.style.background = '#fff4ce';
+            resultEl.innerHTML = '<strong style="color:#8a6914;">得分：' + score + ' / ' + total + '</strong><br>建議複習錯題的解析說明，再試一次！';
+        }
+    }
+
+    function resetQuiz() {
+        document.getElementById('quiz-form').reset();
+        for (let i = 1; i <= 4; i++) {
+            const exp = document.getElementById('exp-' + i);
+            if (exp) { exp.style.display = 'none'; exp.style.background = ''; exp.style.borderLeftColor = 'transparent'; }
+        }
+        document.querySelectorAll('#quiz-form label').forEach(l => { l.style.background = ''; l.style.borderColor = '#e1dfdd'; });
+        document.getElementById('quiz-result').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='進階 10：差速驅動控制';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">🤖 進階 10：API 封裝設計 (API Design &amp; Abstraction)</h1><a aria-label="Permalink: 🤖 進階 10：API 封裝設計 (API Design &amp; Abstraction)" class="anchor" href="#-進階-10api-封裝設計-api-design--abstraction" id="user-content--進階-10api-封裝設計-api-design--abstraction"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>adv-10-unit-api-design</strong> 專案！本單元是讓你從「硬體愛好者」蛻變為「軟體架構師」的關鍵。我們將學習 <strong>「資訊隱藏 (Information Hiding)」</strong> 與 <strong>「抽象層設計 (Abstraction Layer)」</strong>。在這裡，你不再直接對馬達下達 PWM 指令，而是要設計一套具備物理語義的控制 API。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 作業目標與任務</h2><a aria-label="Permalink: 🎯 作業目標與任務" class="anchor" href="#-作業目標與任務" id="user-content--作業目標與任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本次作業分為三個核心任務，請依照順序完成：</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：Kinematics 類別設計 (Abstraction Lab)</h3><a aria-label="Permalink: 任務 1：Kinematics 類別設計 (Abstraction Lab)" class="anchor" href="#任務-1kinematics-類別設計-abstraction-lab" id="user-content-任務-1kinematics-類別設計-abstraction-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作「運動大腦」類別，建立從幾何指令到馬達轉速的強健映射。</li>
+<li>
+<strong>實作檔案</strong>：<code>src/DriveSystem.cpp</code>
+</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>實作物理參數的封裝，確保輪距 $L$、輪徑等只能透過 <code>constructor</code> 初始化。</li>
+<li>處理數學邊界情況：
+<ul>
+<li>半徑過小 (<code>abs(radius) &lt; 0.001</code>)：切換為「原地自轉」模式。</li>
+<li>半徑過大 (<code>radius &gt; 1000</code>)：切換為「直線行駛」模式。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：API 調用挑戰：8 字形軌跡 (API Sequence Challenge)</h3><a aria-label="Permalink: 任務 2：API 調用挑戰：8 字形軌跡 (API Sequence Challenge)" class="anchor" href="#任務-2api-調用挑戰8-字形軌跡-api-sequence-challenge" id="user-content-任務-2api-調用挑戰8-字形軌跡-api-sequence-challenge"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：驗證 API 接口的簡潔性與行為一致性。</li>
+<li>
+<strong>實作檔案</strong>：<code>examples/Figure8.ino</code>
+</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>使用你封裝好的 API 完成「8 字形」繞行任務。</li>
+<li>
+<strong>嚴禁</strong>在應用層 (Sketch) 中出現任何直接控制 PWM 的代碼。</li>
+<li>請觀察多次運行後的累積誤差，並在下方的【觀察與心得】區塊記錄並分析為什麼「開環控制」下的 8 字形會隨時間漂移。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：目標角度轉向接口 (Angle Command Engine)</h3><a aria-label="Permalink: 任務 3：目標角度轉向接口 (Angle Command Engine)" class="anchor" href="#任務-3目標角度轉向接口-angle-command-engine" id="user-content-任務-3目標角度轉向接口-angle-command-engine"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將「時間」因素導入 API，建立具備回饋意識的高階控制。</li>
+<li>
+<strong>實作檔案</strong>：<code>src/DriveSystem.cpp</code> / <code>include/DriveSystem.h</code>
+</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>實作轉向精準度換算：<code>void turnAngle(float degree, float angular_velocity)</code>。</li>
+<li>
+<strong>非阻塞設計</strong>：讓車子在旋轉的同時，程式仍能繼續執行（例如監聽感測器），<strong>不可使用 <code>delay()</code></strong>。</li>
+<li>在下方的【觀察與心得】說明你的非阻塞設計思路。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">🚀 評分與繳交標準 (Software Arch Benchmarks)</h2><a aria-label="Permalink: 🚀 評分與繳交標準 (Software Arch Benchmarks)" class="anchor" href="#-評分與繳交標準-software-arch-benchmarks" id="user-content--評分與繳交標準-software-arch-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>你的程式碼將依據以下標準進行評估：</p>
+<ol>
+<li>
+<strong>封裝完備性</strong>：成員存取控制 (Private/Public) 是否合理？是否成功隱藏了硬體細節？</li>
+<li>
+<strong>接口易用性</strong>：API 調用是否直覺？是否具備「自述性 (Self-documenting)」？</li>
+<li>
+<strong>數學邊界處理</strong>：針對極端參數是否有做平滑降級或保護？</li>
+<li>
+<strong>自動化測試</strong>：透過 <code>tests/api_logic.test.cpp</code> 檢核運動學轉換精準度。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📝 觀察與心得紀錄</h2><a aria-label="Permalink: 📝 觀察與心得紀錄" class="anchor" href="#-觀察與心得紀錄" id="user-content--觀察與心得紀錄"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><em>(請學員完成作業後，在此區塊填寫你的觀察結果與心得)</em></p>
+<ol>
+<li>
+<p><strong>8 字形累積誤差分析</strong>：</p>
+<blockquote>
+<p>請填寫...</p>
+</blockquote>
+</li>
+<li>
+<p><strong>非阻塞轉向設計說明</strong>：</p>
+<blockquote>
+<p>請填寫...</p>
+</blockquote>
+</li>
+</ol>
+<p>祝你好運！讓我們一起寫出優雅且穩健的 API 吧！</p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>adv-10-unit-api-design</code> (API 封裝設計)</strong> 單元，這是一個讓學員從「硬體愛好者」蛻變為「軟體架構師」的關鍵課程。它強調 <strong>「資訊隱藏 (Information Hiding)」</strong> 與 <strong>「抽象層設計 (Abstraction Layer)」</strong>：學員不再直接操控 PWM，而是設計一套具備物理語義的控制接口。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" class="anchor" href="#1-範本程式庫-template-程式庫-配置建議" id="user-content-1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>API 封裝需要嚴謹的類別結構與介面定義，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>include/DriveSystem.h</code></strong>：介面定義檔。定義 <code>KinematicsResult</code> 結構體與 <code>DriveSystem</code> 類別的公有/私有成員，留下運動學計算的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>src/DriveSystem.cpp</code></strong>：實作檔。提供基礎的 C++ 類別骨架，引導學員處理 $R=\infty$ (直線) 等數學邊界情況。</li>
+<li>
+<strong>📂 <code>examples/Figure8.ino</code></strong>：應用範例。這是一個空的 Sketch，學員需在此調用自己寫好的 API 來完成「8 字形」繞行任務。</li>
+<li>
+<strong>📂 <code>tests/api_logic.test.cpp</code></strong>：單元測試腳本。專門測試「運動學映射」——輸入特定的半徑 $R$ 與速度 $V$，檢核輸出的左右輪速是否符合幾何理論值。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：Kinematics 類別設計 (Abstraction Lab)</h4><a aria-label="Permalink: 任務 1：Kinematics 類別設計 (Abstraction Lab)" class="anchor" href="#任務-1kinematics-類別設計-abstraction-lab" id="user-content-任務-1kinematics-類別設計-abstraction-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作「運動大腦」類別，建立從幾何指令到馬達轉速的強健映射。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>封裝規範檢核</strong>：學員必須將輪距 $L$、輪徑等物理參數設定為 <code>private</code>，只能透過 <code>constructor</code> 初始化。</li>
+<li>
+<strong>異常攔截邏輯</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：邊界處理</span>
+<span class="pl-k">if</span> (abs(radius) &lt; <span class="pl-c1">0.001</span>) {
+    <span class="pl-c"><span class="pl-c">//</span> 自動切換為「原地自轉」模式</span>
+} <span class="pl-k">else</span> <span class="pl-k">if</span> (radius &gt; <span class="pl-c1">1000</span>) {
+    <span class="pl-c"><span class="pl-c">//</span> 自動切換為「直線行駛」模式</span>
+}</pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：透過單元測試檢核 <code>calculateIK()</code> 的數學轉換精準度。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：API 調用挑戰：8 字形軌跡 (API Sequence Challenge)</h4><a aria-label="Permalink: 任務 2：API 調用挑戰：8 字形軌跡 (API Sequence Challenge)" class="anchor" href="#任務-2api-調用挑戰8-字形軌跡-api-sequence-challenge" id="user-content-任務-2api-調用挑戰8-字形軌跡-api-sequence-challenge"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：驗證 API 接口的簡潔性與行為一致性。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>指令純淨度要求</strong>：學員在完成 8 字形繞行時，嚴禁出現任何 PWM 設定代碼。</li>
+<li>
+<strong>累積誤差錄試</strong>：要求學員在 <code>README.md</code> 中紀錄多次運行後，圓心偏移的數據，並分析為什麼「開環控制」下的 8 字形會隨時間漂移。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其 API 命名是否具備「自述性 (Self-documenting)」。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：目標角度轉向接口 (Angle Command Engine)</h4><a aria-label="Permalink: 任務 3：目標角度轉向接口 (Angle Command Engine)" class="anchor" href="#任務-3目標角度轉向接口-angle-command-engine" id="user-content-任務-3目標角度轉向接口-angle-command-engine"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將「時間」因素導入 API，建立具備回饋意識的高階控制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>轉向精準度實作</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：角度換算時間公式</span>
+<span class="pl-k">void</span> <span class="pl-en">turnAngle</span>(<span class="pl-k">float</span> degree, <span class="pl-k">float</span> angular_velocity) {
+    <span class="pl-k">unsigned</span> <span class="pl-k">long</span> duration = (<span class="pl-c1">abs</span>(degree) / angular_velocity) * <span class="pl-c1">1000</span>;
+    <span class="pl-c"><span class="pl-c">//</span> 非阻塞式執行或狀態標記</span>
+}</pre></div>
+</li>
+<li>
+<strong>非阻塞設計檢核</strong>：要求學員在 <code>README.md</code> 說明，他們如何讓車子在旋轉 90 度的同時，依然能監聽感測器數據（即不使用 <code>delay()</code>）。</li>
+<li>
+<strong>Push Final</strong>：提交具備「狀態碼（任務中/已完成）」回傳機制的最終版 DriveSystem 程式庫。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 架構設計導師點評標準 (Software Arch Benchmarks)</h3><a aria-label="Permalink: 3. 架構設計導師點評標準 (Software Arch Benchmarks)" class="anchor" href="#3-架構設計導師點評標準-software-arch-benchmarks" id="user-content-3-架構設計導師點評標準-software-arch-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對軟體工程邊界的掌控與設計美學」</strong>：</p>
+<ul>
+<li>[ ] <strong>封裝完備性</strong>：成員存取控制 (Private/Public) 是否合理？是否隱藏了硬體細節？</li>
+<li>[ ] <strong>接口易用性</strong>：API 調用是否直覺？是否能讓另一個開發者在不看原始碼的情況下直接開始使用？</li>
+<li>[ ] <strong>數學邊界處理</strong>：針對極端參數（如大半徑或零半徑）是否有做平滑降級或保護？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/
+│   └── DriveSystem.h       # 介面：定義 API 合法性與數據結構
+├── src/
+│   └── DriveSystem.cpp     # 實作：待學員寫入 ICC 到 PWM 的映射邏輯
+├── examples/
+│   └── Figure8.ino         # 應用：測試 API 的繞行連續性
+├── README.md               # 教材心得：我如何將運動幾何轉化為 clean code
+└── tests/
+    └── api_logic.test.cpp  # 自動化：檢核 180 度自轉與直線校準數據
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的 API 能像呼吸一樣自然」</strong>。掌握 API 封裝後，學員將具備了參與大型機器人開源專案或企業級開發的能力，這標誌著他們已經從「寫腳本的人」進化為「建立系統的人」。</p>
+</section>
+
+</body>
+</html>

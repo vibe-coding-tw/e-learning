@@ -569,6 +569,34 @@ Validation note (2026-05-26):
 - This confirms fingerprint pipeline is active for private course pages.
 - Remaining Phase A gate items require live-browser manual confirmation on production routes.
 
+Phase A manual test checklist (ready to execute):
+
+1. FAB visibility
+   - `https://vibe-coding.tw/courses/prepare-01-developer-identity.html`
+   - `https://vibe-coding.tw/courses/start-01-unit-html5-basics.html`
+   - `https://vibe-coding.tw/courses/basic-01-unit-esp32-architecture.html`
+   - `https://vibe-coding.tw/courses/adv-01-unit-jpeg-quality.html`
+   - Pass criteria: each page shows one dashboard FAB at bottom-right.
+
+2. Nav de-duplication
+   - `https://vibe-coding.tw/courses/start-01-master-web-app.html`
+   - `https://vibe-coding.tw/courses/start-02-master-web-ble.html`
+   - `https://vibe-coding.tw/courses/basic-01-master-environment.html`
+   - `https://vibe-coding.tw/courses/adv-01-master-s3-cam.html`
+   - Pass criteria: no duplicated global nav/header blocks.
+
+3. Access route (no `File not found`)
+   - Open from catalog: `https://vibe-coding.tw/start.html`, `https://vibe-coding.tw/basic.html`, `https://vibe-coding.tw/advanced.html`
+   - Open from dashboard deep link sample:
+     - `https://vibe-coding.tw/dashboard.html?unitId=start-01-unit-html5-basics.html&tab=assignments`
+   - Pass criteria: active unit open succeeds, no `File not found`.
+
+Checklist result placeholder:
+
+- [ ] FAB visibility passed on all 4 sample pages
+- [ ] Nav de-duplication passed on all 4 sample pages
+- [ ] Access route passed (catalog + dashboard deep link)
+
 ### 9.2 Phase B: `entryUnitId` promotion
 
 Goal: reduce dependency on `*-master-*` as runtime entry.

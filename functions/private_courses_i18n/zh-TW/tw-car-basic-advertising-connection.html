@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE 廣播機制與連線流程 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/basic.html" target="_top" class="nav-label">基礎課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">BLE 廣播機制與連線流程</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 156 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>BLE 廣播機制與連線流程</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">基礎 5</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>BLE 如何在擁擠頻段「聰明生存」，建立穩定的 1 對 1 連線。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>能夠解釋 BLE 廣播封包的結構與固定頻道（37/38/39）機制，並自定義設備名稱與 Service UUID 讓手機正確識別。</li>
+                    <li>能夠實作 <code>BLEServerCallbacks</code> 的 <code>onConnect</code> 與 <code>onDisconnect</code> 回呼，透過 LED 反映連線狀態並在斷線後自動重啟廣播。</li>
+                    <li>能夠記錄不同距離下的 RSSI 信號強度變化，並實作基於 RSSI 閾值的近場感知互動功能。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    BLE 設備透過<strong>廣播封包（Advertising）</strong>在固定頻道上宣告自身存在，手機掃描後發起連線請求，建立專屬的 1 對 1 通訊。
+                    本單元將帶你掌握廣播封包的結構、掃描與連線的三步握手流程，以及如何透過限時廣播與事件觸發策略優化功耗管理。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">情境</div>
+                    你給 ESP32 上電後，手機的 nRF Connect 卻完全搜尋不到它；好不容易連上後，手機一斷開連線，
+                    設備就再也無法被重新發現——你懷疑是廣播封包配置有誤，而且忘記在斷線回呼中重新啟動廣播。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/v8w8sw5hZvo"
+                        title="BLE 廣播機制與連線流程 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>廣播機制：宣告存在</h1>
+
+                <p>
+                    BLE 設備在尚未與任何 Client 建立連線之前，會透過<strong>廣播（Advertising）</strong>機制向周圍宣告自身的存在。
+                    這就像是一家新開的店面掛出招牌——路過的人（手機）看到招牌後，才能決定是否要進門（建立連線）。
+                </p>
+
+                <p>
+                    廣播是一種單向、無連線的通訊方式。ESP32 會週期性地在特定頻道上發送<strong>廣播封包（Advertising Packet）</strong>，
+                    任何處於掃描狀態的設備都可以接收到這些封包，但此時雙方並未建立專屬的通訊通道。
+                </p>
+
+                <h2>廣播頻道設計</h2>
+
+                <p>
+                    BLE 使用 2.4 GHz ISM 頻段，共劃分為 40 個頻道（編號 0–39）。其中，<strong>頻道 37、38、39</strong> 被指定為專用廣播頻道，
+                    其餘 37 個頻道用於連線後的數據傳輸。
+                </p>
+
+                <table class="ms-table">
+                    <tr>
+                        <th>廣播頻道</th>
+                        <th>中心頻率</th>
+                        <th>設計用意</th>
+                    </tr>
+                    <tr>
+                        <td>Ch 37</td>
+                        <td>2402 MHz</td>
+                        <td>避開 Wi-Fi Ch 1 的干擾峰值</td>
+                    </tr>
+                    <tr>
+                        <td>Ch 38</td>
+                        <td>2426 MHz</td>
+                        <td>位於 Wi-Fi Ch 1 與 Ch 6 之間的間隙</td>
+                    </tr>
+                    <tr>
+                        <td>Ch 39</td>
+                        <td>2480 MHz</td>
+                        <td>避開 Wi-Fi Ch 11 的干擾峰值</td>
+                    </tr>
+                </table>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        BLE 的廣播頻道特別選在 Wi-Fi 頻道的「間隙」位置，大幅降低了與 Wi-Fi 的互相干擾。這也是為何即使在 Wi-Fi 密集的環境中，BLE 廣播仍能被快速搜尋到的原因。
+                    </div>
+                </div>
+
+                <h2>廣播封包結構</h2>
+
+                <p>
+                    每個廣播封包的最大長度為 <strong>31 bytes</strong>（BLE 4.x）或 <strong>255 bytes</strong>（BLE 5.0 Extended Advertising）。
+                    在有限的空間中，開發者需要精心選擇要在封包中攜帶哪些資訊：
+                </p>
+
+                <ul>
+                    <li><strong>Flags</strong>（必要）：標示設備類型與發現模式</li>
+                    <li><strong>Local Name</strong>：設備名稱，如 <code>"Vibe-Car-07"</code></li>
+                    <li><strong>Service UUID</strong>：公開的服務識別碼，讓手機篩選目標</li>
+                    <li><strong>TX Power Level</strong>：發射功率，用於估算距離</li>
+                    <li><strong>Manufacturer Data</strong>：廠商自定義數據</li>
+                </ul>
+
+                <h2>ESP32 廣播配置</h2>
+
+                <div class="ms-code">
+                    <span class="c-comment">// 初始化 BLE 並設定設備名稱</span><br>
+                    <span class="c-tag">BLEDevice</span><span class="c-white">::</span><span class="c-attr">init</span><span class="c-white">(</span><span class="c-str">"Vibe-Car-07"</span><span class="c-white">);</span><br><br>
+                    <span class="c-comment">// 取得廣播物件並配置封包內容</span><br>
+                    <span class="c-tag">BLEAdvertising</span> <span class="c-white">*pAdvertising = BLEDevice::</span><span class="c-attr">getAdvertising</span><span class="c-white">();</span><br>
+                    <span class="c-white">pAdvertising-></span><span class="c-attr">addServiceUUID</span><span class="c-white">(SERVICE_UUID);</span><br>
+                    <span class="c-white">pAdvertising-></span><span class="c-attr">setScanResponse</span><span class="c-white">(</span><span class="c-kw">true</span><span class="c-white">);</span><br>
+                    <span class="c-white">pAdvertising-></span><span class="c-attr">setMinPreferred</span><span class="c-white">(0x06);</span><br><br>
+                    <span class="c-comment">// 開始廣播</span><br>
+                    <span class="c-tag">BLEDevice</span><span class="c-white">::</span><span class="c-attr">startAdvertising</span><span class="c-white">();</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        將設備名稱加入座號（如 <code>"Vibe-Car-07"</code>）是課堂中區分多台 ESP32 的最佳做法。在 nRF Connect 中，你可以透過名稱快速找到自己的設備。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>掃描與連線</h1>
+
+                <p>
+                    當手機開啟藍牙掃描時，它會在三個廣播頻道上<strong>被動傾聽（Passive Scanning）</strong>或<strong>主動詢問（Active Scanning）</strong>廣播封包。
+                    一旦發現目標設備，手機便可發起<strong>連線請求（Connection Request）</strong>，將雙方從「廣播模式」切換到「連線模式」。
+                </p>
+
+                <h2>連線建立三步流程</h2>
+
+                <div class="ms-steps">
+                    <div class="ms-step">
+                        <div class="ms-step-num">1</div>
+                        <div class="ms-step-body">
+                            <h4>掃描（Scanning）</h4>
+                            <p>手機（Central）在廣播頻道上傾聽封包。若使用 Active Scanning，還會發送 Scan Request 要求設備回傳額外資訊（Scan Response）。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">2</div>
+                        <div class="ms-step-body">
+                            <h4>連線請求（Connection Request）</h4>
+                            <p>手機選定目標後，在廣播頻道上發送 <code>CONNECT_REQ</code> 封包，內含連線參數（間隔、延遲、超時等），ESP32 收到後停止廣播。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">3</div>
+                        <div class="ms-step-body">
+                            <h4>獨佔連線（Connected State）</h4>
+                            <p>雙方進入 1 對 1 的專屬連線。數據傳輸改用其餘 37 個數據頻道，並透過<strong>跳頻（Frequency Hopping）</strong>避免干擾。此時其他手機無法看到該設備。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        BLE 連線是<strong>排他性</strong>的——一旦 ESP32 與一台手機建立連線，它就會停止廣播，其他設備無法發現它。若需要支援多裝置連線，需使用 BLE 5.0 的 Multi-Connection 特性或手動管理重新廣播。
+                    </div>
+                </div>
+
+                <h2>Server Callbacks 事件處理</h2>
+
+                <p>
+                    ESP32 作為 BLE Server，可以透過繼承 <code>BLEServerCallbacks</code> 類別來監聽連線與斷開事件。
+                    這是實現「硬體狀態同步」的關鍵——讓 LED 即時反映藍牙連線狀態：
+                </p>
+
+                <div class="ms-code">
+                    <span class="c-kw">class</span> <span class="c-tag">MyServerCallbacks</span> <span class="c-white">:</span> <span class="c-kw">public</span> <span class="c-tag">BLEServerCallbacks</span> <span class="c-white">{</span><br>
+                    <span class="c-white">&nbsp;&nbsp;</span><span class="c-kw">void</span> <span class="c-attr">onConnect</span><span class="c-white">(BLEServer* pServer) {</span><br>
+                    <span class="c-white">&nbsp;&nbsp;&nbsp;&nbsp;digitalWrite(LED_PIN, HIGH);</span> <span class="c-comment">// 連線時亮燈</span><br>
+                    <span class="c-white">&nbsp;&nbsp;&nbsp;&nbsp;Serial.println(</span><span class="c-str">"Client connected!"</span><span class="c-white">);</span><br>
+                    <span class="c-white">&nbsp;&nbsp;}</span><br><br>
+                    <span class="c-white">&nbsp;&nbsp;</span><span class="c-kw">void</span> <span class="c-attr">onDisconnect</span><span class="c-white">(BLEServer* pServer) {</span><br>
+                    <span class="c-white">&nbsp;&nbsp;&nbsp;&nbsp;digitalWrite(LED_PIN, LOW);</span> <span class="c-comment">// 斷線時熄燈</span><br>
+                    <span class="c-white">&nbsp;&nbsp;&nbsp;&nbsp;pServer-></span><span class="c-attr">startAdvertising</span><span class="c-white">();</span> <span class="c-comment">// 重啟廣播！</span><br>
+                    <span class="c-white">&nbsp;&nbsp;}</span><br>
+                    <span class="c-white">};</span>
+                </div>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        <code>onDisconnect</code> 中必須呼叫 <code>pServer->startAdvertising()</code> 重新啟動廣播。若省略此步驟，手機斷線後設備將永遠「消失」，只能透過重新上電才能恢復——這是學員最常犯的錯誤。
+                    </div>
+                </div>
+
+                <h2>連線參數</h2>
+
+                <p>
+                    連線建立時，Central 會提議一組連線參數，影響通訊的即時性與功耗：
+                </p>
+
+                <table class="ms-table">
+                    <tr>
+                        <th>參數</th>
+                        <th>說明</th>
+                        <th>典型值</th>
+                    </tr>
+                    <tr>
+                        <td>Connection Interval</td>
+                        <td>兩次通訊事件之間的間隔</td>
+                        <td>7.5ms – 4000ms</td>
+                    </tr>
+                    <tr>
+                        <td>Slave Latency</td>
+                        <td>Peripheral 可跳過的通訊事件次數</td>
+                        <td>0 – 499</td>
+                    </tr>
+                    <tr>
+                        <td>Supervision Timeout</td>
+                        <td>無通訊多久後判定斷線</td>
+                        <td>100ms – 32s</td>
+                    </tr>
+                </table>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>工作週期與功耗管理</h1>
+
+                <p>
+                    BLE 之所以被稱為「低功耗藍牙」，核心秘密在於其精心設計的<strong>工作週期（Duty Cycle）</strong>管理機制。
+                    設備不需要持續廣播或保持連線——透過合理的週期配置，可以將電池壽命從數小時延長到數月甚至數年。
+                </p>
+
+                <p>
+                    對於無人車應用，雖然電池容量通常較充裕，但理解功耗管理仍然至關重要——尤其是在設備閒置待命的場景中。
+                </p>
+
+                <h2>廣播間隔（Advertising Interval）</h2>
+
+                <p>
+                    廣播間隔決定了 ESP32 多久發送一次廣播封包。間隔越短，手機越容易快速發現設備，但功耗也越高：
+                </p>
+
+                <table class="ms-table">
+                    <tr>
+                        <th>廣播間隔</th>
+                        <th>發現速度</th>
+                        <th>功耗</th>
+                        <th>適用場景</th>
+                    </tr>
+                    <tr>
+                        <td>20ms – 100ms</td>
+                        <td>極快（&lt;1秒）</td>
+                        <td>高</td>
+                        <td>需要立即被發現（展示、教學）</td>
+                    </tr>
+                    <tr>
+                        <td>100ms – 500ms</td>
+                        <td>快（1–3秒）</td>
+                        <td>中</td>
+                        <td>一般消費產品</td>
+                    </tr>
+                    <tr>
+                        <td>1000ms – 10000ms</td>
+                        <td>慢（3–30秒）</td>
+                        <td>極低</td>
+                        <td>資產追蹤、長待機 Beacon</td>
+                    </tr>
+                </table>
+
+                <h2>功耗優化策略</h2>
+
+                <p>以下兩種策略可大幅降低廣播階段的電力消耗：</p>
+
+                <h3>策略一：限時廣播（Timed Advertising）</h3>
+
+                <p>
+                    設備開機後僅廣播固定時間（如 60 秒），若無人連線則自動進入深度休眠（Deep Sleep）。
+                    使用者按下按鈕時才喚醒並重新廣播：
+                </p>
+
+                <div class="ms-code">
+                    <span class="c-comment">// 設定廣播持續 60 秒後自動停止</span><br>
+                    <span class="c-kw">unsigned long</span> <span class="c-attr">advStartTime</span> <span class="c-white">= millis();</span><br>
+                    <span class="c-kw">const unsigned long</span> <span class="c-attr">ADV_TIMEOUT</span> <span class="c-white">= 60000;</span> <span class="c-comment">// 60 秒</span><br><br>
+                    <span class="c-kw">void</span> <span class="c-attr">loop</span><span class="c-white">() {</span><br>
+                    <span class="c-white">&nbsp;&nbsp;</span><span class="c-kw">if</span> <span class="c-white">(!connected && millis() - advStartTime > ADV_TIMEOUT) {</span><br>
+                    <span class="c-white">&nbsp;&nbsp;&nbsp;&nbsp;Serial.println(</span><span class="c-str">"No connection. Entering deep sleep..."</span><span class="c-white">);</span><br>
+                    <span class="c-white">&nbsp;&nbsp;&nbsp;&nbsp;esp_deep_sleep_start();</span><br>
+                    <span class="c-white">&nbsp;&nbsp;}</span><br>
+                    <span class="c-white">}</span>
+                </div>
+
+                <h3>策略二：事件觸發廣播（Event-Triggered Advertising）</h3>
+
+                <p>
+                    設備平時處於休眠狀態，僅在外部事件（如按下按鈕、感測器觸發）發生時才啟動廣播。
+                    ESP32 支援 GPIO 作為喚醒源，即使在 Deep Sleep 下也能監聽引腳狀態：
+                </p>
+
+                <div class="ms-code">
+                    <span class="c-comment">// 設定 GPIO 0 (BOOT 鍵) 為喚醒源</span><br>
+                    <span class="c-white">esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, 0);</span> <span class="c-comment">// LOW 觸發</span><br>
+                    <span class="c-white">esp_deep_sleep_start();</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        ESP32 在 Deep Sleep 模式下的電流消耗僅約 <strong>10μA</strong>，相較於正常運行時的 80–240mA，省電效果超過 10000 倍。對於電池供電的遙控裝置，合理使用休眠機制是延長續航的關鍵。
+                    </div>
+                </div>
+
+                <h2>RSSI 信號強度感知</h2>
+
+                <p>
+                    <strong>RSSI（Received Signal Strength Indicator）</strong>是手機接收到 BLE 廣播封包時量測的信號強度，單位為 dBm。
+                    RSSI 隨距離增加而衰減，可用於粗略估算設備間的物理距離：
+                </p>
+
+                <ul>
+                    <li><strong>-30 ~ -50 dBm</strong>：極近距離（10cm 以內）</li>
+                    <li><strong>-50 ~ -70 dBm</strong>：近距離（0.5m – 2m）</li>
+                    <li><strong>-70 ~ -90 dBm</strong>：中距離（2m – 5m）</li>
+                    <li><strong>&lt; -90 dBm</strong>：遠距離或訊號微弱</li>
+                </ul>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        RSSI 受環境影響極大——人體遮擋、金屬反射、多路徑效應都會造成讀數波動。切勿將 RSSI 視為精確距離量測工具，它只適合做「近場/遠場」的粗略判斷。實務中建議取 10 組以上的平均值來減少雜訊。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 120 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('basic-05-ble-1', '【作業 5-1】改名大師：自定義廣播封包 (Name Master)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 5-1</div>
+                            <h3 class="text-lg font-bold mb-2">身份識別</h3>
+                            <p class="text-xs text-gray-600 mb-4">修改名稱含座號。記錄 MAC 與 UUID。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 🆔 30 min 【作業 5-1】 「身份識別」 修改名稱含座號。記錄 MAC 與 UUID。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('basic-05-ble-2', '【作業 5-2】連線守門員：Server 回呼機制 (Connection Guard)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 5-2</div>
+                            <h3 class="text-lg font-bold mb-2">連線機制</h3>
+                            <p class="text-xs text-gray-600 mb-4">實作 Server Callbacks。亮燈且自動重啟廣播。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 🔦 45 min 【作業 5-2】 「連線機制」 實作 Server Callbacks。亮燈且自動重啟廣播。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('basic-05-ble-3', '【作業 5-3】距離與強度：RSSI 測距實驗 (RSSI Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 5-3</div>
+                            <h3 class="text-lg font-bold mb-2">RSSI 感知</h3>
+                            <p class="text-xs text-gray-600 mb-4">記錄距離下的強度。實作近場提示。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 📏 45 min 【作業 5-3】 「RSSI 感知」 記錄距離下的強度。實作近場提示。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+        <!-- ══════════ PAGE 6: QUIZ ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+                <p>為每個問題選出最佳答案，確認你對本模組的理解。</p>
+
+                <div id="quiz-form">
+
+                    <div class="quiz-question">
+                        <p>1. BLE 廣播使用的三個專用頻道（37、38、39）為什麼被選在這些特定頻率上？</p>
+                        <label class="quiz-option"><input type="radio" name="q1" value="a"> 因為這三個頻道的傳輸速度最快</label>
+                        <label class="quiz-option"><input type="radio" name="q1" value="b"> 因為它們位於 Wi-Fi 頻道的間隙位置，可大幅降低與 Wi-Fi 的互相干擾</label>
+                        <label class="quiz-option"><input type="radio" name="q1" value="c"> 因為這三個頻道是 BLE 5.0 新增的專用通道</label>
+                        <div class="quiz-feedback" id="q1-feedback"></div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <p>2. 在 BLEServerCallbacks 的 onDisconnect 中，如果忘記呼叫 pServer->startAdvertising() 會發生什麼？</p>
+                        <label class="quiz-option"><input type="radio" name="q2" value="a"> ESP32 會自動重新開始廣播</label>
+                        <label class="quiz-option"><input type="radio" name="q2" value="b"> 手機斷線後設備將「消失」，無法被重新發現，只能重新上電</label>
+                        <label class="quiz-option"><input type="radio" name="q2" value="c"> 不會有任何影響，BLE 連線是持久的</label>
+                        <div class="quiz-feedback" id="q2-feedback"></div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <p>3. RSSI 值為 -45 dBm 時，代表什麼距離範圍？</p>
+                        <label class="quiz-option"><input type="radio" name="q3" value="a"> 中距離（2m-5m）</label>
+                        <label class="quiz-option"><input type="radio" name="q3" value="b"> 極近距離（10cm 以內）</label>
+                        <label class="quiz-option"><input type="radio" name="q3" value="c"> 遠距離（5m 以上）</label>
+                        <div class="quiz-feedback" id="q3-feedback"></div>
+                    </div>
+
+                    <div class="quiz-question">
+                        <p>4. ESP32 在 Deep Sleep 模式下的電流消耗約為多少？</p>
+                        <label class="quiz-option"><input type="radio" name="q4" value="a"> 約 80mA</label>
+                        <label class="quiz-option"><input type="radio" name="q4" value="b"> 約 10μA</label>
+                        <label class="quiz-option"><input type="radio" name="q4" value="c"> 約 1mA</label>
+                        <div class="quiz-feedback" id="q4-feedback"></div>
+                    </div>
+
+                    <div class="quiz-submit">
+                        <button class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                        <button class="ms-btn-ghost" onclick="resetQuiz()" id="quiz-reset-btn" style="margin-left:8px; display:none;">重新作答</button>
+                    </div>
+                    <div id="quiz-score" style="display:none; margin-top:16px; padding:16px; background:#f3f2f1; border-radius:4px; font-size:14px;"></div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>BLE 廣播機制與連線流程</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>📢 1. 廣播機制：宣告存在</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🤝 2. 掃描與連線</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>🔋 3. 工作週期</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="https://www.youtube.com/embed/v8w8sw5hZvo" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://docs.google.com/document/d/e/2PACX-1vRPXS-p77hB3ttso-elHkH8OizQXQoYxx4fzYm5ZYrUlXv7tFgylSDiMvdAF_YWr6kCYrH3iCLRXYkC/pub?embedded=true" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「BLE 廣播機制與連線流程」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '📢 1. 廣播機制：宣告存在', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🤝 2. 掃描與連線', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '🔋 3. 工作週期', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '120 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',              time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+    const QUIZ_ANSWERS = { q1: 'b', q2: 'b', q3: 'b', q4: 'b' };
+    const QUIZ_EXPLANATIONS = {
+        q1: { b: '正確！BLE 的廣播頻道特別選在 Wi-Fi Ch1、Ch6、Ch11 的「間隙」位置（2402/2426/2480 MHz），即使在 Wi-Fi 密集環境中也能被快速搜尋到。' },
+        q2: { b: '正確！BLE 連線是排他性的，斷線後 ESP32 不會自動恢復廣播。必須在 onDisconnect 中手動呼叫 startAdvertising() 重啟廣播。' },
+        q3: { b: '正確！-30～-50 dBm 通常代表極近距離（約 10cm 以內）。RSSI 隨距離增加而衰減，但受環境影響很大，只適合做粗略的近場/遠場判斷。' },
+        q4: { b: '正確！ESP32 在 Deep Sleep 下電流僅約 10μA，相較於正常運行的 80-240mA，省電效果超過 10000 倍，是延長電池續航的關鍵技術。' },
+    };
+
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">測驗</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='基礎 05：BLE GATT 協定';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "https://www.youtube.com/embed/v8w8sw5hZvo",
+        doc: "https://docs.google.com/document/d/e/2PACX-1vRPXS-p77hB3ttso-elHkH8OizQXQoYxx4fzYm5ZYrUlXv7tFgylSDiMvdAF_YWr6kCYrH3iCLRXYkC/pub?embedded=true"
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">BLE 廣播機制與連線流程實驗</h1><a aria-label="Permalink: BLE 廣播機制與連線流程實驗" class="anchor" href="#ble-廣播機制與連線流程實驗" id="user-content-ble-廣播機制與連線流程實驗"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本實驗旨在引導學員掌握 BLE (Bluetooth Low Energy) 的核心運作機制，包括設備廣播、連線事件處理以及 RSSI 信號感知。透過本實驗，你將學習如何讓硬體根據連線狀態做出反應，並理解無線信號在空間中的傳播規律。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 實驗目標</h2><a aria-label="Permalink: 🎯 實驗目標" class="anchor" href="#-實驗目標" id="user-content--實驗目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>自定義廣播封包</strong>：修改設備名稱與 UUID，並使用偵錯工具驗證。</li>
+<li>
+<strong>實作連線回呼 (Callbacks)</strong>：處理連線與斷開事件，確保設備具備自動恢復廣播的能力。</li>
+<li>
+<strong>RSSI 空間交互</strong>：記錄不同距離下的信號強度，並實作基於強度的近場互動。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠 實驗任務</h2><a aria-label="Permalink: 🛠 實驗任務" class="anchor" href="#-實驗任務" id="user-content--實驗任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「改名大師」自定義廣播封包</h3><a aria-label="Permalink: 任務 1：「改名大師」自定義廣播封包" class="anchor" href="#任務-1改名大師自定義廣播封包" id="user-content-任務-1改名大師自定義廣播封包"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：修改 <code>include/ble_app.h</code> 中的 <code>DEVICE_NAME</code> 為 <code>Vibe-Student-XX</code> (XX 為你的座號)。</li>
+<li>
+<strong>驗證</strong>：使用手機 App（如 nRF Connect）掃描到你的設備，並記錄其 MAC 地址。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：「連線守門員」Server 回呼機制</h3><a aria-label="Permalink: 任務 2：「連線守門員」Server 回呼機制" class="anchor" href="#任務-2連線守門員server-回呼機制" id="user-content-任務-2連線守門員server-回呼機制"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在 <code>src/main.cpp</code> 中補全 <code>BLEServerCallbacks</code> 的 <code>onConnect</code> 與 <code>onDisconnect</code> 邏輯。
+<ul>
+<li>
+<strong>連線時</strong>：板載 LED 恆亮。</li>
+<li>
+<strong>斷開時</strong>：板載 LED 閃爍，且必須調用 <code>pServer-&gt;startAdvertising()</code> 以重啟廣播。</li>
+</ul>
+</li>
+<li>
+<strong>驗證</strong>：測試連線後再斷開，手機是否能立即再次搜尋到該設備。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：「距離強度」RSSI 測距實驗</h3><a aria-label="Permalink: 任務 3：「距離強度」RSSI 測距實驗" class="anchor" href="#任務-3距離強度rssi-測距實驗" id="user-content-任務-3距離強度rssi-測距實驗"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在 10cm, 50cm, 150cm 處分別記錄 RSSI 值。</li>
+<li>
+<strong>加分題</strong>：實作當 RSSI 大於 <code>-50dBm</code> 時，觸發 LED 快速閃爍。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">📝 學員實驗報表 (Student Lab Report)</h2><a aria-label="Permalink: 📝 學員實驗報表 (Student Lab Report)" class="anchor" href="#-學員實驗報表-student-lab-report" id="user-content--學員實驗報表-student-lab-report"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 設備基本資訊</h3><a aria-label="Permalink: 1. 設備基本資訊" class="anchor" href="#1-設備基本資訊" id="user-content-1-設備基本資訊"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>自定義名稱 (Device Name)</strong>: <code>Vibe-Student-XX</code>
+</li>
+<li>
+<strong>MAC 位址</strong>: <code>[在此填寫你的設備 MAC 地址]</code>
+</li>
+<li>
+<strong>Service UUID</strong>: <code>[在此填寫你的 Service UUID]</code>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">2. RSSI 距離測量實驗 (Task 3)</h3><a aria-label="Permalink: 2. RSSI 距離測量實驗 (Task 3)" class="anchor" href="#2-rssi-距離測量實驗-task-3" id="user-content-2-rssi-距離測量實驗-task-3"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在不同距離下測量 10 組 RSSI 並取其平均值：</p>
+<table>
+<thead>
+<tr>
+<th align="left">距離 (cm)</th>
+<th align="left">RSSI 平均值 (dBm)</th>
+<th align="left">備註 (是否有遮擋物)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">10 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">50 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">150 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<div class="markdown-heading"><h3 class="heading-element">3. 生命週期觀察 (Task 2)</h3><a aria-label="Permalink: 3. 生命週期觀察 (Task 2)" class="anchor" href="#3-生命週期觀察-task-2" id="user-content-3-生命週期觀察-task-2"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>斷開連線後的行為</strong>: [描述手機斷開後，板子 LED 的變化以及手機是否能立即重新掃描到設備]</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">4. 實驗截圖</h3><a aria-label="Permalink: 4. 實驗截圖" class="anchor" href="#4-實驗截圖" id="user-content-4-實驗截圖"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請將 <code>nRF Connect</code> 或相關掃描工具的截圖存放在 <code>assets/nrf_scan.jpg</code> 並在此連結：
+<a href="assets/nrf_scan.jpg" rel="noopener noreferrer" target="_blank"><img alt="Scan Screenshot" src="assets/nrf_scan.jpg" style="max-width: 100%;"/></a></p>
+<div class="markdown-heading"><h3 class="heading-element">5. 心得與發現</h3><a aria-label="Permalink: 5. 心得與發現" class="anchor" href="#5-心得與發現" id="user-content-5-心得與發現"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>[在此描述你對 RSSI 隨距離衰減的觀察，以及為何遮擋物會影嚮信號強度]</p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>basic-05-unit-advertising-connection</code> (BLE 廣播機制與連線流程)</strong> 單元，這是學員從「有線控制」轉向「無線物聯網 (IoT)」的物理與邏輯門檻。它要求學員具備 <strong>事件驅動編程 (Event-Driven Programming)</strong> 的思維，學習設備如何宣告自身身份、如何透過硬體（如 LED）即時反映連線狀態，以及如何將抽象的信號強度 (RSSI) 轉化為具備感知能力的 <strong>「近場偵測」</strong> 應用。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" class="anchor" href="#1-範本程式庫-template-程式庫-配置建議" id="user-content-1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>BLE 作業的核心在於「狀態管理」與「無線感知」，範本應包含完整的 BLE 框架，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>回呼函數 (Callbacks) 實作區</strong>。學員需在此繼承並實作 <code>BLEServerCallbacks</code> 類別，補全 <code>onConnect</code> 與 <code>onDisconnect</code> 邏輯，特別是斷開後的 <strong>「自動重啟廣播」</strong> 機制。</li>
+<li>
+<strong>📂 <code>include/ble_identity.h</code></strong>：引腳與標識定義中心。提供宏定義供學員填寫自定義的 <code>DEVICE_NAME</code>（要求包含座號）與 <code>SERVICE_UUID</code>。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>無線實驗報表</strong>。提供表格範本讓學員記錄：「距離 (cm)」 vs 「RSSI 平均值 (dBm)」。並貼上掃描工具（如 nRF Connect）偵測到自身設備的截圖。</li>
+<li>
+<strong>📂 <code>docs/STATE_MACHINE.md</code></strong>：<strong>生命週期說明書</strong>。要求學員以文字描述 BLE 設備從「廣播 -&gt; 被發現 -&gt; 連線 -&gt; 斷開 -&gt; 重新廣播」的狀態轉換過程。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「改名大師」自定義廣播封包 (Name Master Lab)</h4><a aria-label="Permalink: 任務 1：「改名大師」自定義廣播封包 (Name Master Lab)" class="anchor" href="#任務-1改名大師自定義廣播封包-name-master-lab" id="user-content-任務-1改名大師自定義廣播封包-name-master-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立對 BLE 身份宣告 (Advertising) 的直覺，學會使用專業偵錯工具驗證無線資產。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>唯一性挑戰</strong>：要求學員修改名稱為 <code>Vibe-Student-XX</code> (XX 為座號)。</li>
+<li>
+<strong>封包審計</strong>：使用手機 APP 掃描並回傳該設備的 MAC 地址。</li>
+<li>
+<strong>驗證要點</strong>：README 中必須清楚標註 MAC 地址與對應的 Service UUID。這是證明學生能「正確宣告存在」的第一步。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「連線守門員」Server 回呼機制 (Connection Guard Lab)</h4><a aria-label="Permalink: 任務 2：「連線守門員」Server 回呼機制 (Connection Guard Lab)" class="anchor" href="#任務-2連線守門員server-回呼機制-connection-guard-lab" id="user-content-任務-2連線守門員server-回呼機制-connection-guard-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握異步事件處理，確保系統具備硬體層級的狀態回饋與故障恢復能力 (Self-healing)。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>狀態同步顯像</strong>：連線時，板載 LED 恆亮綠燈；斷線時，LED 閃爍。</li>
+<li>
+<strong>魯棒性 (Robustness) 實作</strong>：<strong>核心考點</strong>。學員必須在 <code>onDisconnect</code> 回呼中加入 <code>pServer-&gt;startAdvertising()</code>。</li>
+<li>
+<strong>驗證要點</strong>：測試「連線後再斷開」，手機是否能立即再次搜尋到該設備？（若無法搜尋即代表未實作重啟機制）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「距離強度」RSSI 測距實驗 (RSSI Distance Lab)</h4><a aria-label="Permalink: 任務 3：「距離強度」RSSI 測距實驗 (RSSI Distance Lab)" class="anchor" href="#任務-3距離強度rssi-測距實驗-rssi-distance-lab" id="user-content-任務-3距離強度rssi-測距實驗-rssi-distance-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：體會無線信號隨物理空間衰減的非線性規律，實作基於信號強度的「空間交互」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據採樣量測</strong>：分別在 10cm, 50cm, 150cm 處記錄 10 組 RSSI 平均值。</li>
+<li>
+<strong>近場提示 (Proximity Recall)</strong>：撰寫邏輯，當 RSSI 大於 <code>-50dBm</code> 時（代表極近距離），觸發 LED 快速閃爍作為感知互動。</li>
+<li>
+<strong>驗證要點</strong>：在報告中描述：為何手機放很近時 RSSI 是 -40 而非 0？並說明遮擋物（如手掌）對 RSSI 的影嚮。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 無線通訊與生命週期點評標準 (Wireless Lifecycle &amp; UX Standards)</h3><a aria-label="Permalink: 3. 無線通訊與生命週期點評標準 (Wireless Lifecycle &amp; UX Standards)" class="anchor" href="#3-無線通訊與生命週期點評標準-wireless-lifecycle--ux-standards" id="user-content-3-無線通訊與生命週期點評標準-wireless-lifecycle--ux-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對無線物理特性的掌握與連線魯棒性的設計」</strong>：</p>
+<ul>
+<li>[ ] <strong>連線自癒能力</strong>：斷開連線後，設備是否能不需要重開機就自動重新進入廣播模式？</li>
+<li>[ ] <strong>硬體同步意識</strong>：LED 的視覺回饋是否精準對應了藍牙內部的狀態機 (State Machine)？</li>
+<li>[ ] <strong>信號洞察力</strong>：RSSI 實驗日誌是否呈現出了信號隨距離增加而對數衰減的趨勢？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：BLE Server 回呼邏輯與 RSSI 閾值處理
+├── include/ble_app.h    # 配置：UUID 產生器與設備名稱 Macro 定義
+├── docs/LifeCycle.png   # 文檔：學員繪製的 BLE 連線生命週期流程圖
+├── README.md            # 總結：我如何透過 RSSI 建立空間感知並確保連線韌性
+└── assets/nrf_scan.jpg  # 照片：手機 App 成功掃描到自定義封包的證據截圖
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的物聯網工程師，是能將看不見的無線電波轉化為可視化的硬體行為，並在混亂的頻段中為設備建立起穩健通訊協定的系統設計師」</strong>。掌握廣播與連線機制後，學員將擁有了開發「智慧 Beacon、近場支付感應、自動解鎖門禁」最核心也最具未來感的無線開發能力！_</p>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">🛠 學員實驗報表 (Student Lab Report)</h2><a aria-label="Permalink: 🛠 學員實驗報表 (Student Lab Report)" class="anchor" href="#-學員實驗報表-student-lab-report" id="user-content--學員實驗報表-student-lab-report"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 設備基本資訊</h3><a aria-label="Permalink: 1. 設備基本資訊" class="anchor" href="#1-設備基本資訊" id="user-content-1-設備基本資訊"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>自定義名稱 (Device Name)</strong>: <code>Vibe-Student-99</code>
+</li>
+<li>
+<strong>MAC 位址</strong>: <code>AA:BB:CC:DD:EE:FF</code>
+</li>
+<li>
+<strong>Service UUID</strong>: <code>4fafc201-1fb5-459e-8fcc-c5c9c331914b</code>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">2. RSSI 距離測量實驗 (Task 3)</h3><a aria-label="Permalink: 2. RSSI 距離測量實驗 (Task 3)" class="anchor" href="#2-rssi-距離測量實驗-task-3" id="user-content-2-rssi-距離測量實驗-task-3"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在不同距離下測量 10 組 RSSI 並取其平均值：</p>
+<table>
+<thead>
+<tr>
+<th align="left">距離 (cm)</th>
+<th align="left">RSSI 平均值 (dBm)</th>
+<th align="left">備註 (是否有遮擋物)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">10 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">50 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">150 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<div class="markdown-heading"><h3 class="heading-element">3. 生命週期觀察 (Task 2)</h3><a aria-label="Permalink: 3. 生命週期觀察 (Task 2)" class="anchor" href="#3-生命週期觀察-task-2" id="user-content-3-生命週期觀察-task-2"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>斷開連線後的行為</strong>: [描述手機斷開後，板子 LED 的變化以及手機是否能立即重新掃描到設備]</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">4. 實驗截圖</h3><a aria-label="Permalink: 4. 實驗截圖" class="anchor" href="#4-實驗截圖" id="user-content-4-實驗截圖"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請將 <code>nRF Connect</code> 或相關掃描工具的截圖存放在 <code>assets/nrf_scan.jpg</code> 並在此連結：
+<a href="assets/nrf_scan.jpg" rel="noopener noreferrer" target="_blank"><img alt="Scan Screenshot" src="assets/nrf_scan.jpg" style="max-width: 100%;"/></a></p>
+<div class="markdown-heading"><h3 class="heading-element">5. 心得與發現</h3><a aria-label="Permalink: 5. 心得與發現" class="anchor" href="#5-心得與發現" id="user-content-5-心得與發現"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>[在此描述你對 RSSI 隨距離衰減的觀察，以及為何遮擋物會影嚮信號強度]</p>
+</section>
+
+</body>
+</html>

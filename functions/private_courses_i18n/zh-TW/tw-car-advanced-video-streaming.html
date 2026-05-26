@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影像串流原理：MJPEG vs. H.264 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/advanced.html" target="_top" class="nav-label">進階課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">影像串流原理：MJPEG vs. H.264</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>影像串流原理：MJPEG vs. H.264</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">進階課程 2</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>解析空間壓縮與時間預測兩大編碼哲學的物理代價，量化端到端延遲與頻寬佔用，設計情境感知的編碼切換策略。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>🎞️ 1. MJPEG：簡單暴力的圖片連播 (20 min)</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🧠 2. H.264 (AVC)：聰明的變化預測 (30 min)</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>️ 3. 延遲 (Latency) 的組成 (10 min)</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    影像串流不只有一種做法——<strong>MJPEG 和 H.264 代表著兩種截然不同的壓縮哲學</strong>，各有其適用的場景與代價。
+                    選錯編碼方式，輕則浪費頻寬，重則導致無法接受的延遲或畫面殘影。
+                    本模組將帶你理解兩種串流架構的核心差異，讓你在設計物聯網影像系統時能做出有根據的技術決策。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">情境</div>
+                    你被指派為一個智慧監控專案選擇串流方案。主管要求「高畫質、低延遲、省頻寬」，但你很快發現這三者不可能同時達成。用 MJPEG 延遲極低但吃掉了大量頻寬；換成 H.264 頻寬省了十倍，卻在網路不穩時出現詭異的馬賽克殘影。你需要真正理解 I-Frame、P-Frame 的運作原理，才能向團隊解釋為什麼「沒有完美方案，只有最適合場景的權衡」。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="影像串流原理：MJPEG vs. H.264 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>MJPEG：簡單暴力的圖片連播</h1>
+
+                <p>
+                    MJPEG（Motion JPEG）是最直覺的影像串流方式：將攝影機捕捉到的每一幀畫面都<strong>獨立壓縮為一張 JPEG 圖片</strong>，然後透過 HTTP 的 <code>multipart/x-mixed-replace</code> 協定，以「接力」的方式不斷將新圖片推送到客戶端。你可以把它想像成一本「翻頁書」——每頁都是完整的圖，快速翻動就形成了影片效果。
+                </p>
+
+                <p>
+                    這種壓縮方式在技術上稱為<strong>畫面內壓縮（Intra-frame Compression）</strong>，意味著每一幀的壓縮只參考自己——不會去「偷看」前一幀或後一幀的資訊。這帶來了極大的簡潔性：任何一幀都能獨立解碼，不存在幀與幀之間的依賴關係。
+                </p>
+
+                <h2>MJPEG 的工作流程</h2>
+
+                <p>在 ESP32-CAM 的典型實作中，MJPEG 串流的整個生命週期可以拆解為三個階段：</p>
+
+                <div class="ms-steps">
+                    <div class="ms-step">
+                        <div class="ms-step-num">1</div>
+                        <div class="ms-step-body">
+                            <h4>擷取與壓縮</h4>
+                            <p>攝影機感測器（如 OV2640）擷取原始影像後，由晶片內建的 JPEG 硬體編碼器將畫面壓縮為 JPEG 格式。<code>Quality</code> 參數（10–63）決定壓縮強度。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">2</div>
+                        <div class="ms-step-body">
+                            <h4>封裝與傳送</h4>
+                            <p>壓縮後的 JPEG 資料以 HTTP multipart boundary 分隔，透過 Wi-Fi 以 TCP 連線送出。每一幀都帶有 <code>Content-Type: image/jpeg</code> 與 <code>Content-Length</code> 標頭。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">3</div>
+                        <div class="ms-step-body">
+                            <h4>接收與顯示</h4>
+                            <p>瀏覽器的 <code>&lt;img&gt;</code> 標籤原生支援 MJPEG 串流——只需將 <code>src</code> 指向串流 URL，瀏覽器會自動刷新顯示每一幀新圖片。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>ESP32 上的 MJPEG 串流程式碼</h2>
+
+                <p>以下是 ESP32-CAM 建立 MJPEG 串流端點的核心邏輯：</p>
+
+                <div class="ms-code">
+<span class="c-comment">// 串流處理函式：持續推送 JPEG 幀</span>
+<span class="c-kw">esp_err_t</span> <span class="c-tag">stream_handler</span><span class="c-white">(</span><span class="c-kw">httpd_req_t</span> <span class="c-white">*req) {</span>
+    <span class="c-kw">camera_fb_t</span> <span class="c-white">*fb = </span><span class="c-kw">NULL</span><span class="c-white">;</span>
+    <span class="c-tag">httpd_resp_set_type</span><span class="c-white">(req, </span><span class="c-str">"multipart/x-mixed-replace;boundary=frame"</span><span class="c-white">);</span>
+
+    <span class="c-kw">while</span> <span class="c-white">(</span><span class="c-kw">true</span><span class="c-white">) {</span>
+        <span class="c-white">fb = </span><span class="c-tag">esp_camera_fb_get</span><span class="c-white">();  </span><span class="c-comment">// 取得一幀 JPEG</span>
+        <span class="c-kw">size_t</span> <span class="c-attr">hlen</span> <span class="c-white">= snprintf(buf, 128,</span>
+            <span class="c-str">"--frame\r\nContent-Type: image/jpeg\r\n"</span>
+            <span class="c-str">"Content-Length: %u\r\n\r\n"</span><span class="c-white">, fb-&gt;len);</span>
+        <span class="c-tag">httpd_resp_send_chunk</span><span class="c-white">(req, buf, hlen);</span>
+        <span class="c-tag">httpd_resp_send_chunk</span><span class="c-white">(req, (</span><span class="c-kw">char</span><span class="c-white"> *)fb-&gt;buf, fb-&gt;len);</span>
+        <span class="c-tag">esp_camera_fb_return</span><span class="c-white">(fb);</span>
+    <span class="c-white">}</span>
+<span class="c-white">}</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        ESP32-CAM 的 OV2640 感測器內建 JPEG 硬體編碼器，因此 MJPEG 串流幾乎不消耗 CPU 算力。這是 MJPEG 在資源受限的嵌入式設備上如此受歡迎的核心原因。
+                    </div>
+                </div>
+
+                <h2>MJPEG 的優勢與限制</h2>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>表現</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>編碼複雜度</td>
+                            <td><span class="check"><i class="fas fa-check-circle"></i></span> 極低</td>
+                            <td>僅需硬體 JPEG 編碼，ESP32 即可輕鬆處理</td>
+                        </tr>
+                        <tr>
+                            <td>延遲</td>
+                            <td><span class="check"><i class="fas fa-check-circle"></i></span> 極低</td>
+                            <td>無幀間依賴，不需緩衝區累積，編碼即送出</td>
+                        </tr>
+                        <tr>
+                            <td>隨機存取</td>
+                            <td><span class="check"><i class="fas fa-check-circle"></i></span> 完美</td>
+                            <td>每幀獨立，可隨時跳轉或截圖，無需等待關鍵幀</td>
+                        </tr>
+                        <tr>
+                            <td>頻寬效率</td>
+                            <td><span class="cross"><i class="fas fa-times-circle"></i></span> 極差</td>
+                            <td>不利用時間冗餘，每幀完整傳送所有像素資訊</td>
+                        </tr>
+                        <tr>
+                            <td>丟包影響</td>
+                            <td><span class="check"><i class="fas fa-check-circle"></i></span> 輕微</td>
+                            <td>最多掉一幀，下一幀立即恢復正常顯示</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        在 VGA（640×480）解析度、Quality=20 的設定下，單幀 JPEG 約為 30–50 KB。以 15 FPS 計算，MJPEG 串流需要約 <strong>3.6–6.0 Mbps</strong> 的頻寬——這已經接近 ESP32 在 2.4 GHz Wi-Fi 下的實際傳輸上限。
+                    </div>
+                </div>
+
+                <h2>丟包時的行為特徵</h2>
+
+                <p>
+                    MJPEG 在網路不穩時的行為非常好預測：由於每一幀都是獨立的完整圖片，當網路發生壅塞時，結果是<strong>整幀丟失（掉幀）</strong>而非畫面撕裂或殘影。觀看體驗是「畫面凍結一瞬間，然後直接跳到最新畫面」，不會出現 H.264 那種方塊殘影（Artifacts）。這種「乾淨的失敗模式」是 MJPEG 在即時遙控場景中被偏好的重要原因。
+                </p>
+
+                <p>
+                    反過來說，MJPEG 最大的致命傷在於<strong>頻寬浪費</strong>。以一個監控畫面為例：90% 的時間裡背景是靜止的，但 MJPEG 仍然會對每一幀完整重複編碼這些不變的像素。相較之下，H.264 的時間壓縮只需要傳送「變化的部分」，頻寬效率高出 10 倍以上。
+                </p>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        在下一節的實戰挑戰中，你將實際測量不同 Quality 設定下的單幀大小，並計算在現有頻寬下 FPS 的理論上限。理解 MJPEG 的「暴力美學」，有助於你在後續評估 H.264 時做出更有依據的比較。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>H.264 (AVC)：聰明的變化預測</h1>
+
+                <p>
+                    H.264（又稱 AVC，Advanced Video Coding）採用了完全不同於 MJPEG 的壓縮哲學：<strong>不傳送整張圖片，只傳送「跟上一幀比起來，哪裡發生了變化」</strong>。這種技術稱為<strong>幀間壓縮（Inter-frame Compression）</strong>，它利用了影片中一個關鍵的物理事實——連續兩幀之間，通常有 90% 以上的像素是相同的。
+                </p>
+
+                <p>
+                    透過只編碼「差異」而非「全部」，H.264 可以將頻寬消耗壓縮到 MJPEG 的 1/10 甚至更低。但這種聰明的壓縮方式也帶來了代價：更高的計算需求、更複雜的解碼流程，以及一旦有幀遺失，錯誤會沿時間軸<strong>向後擴散</strong>。
+                </p>
+
+                <h2>幀類型（Frame Types）</h2>
+
+                <p>H.264 編碼器會將影片的每一幀標記為三種類型之一，每種類型承擔不同的角色：</p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>幀類型</th>
+                            <th>全名</th>
+                            <th>壓縮方式</th>
+                            <th>大小</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>I-Frame</strong></td>
+                            <td>Intra-coded Frame</td>
+                            <td>獨立壓縮（類似 JPEG）</td>
+                            <td>最大</td>
+                            <td>完整畫面，是所有預測的「基石」，又稱關鍵幀（Keyframe）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>P-Frame</strong></td>
+                            <td>Predicted Frame</td>
+                            <td>參考前一幀的差異</td>
+                            <td>中等</td>
+                            <td>只記錄「跟前一幀相比，哪些區塊移動了、哪些色彩變了」</td>
+                        </tr>
+                        <tr>
+                            <td><strong>B-Frame</strong></td>
+                            <td>Bi-directional Frame</td>
+                            <td>同時參考前後幀</td>
+                            <td>最小</td>
+                            <td>壓縮率最高，但需要緩衝未來的幀，增加解碼延遲</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        在 ESP32 等嵌入式設備的即時串流場景中，通常<strong>不會使用 B-Frame</strong>，因為 B-Frame 需要等待後續幀才能解碼，這會增加無法接受的延遲。ESP32 的 H.264 編碼器通常只產生 I-Frame 與 P-Frame 的組合。
+                    </div>
+                </div>
+
+                <h2>GOP 結構與運動補償</h2>
+
+                <p>
+                    一組連續的幀從 I-Frame 開始，到下一個 I-Frame 之前結束，這組幀的集合稱為<strong>GOP（Group of Pictures）</strong>。典型的 GOP 結構如：<code>I-P-P-P-P-P-P-P-P-P-I</code>，其中 GOP 長度為 10，表示每 10 幀插入一個關鍵幀。
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// ESP32 H.264 GOP 設定範例</span>
+<span class="c-kw">typedef struct</span> <span class="c-white">{</span>
+    <span class="c-kw">int</span> <span class="c-attr">gop_size</span><span class="c-white">;        </span><span class="c-comment">// GOP 長度（兩個 I-Frame 之間的幀數）</span>
+    <span class="c-kw">int</span> <span class="c-attr">target_bitrate</span><span class="c-white">;  </span><span class="c-comment">// 目標位元率 (bps)</span>
+    <span class="c-kw">int</span> <span class="c-attr">fps</span><span class="c-white">;             </span><span class="c-comment">// 輸出幀率</span>
+<span class="c-white">} </span><span class="c-tag">h264_config_t</span><span class="c-white">;</span>
+
+<span class="c-comment">// GOP=10：每 10 幀送一個 I-Frame</span>
+<span class="c-comment">// GOP 越長 → 壓縮率越高 → 但丟包恢復越慢</span>
+<span class="c-tag">h264_config_t</span> <span class="c-attr">cfg</span> <span class="c-white">= { .gop_size = </span><span class="c-val">10</span><span class="c-white">, .target_bitrate = </span><span class="c-val">500000</span><span class="c-white">, .fps = </span><span class="c-val">15</span> <span class="c-white">};</span>
+                </div>
+
+                <p>
+                    <strong>運動補償（Motion Compensation）</strong>是 P-Frame 壓縮的核心機制。編碼器將畫面切成 16×16 像素的巨集區塊（Macroblock），然後分析每個區塊在前後幀之間的位移。例如，一輛車向右移動了 5 個像素，編碼器只需記錄「把這個區塊向右平移 5 像素」這條<strong>運動向量（Motion Vector）</strong>，而不是重新傳送整個車輛的像素資料。
+                </p>
+
+                <h2>H.264 vs MJPEG 效能對比</h2>
+
+                <div class="compare-grid">
+                    <div class="compare-card">
+                        <div class="compare-card-header" style="background:#deecf9;">
+                            <i class="fas fa-compress" style="color:#0078d4;"></i> H.264 (AVC)
+                        </div>
+                        <div class="compare-card-body">
+                            <ul style="margin:0; padding-left:18px;">
+                                <li>頻寬消耗僅為 MJPEG 的 1/10</li>
+                                <li>適合頻寬受限的長時間監控</li>
+                                <li>丟包時出現方塊殘影，需等待下個 I-Frame 恢復</li>
+                                <li>編碼需要較多 CPU/硬體資源</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="compare-card">
+                        <div class="compare-card-header" style="background:#dff6dd;">
+                            <i class="fas fa-images" style="color:#107c10;"></i> MJPEG
+                        </div>
+                        <div class="compare-card-body">
+                            <ul style="margin:0; padding-left:18px;">
+                                <li>頻寬消耗為 H.264 的 10 倍以上</li>
+                                <li>適合短距離、高頻寬的即時遙控</li>
+                                <li>丟包時只掉一幀，下一幀立即正常</li>
+                                <li>編碼極簡單，ESP32 硬體即可處理</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ms-important">
+                    <div class="note-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="note-body">
+                        <strong>重要：馬賽克殘影的成因</strong>
+                        當網路丟失了一個 P-Frame，解碼器缺少了「差異資料」，卻仍然以前一幀為基礎繼續預測後續幀。這導致畫面中出現殘留的方塊（Macroblock Artifacts），直到下一個 I-Frame 抵達才能完全「重置」畫面。GOP 設定越長（I-Frame 間隔越大），殘影持續的時間就越久。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>延遲 (Latency) 的組成</h1>
+
+                <p>
+                    在即時影像應用中，「延遲」是比「畫質」更致命的問題。你的遙控車畫面解析度再高，如果延遲超過 200 毫秒，操控者看到障礙物時車子早已撞上去了。理解延遲的組成，才能知道該從哪裡「砍」延遲、該犧牲什麼來換取即時性。
+                </p>
+
+                <h2>端到端延遲的三大組成</h2>
+
+                <p>
+                    從攝影機捕捉到光線，到使用者在螢幕上看到畫面，整段路徑的總延遲稱為<strong>端到端延遲（End-to-End Latency）</strong>。它由三個階段疊加而成：
+                </p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>延遲階段</th>
+                            <th>MJPEG 典型值</th>
+                            <th>H.264 典型值</th>
+                            <th>主要影響因素</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>編碼延遲</strong><br><span style="font-size:12px;color:#605e5c;">感測器擷取 → 壓縮完成</span></td>
+                            <td>10–30 ms</td>
+                            <td>30–100 ms</td>
+                            <td>編碼器硬體效能、幀大小、是否使用 B-Frame</td>
+                        </tr>
+                        <tr>
+                            <td><strong>傳輸延遲</strong><br><span style="font-size:12px;color:#605e5c;">封包從裝置到客戶端</span></td>
+                            <td>5–50 ms</td>
+                            <td>5–50 ms</td>
+                            <td>網路品質（Ping）、封包大小、壅塞程度</td>
+                        </tr>
+                        <tr>
+                            <td><strong>解碼 / 緩衝延遲</strong><br><span style="font-size:12px;color:#605e5c;">接收端解壓 → 顯示</span></td>
+                            <td>5–15 ms</td>
+                            <td>50–200 ms</td>
+                            <td>解碼器緩衝區大小、GOP 長度、播放器策略</td>
+                        </tr>
+                        <tr>
+                            <td><strong>端到端總計</strong></td>
+                            <td><strong>20–95 ms</strong></td>
+                            <td><strong>85–350 ms</strong></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-important">
+                    <div class="note-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="note-body">
+                        <strong>重要</strong>
+                        H.264 的解碼延遲遠高於 MJPEG，因為解碼器需要<strong>緩衝多個幀</strong>才能開始解碼 P-Frame。特別是使用 B-Frame 時，解碼器必須等待「未來的幀」到達後才能回頭解碼，這會額外增加至少一個幀間隔（約 33–66 ms）的延遲。
+                    </div>
+                </div>
+
+                <h2>為什麼 MJPEG 天生低延遲？</h2>
+
+                <p>
+                    MJPEG 的每一幀都是<strong>獨立可解碼</strong>的——接收端拿到一幀 JPEG，立刻就能解碼顯示，不需要等待前面或後面的幀。沒有幀間依賴、沒有解碼緩衝區，這使得 MJPEG 的端到端延遲可以壓到<strong> 50 ms 以下</strong>，接近人類感知的即時極限。
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// MJPEG 延遲路徑（極簡）</span>
+<span class="c-white">感測器擷取(10ms) → JPEG編碼(15ms) → TCP傳送(20ms) → 直接顯示(5ms)</span>
+<span class="c-comment">// 總計：約 50 ms</span>
+
+<span class="c-comment">// H.264 延遲路徑（含緩衝）</span>
+<span class="c-white">感測器擷取(10ms) → H.264編碼(50ms) → TCP傳送(20ms) → 緩衝2幀(66ms) → 解碼(20ms)</span>
+<span class="c-comment">// 總計：約 166 ms</span>
+                </div>
+
+                <h2>場景化延遲需求分析</h2>
+
+                <p>不同的應用場景對延遲的容忍度截然不同：</p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>應用場景</th>
+                            <th>可接受延遲</th>
+                            <th>推薦編碼</th>
+                            <th>決策依據</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>遙控賽車 / FPV 飛行</td>
+                            <td>&lt; 100 ms</td>
+                            <td>MJPEG</td>
+                            <td>操控者需即時反應，延遲 = 碰撞風險</td>
+                        </tr>
+                        <tr>
+                            <td>遠端手術 / 精密操作</td>
+                            <td>&lt; 50 ms</td>
+                            <td>MJPEG（低解析度）</td>
+                            <td>毫秒級延遲攸關生命安全</td>
+                        </tr>
+                        <tr>
+                            <td>居家安防監控</td>
+                            <td>&lt; 2000 ms</td>
+                            <td>H.264</td>
+                            <td>頻寬與儲存成本優先，延遲容忍度高</td>
+                        </tr>
+                        <tr>
+                            <td>自動駕駛視覺避障</td>
+                            <td>&lt; 30 ms</td>
+                            <td>無壓縮 / MJPEG</td>
+                            <td>影像處理在本地端完成，不經網路傳輸</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        判斷「該選 MJPEG 還是 H.264」的簡易法則：<strong>如果延遲會造成物理傷害或操控失敗</strong>（如碰撞），選擇 MJPEG 並犧牲頻寬；如果系統<strong>只需要事後回放或長時間監控</strong>，選擇 H.264 並節省頻寬與儲存空間。
+                    </div>
+                </div>
+
+                <h2>測量端到端延遲的方法</h2>
+
+                <p>
+                    在實戰挑戰中，你將使用 <code>tools/latency_meter.html</code>——一個顯示高速計數器的網頁。方法是將攝影機對準運行中的計時器螢幕，然後同時拍下「原始螢幕上的數字」與「串流畫面上的數字」。兩者的差值就是端到端延遲。
+                </p>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        記住：「沒有完美方案，只有最適合場景的權衡。」MJPEG 與 H.264 各有不可調和的物理限制，你的工程價值在於能根據需求做出有根據的技術選擇——這正是本模組希望你帶走的核心能力。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-02-mjpeg-test', '【作業 1-1】頻寬殺手：MJPEG 壓力測試')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 1-1</div>
+                            <h3 class="text-lg font-bold mb-2">MJPEG 壓力測試</h3>
+                            <p class="text-xs text-gray-600 mb-4">動態調整 JPEG Quality，紀錄單幀大小並計算 Mbps 需求。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 作業 1-1 60 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-02-h264-latency', '【作業 1-2】時空旅人：H.264 延遲觀測實驗')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 1-2</div>
+                            <h3 class="text-lg font-bold mb-2">H.264 延遲觀測</h3>
+                            <p class="text-xs text-gray-600 mb-4">測量編解碼產生的端對端延遲，分析 I/P 幀對畫面的影響。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 作業 1-2 60 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-02-h264-strategy', '【作業 1-3】情境化編碼策略設計')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 1-3</div>
+                            <h3 class="text-lg font-bold mb-2">編碼策略設計</h3>
+                            <p class="text-xs text-gray-600 mb-4">設計一套根據場景動態切換編解碼方案的邏輯。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 作業 1-3 45 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+                <p>請回答以下問題，測試你對本模組內容的理解程度。每題僅有一個正確答案。</p>
+
+                <form id="quiz-form" onsubmit="return false;" style="margin-top:24px;">
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">1. H.264 使用哪種壓縮技術來大幅提高壓縮率？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="A" style="margin-right:8px;"> A. 只使用畫面內壓縮
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="B" style="margin-right:8px;"> B. 幀間壓縮，利用相鄰幀的差異
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="C" style="margin-right:8px;"> C. 無損壓縮 (Lossless)
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="D" style="margin-right:8px;"> D. 音訊與視訊聯合壓縮
+                        </label>
+                        <div id="fb-q1" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">2. H.264 中的 I-Frame (關鍵幀) 具有什麼特性？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="A" style="margin-right:8px;"> A. 只記錄與前一幀的差異
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="B" style="margin-right:8px;"> B. 是完整的獨立幀，不依賴其他幀
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="C" style="margin-right:8px;"> C. 用於音訊同步
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="D" style="margin-right:8px;"> D. 體積最小的幀類型
+                        </label>
+                        <div id="fb-q2" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">3. 在 ESP32 等嵌入式裝置上，MJPEG 相比 H.264 的主要優勢是什麼？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="A" style="margin-right:8px;"> A. 壓縮率更高
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="B" style="margin-right:8px;"> B. 畫質更好
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="C" style="margin-right:8px;"> C. 運算複雜度低，延遲極低
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="D" style="margin-right:8px;"> D. 佔用頻寬更少
+                        </label>
+                        <div id="fb-q3" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">4. 當 H.264 串流中的 P-Frame 發生丟包時，會出現什麼現象？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="A" style="margin-right:8px;"> A. 只有丟失的那一幀消失
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="B" style="margin-right:8px;"> B. 出現馬賽克殘影，直到下一個 I-Frame
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="C" style="margin-right:8px;"> C. 串流自動恢復
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="D" style="margin-right:8px;"> D. 畫面完全黑屏
+                        </label>
+                        <div id="fb-q4" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="display:flex;gap:12px;margin-top:20px;">
+                        <button type="button" class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                        <button type="button" class="ms-btn-ghost" onclick="resetQuiz()">重新作答</button>
+                    </div>
+                    <div id="quiz-result" style="margin-top:16px;font-size:15px;font-weight:600;display:none;"></div>
+                </form>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>影像串流原理：MJPEG vs. H.264</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>🎞️ 1. MJPEG：簡單暴力的圖片連播 (20 min)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🧠 2. H.264 (AVC)：聰明的變化預測 (30 min)</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>️ 3. 延遲 (Latency) 的組成 (10 min)</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「影像串流原理：MJPEG vs. H.264」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '🎞️ 1. MJPEG：簡單暴力的圖片連播 (20 min)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🧠 2. H.264 (AVC)：聰明的變化預測 (30 min)', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '️ 3. 延遲 (Latency) 的組成 (10 min)', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',     time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">測驗</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+
+    /* ─── QUIZ ─── */
+    const QUIZ_ANSWERS = { q1: 'B', q2: 'B', q3: 'C', q4: 'B' };
+    const QUIZ_EXPLANATIONS = {
+        q1: 'H.264 利用幀間壓縮（Inter-frame），分析相鄰幀之間的差異，只傳送變化的部分，達到比 MJPEG 高 10 倍以上的壓縮率。',
+        q2: 'I-Frame 是完整且獨立編碼的關鍵幀，解碼時不需要參考其他幀，是錯誤恢復的基準點。',
+        q3: 'MJPEG 每幀獨立壓縮，不需記住前一幀，運算量遠低於 H.264，且任意一幀即可解碼，延遲極低。',
+        q4: 'P-Frame 依賴前一幀，丟失後會導致錯誤傳播，產生馬賽克殘影（Artifact），直到收到下一個 I-Frame 才恢復正常。'
+    };
+
+    function submitQuiz() {
+        let score = 0;
+        const total = Object.keys(QUIZ_ANSWERS).length;
+        for (const [q, correct] of Object.entries(QUIZ_ANSWERS)) {
+            const selected = document.querySelector(`input[name="${q}"]:checked`);
+            const fb = document.getElementById(`fb-${q}`);
+            if (!selected) {
+                fb.style.display = 'block';
+                fb.innerHTML = '<span style="color:#d13438;">⚠ 請選擇一個答案</span>';
+                continue;
+            }
+            fb.style.display = 'block';
+            if (selected.value === correct) {
+                score++;
+                fb.innerHTML = `<span style="color:#107c10;">✔ 正確！</span> ${QUIZ_EXPLANATIONS[q]}`;
+            } else {
+                fb.innerHTML = `<span style="color:#d13438;">✘ 不正確。正確答案是 ${correct}。</span> ${QUIZ_EXPLANATIONS[q]}`;
+            }
+        }
+        const result = document.getElementById('quiz-result');
+        result.style.display = 'block';
+        if (score === total) {
+            result.innerHTML = `<span style="color:#107c10;">🎉 滿分！你答對了全部 ${total} 題！</span>`;
+            markDone(6);
+        } else {
+            result.innerHTML = `<span style="color:#d13438;">你答對了 ${score} / ${total} 題。再試一次吧！</span>`;
+        }
+    }
+
+    function resetQuiz() {
+        document.getElementById('quiz-form').reset();
+        for (let i = 1; i <= Object.keys(QUIZ_ANSWERS).length; i++) {
+            const fb = document.getElementById(`fb-q${i}`);
+            if (fb) { fb.style.display = 'none'; fb.innerHTML = ''; }
+        }
+        document.getElementById('quiz-result').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='進階 02：影像串流技術';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">adv-02-unit-video-streaming：影像串流原理實作 (MJPEG vs. H.264)</h1><a aria-label="Permalink: adv-02-unit-video-streaming：影像串流原理實作 (MJPEG vs. H.264)" class="anchor" href="#adv-02-unit-video-streaming影像串流原理實作-mjpeg-vs-h264" id="user-content-adv-02-unit-video-streaming影像串流原理實作-mjpeg-vs-h264"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元將帶領你深入探討影像壓縮算法的核心原理，並透過實作測量「端對端延遲 (End-to-End Latency)」與「頻寬佔用」，理解 MJPEG 與 H.264 的物理代價。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 作業目標</h2><a aria-label="Permalink: 🎯 作業目標" class="anchor" href="#-作業目標" id="user-content--作業目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>量化分析</strong>：測量並對比不同編解碼器在不同畫質設定下的頻寬消耗。</li>
+<li>
+<strong>延遲觀測</strong>：使用專用工具測量影像串流的總體延遲。</li>
+<li>
+<strong>策略設計</strong>：根據應用場景實作動態切換編解碼器的邏輯。</li>
+</ol>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 任務說明</h2><a aria-label="Permalink: 🛠️ 任務說明" class="anchor" href="#️-任務說明" id="user-content-️-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：MJPEG 壓力測試 (Bandwidth Stress Lab)</h3><a aria-label="Permalink: 任務 1：MJPEG 壓力測試 (Bandwidth Stress Lab)" class="anchor" href="#任務-1mjpeg-壓力測試-bandwidth-stress-lab" id="user-content-任務-1mjpeg-壓力測試-bandwidth-stress-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解「空間壓縮 (Intra-frame)」在物理層面的頻寬佔量。</li>
+<li>
+<strong>要求</strong>：
+<ol>
+<li>修改 <code>src/codec_manager.cpp</code> 中的 MJPEG 品質參數 (Quality)。</li>
+<li>觀察並紀錄當 Quality 從 10 增加到 90 時，串流的 $FPS$ 下降的臨界點。</li>
+<li>填寫數據，對比在同一 Wi-Fi 環境下，MJPEG 與 H.264 在相同畫質下的串流比特率 ($Mbps$)。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：H.264 延遲與殘影觀測 (Latency &amp; Artifacts Lab)</h3><a aria-label="Permalink: 任務 2：H.264 延遲與殘影觀測 (Latency &amp; Artifacts Lab)" class="anchor" href="#任務-2h264-延遲與殘影觀測-latency--artifacts-lab" id="user-content-任務-2h264-延遲與殘影觀測-latency--artifacts-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：量化解碼緩衝區與「時間預測 (Inter-frame)」帶來的延遲代價。</li>
+<li>
+<strong>工具</strong>：開啟 <code>tools/latency_meter.html</code>。</li>
+<li>
+<strong>要求</strong>：
+<ol>
+<li>將相機對準正在執行 <code>latency_meter.html</code> 的螢幕。</li>
+<li>同時拍下「原始螢幕」與「接收到的串流畫面」。</li>
+<li>計算兩者數值差來計算 End-to-End 延遲，記錄於 <code>reports/artifact_test.md</code>。</li>
+<li>在快速甩動相機時，描述為什麼 H.264 會出現「方塊殘影 (P-Frame Artifacts)」。</li>
+<li>
+<strong>提交證據</strong>：上傳一張帶有明顯編碼殘影的截圖 (建議命名為 <code>latency-proof.jpg</code>)。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：適應性編碼策略 (Adaptive Strategy Design)</h3><a aria-label="Permalink: 任務 3：適應性編碼策略 (Adaptive Strategy Design)" class="anchor" href="#任務-3適應性編碼策略-adaptive-strategy-design" id="user-content-任務-3適應性編碼策略-adaptive-strategy-design"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：根據業務場景（即時遙控 vs. 錄影存證）設計動態切換策略。</li>
+<li>
+<strong>要求</strong>：
+在 <code>src/codec_switcher.cpp</code> 中實作以下狀態機邏輯：
+<ul>
+<li>
+<strong>遠端遙控模式 (REMOTE_CONTROL)</strong>：切換為 <code>MJPEG</code> (優先保證延遲低於 100ms)。</li>
+<li>
+<strong>儲存模式 (STORAGE_MODE)</strong>：切換為 <code>H.264</code> (優先保證節省 SD 卡空間)。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a aria-label="Permalink: 📂 程式庫結構" class="anchor" href="#-程式庫結構" id="user-content--程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/</code>：包含核心編解碼控制邏輯。</li>
+<li>
+<code>tools/</code>：輔助測量工具 (如延遲計時器 <code>latency_meter.html</code>)。</li>
+<li>
+<code>reports/</code>：存放你的實驗紀錄、截圖與分析報告。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a aria-label="Permalink: 📝 提交要求" class="anchor" href="#-提交要求" id="user-content--提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>src/</code> 中的程式碼實作。</li>
+<li>在 <code>reports/</code> 中上傳延遲實測照片與殘影截圖。</li>
+<li>更新 <code>reports/artifact_test.md</code> 中的實驗數據與分析報告。</li>
+<li>最後在報告中總結你為「遙控車」選擇的最終編碼方案及其工程依據。</li>
+</ol>
+<hr/>
+<p>祝實作順利！</p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>adv-02-unit-video-streaming</code> (影像串流原理：MJPEG vs. H.264)</strong> 單元，這是一個涉及「影像壓縮算法」與「端到端延遲 (Latency)」深度對應的課題。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" class="anchor" href="#1-範本程式庫-template-repo-配置建議" id="user-content-1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>影像串流單元的範本應強調「量化測量工具」，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>tools/latency_meter.html</code></strong>：一個顯示高速計數器的網頁。學員需將相機對準此螢幕，拍攝「原始螢幕」與「串流畫面」的並列照片，透過兩者數值差來計算 End-to-End 延遲。</li>
+<li>
+<strong>📂 <code>src/codec_manager.cpp</code></strong>：提供切換編解碼器的核心框架，預置 <code>useMJPEG()</code> 與 <code>useH264()</code> 介面。</li>
+<li>
+<strong>📂 <code>analysis/codec_bench.md</code></strong>：預置一個檢核清單，讓學員紀錄在不同動態場景（靜止 vs. 快速甩動）下的畫面崩潰現象（如馬賽克、果凍效應）。</li>
+<li>
+<strong>📂 <code>.github/workflows/artifact_audit.yml</code></strong>：設置檢查點，驗證學員是否有上傳延遲實測證明照片（如 <code>latency-proof.jpg</code>）。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：頻寬殺手 MJPEG 壓力測試 (Bandwidth Stress Lab)</h4><a aria-label="Permalink: 任務 1：頻寬殺手 MJPEG 壓力測試 (Bandwidth Stress Lab)" class="anchor" href="#任務-1頻寬殺手-mjpeg-壓力測試-bandwidth-stress-lab" id="user-content-任務-1頻寬殺手-mjpeg-壓力測試-bandwidth-stress-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解「空間壓縮 (Intra-frame)」在物理層面的頻寬佔量。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>實驗要求</strong>：學員需在 README 中紀錄 Quality 從 10 到 90 的過程中，$FPS$ 下降的臨界點。</li>
+<li>
+<strong>數據提交</strong>：提交一份測量表，對比在同一 Wi-Fi 底下，MJPEG 與 H.264 在相同畫質下的串流比特率 ($Mbps$)。這能讓學員深刻理解 H.264 十倍壓縮率的威力。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：時空旅人 H.264 延遲觀測 (Latency &amp; Artifacts Lab)</h4><a aria-label="Permalink: 任務 2：時空旅人 H.264 延遲觀測 (Latency &amp; Artifacts Lab)" class="anchor" href="#任務-2時空旅人-h264-延遲觀測-latency--artifacts-lab" id="user-content-任務-2時空旅人-h264-延遲觀測-latency--artifacts-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：量化解碼緩衝區與「時間預測 (Inter-frame)」帶來的代價。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>量化核核</strong>：學員必須利用提供的 <code>latency_meter.html</code> 進行實測。</li>
+<li>
+<strong>現象解釋</strong>：在報告中描述為什麼快速甩動相機時，H.264 會出現「方塊殘影 (P-Frame Artifacts)」。導師應檢查學員是否能正確將此現象歸因於「運動向量預測失敗」。</li>
+<li>
+<strong>提交證據</strong>：上傳一張帶有明顯編碼殘影的截圖，並標註出這屬於哪一種類型的幀錯誤。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：情境化編碼策略設計 (Adaptive Strategy Design)</h4><a aria-label="Permalink: 任務 3：情境化編碼策略設計 (Adaptive Strategy Design)" class="anchor" href="#任務-3情境化編碼策略設計-adaptive-strategy-design" id="user-content-任務-3情境化編碼策略設計-adaptive-strategy-design"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：根據業務場景（即時遙控 vs. 錄影存證）設計動態切換策略。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>邏輯設計</strong>：要求學員實作一個狀態機邏輯：
+<ul>
+<li>
+<code>State: REMOTE_CONTROL</code> -&gt; 強制切換為 <code>MJPEG</code> (優先保證延遲低於 100ms)</li>
+<li>
+<code>State: STORAGE_MODE</code> -&gt; 切換為 <code>H.264</code> (優先保證節省 SD 卡空間)</li>
+</ul>
+</li>
+<li>
+<strong>驗證方式</strong>：在 PR (Pull Request) 中審核其 <code>STRATEGY.md</code> 設計文檔。導師評估其是否考慮了切換編解碼器時，「系統重置時間」對控制連續性的影響。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 編碼導師點評標準 (Codec Benchmarks)</h3><a aria-label="Permalink: 3. 編碼導師點評標準 (Codec Benchmarks)" class="anchor" href="#3-編碼導師點評標準-codec-benchmarks" id="user-content-3-編碼導師點評標準-codec-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對延遲成因的深度拆解」</strong>：</p>
+<ul>
+<li>[ ] <strong>延遲識別力</strong>：能否準確說出當前的 200ms 延遲中，是由於「網路擁塞」還是「H.264 緩衝過大」造成的？</li>
+<li>[ ] <strong>畫質解構力</strong>：是否能透過觀察畫面，判斷出當前是否正在傳送 I-Frame (關鍵幀)？</li>
+<li>[ ] <strong>場景通透性</strong>：在 README 中，學員是否能釐清：對於「視覺避障」功能的無人車，應該選擇哪種編碼方案並給出工程依據？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   └── codec_switcher.cpp  # 核心：學員實作動態切換邏輯
+├── tools/
+│   └── latency_meter.html  # 工具：用於量化端對端延遲
+├── reports/
+│   ├── latency-proof.jpg   # 證據：延遲測量截圖
+│   └── artifact_test.md    # 分析：馬賽克、殘影現象紀錄報告
+└── README.md               # 結語：我為遙控車選擇的最終編碼方案
+</code></pre>
+<p>透過這種部署方式，學生能從「會看影片」進化到「<strong>理解每一幀數據背後的物理代價</strong>」。這對於未來開發低延遲視訊系統（如 fpv、遠端手術、雲端串流遊戲）是絕對核心的基本功。</p>
+</section>
+
+</body>
+</html>

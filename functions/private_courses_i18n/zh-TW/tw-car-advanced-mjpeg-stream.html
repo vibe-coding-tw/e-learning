@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJPEG 編碼與 HTTP Boundary 原理 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/advanced.html" target="_top" class="nav-label">進階課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">MJPEG 編碼與 HTTP Boundary 原理</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>MJPEG 編碼與 HTTP Boundary 原理</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">進階課程 1</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>拆解 MJPEG 逐幀傳輸的底層協議，親手拼接 HTTP Boundary 隔板與 SOI/EOI 標誌，從調包俠進化為協議理解者。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>🎞️ 1. MJPEG：每一幀都是主角 (20 min)</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🚧 2. HTTP Boundary 的「隔板」原理 (25 min)</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>🔄 3. 串流的生命週期 (15 min)</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    你可能已經成功讓 ESP32-CAM 的串流跑起來了，但你真的理解瀏覽器是<strong>如何分辨每一幀影像的開始與結尾</strong>嗎？
+                    MJPEG 串流的穩定性取決於 HTTP Boundary 與 JPEG 標誌的精確封裝——少一個 <code>\r\n</code> 就可能導致綠屏或畫面撕裂。
+                    本模組將帶你從協議底層拆解 MJPEG 的運作機制，讓你從「套用範例程式」晉升為「能獨立排錯的協議理解者」。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">情境</div>
+                    你照著網路教學複製了一段 MJPEG 串流程式碼，在 Chrome 上一切正常，但換到 Safari 就只顯示第一幀就卡死。你用 F12 開發者工具檢查 Network，發現回應的 Content-Type 看起來怪怪的。問題出在哪裡？是 Boundary 命名衝突？還是 CRLF 換行符少了一個？透過本模組，你將學會親手拆解封包，精確定位這類「差一個位元組就爆炸」的協議錯誤。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/moyotioE18s"
+                        title="MJPEG 編碼與 HTTP Boundary 原理 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>MJPEG：每一幀都是主角</h1>
+
+                <p>
+                    當你在瀏覽器上看到 ESP32-CAM 的即時影像時，你可能會以為它在播放「影片」——但事實上，你看到的是一連串<strong>獨立的 JPEG 圖片被快速輪播</strong>。這就是 MJPEG（Motion JPEG）的核心概念：它不是影片壓縮格式，而是一種「不斷替換靜態圖片」的傳輸策略。
+                </p>
+
+                <h2>MJPEG 與現代影片編碼的根本差異</h2>
+                <p>
+                    現代影片編碼格式（如 H.264 / H.265）使用了極為複雜的<strong>幀間壓縮 (Inter-frame Compression)</strong> 技術。它們會分析相鄰幀之間的差異，只傳送「變化的部分」，從而達到極高的壓縮率。然而，這種演算法需要大量的運算資源——在 ESP32-S3 這種等級的 MCU 上，即使有硬體加速，即時編碼 H.264 仍然幾乎不可能。
+                </p>
+                <p>
+                    MJPEG 則完全不同：每一幀都是<strong>獨立壓縮</strong>的 JPEG 圖片，幀與幀之間沒有任何依賴關係。這意味著編碼器不需要記住「上一幀長什麼樣子」，只需要專注於壓縮當前這一幀。對於運算資源有限的嵌入式裝置來說，這是一個非常務實的選擇。
+                </p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>MJPEG</th>
+                            <th>H.264</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>壓縮方式</td>
+                            <td>幀內壓縮 (Intra-frame)</td>
+                            <td>幀間壓縮 (Inter-frame)</td>
+                        </tr>
+                        <tr>
+                            <td>編碼運算量</td>
+                            <td>低（適合 MCU）</td>
+                            <td>極高（需要 DSP/GPU）</td>
+                        </tr>
+                        <tr>
+                            <td>壓縮率（同等畫質）</td>
+                            <td>較低（檔案大）</td>
+                            <td>極高（檔案小 5～10 倍）</td>
+                        </tr>
+                        <tr>
+                            <td>延遲</td>
+                            <td>極低（無需等待參考幀）</td>
+                            <td>較高（GOP 結構造成延遲）</td>
+                        </tr>
+                        <tr>
+                            <td>隨機存取</td>
+                            <td>每幀皆可獨立解碼</td>
+                            <td>需從最近的 I-frame 開始解碼</td>
+                        </tr>
+                        <tr>
+                            <td>音訊支援</td>
+                            <td>通常無</td>
+                            <td>完整支援</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        MJPEG 的「低延遲」特性對即時控制類應用（如遙控車、無人機 FPV）非常重要。H.264 的 GOP（Group of Pictures）結構可能引入數百毫秒的額外延遲，而 MJPEG 的延遲理論上只有「一幀的擷取時間 + 壓縮時間 + 傳輸時間」。
+                    </div>
+                </div>
+
+                <h2>JPEG 檔案的二進位結構</h2>
+                <p>
+                    每一幀 MJPEG 影像本質上就是一個標準的 JPEG 檔案。JPEG 規範定義了明確的<strong>標記 (Marker)</strong> 來界定檔案的開始與結束，這是接收端辨識影像邊界的基礎：
+                </p>
+                <ul>
+                    <li><strong>SOI (Start of Image)：</strong><code>0xFF 0xD8</code> — 每個 JPEG 檔案的開頭兩個位元組，就像一本書的封面。</li>
+                    <li><strong>EOI (End of Image)：</strong><code>0xFF 0xD9</code> — 每個 JPEG 檔案的結尾兩個位元組，標記這張圖片的資料到此為止。</li>
+                </ul>
+                <p>
+                    在 SOI 與 EOI 之間，還包含了多個功能區段：DQT（量化表）、DHT（霍夫曼表）、SOF（幀起始標記，含解析度資訊）以及壓縮後的掃描資料 (SOS)。理解這個結構，對於排查「影像損毀」或「綠屏」問題至關重要。
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// JPEG 二進位結構示意（以 hex 表示）</span><br>
+<span class="c-str">FF D8</span>           <span class="c-comment">← SOI: 影像開始</span><br>
+<span class="c-str">FF E0</span> <span class="c-white">xx xx</span>     <span class="c-comment">← APP0: JFIF 標頭 (含版本資訊)</span><br>
+<span class="c-str">FF DB</span> <span class="c-white">xx xx</span>     <span class="c-comment">← DQT: 量化表 (控制壓縮品質)</span><br>
+<span class="c-str">FF C0</span> <span class="c-white">xx xx</span>     <span class="c-comment">← SOF0: 幀起始 (含寬度、高度)</span><br>
+<span class="c-str">FF C4</span> <span class="c-white">xx xx</span>     <span class="c-comment">← DHT: 霍夫曼編碼表</span><br>
+<span class="c-str">FF DA</span> <span class="c-white">xx xx</span>     <span class="c-comment">← SOS: 掃描開始 (壓縮影像資料)</span><br>
+<span class="c-white">  ... 壓縮資料 ...</span><br>
+<span class="c-str">FF D9</span>           <span class="c-comment">← EOI: 影像結束</span>
+                </div>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        在壓縮資料區段中，<code>0xFF</code> 本身是合法的像素值。JPEG 規範使用<strong>位元組填充 (Byte Stuffing)</strong> 來避免混淆：當壓縮資料中出現 <code>0xFF</code> 時，會緊跟一個 <code>0x00</code>。因此，你不能單純地搜尋 <code>0xFF 0xD9</code> 來尋找 EOI——必須排除 <code>0xFF 0x00</code> 的填充序列。
+                    </div>
+                </div>
+
+                <h2>為什麼 ESP32 選擇 MJPEG？</h2>
+                <p>
+                    ESP32-S3 的硬體 JPEG 編碼器可以在不佔用 CPU 的情況下將攝影機擷取的原始 YUV/RGB 像素壓縮為 JPEG。這個硬體編碼器的效能足以在 VGA 解析度下達到 <strong>15～30 FPS</strong> 的即時壓縮速率。結合 MJPEG 協定簡單、不需要複雜的前後幀分析的特性，使它成為 ESP32 平台上最實用、最可靠的即時影像串流方案。
+                </p>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>HTTP Boundary 的「隔板」原理</h1>
+
+                <p>
+                    上一單元我們知道了 MJPEG 是「一連串 JPEG 圖片的快速輪播」。但問題來了：TCP 是一個<strong>連續的位元組流 (Byte Stream)</strong>，它不會告訴接收端「第一張圖從哪裡結束、第二張圖從哪裡開始」。HTTP Boundary 就是為了解決這個「封包邊界辨識」問題而設計的機制——它就像壽司輸送帶上的隔板，把每一盤壽司（每一幀影像）清楚地分開。
+                </p>
+
+                <h2>multipart/x-mixed-replace 協議</h2>
+                <p>
+                    MJPEG over HTTP 的核心在於一個特殊的 Content-Type 標頭：
+                </p>
+                <div class="ms-code">
+<span class="c-attr">Content-Type</span><span class="c-white">: </span><span class="c-str">multipart/x-mixed-replace</span><span class="c-white">; </span><span class="c-attr">boundary</span><span class="c-white">=</span><span class="c-val">frame_boundary</span>
+                </div>
+                <p>
+                    這個標頭告訴瀏覽器三件事：
+                </p>
+                <ol>
+                    <li><strong>multipart</strong>：回應內容包含多個部分（多張圖片）。</li>
+                    <li><strong>x-mixed-replace</strong>：每收到一個新的部分，就用它「替換 (replace)」前一個部分的顯示內容。</li>
+                    <li><strong>boundary=frame_boundary</strong>：使用字串 <code>frame_boundary</code> 作為每個部分之間的分隔符。</li>
+                </ol>
+                <p>
+                    瀏覽器收到這個標頭後，會保持 HTTP 連線<strong>不關閉</strong>，持續監聽後續傳入的資料。每當它偵測到 boundary 字串，就知道前一張圖已經傳完，會立刻渲染新收到的圖片。
+                </p>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>注意</strong>
+                        <code>x-mixed-replace</code> 是一個非標準但被廣泛支援的 MIME 類型，最早由 Netscape 在 1990 年代提出。現代主流瀏覽器（Chrome、Firefox、Edge）都原生支援它。Safari 在某些版本上有相容性問題，可能只顯示第一幀後就停止更新。
+                    </div>
+                </div>
+
+                <h2>完整的幀封裝結構</h2>
+                <p>
+                    每一幀 JPEG 影像在傳送前，都需要被「包裝」在嚴格的 HTTP 多部份格式中。以下是伺服器端每次推送一幀影像時，必須依序發送的完整位元組序列：
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// 每一幀的完整 HTTP 封裝格式</span><br>
+<span class="c-str">--frame_boundary\r\n</span>              <span class="c-comment">← 分隔符 (注意前面的 --)</span><br>
+<span class="c-str">Content-Type: image/jpeg\r\n</span>      <span class="c-comment">← 這個部分是 JPEG 圖片</span><br>
+<span class="c-str">Content-Length: 28456\r\n</span>         <span class="c-comment">← 圖片大小 (位元組)</span><br>
+<span class="c-str">\r\n</span>                               <span class="c-comment">← 空行：標頭與資料的分隔</span><br>
+<span class="c-val">[28456 bytes of JPEG data]</span>        <span class="c-comment">← FF D8 ... 壓縮資料 ... FF D9</span><br>
+<span class="c-str">\r\n</span>                               <span class="c-comment">← 資料後的換行</span>
+                </div>
+
+                <p>
+                    這裡有幾個極易出錯的細節，值得特別標注：
+                </p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>常見錯誤</th>
+                            <th>症狀</th>
+                            <th>原因</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Boundary 前少了 <code>--</code></td>
+                            <td>瀏覽器只顯示第一幀後卡死</td>
+                            <td>RFC 規定分隔符前必須加兩個連字號</td>
+                        </tr>
+                        <tr>
+                            <td>使用 <code>\n</code> 而非 <code>\r\n</code></td>
+                            <td>Chrome 正常但 Safari 綠屏</td>
+                            <td>HTTP 規範強制使用 CRLF 換行</td>
+                        </tr>
+                        <tr>
+                            <td>缺少空行（標頭與資料間）</td>
+                            <td>影像完全無法解析</td>
+                            <td>HTTP 用空行區分標頭與正文</td>
+                        </tr>
+                        <tr>
+                            <td>Content-Length 數值錯誤</td>
+                            <td>畫面破碎或後續幀錯位</td>
+                            <td>長度必須精確匹配 JPEG 位元組數</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        <code>\r\n</code>（CRLF，即 Carriage Return + Line Feed）與 <code>\n</code>（LF，僅 Line Feed）是完全不同的位元組序列。HTTP/1.1 規範明確要求使用 CRLF 作為行終止符。在 C/C++ 程式碼中，務必寫成 <code>"\r\n"</code> 而非僅 <code>"\n"</code>。這個「差一個位元組」的錯誤是 MJPEG 串流開發中最隱蔽、最難除錯的問題之一。
+                    </div>
+                </div>
+
+                <h2>ESP32 端的實作要點</h2>
+                <p>
+                    在 ESP32 的 HTTP 伺服器中實作 MJPEG 串流時，核心邏輯是在一個迴圈中不斷擷取新幀並推送給客戶端。以下程式碼片段展示了手動拼接 HTTP 多部份封包的關鍵步驟：
+                </p>
+
+                <div class="ms-code">
+<span class="c-kw">const char</span><span class="c-white">* </span><span class="c-attr">BOUNDARY</span><span class="c-white"> = </span><span class="c-str">"esp32_frame"</span><span class="c-white">;</span><br>
+<br>
+<span class="c-comment">// 步驟 1：發送 HTTP 回應標頭 (僅在連線建立時發送一次)</span><br>
+<span class="c-white">client.</span><span class="c-tag">print</span><span class="c-white">(</span><span class="c-str">"HTTP/1.1 200 OK\r\n"</span><span class="c-white">);</span><br>
+<span class="c-white">client.</span><span class="c-tag">printf</span><span class="c-white">(</span><span class="c-str">"Content-Type: multipart/x-mixed-replace; boundary=%s\r\n"</span><span class="c-white">, BOUNDARY);</span><br>
+<span class="c-white">client.</span><span class="c-tag">print</span><span class="c-white">(</span><span class="c-str">"\r\n"</span><span class="c-white">);</span><br>
+<br>
+<span class="c-comment">// 步驟 2：迴圈推送每一幀</span><br>
+<span class="c-kw">while</span><span class="c-white"> (client.</span><span class="c-tag">connected</span><span class="c-white">()) {</span><br>
+<span class="c-white">    camera_fb_t* fb = </span><span class="c-tag">esp_camera_fb_get</span><span class="c-white">();</span><br>
+<span class="c-white">    </span><span class="c-kw">if</span><span class="c-white"> (!fb) </span><span class="c-kw">continue</span><span class="c-white">;</span><br>
+<br>
+<span class="c-white">    client.</span><span class="c-tag">printf</span><span class="c-white">(</span><span class="c-str">"--%s\r\n"</span><span class="c-white">, BOUNDARY);</span><br>
+<span class="c-white">    client.</span><span class="c-tag">print</span><span class="c-white">(</span><span class="c-str">"Content-Type: image/jpeg\r\n"</span><span class="c-white">);</span><br>
+<span class="c-white">    client.</span><span class="c-tag">printf</span><span class="c-white">(</span><span class="c-str">"Content-Length: %u\r\n\r\n"</span><span class="c-white">, fb->len);</span><br>
+<span class="c-white">    client.</span><span class="c-tag">write</span><span class="c-white">(fb->buf, fb->len);</span><br>
+<span class="c-white">    client.</span><span class="c-tag">print</span><span class="c-white">(</span><span class="c-str">"\r\n"</span><span class="c-white">);</span><br>
+<br>
+<span class="c-white">    </span><span class="c-tag">esp_camera_fb_return</span><span class="c-white">(fb);</span><br>
+<span class="c-white">}</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        Boundary 字串的命名沒有強制規範，但建議使用<strong>不可能出現在 JPEG 二進位資料中</strong>的 ASCII 字串。像 <code>"123frame"</code> 這種簡短字串理論上沒問題，但業界常見做法是使用較長且含隨機字元的字串（如 <code>"----esp32cam_frame_boundary"</code>）以避免極端情況下的碰撞。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>串流的生命週期</h1>
+
+                <p>
+                    一個穩健的 MJPEG 串流服務，不僅要能「送」影像，還要能優雅地「停」，並且要正確處理「多個觀眾同時觀看」的情境。理解串流的完整生命週期——從連線建立到資源回收——是打造生產級影像服務的必備知識。
+                </p>
+
+                <h2>串流的三個階段</h2>
+                <p>
+                    一次完整的 MJPEG 串流會經歷以下三個階段：
+                </p>
+
+                <h3>階段一：連線建立 (Handshake)</h3>
+                <p>
+                    當使用者在瀏覽器輸入 <code>http://192.168.4.1/stream</code> 時，瀏覽器會對 ESP32 的 HTTP 伺服器發起 TCP 連線，並發送一個標準的 HTTP GET 請求。ESP32 端的路由處理器匹配到 <code>/stream</code> 端點後，回應一個特殊的 HTTP 標頭（即 <code>multipart/x-mixed-replace</code>），告訴瀏覽器：「準備好接收一個不會結束的影像串流」。
+                </p>
+
+                <h3>階段二：持續推送 (Streaming Loop)</h3>
+                <p>
+                    連線建立後，ESP32 進入一個無窮迴圈：擷取攝影機幀 → JPEG 壓縮 → 封裝 HTTP 多部份格式 → 透過 TCP 傳送 → 釋放幀緩衝區 → 重複。這個迴圈會持續運作，直到客戶端斷線或發生錯誤。
+                </p>
+
+                <h3>階段三：連線終止 (Teardown)</h3>
+                <p>
+                    當使用者關閉瀏覽器分頁或網路斷線時，TCP 連線會被終止。ESP32 必須偵測到這個事件並正確清理資源。
+                </p>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>注意</strong>
+                        ESP32 端偵測客戶端斷線的方式有兩種：(1) 呼叫 <code>client.connected()</code> 返回 <code>false</code>；(2) 呼叫 <code>client.write()</code> 時返回錯誤（寫入失敗）。在串流迴圈中，<strong>每次發送前都應檢查連線狀態</strong>，否則 ESP32 會持續向一個已死的 socket 發送資料，浪費 CPU 與記憶體資源。
+                    </div>
+                </div>
+
+                <h2>連線終止的偵測機制</h2>
+                <p>
+                    在 TCP 層面，連線終止有兩種方式，ESP32 的處理策略各有不同：
+                </p>
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>終止方式</th>
+                            <th>觸發情境</th>
+                            <th>ESP32 端的表現</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>TCP FIN</strong>（正常關閉）</td>
+                            <td>使用者關閉分頁、點擊停止</td>
+                            <td><code>client.connected()</code> 返回 <code>false</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>TCP RST</strong>（異常重置）</td>
+                            <td>網路斷線、瀏覽器崩潰</td>
+                            <td><code>client.write()</code> 返回 -1 或觸發錯誤</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-code">
+<span class="c-comment">// 健壯的串流迴圈：正確處理連線終止</span><br>
+<span class="c-kw">void</span> <span class="c-tag">handleStream</span><span class="c-white">(WiFiClient&amp; client) {</span><br>
+<span class="c-white">    </span><span class="c-tag">sendStreamHeader</span><span class="c-white">(client);</span><br>
+<br>
+<span class="c-white">    </span><span class="c-kw">while</span><span class="c-white"> (client.</span><span class="c-tag">connected</span><span class="c-white">()) {</span><br>
+<span class="c-white">        camera_fb_t* fb = </span><span class="c-tag">esp_camera_fb_get</span><span class="c-white">();</span><br>
+<span class="c-white">        </span><span class="c-kw">if</span><span class="c-white"> (!fb) {</span><br>
+<span class="c-white">            </span><span class="c-tag">ESP_LOGE</span><span class="c-white">(TAG, </span><span class="c-str">"攝影機擷取失敗"</span><span class="c-white">);</span><br>
+<span class="c-white">            </span><span class="c-kw">break</span><span class="c-white">;</span><br>
+<span class="c-white">        }</span><br>
+<br>
+<span class="c-white">        </span><span class="c-kw">int</span><span class="c-white"> sent = </span><span class="c-tag">sendFrame</span><span class="c-white">(client, fb);</span><br>
+<span class="c-white">        </span><span class="c-tag">esp_camera_fb_return</span><span class="c-white">(fb);</span><br>
+<br>
+<span class="c-white">        </span><span class="c-kw">if</span><span class="c-white"> (sent &lt; 0) {</span><br>
+<span class="c-white">            </span><span class="c-tag">ESP_LOGW</span><span class="c-white">(TAG, </span><span class="c-str">"客戶端已斷線，結束串流"</span><span class="c-white">);</span><br>
+<span class="c-white">            </span><span class="c-kw">break</span><span class="c-white">;</span><br>
+<span class="c-white">        }</span><br>
+<span class="c-white">    }</span><br>
+<br>
+<span class="c-white">    client.</span><span class="c-tag">stop</span><span class="c-white">();</span><br>
+<span class="c-white">    </span><span class="c-tag">ESP_LOGI</span><span class="c-white">(TAG, </span><span class="c-str">"串流結束，資源已回收"</span><span class="c-white">);</span><br>
+<span class="c-white">}</span>
+                </div>
+
+                <h2>多客戶端與資源競爭</h2>
+                <p>
+                    在實際部署中，可能有<strong>多個使用者同時觀看</strong>串流。ESP32 的 HTTP 伺服器需要為每個客戶端維護一個獨立的 TCP 連線，每個連線都會佔用一個 FreeRTOS 任務堆疊（通常 4～8 KB）。考慮到 ESP32-S3 有限的記憶體，建議限制同時連線數為 <strong>2～4 個</strong>。
+                </p>
+                <p>
+                    另一個常見的陷阱是<strong>幀緩衝區的競爭</strong>。ESP-IDF 的攝影機驅動通常只配置 2～3 個幀緩衝區（frame buffer）。如果第一個客戶端正在讀取某個緩衝區時，第二個客戶端也嘗試讀取同一個緩衝區，就會產生資料競爭 (Race Condition)。解決方案是使用 <strong>FreeRTOS 信號量 (Semaphore)</strong> 或<strong>雙緩衝 (Double Buffering)</strong> 策略。
+                </p>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        如果串流迴圈中忘記呼叫 <code>esp_camera_fb_return(fb)</code> 歸還幀緩衝區，緩衝區很快就會被耗盡，導致 <code>esp_camera_fb_get()</code> 永遠返回 <code>NULL</code>。這是一種典型的<strong>記憶體洩漏 (Memory Leak)</strong>，而且症狀（攝影機「凍結」）很容易被誤診為硬體故障。養成「取得後必歸還」的習慣至關重要。
+                    </div>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        要觀察 MJPEG 串流的原始封包結構，最簡單的方法是用瀏覽器的 F12 開發者工具開啟 Network 面板，找到串流請求後查看 Response 的 Raw Data。你會清楚看到 boundary 字串、Content-Type 標頭與每一幀 JPEG 的二進位資料交錯排列。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-01-packet-analysis', '【作業 2-1】封包解剖師：觀察 HTTP 串流頭')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-1</div>
+                            <h3 class="text-lg font-bold mb-2">封包解剖師</h3>
+                            <p class="text-xs text-gray-600 mb-4">找出 Content-Type 與指定的 boundary 名稱，計算 FPS。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 作業 2-1 60 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-01-manual-mjpeg', '【作業 2-2】實作 MJPEG 手動推送邏輯')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-2</div>
+                            <h3 class="text-lg font-bold mb-2">手動拼接 HTTP 數據流</h3>
+                            <p class="text-xs text-gray-600 mb-4">手動插入 boundary 與 Header，不依賴第三方庫實作串流。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 作業 2-2 60 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-01-stream-stability', '【作業 2-3】串流穩定性與 MTU 優化')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-3</div>
+                            <h3 class="text-lg font-bold mb-2">穩定性壓力測試</h3>
+                            <p class="text-xs text-gray-600 mb-4">對比不同解析度下的影像平滑度，調整緩衝區大小。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 作業 2-3 45 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+                <p>請回答以下問題，測試你對本模組內容的理解程度。每題僅有一個正確答案。</p>
+
+                <form id="quiz-form" onsubmit="return false;" style="margin-top:24px;">
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">1. MJPEG 串流中，每一幀影像使用的壓縮方式為何？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="A" style="margin-right:8px;"> A. 幀間壓縮 (Inter-frame Compression)
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="B" style="margin-right:8px;"> B. 畫面內壓縮 (Intra-frame Compression)
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="C" style="margin-right:8px;"> C. 無壓縮傳輸 (Raw Transfer)
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="D" style="margin-right:8px;"> D. 差分壓縮 (Differential Compression)
+                        </label>
+                        <div id="fb-q1" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">2. HTTP multipart/x-mixed-replace 中 Boundary 字串的作用是什麼？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="A" style="margin-right:8px;"> A. 加密每一幀影像資料
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="B" style="margin-right:8px;"> B. 壓縮影像以節省頻寬
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="C" style="margin-right:8px;"> C. 分隔每一幀 JPEG 資料的開始與結尾
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="D" style="margin-right:8px;"> D. 驗證影像資料的完整性
+                        </label>
+                        <div id="fb-q2" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">3. JPEG 檔案的起始標誌 (SOI) 是哪兩個位元組？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="A" style="margin-right:8px;"> A. 0xFF 0xD9
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="B" style="margin-right:8px;"> B. 0xFF 0xD8
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="C" style="margin-right:8px;"> C. 0xFF 0xE0
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="D" style="margin-right:8px;"> D. 0x89 0x50
+                        </label>
+                        <div id="fb-q3" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">4. MJPEG 與 H.264 最根本的差異在於？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="A" style="margin-right:8px;"> A. MJPEG 畫質較差
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="B" style="margin-right:8px;"> B. MJPEG 每幀獨立壓縮，無幀間依賴
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="C" style="margin-right:8px;"> C. H.264 不支援即時串流
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="D" style="margin-right:8px;"> D. H.264 只能在瀏覽器中播放
+                        </label>
+                        <div id="fb-q4" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="display:flex;gap:12px;margin-top:20px;">
+                        <button type="button" class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                        <button type="button" class="ms-btn-ghost" onclick="resetQuiz()">重新作答</button>
+                    </div>
+                    <div id="quiz-result" style="margin-top:16px;font-size:15px;font-weight:600;display:none;"></div>
+                </form>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>MJPEG 編碼與 HTTP Boundary 原理</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>🎞️ 1. MJPEG：每一幀都是主角 (20 min)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🚧 2. HTTP Boundary 的「隔板」原理 (25 min)</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>🔄 3. 串流的生命週期 (15 min)</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="https://www.youtube.com/embed/moyotioE18s" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://docs.google.com/document/d/e/2PACX-1vQU_xbj5iaj_XWXxuAfwCXoaNdhmIrz3agrXnpSPfeOtaQ76ZjotEczMAhUlkQSOMn1sy64yZbvjuj8/pub?embedded=true" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「MJPEG 編碼與 HTTP Boundary 原理」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '🎞️ 1. MJPEG：每一幀都是主角 (20 min)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🚧 2. HTTP Boundary 的「隔板」原理 (25 min)', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '🔄 3. 串流的生命週期 (15 min)', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',     time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">測驗</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+
+    /* ─── QUIZ ─── */
+    const QUIZ_ANSWERS = { q1: 'B', q2: 'C', q3: 'B', q4: 'B' };
+    const QUIZ_EXPLANATIONS = {
+        q1: 'MJPEG 每一幀都是獨立壓縮的 JPEG 圖片，屬於畫面內壓縮，幀與幀之間沒有任何依賴關係。',
+        q2: 'Boundary 是 HTTP multipart 協議中用來分隔各個部分（即每一幀 JPEG）的字串標記。',
+        q3: 'JPEG 的 SOI (Start of Image) 標誌為 0xFFD8，而 EOI (End of Image) 為 0xFFD9。',
+        q4: 'MJPEG 每幀獨立壓縮（Intra-frame），而 H.264 使用幀間預測（Inter-frame），利用相鄰幀的相似性提高壓縮率。'
+    };
+
+    function submitQuiz() {
+        let score = 0;
+        const total = Object.keys(QUIZ_ANSWERS).length;
+        for (const [q, correct] of Object.entries(QUIZ_ANSWERS)) {
+            const selected = document.querySelector(`input[name="${q}"]:checked`);
+            const fb = document.getElementById(`fb-${q}`);
+            if (!selected) {
+                fb.style.display = 'block';
+                fb.innerHTML = '<span style="color:#d13438;">⚠ 請選擇一個答案</span>';
+                continue;
+            }
+            fb.style.display = 'block';
+            if (selected.value === correct) {
+                score++;
+                fb.innerHTML = `<span style="color:#107c10;">✔ 正確！</span> ${QUIZ_EXPLANATIONS[q]}`;
+            } else {
+                fb.innerHTML = `<span style="color:#d13438;">✘ 不正確。正確答案是 ${correct}。</span> ${QUIZ_EXPLANATIONS[q]}`;
+            }
+        }
+        const result = document.getElementById('quiz-result');
+        result.style.display = 'block';
+        if (score === total) {
+            result.innerHTML = `<span style="color:#107c10;">🎉 滿分！你答對了全部 ${total} 題！</span>`;
+            markDone(6);
+        } else {
+            result.innerHTML = `<span style="color:#d13438;">你答對了 ${score} / ${total} 題。再試一次吧！</span>`;
+        }
+    }
+
+    function resetQuiz() {
+        document.getElementById('quiz-form').reset();
+        for (let i = 1; i <= Object.keys(QUIZ_ANSWERS).length; i++) {
+            const fb = document.getElementById(`fb-q${i}`);
+            if (fb) { fb.style.display = 'none'; fb.innerHTML = ''; }
+        }
+        document.getElementById('quiz-result').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='進階 01：ESP32-S3 攝影機';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "https://www.youtube.com/embed/moyotioE18s",
+        doc: "https://docs.google.com/document/d/e/2PACX-1vQU_xbj5iaj_XWXxuAfwCXoaNdhmIrz3agrXnpSPfeOtaQ76ZjotEczMAhUlkQSOMn1sy64yZbvjuj8/pub?embedded=true"
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">MJPEG 編碼與 HTTP Boundary 原理 (adv-01-unit-mjpeg-stream)</h1><a aria-label="Permalink: MJPEG 編碼與 HTTP Boundary 原理 (adv-01-unit-mjpeg-stream)" class="anchor" href="#mjpeg-編碼與-http-boundary-原理-adv-01-unit-mjpeg-stream" id="user-content-mjpeg-編碼與-http-boundary-原理-adv-01-unit-mjpeg-stream"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">課程目標</h2><a aria-label="Permalink: 課程目標" class="anchor" href="#課程目標" id="user-content-課程目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元的目標是讓學員從「函式庫使用者」進化為「協議理解者」。你將學習如何不依賴高階影像串流庫，手動透過 TCP Socket 實作符合 HTTP 標準的 MJPEG 影像串流。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務說明</h2><a aria-label="Permalink: 任務說明" class="anchor" href="#任務說明" id="user-content-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：封包解剖師 (Packet Analysis Lab)</h3><a aria-label="Permalink: 任務 1：封包解剖師 (Packet Analysis Lab)" class="anchor" href="#任務-1封包解剖師-packet-analysis-lab" id="user-content-任務-1封包解剖師-packet-analysis-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過觀察真實流量，理解 MJPEG 在 HTTP 層級的運作機制。</li>
+<li>
+<strong>要求</strong>：
+<ol>
+<li>使用瀏覽器開發者工具 (F12) 或 Wireshark 擷取 HTTP 串流。</li>
+<li>找出 <code>Content-Type: multipart/x-mixed-replace; boundary=...</code> 這一行。</li>
+<li>在 <code>docs/protocol_report.md</code> 中解釋 <code>boundary</code> 的具體作用。</li>
+<li>找出單張 JPEG 的 SOI (<code>0xFFD8</code>) 與 EOI (<code>0xFFD9</code>) 在二進位流中的位置並紀錄。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：手動拼接 MJPEG 數據流 (Manual Streamer Implementation)</h3><a aria-label="Permalink: 任務 2：手動拼接 MJPEG 數據流 (Manual Streamer Implementation)" class="anchor" href="#任務-2手動拼接-mjpeg-數據流-manual-streamer-implementation" id="user-content-任務-2手動拼接-mjpeg-數據流-manual-streamer-implementation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：不依賴第三方庫，手動透過 <code>WiFiClient</code> 物件推送影像流。</li>
+<li>
+<strong>要求</strong>：
+<ol>
+<li>在 <code>src/mjpeg_driver.cpp</code> (或指定檔案) 中實作 HTTP 多部份 (Multipart) 數據包的發送邏輯。</li>
+<li>確保正確使用 <strong>CRLF (<code>\r\n</code>)</strong> 換行符。</li>
+<li>正確封裝每張影像的標頭 (Boundary, Content-Type, Content-Length)。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)</h3><a aria-label="Permalink: 任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)" class="anchor" href="#任務-3串流穩定性與-mtu-優化-stream-stability-lab" id="user-content-任務-3串流穩定性與-mtu-優化-stream-stability-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：解決高解析度下的影像撕裂 (Tearing) 問題。</li>
+<li>
+<strong>要求</strong>：
+<ol>
+<li>在 VGA 解析度下測試傳輸穩定性。</li>
+<li>紀錄調整傳輸參數前後的流暢度差異。</li>
+<li>將測試數據紀錄於 <code>test/stability_test.csv</code> 中。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">提交要求</h2><a aria-label="Permalink: 提交要求" class="anchor" href="#提交要求" id="user-content-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>src/</code> 中的程式碼實作。</li>
+<li>完成 <code>docs/protocol_report.md</code> 的分析報告。</li>
+<li>確保你的程式庫程式碼乾淨且包含必要的註解。</li>
+<li>將所有更改提交並推送到 GitHub 程式庫。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">評分標準</h2><a aria-label="Permalink: 評分標準" class="anchor" href="#評分標準" id="user-content-評分標準"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>協議嚴謹度</strong>：HTTP 標頭與邊界封裝是否完全符合規範？</li>
+<li>
+<strong>故障排除能力</strong>：是否能正確診斷串流失敗的原因？</li>
+<li>
+<strong>穩定性</strong>：影像串流是否平滑且無撕裂現象？</li>
+</ul>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>adv-01-unit-mjpeg-stream</code> (MJPEG 編碼與 HTTP Boundary 原理)</strong> 單元，這是一個讓學生從「調包俠 (Library User)」進化為「協議理解者 (Protocol Implementer)」的關鍵進階課程。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" class="anchor" href="#1-範本程式庫-template-repo-配置建議" id="user-content-1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>進階協議單元的範本應強調「零依賴 (Dependency-free)」的實作，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/mjpeg_server.cpp</code></strong>：故意移除高階影像串流庫，僅保留原始的 <code>WiFiClient</code> 物件。學員需在此實作手動拼接 HTTP 多部份 (Multipart) 數據包的邏輯。</li>
+<li>
+<strong>📂 <code>analysis/packet_dump.md</code></strong>：預置一個報告模板，讓學員貼入瀏覽器開發者工具 (F12) 擷取的 HTTP 標頭 (Header) 分析。</li>
+<li>
+<strong>📂 <code>web/stream_test.html</code></strong>：一個極簡的前端頁面，用於驗證學員實作的串流是否能被標準 <code>&lt;img&gt;</code> 標籤解析。</li>
+<li>
+<strong>📂 <code>.github/workflows/protocol_checker.yml</code></strong>：自動化腳本，初步檢查原始碼中是否包含正確的 <code>\r\n</code> (CRLF) 換行邏輯。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：封包解剖師 (Packet Analysis Lab)</h4><a aria-label="Permalink: 任務 1：封包解剖師 (Packet Analysis Lab)" class="anchor" href="#任務-1封包解剖師-packet-analysis-lab" id="user-content-任務-1封包解剖師-packet-analysis-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過觀察真實流量，理解 MJPEG 在 HTTP 層級的運作機制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>要求</strong>：學員需擷取 <code>Content-Type: multipart/x-mixed-replace; boundary=...</code> 這一行，並解釋 <code>boundary</code> 的具體作用。</li>
+<li>
+<strong>驗證方式</strong>：在 <code>analysis/packet_dump.md</code> 中檢查學員是否能正確計算出單張 JPEG 的 SOI (<code>0xFFD8</code>) 與 EOI (<code>0xFFD9</code>) 在二進位流中的位置。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：手動拼接 MJPEG 數據流 (Manual Streamer Implementation)</h4><a aria-label="Permalink: 任務 2：手動拼接 MJPEG 數據流 (Manual Streamer Implementation)" class="anchor" href="#任務-2手動拼接-mjpeg-數據流-manual-streamer-implementation" id="user-content-任務-2手動拼接-mjpeg-數據流-manual-streamer-implementation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：不依賴第三方庫，手動透過 TCP Socket 推送影像流。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心代碼檢核</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：手動傳送邊界與長度標頭</span>
+client.print(<span class="pl-s"><span class="pl-pds">"</span>--<span class="pl-pds">"</span></span> + boundary + <span class="pl-s"><span class="pl-pds">"</span><span class="pl-cce">\r\n</span><span class="pl-pds">"</span></span>);
+client.print(<span class="pl-s"><span class="pl-pds">"</span>Content-Type: image/jpeg<span class="pl-cce">\r\n</span><span class="pl-pds">"</span></span>);
+client.print(<span class="pl-s"><span class="pl-pds">"</span>Content-Length: <span class="pl-pds">"</span></span> + String(fb-&gt;len) + <span class="pl-s"><span class="pl-pds">"</span><span class="pl-cce">\r\n\r\n</span><span class="pl-pds">"</span></span>);
+client.write(fb-&gt;buf, fb-&gt;len);
+client.print(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-cce">\r\n</span><span class="pl-pds">"</span></span>);</pre></div>
+</li>
+<li>
+<strong>核核重點</strong>：導師應在 PR 中檢查學員是否正確使用了 <strong>CRLF (<code>\r\n</code>)</strong>。在 HTTP 協議中，少一個位元組都會導致瀏覽器渲染失敗（出現破碎畫面或綠屏）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)</h4><a aria-label="Permalink: 任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)" class="anchor" href="#任務-3串流穩定性與-mtu-優化-stream-stability-lab" id="user-content-任務-3串流穩定性與-mtu-優化-stream-stability-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：解決高解析度下的影像撕裂 (Tearing) 問題。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據採集</strong>：要求學員紀錄在 VGA 解析度下，調整 <code>CONFIG_TCP_MSS</code> (最大報文段大小) 前後，影像傳輸的流暢度差異。</li>
+<li>
+<strong>成果展示</strong>：上傳一段錄影或截圖，對比「優化前（影像腰斬/撕裂）」與「優化後（完整幀平滑切換）」的視覺效果。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 進階協議單元導師點評標準 (Advanced Benchmarks)</h3><a aria-label="Permalink: 3. 進階協議單元導師點評標準 (Advanced Benchmarks)" class="anchor" href="#3-進階協議單元導師點評標準-advanced-benchmarks" id="user-content-3-進階協議單元導師點評標準-advanced-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數位邊界的精確控制」</strong>：</p>
+<ul>
+<li>[ ] <strong>協議嚴謹度</strong>：手動封裝的 HTTP 流是否完全符合規範，且不依賴任何外部渲染輔助？</li>
+<li>[ ] <strong>故障排除能力</strong>：當瀏覽器無法連線時，學員是否能透過 F12 工具診斷出是 Boundary 名稱不匹配還是換行符出錯？</li>
+<li>[ ] <strong>性能直覺</strong>：學員是否理解為什麼在頻寬受限時，MJPEG 的表現會優於/劣於其他編碼格式？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   └── mjpeg_driver.cpp    # 核心：學員需在此實作位元組級別的發送邏輯
+├── docs/
+│   └── protocol_report.md  # 協議解剖報告 (含 Header 截圖)
+├── test/
+│   └── stability_test.csv  # 穩定性測試數據 (解析度 vs. 撕裂次數)
+└── README.md               # 專案總結：從 Socket 層面看影像連線
+</code></pre>
+<p>透過這種部署方式，學生能從「會寫程式碼」提升到「<strong>理解數據流動規律</strong>」的高度，這是成為資深物聯網或影音工程師的必經之路。</p>
+</section>
+
+</body>
+</html>

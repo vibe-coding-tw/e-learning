@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統性能分析與瓶頸優化 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/advanced.html" target="_top" class="nav-label">進階課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">系統性能分析與瓶頸優化</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 196 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>系統性能分析與瓶頸優化</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">單元課程 進階 13</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>打破速度的天花板：從微秒計較到數據精簡，壓榨系統的最後一滴性能。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>🔍 1. 偵測效能黑洞 (Bottlenecks)</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🧱 2. 數據壓縮：少即是多的智慧</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>前端極速渲染：告別控制卡頓</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    歡迎來到本模組！本單元聚焦於 <strong>系統性能分析與瓶頸優化</strong>。
+                    你的控制系統明明邏輯正確，操控起來卻總有一種「遲鈍感」？問題往往不在演算法，而在隱藏的性能瓶頸——可能是一行阻塞式 Serial 輸出吞掉了 85% 的 CPU 時間，也可能是肥大的 JSON 封包塞爆了藍牙頻寬。
+                    本模組將教你用數據精準定位這些「效能黑洞」，並從通訊協議到前端渲染全鏈路壓榨性能。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">情境設定</div>
+                    你的機器人儀表板顯示一切正常，但當你快速操控搖桿時，車體反應總是慢半拍，轉彎時像在水中移動。
+                    你懷疑是藍牙延遲，但用 micros() 一量才發現：主迴圈中一個被遺忘的 Serial.print() 就佔用了每次循環 12ms 中的 10ms。
+                    請先觀看教學影片，學會如何用科學方法揪出這些隱形的性能殺手。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="系統性能分析與瓶頸優化 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🔍 1. 偵測效能黑洞 (Bottlenecks)</h1>
+
+                <p>
+                    控制系統的反應速度取決於整條鏈路中<strong>最慢的那一環</strong>。
+                    即使你的 PID 演算法再精妙、馬達再強勁，如果主迴圈中有一行被遺忘的 <code>Serial.print()</code>
+                    佔據了每次循環 12ms 中的 10ms，整台車的操控體驗就會像在水中移動一樣遲鈍。
+                    性能優化的第一步，永遠是<strong>用數據找出瓶頸</strong>，而非憑直覺猜測。
+                </p>
+
+                <p>
+                    嵌入式系統的性能瓶頸通常隱藏在三個層面：<strong>通訊層</strong>（藍牙頻寬與封包延遲）、
+                    <strong>運算層</strong>（CPU 被阻塞式 I/O 佔用）、以及<strong>渲染層</strong>（前端 DOM 操作過於頻繁）。
+                    本單元將教你使用 <code>micros()</code> 函數對 ESP32 主迴圈進行精確的時間埋點，
+                    找出真正的「效能黑洞」。
+                </p>
+
+                <h2>使用 micros() 進行效能剖析</h2>
+
+                <p>
+                    <code>micros()</code> 回傳自 ESP32 開機以來的微秒數，精度遠高於 <code>millis()</code>。
+                    透過在主迴圈的各個關鍵區段前後插入時間戳記，你可以精確計算每個模組的執行耗時，
+                    並算出其佔總循環時間的百分比。
+                </p>
+
+                <div class="ms-code">
+<span class="c-kw">void</span> <span class="c-tag">loop</span><span class="c-white">() {</span><br>
+&nbsp;&nbsp;<span class="c-kw">unsigned long</span> <span class="c-attr">t0</span> <span class="c-white">= </span><span class="c-tag">micros</span><span class="c-white">();</span><br><br>
+&nbsp;&nbsp;<span class="c-tag">readSensors</span><span class="c-white">();</span><br>
+&nbsp;&nbsp;<span class="c-kw">unsigned long</span> <span class="c-attr">t1</span> <span class="c-white">= </span><span class="c-tag">micros</span><span class="c-white">();</span><br><br>
+&nbsp;&nbsp;<span class="c-tag">processCommand</span><span class="c-white">();</span><br>
+&nbsp;&nbsp;<span class="c-kw">unsigned long</span> <span class="c-attr">t2</span> <span class="c-white">= </span><span class="c-tag">micros</span><span class="c-white">();</span><br><br>
+&nbsp;&nbsp;<span class="c-tag">updateMotors</span><span class="c-white">();</span><br>
+&nbsp;&nbsp;<span class="c-kw">unsigned long</span> <span class="c-attr">t3</span> <span class="c-white">= </span><span class="c-tag">micros</span><span class="c-white">();</span><br><br>
+&nbsp;&nbsp;<span class="c-tag">sendTelemetry</span><span class="c-white">();</span>
+<span class="c-comment">  // 包含 Serial.print — 常見瓶頸！</span><br>
+&nbsp;&nbsp;<span class="c-kw">unsigned long</span> <span class="c-attr">t4</span> <span class="c-white">= </span><span class="c-tag">micros</span><span class="c-white">();</span><br><br>
+&nbsp;&nbsp;<span class="c-comment">// 每 100 次循環輸出一次性能報告</span><br>
+&nbsp;&nbsp;<span class="c-kw">static int</span> <span class="c-attr">count</span> <span class="c-white">= </span><span class="c-val">0</span><span class="c-white">;</span><br>
+&nbsp;&nbsp;<span class="c-kw">if</span> <span class="c-white">(++count % </span><span class="c-val">100</span> <span class="c-white">== </span><span class="c-val">0</span><span class="c-white">) {</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-tag">Serial</span><span class="c-white">.printf(</span><span class="c-str">"Sensor:%lu Cmd:%lu Motor:%lu Tele:%lu\n"</span><span class="c-white">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-white">t1-t0, t2-t1, t3-t2, t4-t3);</span><br>
+&nbsp;&nbsp;<span class="c-white">}</span><br>
+<span class="c-white">}</span>
+                </div>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>常見陷阱</strong>
+                        <code>Serial.print()</code> 在 115200 baud 下傳輸 100 個字元需要約 8.7ms——
+                        這在一個理想循環時間只有 10ms 的控制系統中，幾乎佔用了 87% 的 CPU 時間！
+                        解法是將 Serial 輸出改為<strong>條件式</strong>（如每 N 次才輸出一次），
+                        或直接透過 WebSocket 傳送遙測數據來取代 Serial。
+                    </div>
+                </div>
+
+                <h2>常見瓶頸排行榜</h2>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr><th>瓶頸來源</th><th>典型耗時</th><th>佔比影響</th><th>優化策略</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>Serial.print()</code> (阻塞式)</td><td>5–12 ms</td><td>50–85%</td><td>條件式輸出 / 改用非阻塞 UART</td></tr>
+                        <tr><td><code>analogRead()</code> (多通道)</td><td>1–3 ms</td><td>10–30%</td><td>降低取樣頻率 / 使用 DMA</td></tr>
+                        <tr><td>JSON 序列化</td><td>0.5–2 ms</td><td>5–20%</td><td>改用二進位精簡協議</td></tr>
+                        <tr><td>PID 計算</td><td>10–50 μs</td><td>&lt;1%</td><td>通常不是瓶頸</td></tr>
+                        <tr><td>WiFi/BLE 事件處理</td><td>0–5 ms</td><td>不定</td><td>使用回呼 (Callback) 而非輪詢</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>阿姆達爾定律 (Amdahl's Law)</strong>
+                        優化應優先針對佔比最大的瓶頸。如果 Serial 佔了 85% 的時間，
+                        即使你把 PID 計算速度提升 10 倍，整體效能也只會改善不到 1%。
+                        <strong>先量測，再優化</strong>——這是性能工程的鐵律。
+                    </div>
+                </div>
+
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🧱 2. 數據壓縮：少即是多的智慧</h1>
+
+                <p>
+                    無線傳輸的頻寬是有限且珍貴的資源。在 BLE (Bluetooth Low Energy) 環境中，
+                    單次封包的有效載荷 (Payload) 通常只有 20–244 位元組。
+                    如果你仍然使用像 <code>{"velocity":100,"angle":45,"brake":false}</code> 這樣的冗長 JSON 格式，
+                    每個封包就要消耗 40+ 位元組——相當於把寶貴的頻寬浪費在大量的引號、冒號和鍵名上。
+                </p>
+
+                <p>
+                    <strong>數據壓縮的核心哲學是「少即是多」</strong>：
+                    透過設計更精簡的自定義協議，將相同的語意資訊用更少的位元組表達，
+                    不僅能降低單次傳輸延遲，更能在相同時間內傳送更多筆指令，直接提升系統的控制更新率 (Hz)。
+                </p>
+
+                <h2>協議演進：從 JSON 到極簡格式</h2>
+
+                <p>以下展示了三種不同壓縮層級的協議設計，以及它們對系統性能的影響：</p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr><th>協議類型</th><th>封包範例</th><th>大小</th><th>壓縮率</th><th>解析複雜度</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>原始 JSON</strong></td>
+                            <td><code>{"velocity":100,"angle":45}</code></td>
+                            <td>31 bytes</td>
+                            <td>—</td>
+                            <td>中（需 JSON 解析器）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>短字串協議</strong></td>
+                            <td><code>v100a45</code></td>
+                            <td>7 bytes</td>
+                            <td>77%</td>
+                            <td>低（字串切割）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>二進位協議</strong></td>
+                            <td><code>0x64 0x2D</code> (2 bytes)</td>
+                            <td>2 bytes</td>
+                            <td>94%</td>
+                            <td>極低（直接記憶體映射）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>實作：短字串協議的編碼與解碼</h2>
+
+                <p>短字串協議在壓縮率與可讀性之間取得了良好的平衡，非常適合教學與除錯場景：</p>
+
+                <div class="ms-code">
+<span class="c-comment">// ESP32 端：解析短字串協議 "v100a45"</span><br>
+<span class="c-kw">void</span> <span class="c-tag">parseCompactCmd</span><span class="c-white">(</span><span class="c-kw">String</span> <span class="c-attr">msg</span><span class="c-white">) {</span><br>
+&nbsp;&nbsp;<span class="c-kw">int</span> <span class="c-attr">vIdx</span> <span class="c-white">= msg.indexOf(</span><span class="c-str">'v'</span><span class="c-white">);</span><br>
+&nbsp;&nbsp;<span class="c-kw">int</span> <span class="c-attr">aIdx</span> <span class="c-white">= msg.indexOf(</span><span class="c-str">'a'</span><span class="c-white">);</span><br>
+&nbsp;&nbsp;<span class="c-kw">if</span> <span class="c-white">(vIdx < </span><span class="c-val">0</span><span class="c-white"> || aIdx < </span><span class="c-val">0</span><span class="c-white">) </span><span class="c-kw">return</span><span class="c-white">;</span><br><br>
+&nbsp;&nbsp;<span class="c-kw">int</span> <span class="c-attr">vel</span> <span class="c-white">= msg.substring(vIdx+</span><span class="c-val">1</span><span class="c-white">, aIdx).toInt();</span><br>
+&nbsp;&nbsp;<span class="c-kw">int</span> <span class="c-attr">ang</span> <span class="c-white">= msg.substring(aIdx+</span><span class="c-val">1</span><span class="c-white">).toInt();</span><br><br>
+&nbsp;&nbsp;<span class="c-attr">vel</span> <span class="c-white">= </span><span class="c-tag">constrain</span><span class="c-white">(vel, </span><span class="c-val">0</span><span class="c-white">, </span><span class="c-val">255</span><span class="c-white">);</span><br>
+&nbsp;&nbsp;<span class="c-attr">ang</span> <span class="c-white">= </span><span class="c-tag">constrain</span><span class="c-white">(ang, </span><span class="c-val">-90</span><span class="c-white">, </span><span class="c-val">90</span><span class="c-white">);</span><br>
+&nbsp;&nbsp;<span class="c-tag">applyControl</span><span class="c-white">(vel, ang);</span><br>
+<span class="c-white">}</span>
+                </div>
+
+                <div class="ms-code">
+<span class="c-comment">// JavaScript 端：編碼短字串協議</span><br>
+<span class="c-kw">function</span> <span class="c-tag">encodeCmd</span><span class="c-white">(</span><span class="c-attr">velocity</span><span class="c-white">, </span><span class="c-attr">angle</span><span class="c-white">) {</span><br>
+&nbsp;&nbsp;<span class="c-kw">return</span> <span class="c-str">`v${velocity}a${angle}`</span><span class="c-white">;</span><br>
+<span class="c-white">}</span>
+                </div>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>二進位協議的取捨</strong>
+                        雖然二進位協議的壓縮率最高，但它犧牲了<strong>人類可讀性</strong>。
+                        在除錯階段，你無法直接用 Serial Monitor 查看封包內容。
+                        建議在開發初期使用短字串協議，待系統穩定後再切換到二進位格式以獲取極致性能。
+                    </div>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>量化驗證</strong>
+                        切換協議後，務必量測「數據刷新率 (Hz)」的實際提升幅度。
+                        典型結果是從 JSON 的 10–15 Hz 提升到短字串的 40–60 Hz，
+                        甚至二進位的 80–120 Hz。這個數據將是你性能報告中最有說服力的證據。
+                    </div>
+                </div>
+
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>⚡ 3. 前端極速渲染：告別控制卡頓</h1>
+
+                <p>
+                    當後端（ESP32）與通訊協議都已經過優化，最後一個可能拖慢系統的環節就是<strong>前端渲染</strong>。
+                    如果你的 Dashboard 每收到一筆數據就直接操作 DOM——更新文字、重繪 Canvas、插入日誌——
+                    瀏覽器很快就會因為過度重繪 (Repaint) 與重排 (Reflow) 而卡頓。
+                    當數據流達到每秒 50–100 筆時，未經優化的前端甚至會拖累整個控制鏈路。
+                </p>
+
+                <p>
+                    高效能前端渲染的關鍵在於三個策略：
+                    <strong>使用 <code>requestAnimationFrame</code> 同步螢幕刷新率</strong>、
+                    <strong>採用離屏 Canvas 預渲染靜態圖層</strong>、以及
+                    <strong>利用循環緩衝區管理數據流</strong>。
+                    這三者結合，能確保即便數據洪流來襲，儀表板依然如絲般順滑。
+                </p>
+
+                <h2>requestAnimationFrame：與瀏覽器同步</h2>
+
+                <p>
+                    <code>requestAnimationFrame(callback)</code> 會在瀏覽器下一次重繪之前調用你的回呼函數，
+                    頻率通常為 60 次/秒（即 60 FPS）。相比直接用 <code>setInterval</code> 來驅動渲染，
+                    rAF 有兩個核心優勢：它會自動匹配螢幕刷新率，避免無謂的計算；
+                    且在頁面不可見時會自動暫停，節省 CPU 資源。
+                </p>
+
+                <div class="ms-code">
+<span class="c-kw">let</span> <span class="c-attr">dataBuffer</span> <span class="c-white">= [];</span><br>
+<span class="c-kw">let</span> <span class="c-attr">needsRedraw</span> <span class="c-white">= </span><span class="c-kw">false</span><span class="c-white">;</span><br><br>
+<span class="c-comment">// 數據接收：只更新 buffer，標記需要重繪</span><br>
+<span class="c-attr">ws</span><span class="c-white">.onmessage = (</span><span class="c-attr">e</span><span class="c-white">) => {</span><br>
+&nbsp;&nbsp;<span class="c-attr">dataBuffer</span><span class="c-white">.push(JSON.parse(e.data));</span><br>
+&nbsp;&nbsp;<span class="c-kw">if</span> <span class="c-white">(dataBuffer.length > </span><span class="c-val">200</span><span class="c-white">) dataBuffer.shift();</span><br>
+&nbsp;&nbsp;<span class="c-attr">needsRedraw</span> <span class="c-white">= </span><span class="c-kw">true</span><span class="c-white">;</span><br>
+<span class="c-white">};</span><br><br>
+<span class="c-comment">// 渲染迴圈：僅在有新數據時才重繪</span><br>
+<span class="c-kw">function</span> <span class="c-tag">renderLoop</span><span class="c-white">() {</span><br>
+&nbsp;&nbsp;<span class="c-kw">if</span> <span class="c-white">(needsRedraw) {</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-tag">drawWaveform</span><span class="c-white">(dataBuffer);</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">needsRedraw</span> <span class="c-white">= </span><span class="c-kw">false</span><span class="c-white">;</span><br>
+&nbsp;&nbsp;<span class="c-white">}</span><br>
+&nbsp;&nbsp;<span class="c-tag">requestAnimationFrame</span><span class="c-white">(renderLoop);</span><br>
+<span class="c-white">}</span><br>
+<span class="c-tag">requestAnimationFrame</span><span class="c-white">(renderLoop);</span>
+                </div>
+
+                <h2>離屏 Canvas：預渲染靜態圖層</h2>
+
+                <p>
+                    儀表板上的許多元素（如刻度盤背景、座標軸、標籤文字）是<strong>靜態的</strong>，不隨數據變動。
+                    如果每一幀都重新繪製這些元素，就是在浪費 GPU 運算。
+                    解法是使用 <strong>Offscreen Canvas</strong> 預先繪製靜態圖層，
+                    然後在每一幀的渲染中只需用 <code>drawImage()</code> 把它「貼」上去，再疊加動態波形。
+                </p>
+
+                <h2>三種渲染策略的效能比較</h2>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr><th>渲染策略</th><th>數據流 50 Hz</th><th>數據流 100 Hz</th><th>CPU 佔用</th><th>適用場景</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>直接 DOM 操作</td><td>卡頓明顯</td><td>近乎凍結</td><td>極高</td><td>低頻文字更新</td></tr>
+                        <tr><td>Canvas + rAF</td><td>流暢 (55+ FPS)</td><td>偶有掉幀</td><td>中等</td><td>中頻圖表繪製</td></tr>
+                        <tr><td>Offscreen + rAF + Buffer</td><td>穩定 60 FPS</td><td>穩定 60 FPS</td><td>低</td><td>高頻即時儀表板</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>Chrome DevTools 性能診斷</strong>
+                        打開 Chrome DevTools 的 <strong>Performance</strong> 面板，錄製 5 秒的操作過程。
+                        在火焰圖 (Flame Chart) 中觀察 <strong>Scripting</strong>（JavaScript 執行）佔比是否超過每幀 10ms。
+                        如果超過，就需要進一步優化渲染邏輯。目標是讓每幀的總處理時間保持在 <strong>16.67ms 以內</strong>（60 FPS 的預算）。
+                    </div>
+                </div>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>垃圾回收 (GC) 的影響</strong>
+                        頻繁建立與銷毀 JavaScript 物件會觸發瀏覽器的垃圾回收，造成不定期的微型凍結。
+                        使用<strong>預分配的循環陣列 (Ring Buffer)</strong> 而非 <code>push/shift</code>，
+                        可以顯著減少記憶體分配壓力，讓波形繪製更加穩定。
+                    </div>
+                </div>
+
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 160 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-13-profiling', '【作業 13-1】「瓶頸偵察」：主迴圈性能透視 (Bottleneck Profiling & Analysis Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 13-1</div>
+                            <h3 class="text-lg font-bold mb-2">代碼效能偵錯</h3>
+                            <p class="text-xs text-gray-600 mb-4">利用 micros() 對 ESP32 主迴圈各模組進行耗時埋點。找出最影響即時性的區塊（如：阻塞式 Serial），並計算其資源佔用比百分比。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 🕵️ 50 min 【作業 13-1】 「代碼效能偵錯」 利用 micros() 對 ESP32 主迴圈各模組進行耗時埋點。找出最影響即時性的區塊（如：阻塞式 Serial），並計算其資源佔用比百分比。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-13-protocol', '【作業 13-2】「數據瘦身術」：極簡協議重構 (Binary Protocol Optimization Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 13-2</div>
+                            <h3 class="text-lg font-bold mb-2">協議壓縮挑戰</h3>
+                            <p class="text-xs text-gray-600 mb-4">重構通訊層。將臃腫的 JSON 替換為極簡字符協議，將封包體積削減 60% 以上。驗證在弱訊號環境下封包丟失率與控制響應率的改善數據。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 🧱 70 min 【作業 13-2】 「協議壓縮挑戰」 重構通訊層。將臃腫的 JSON 替換為極簡字符協議，將封包體積削減 60% 以上。驗證在弱訊號環境下封包丟失率與控制響應率的改善數據。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-13-rendering', '【作業 13-3】「流體控制 UI」：Canvas 渲染加速 (High-performance UI Rendering Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 13-3</div>
+                            <h3 class="text-lg font-bold mb-2">介面渲染優化</h3>
+                            <p class="text-xs text-gray-600 mb-4">利用 Chrome DevTools 診斷渲染卡頓原因。實作離屏緩衝繪製與 rAF 同步，確保即便每秒處理 50 筆以上的數據，儀表板依然零抖動順滑。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ ⚡ 40 min 【作業 13-3】 「介面渲染優化」 利用 Chrome DevTools 診斷渲染卡頓原因。實作離屏緩衝繪製與 rAF 同步，確保即便每秒處理 50 筆以上的數據，儀表板依然零抖動順滑。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+
+                <p>
+                    請回答以下問題，測試你對「<strong>系統效能分析</strong>」的理解程度。
+                    選擇完畢後點擊「送出答案」查看結果與解析。
+                </p>
+
+                <div id="quiz-container" style="margin:24px 0;">
+
+                    <div class="quiz-question" id="quiz-q0" style="background:#faf9f8; border:1px solid #e1dfdd; border-radius:6px; padding:20px; margin-bottom:16px;">
+                        <p style="font-weight:600; margin-bottom:12px;">1. 在嵌入式系統中，「即時性（Real-Time）」的定義是什麼？</p>
+                        
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q0-opt0">
+                            <input type="radio" name="quiz-q0" value="0" style="accent-color:var(--ms-blue);">
+                            <span>程式執行速度越快越好</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q0-opt1">
+                            <input type="radio" name="quiz-q0" value="1" style="accent-color:var(--ms-blue);">
+                            <span>系統必須在確定的時間期限內完成指定任務</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q0-opt2">
+                            <input type="radio" name="quiz-q0" value="2" style="accent-color:var(--ms-blue);">
+                            <span>使用最新的硬體</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q0-opt3">
+                            <input type="radio" name="quiz-q0" value="3" style="accent-color:var(--ms-blue);">
+                            <span>同時處理多個任務</span>
+                        </label>
+                        <div class="quiz-explanation" id="quiz-exp0" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; font-size:13px;"></div>
+                    </div>
+                    <div class="quiz-question" id="quiz-q1" style="background:#faf9f8; border:1px solid #e1dfdd; border-radius:6px; padding:20px; margin-bottom:16px;">
+                        <p style="font-weight:600; margin-bottom:12px;">2. 迴圈執行時間（Loop Time）不穩定會對 PID 控制產生什麼影響？</p>
+                        
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q1-opt0">
+                            <input type="radio" name="quiz-q1" value="0" style="accent-color:var(--ms-blue);">
+                            <span>完全沒有影響</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q1-opt1">
+                            <input type="radio" name="quiz-q1" value="1" style="accent-color:var(--ms-blue);">
+                            <span>積分與微分計算失準，導致控制品質下降</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q1-opt2">
+                            <input type="radio" name="quiz-q1" value="2" style="accent-color:var(--ms-blue);">
+                            <span>只影響顯示畫面</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q1-opt3">
+                            <input type="radio" name="quiz-q1" value="3" style="accent-color:var(--ms-blue);">
+                            <span>會讓馬達反轉</span>
+                        </label>
+                        <div class="quiz-explanation" id="quiz-exp1" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; font-size:13px;"></div>
+                    </div>
+                    <div class="quiz-question" id="quiz-q2" style="background:#faf9f8; border:1px solid #e1dfdd; border-radius:6px; padding:20px; margin-bottom:16px;">
+                        <p style="font-weight:600; margin-bottom:12px;">3. 以下哪種方法最適合用來量測程式碼某段的執行時間？</p>
+                        
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q2-opt0">
+                            <input type="radio" name="quiz-q2" value="0" style="accent-color:var(--ms-blue);">
+                            <span>用肉眼觀察</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q2-opt1">
+                            <input type="radio" name="quiz-q2" value="1" style="accent-color:var(--ms-blue);">
+                            <span>在前後使用 micros() 取時間差</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q2-opt2">
+                            <input type="radio" name="quiz-q2" value="2" style="accent-color:var(--ms-blue);">
+                            <span>計算程式碼行數</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q2-opt3">
+                            <input type="radio" name="quiz-q2" value="3" style="accent-color:var(--ms-blue);">
+                            <span>查看編譯器輸出</span>
+                        </label>
+                        <div class="quiz-explanation" id="quiz-exp2" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; font-size:13px;"></div>
+                    </div>
+                    <div class="quiz-question" id="quiz-q3" style="background:#faf9f8; border:1px solid #e1dfdd; border-radius:6px; padding:20px; margin-bottom:16px;">
+                        <p style="font-weight:600; margin-bottom:12px;">4. 當系統需要同時處理感測、運算、通訊等多項任務時，最佳的架構策略是什麼？</p>
+                        
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q3-opt0">
+                            <input type="radio" name="quiz-q3" value="0" style="accent-color:var(--ms-blue);">
+                            <span>全部放在一個大迴圈用 delay 分隔</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q3-opt1">
+                            <input type="radio" name="quiz-q3" value="1" style="accent-color:var(--ms-blue);">
+                            <span>使用合作式多工（時間片輪轉）或優先權排程</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q3-opt2">
+                            <input type="radio" name="quiz-q3" value="2" style="accent-color:var(--ms-blue);">
+                            <span>只處理最重要的任務，忽略其他</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q3-opt3">
+                            <input type="radio" name="quiz-q3" value="3" style="accent-color:var(--ms-blue);">
+                            <span>使用多個 Arduino 板子分工</span>
+                        </label>
+                        <div class="quiz-explanation" id="quiz-exp3" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; font-size:13px;"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:24px;">
+                    <button class="ms-btn" onclick="submitQuiz()">送出答案</button>
+                    <button class="ms-btn-ghost" onclick="resetQuiz()">重新作答</button>
+                </div>
+
+                <div id="quiz-result" style="display:none; margin-top:20px; padding:16px 20px; border-radius:6px; font-weight:600;"></div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>系統性能分析與瓶頸優化</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>🔍 1. 偵測效能黑洞 (Bottlenecks)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🧱 2. 數據壓縮：少即是多的智慧</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>前端極速渲染：告別控制卡頓</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「系統性能分析與瓶頸優化」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '🔍 1. 偵測效能黑洞 (Bottlenecks)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🧱 2. 數據壓縮：少即是多的智慧', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '前端極速渲染：告別控制卡頓', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '160 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',       time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">QUIZ</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    
+    /* ─── QUIZ ─── */
+    const QUIZ_ANSWERS = [1, 1, 1, 1];
+    const QUIZ_EXPLANATIONS = ["即時系統的關鍵不是「快」，而是「可預測」——必須保證在 deadline 之前完成計算與回應。","PID 的積分與微分項假設固定的取樣間隔，若 loop time 波動，Δt 不一致會導致計算偏差。","micros() 提供微秒級計時，在程式段前後各取一次時間戳並相減，即可精確量測該段的執行耗時。","合作式多工或優先權排程能確保各任務按需求獲得執行時間，兼顧即時性與公平性。"];
+
+    function submitQuiz() {
+        let score = 0;
+        QUIZ_ANSWERS.forEach((ans, i) => {
+            const selected = document.querySelector(`input[name="quiz-q${i}"]:checked`);
+            const expEl = document.getElementById(`quiz-exp${i}`);
+            const qEl = document.getElementById(`quiz-q${i}`);
+            if (selected && parseInt(selected.value) === ans) {
+                score++;
+                qEl.style.borderColor = '#107c10';
+                expEl.style.background = '#dff6dd';
+                expEl.innerHTML = '<strong style="color:#107c10;">✓ 正確！</strong> ' + QUIZ_EXPLANATIONS[i];
+            } else {
+                qEl.style.borderColor = '#d13438';
+                expEl.style.background = '#fde7e9';
+                expEl.innerHTML = '<strong style="color:#d13438;">✗ 不正確。</strong> ' + QUIZ_EXPLANATIONS[i];
+            }
+            expEl.style.display = 'block';
+        });
+        const resultEl = document.getElementById('quiz-result');
+        resultEl.style.display = 'block';
+        if (score === QUIZ_ANSWERS.length) {
+            resultEl.style.background = '#dff6dd';
+            resultEl.style.color = '#107c10';
+            resultEl.textContent = `🎉 滿分！你答對了全部 ${QUIZ_ANSWERS.length} 題！`;
+        } else {
+            resultEl.style.background = '#deecf9';
+            resultEl.style.color = '#005a9e';
+            resultEl.textContent = `你答對了 ${score} / ${QUIZ_ANSWERS.length} 題，請查看解析後再試一次。`;
+        }
+    }
+
+    function resetQuiz() {
+        QUIZ_ANSWERS.forEach((_, i) => {
+            const radios = document.querySelectorAll(`input[name="quiz-q${i}"]`);
+            radios.forEach(r => r.checked = false);
+            const expEl = document.getElementById(`quiz-exp${i}`);
+            expEl.style.display = 'none';
+            const qEl = document.getElementById(`quiz-q${i}`);
+            qEl.style.borderColor = '#e1dfdd';
+        });
+        document.getElementById('quiz-result').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='進階 13：系統穩健性';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">作業單元 13：系統性能分析 (System Performance Profiling)</h1><a aria-label="Permalink: 作業單元 13：系統性能分析 (System Performance Profiling)" class="anchor" href="#作業單元-13系統性能分析-system-performance-profiling" id="user-content-作業單元-13系統性能分析-system-performance-profiling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>系統性能分析</strong> 挑戰。在這個單元中，你將學習如何診斷並優化嵌入式系統、通訊協議以及 Web 前端渲染的性能瓶頸。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a aria-label="Permalink: 🎯 學習目標" class="anchor" href="#-學習目標" id="user-content--學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>系統耗時診斷</strong>：使用嵌入式性能工具找出系統中的「性能黑洞」。</li>
+<li>
+<strong>通訊協議優化</strong>：設計緊湊的二進位協議，壓榨無線頻寬的極限。</li>
+<li>
+<strong>前端渲染加速</strong>：實作 Offscreen Canvas 與 <code>requestAnimationFrame</code>，確保高頻數據流下的流暢體驗。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a aria-label="Permalink: 🚀 任務說明" class="anchor" href="#-任務說明" id="user-content--任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：系統耗時診斷 (System Profiling)</h3><a aria-label="Permalink: 任務 1：系統耗時診斷 (System Profiling)" class="anchor" href="#任務-1系統耗時診斷-system-profiling" id="user-content-任務-1系統耗時診斷-system-profiling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>在 <code>src/main.ino</code> 的主迴圈中使用 <code>micros()</code> 進行時間標記。</li>
+<li>定位出執行最耗時的模組（例如過度的 <code>Serial.print</code> 或頻繁的感測器讀取）。</li>
+<li>優化程式碼並記錄優化前後的 Loop Time (ms)。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：通訊協議瘦身 (Protocol Compression)</h3><a aria-label="Permalink: 任務 2：通訊協議瘦身 (Protocol Compression)" class="anchor" href="#任務-2通訊協議瘦身-protocol-compression" id="user-content-任務-2通訊協議瘦身-protocol-compression"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>將原本基於 JSON 的指令重構為緊湊的二進位或短字串格式（參考 <code>include/protocol_v2.h</code>）。</li>
+<li>驗證數據刷新率（Hz）是否顯著提升。</li>
+<li>在 <code>web/</code> 目錄中實作相對應的高效解碼器。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：Canvas 渲染加速 (UI Rendering Optimization)</h3><a aria-label="Permalink: 任務 3：Canvas 渲染加速 (UI Rendering Optimization)" class="anchor" href="#任務-3canvas-渲染加速-ui-rendering-optimization" id="user-content-任務-3canvas-渲染加速-ui-rendering-optimization"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>使用 Chrome DevTools 的 Performance 面板診斷渲染卡頓。</li>
+<li>實作離屏緩衝 (Offscreen Canvas) 技術。</li>
+<li>確保儀表板即便在數據流高達 100 筆/秒時，依然能穩定維持在 60 FPS。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a aria-label="Permalink: 📂 程式庫結構" class="anchor" href="#-程式庫結構" id="user-content--程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>include/</code>：包含性能監控與協議定義標頭檔。</li>
+<li>
+<code>src/</code>：嵌入式端主程式與性能分析工具。</li>
+<li>
+<code>web/</code>：具備渲染優化特性的前端儀表板。</li>
+<li>
+<code>docs/</code>：請在此放置你的性能分析報告。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交要求</h2><a aria-label="Permalink: 📝 繳交要求" class="anchor" href="#-繳交要求" id="user-content--繳交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>程式碼</strong>：確保所有優化邏輯已實作並通過測試。</li>
+<li>
+<strong>性能報告</strong>：在 <code>docs/profiling_report.md</code> 中詳細列出：
+<ul>
+<li>優化前的瓶頸分析。</li>
+<li>所採取的優化手段。</li>
+<li>優化後的數據对比 (Loop Time, FPS, Throughput)。</li>
+</ul>
+</li>
+<li>
+<strong>PR 說明</strong>：提交 PR 時，請附上性能提升的截圖或螢幕錄影。</li>
+</ol>
+<hr/>
+<p>掌握性能優化，是你邁向「全疊堆高級開發者」的關鍵一步。加油！</p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>adv-13-unit-system-perf</code> (系統性能分析)</strong> 單元，這是邁向「全疊堆高級開發者」的最終磨練。它不只要求程式能跑，更要求程式「極致高效」。這涉及到從嵌入式 CPU 的微秒級埋點量測，到通訊協議的二進位壓縮，再到瀏覽器 GPU 的 Canvas 渲染加速。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫配置建議</h3><a aria-label="Permalink: 1. 範本程式庫配置建議" class="anchor" href="#1-範本程式庫配置建議" id="user-content-1-範本程式庫配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>性能優化需要精確的對比數據與分析工具，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/SystemProfiler.cpp</code></strong>：性能量測工具。預置多個計時節點，能自動計算每個模組（如 PID、感測器讀取）的平均執行時間。</li>
+<li>
+<strong>📂 <code>include/protocol_v2.h</code></strong>：高效協議定義。提供一個框架，讓學員將原本的 JSON 指令重構為緊湊的二進位或短字串格式。</li>
+<li>
+<strong>📂 <code>web/js/high_speed_canvas.js</code></strong>：空白的渲染優化檔案。學員需在此實作離屏渲染與 <code>requestAnimationFrame</code> 邏輯。</li>
+<li>
+<strong>📂 <code>PERFORMANCE_STATS.md</code></strong>：性能對比白皮書。要求學員在優化前後，紀錄「Loop Time (ms)」、「通訊頻率 (Hz)」與「UI 幀率 (FPS)」。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：系統耗時診斷 (System Profiling Lab)</h4><a aria-label="Permalink: 任務 1：系統耗時診斷 (System Profiling Lab)" class="anchor" href="#任務-1系統耗時診斷-system-profiling-lab" id="user-content-任務-1系統耗時診斷-system-profiling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會使用嵌入式性能工具找出躲在主快取中的「性能黑洞」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>模組耗時計數</strong>：學員需在主迴圈內使用 <code>micros()</code> 進行時間戳記埋點。</li>
+<li>
+<strong>瓶頸定位報告</strong>：在 README 中列出排行榜。通常會發現 <code>Serial.print()</code> 或過度頻繁的 <code>AnalogRead</code> 是最大瓶頸。</li>
+<li>
+<strong>PR 提交內容</strong>：提交一份包含分析數據的 PR。解釋為什麼某個區塊佔用了 70% 的 CPU 時間。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：通訊協議瘦身術 (Protocol Compression Lab)</h4><a aria-label="Permalink: 任務 2：通訊協議瘦身術 (Protocol Compression Lab)" class="anchor" href="#任務-2通訊協議瘦身術-protocol-compression-lab" id="user-content-任務-2通訊協議瘦身術-protocol-compression-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過設計極簡协议，在有限的無線頻寬下實現更高的反饋頻率。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>協議重構實作</strong>：將原本肥大的 <code>{"speed":100,"angle":45}</code> 壓縮為緊湊協議（如 <code>v100a45</code>）。</li>
+<li>
+<strong>傳輸吞吐量驗證</strong>：要求學員對比在相同環境下，優化後的數據刷新率是否提升了 3-5 倍。</li>
+<li>
+<strong>解碼器開發</strong>：同步開發 Javascript 端的高效解碼函數，確保通訊鏈路的全線路通暢。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：Canvas 渲染加速挑戰 (High-performance UI Rendering)</h4><a aria-label="Permalink: 任務 3：Canvas 渲染加速挑戰 (High-performance UI Rendering)" class="anchor" href="#任務-3canvas-渲染加速挑戰-high-performance-ui-rendering" id="user-content-任務-3canvas-渲染加速挑戰-high-performance-ui-rendering"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：優化前端顯示，確保在高頻數據流衝擊下操控手感依然順滑。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>渲染卡頓診斷</strong>：使用 Chrome DevTools 錄製 Performance Profile。</li>
+<li>
+<strong>非同步渲染實作</strong>：實作 <code>requestAnimationFrame</code> (rAF) 同步技術。</li>
+<li>
+<strong>離屏緩衝技術</strong>：繪製靜態背景與標籤於 Offscreen Canvas，動態波形僅重繪變動部分，大幅降低 GPU 負載。</li>
+<li>
+<strong>Final Video</strong>：展示即便數據流高達 每秒 100 筆，儀表板也毫無延遲、流暢運行的最終成果。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 系統架構師導師點評標準 (Full-Stack Performance Benchmarks)</h3><a aria-label="Permalink: 3. 系統架構師導師點評標準 (Full-Stack Performance Benchmarks)" class="anchor" href="#3-系統架構師導師點評標準-full-stack-performance-benchmarks" id="user-content-3-系統架構師導師點評標準-full-stack-performance-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對全系統資源極限的掌控力」</strong>：</p>
+<ul>
+<li>[ ] <strong>數據說服力</strong>：優化前後的數據是否有顯著提升 (如 Loop 時間下降、FPS 穩定在 60)？</li>
+<li>[ ] <strong>協議設計精妙度</strong>：自定義協議是否兼顧了「節省頻寬」與「易於解析」的平衡？</li>
+<li>[ ] <strong>架構優雅性</strong>：優化手段是否引入了過多複雜度？還是透過更聰明的設計達成高效？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/perf_config.h    # 核心：定義性能監控節點
+├── src/main.ino             # 實作：學員需在此優化主流程並實作精簡協議
+├── web/fast_dashboard.html  # 介面：具備高效渲染特性的儀表板
+├── docs/profiling_report.md # 報告：詳列優化前後的全鏈路延遲數據對比
+├── README.md                # 專案報告：我如何讓系統性能翻倍的技術總結
+└── performance_profile.json # 數據：上傳 Chrome DevTools 錄製的性能診斷檔
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的工程師，是能看穿資料流中的每一個位元，並壓榨出每一微秒性能的極客」</strong>。掌握性能分析後，學員將擁有了開發「高頻交易系統」、「多人連線遊戲」或「精準工業自動化」所需的頂層優化技術。
+|
+|
+完美！至此我們已經將 <strong>進階 13</strong> 的所有單元（系統健壯性、性能分析）全部標準化完成。恭喜！Vibe Coding 進階課程的 GitHub Classroom 部署地圖已完美收官！</p>
+</section>
+
+</body>
+</html>

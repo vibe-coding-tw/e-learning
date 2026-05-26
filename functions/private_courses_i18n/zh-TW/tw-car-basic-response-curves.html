@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>曲線優化：線性 vs. 指數響應 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Quiz */
+        .quiz-question { margin-bottom: 32px; }
+        .quiz-question p { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+        .quiz-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 14px;
+            border: 1px solid #e1dfdd;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background .1s, border-color .1s;
+            font-size: 14px;
+        }
+        .quiz-option:hover { background: #f3f2f1; border-color: #c8c6c4; }
+        .quiz-option input[type=radio] { margin-top: 2px; accent-color: var(--ms-blue); flex-shrink: 0; }
+        .quiz-option.correct { background: #dff6dd; border-color: var(--ms-green); }
+        .quiz-option.wrong { background: #fde7e9; border-color: var(--ms-red); }
+        .quiz-feedback {
+            display: none;
+            margin-top: 8px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .quiz-feedback.correct { background: #dff6dd; color: #107c10; display: block; }
+        .quiz-feedback.wrong { background: #fde7e9; color: #d13438; display: block; }
+        .quiz-submit { margin-top: 16px; }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/basic.html" target="_top" class="nav-label">基礎課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">曲線優化：線性 vs. 指數響應</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>曲線優化：線性 vs. 指數響應</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">基礎 8</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>掌握演算法彌補肌肉不足。打造完美手感「人機合一」。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>能夠比較線性響應（\(y = x\)）與指數響應（如 \((1-k)x + kx^3\)）的數學特性，並解釋「軟中心」斜率如何提升低速微調的操控容錯空間。</li>
+                    <li>能夠實作混合映射公式並正確處理負數區間（保留符號），透過繞錐測試量化比較不同曲線設定對碰撞率與操縱感的影響。</li>
+                    <li>能夠開發即時模式切換 UI，在「直覺模式」與「精準模式」之間熱切換響應曲線，並確保切換過程不產生控制跳動。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    線性映射雖然簡單，但人類對搖桿的操控感受並不是線性的——低速區需要更細膩的控制，高速區則希望一推就到位。
+                    指數曲線（或二次曲線）能讓低速段「放大」、高速段「壓縮」，大幅提升操控手感。
+                    本單元比較不同響應曲線的數學與實際體驗差異，幫你找到最適合自己車輛的映射函數。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">情境</div>
+                    你的遙控車在低速微調時總是「頓頓的」，稍微推一點搖桿就衝太快；
+                    但全速行駛時又覺得推到 80% 跟 100% 沒什麼差別。
+                    這就是線性映射的先天限制——套上一條指數曲線後，低速更絲滑、高速更分明，操控體驗瞬間升級。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/z13-gjYTvNk"
+                        title="曲線優化：線性 vs. 指數響應 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>線性響應 (Linear Response)</h1>
+
+                <p>
+                    <strong>線性響應</strong>是最簡單、最直覺的搖桿映射方式：輸出與輸入成正比，
+                    數學表達為 \(f(x) = x\)。搖桿推了 30%，馬達就輸出 30% 的動力；推了 80%，就輸出 80%。
+                    斜率在整個範圍內恆定為 <code>1.0</code>，沒有任何加速或減速的區段。
+                </p>
+
+                <p>
+                    這種映射的最大優勢是<strong>可預測性</strong>——操控者可以精確地知道搖桿位置對應多少出力，
+                    不需要適應任何非線性的「手感曲線」。對於初學者或需要快速部署的場景，線性響應通常是第一選擇。
+                </p>
+
+                <h2>數學特性</h2>
+
+                <p>線性響應函數的完整定義：</p>
+
+                \[f(x) = x, \quad x \in [-1.0,\; 1.0]\]
+
+                <p>其關鍵特性如下：</p>
+
+                <ul>
+                    <li><strong>恆定斜率</strong>：\(f'(x) = 1.0\)，在中心和邊緣的敏感度完全相同</li>
+                    <li><strong>零截距</strong>：\(f(0) = 0\)，搖桿中心精確對應零輸出</li>
+                    <li><strong>端點閉合</strong>：\(f(1) = 1\)，全推對應全力</li>
+                    <li><strong>符號保留</strong>：\(f(-x) = -f(x)\)，正反方向對稱</li>
+                </ul>
+
+                <h2>優缺點分析</h2>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>面向</th>
+                            <th>評價</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>直覺性</td>
+                            <td><span class="check"><i class="fas fa-check"></i></span> 優</td>
+                            <td>輸入與輸出 1:1 對應，無需學習或適應</td>
+                        </tr>
+                        <tr>
+                            <td>實作複雜度</td>
+                            <td><span class="check"><i class="fas fa-check"></i></span> 優</td>
+                            <td>無需額外計算，直接使用歸一化值</td>
+                        </tr>
+                        <tr>
+                            <td>低速微調</td>
+                            <td><span class="cross"><i class="fas fa-times"></i></span> 劣</td>
+                            <td>中心區域斜率過陡，微小位移就產生明顯出力變化</td>
+                        </tr>
+                        <tr>
+                            <td>高速辨識度</td>
+                            <td><span class="cross"><i class="fas fa-times"></i></span> 劣</td>
+                            <td>80% 到 100% 的出力差異不明顯，缺乏「爆發」層次</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        線性響應的「中心過敏」問題在實際操控中非常明顯：當你嘗試讓遙控車慢慢前進時，
+                        稍微推一下搖桿就會「衝」出去。這是因為人類手指的精度約為 5%–10%，
+                        而線性映射在這個區間的輸出變化已經足以讓馬達產生可感知的動力。
+                    </div>
+                </div>
+
+                <h2>程式碼實作</h2>
+
+                <p>線性響應的實作極為簡單——歸一化後的值本身就是線性映射的結果：</p>
+
+                <pre class="ms-code"><span class="c-comment">// 線性響應：直接回傳歸一化值</span>
+<span class="c-kw">function</span> <span class="c-tag">linearResponse</span><span class="c-white">(</span><span class="c-attr">x</span><span class="c-white">) {</span>
+  <span class="c-kw">return</span> <span class="c-white">x;</span>
+<span class="c-white">}</span>
+
+<span class="c-comment">// 在控制管線中使用</span>
+<span class="c-kw">const</span> <span class="c-attr">raw</span> <span class="c-white">=</span> <span class="c-tag">normalize</span><span class="c-white">(joystickY, maxRadius);</span>
+<span class="c-kw">const</span> <span class="c-attr">output</span> <span class="c-white">=</span> <span class="c-tag">linearResponse</span><span class="c-white">(raw);</span> <span class="c-comment">// output === raw</span></pre>
+
+                <p>
+                    雖然線性響應看似「什麼都不用做」，但把它封裝成獨立函式仍然很重要——
+                    這為後續替換成指數曲線或其他映射函數提供了統一的介面，是良好的軟體架構實踐。
+                </p>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>指數響應 (Exponential Response)</h1>
+
+                <p>
+                    線性響應的先天限制在於：人類的手指肌肉控制精度有限，中心區域需要更大的「容錯空間」。
+                    <strong>指數響應（或稱 Expo 曲線）</strong>透過數學方式重新分配敏感度——
+                    讓搖桿中心附近的斜率變平緩（低速更容易微調），邊緣附近的斜率變陡峭（高速動力更集中）。
+                    這就是遙控車與無人機領域中所謂的「軟中心 (Soft Center)」效果。
+                </p>
+
+                <h2>混合映射公式</h2>
+
+                <p>最常用的指數響應公式是線性項與三次方項的加權混合：</p>
+
+                \[f(x) = (1 - k) \cdot x + k \cdot x^3\]
+
+                <p>
+                    其中 <code>k</code> 是靈敏度係數（範圍 <code>0.0</code> 到 <code>1.0</code>）。
+                    它控制了曲線的「彎曲程度」：
+                </p>
+
+                <ul>
+                    <li><strong>\(k = 0\)</strong>：退化為純線性 \(f(x) = x\)，無任何 Expo 效果</li>
+                    <li><strong>\(k = 0.5\)</strong>：適中的軟中心，適合一般場景</li>
+                    <li><strong>\(k = 0.8\)</strong>：明顯的軟中心，適合需要精密微調的低速操作</li>
+                    <li><strong>\(k = 1.0\)</strong>：完全三次方 \(f(x) = x^3\)，最大的中心緩衝區</li>
+                </ul>
+
+                <h2>不同 k 值的數值比較</h2>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>輸入 \(x\)</th>
+                            <th>\(k = 0\) (線性)</th>
+                            <th>\(k = 0.5\)</th>
+                            <th>\(k = 0.8\)</th>
+                            <th>\(k = 1.0\) (三次方)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>0.1</code></td>
+                            <td><code>0.100</code></td>
+                            <td><code>0.051</code></td>
+                            <td><code>0.021</code></td>
+                            <td><code>0.001</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>0.3</code></td>
+                            <td><code>0.300</code></td>
+                            <td><code>0.164</code></td>
+                            <td><code>0.081</code></td>
+                            <td><code>0.027</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>0.5</code></td>
+                            <td><code>0.500</code></td>
+                            <td><code>0.313</code></td>
+                            <td><code>0.200</code></td>
+                            <td><code>0.125</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>0.8</code></td>
+                            <td><code>0.800</code></td>
+                            <td><code>0.656</code></td>
+                            <td><code>0.570</code></td>
+                            <td><code>0.512</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>1.0</code></td>
+                            <td><code>1.000</code></td>
+                            <td><code>1.000</code></td>
+                            <td><code>1.000</code></td>
+                            <td><code>1.000</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        注意表中最後一列：不論 <code>k</code> 取什麼值，<code>f(1.0)</code> 永遠等於 <code>1.0</code>。
+                        這是混合公式的數學性質——<strong>端點閉合</strong>保證了全推搖桿時，馬達一定能達到 100% 出力。
+                    </div>
+                </div>
+
+                <h2>程式碼實作</h2>
+
+                <p>以下 JavaScript 函式實作了帶符號保留的指數響應曲線：</p>
+
+                <pre class="ms-code"><span class="c-comment">// 混合指數響應：(1-k)·x + k·x³</span>
+<span class="c-kw">function</span> <span class="c-tag">expoResponse</span><span class="c-white">(</span><span class="c-attr">x</span><span class="c-white">,</span> <span class="c-attr">k</span><span class="c-white">) {</span>
+  <span class="c-kw">return</span> <span class="c-white">(</span><span class="c-val">1.0</span> <span class="c-white">- k) * x + k *</span> <span class="c-tag">Math</span><span class="c-white">.pow(x,</span> <span class="c-val">3</span><span class="c-white">);</span>
+<span class="c-white">}</span>
+
+<span class="c-comment">// 使用範例</span>
+<span class="c-tag">expoResponse</span><span class="c-white">(</span><span class="c-val">0.5</span><span class="c-white">,</span> <span class="c-val">0.7</span><span class="c-white">);</span>   <span class="c-comment">// → 0.238 (遠小於線性的 0.5)</span>
+<span class="c-tag">expoResponse</span><span class="c-white">(</span><span class="c-val">-0.5</span><span class="c-white">,</span> <span class="c-val">0.7</span><span class="c-white">);</span>  <span class="c-comment">// → -0.238 (符號自動保留)</span>
+<span class="c-tag">expoResponse</span><span class="c-white">(</span><span class="c-val">1.0</span><span class="c-white">,</span> <span class="c-val">0.7</span><span class="c-white">);</span>   <span class="c-comment">// → 1.0 (端點閉合)</span></pre>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        這個公式使用的是<strong>奇數次冪</strong>（三次方），因此天然保留了輸入的正負號——
+                        \((-x)^3 = -(x^3)\)。如果使用偶數次冪（如平方），必須額外用
+                        <code>Math.sign(x)</code> 恢復符號，否則後退操作會失效。
+                    </div>
+                </div>
+
+                <p>
+                    掌握了指數響應的數學原理後，下一步是學習如何在實際操控中選擇最佳的 <code>k</code> 值，
+                    以及如何實作即時模式切換功能。
+                </p>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>調校實務</h1>
+
+                <p>
+                    沒有一條曲線能適用所有場景：在寬闘賽道上全速衝刺時，線性響應的直覺反應可能更好；
+                    在狹窄障礙物之間精密穿梭時，指數響應的軟中心更能避免碰撞。
+                    專業的遙控系統應該支援<strong>即時模式切換</strong>，讓操控者根據任務需求在不同的響應曲線之間熱切換。
+                </p>
+
+                <h2>模式切換架構</h2>
+
+                <p>
+                    實作模式切換的關鍵在於將映射函式抽象為可替換的策略。以下是推薦的架構設計：
+                </p>
+
+                <pre class="ms-code"><span class="c-comment">// 定義可切換的響應模式</span>
+<span class="c-kw">let</span> <span class="c-attr">currentMode</span> <span class="c-white">=</span> <span class="c-str">'expo'</span><span class="c-white">;</span>
+<span class="c-kw">let</span> <span class="c-attr">expoK</span> <span class="c-white">=</span> <span class="c-val">0.7</span><span class="c-white">;</span>
+
+<span class="c-kw">function</span> <span class="c-tag">applyResponse</span><span class="c-white">(</span><span class="c-attr">x</span><span class="c-white">) {</span>
+  <span class="c-kw">if</span> <span class="c-white">(currentMode ===</span> <span class="c-str">'linear'</span><span class="c-white">)</span> <span class="c-kw">return</span> <span class="c-white">x;</span>
+  <span class="c-kw">if</span> <span class="c-white">(currentMode ===</span> <span class="c-str">'expo'</span><span class="c-white">)</span>
+    <span class="c-kw">return</span> <span class="c-white">(</span><span class="c-val">1</span> <span class="c-white">- expoK) * x + expoK *</span> <span class="c-tag">Math</span><span class="c-white">.pow(x,</span> <span class="c-val">3</span><span class="c-white">);</span>
+  <span class="c-kw">return</span> <span class="c-white">x;</span>
+<span class="c-white">}</span>
+
+<span class="c-comment">// 模式切換（由 UI 按鈕觸發）</span>
+<span class="c-kw">function</span> <span class="c-tag">toggleMode</span><span class="c-white">() {</span>
+  <span class="c-white">currentMode = currentMode ===</span> <span class="c-str">'linear'</span> <span class="c-white">?</span> <span class="c-str">'expo'</span> <span class="c-white">:</span> <span class="c-str">'linear'</span><span class="c-white">;</span>
+  <span class="c-tag">updateModeUI</span><span class="c-white">();</span>
+<span class="c-white">}</span></pre>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        模式切換的瞬間可能產生<strong>控制跳動 (Control Glitch)</strong>：假設搖桿正停在 <code>0.5</code>，
+                        從線性模式（輸出 <code>0.5</code>）切換到 Expo 模式（輸出 <code>0.238</code>），
+                        馬達會突然減速。在高速場景下，這種跳動可能造成失控。建議在搖桿接近中心時才允許切換，
+                        或加入平滑過渡 (interpolation) 機制。
+                    </div>
+                </div>
+
+                <h2>視覺回饋設計</h2>
+
+                <p>
+                    模式切換必須搭配<strong>清晰的視覺回饋</strong>，避免操控者不知道目前處於哪種模式。
+                    以下是推薦的 UI 設計原則：
+                </p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>模式</th>
+                            <th>建議配色</th>
+                            <th>標籤文字</th>
+                            <th>使用場景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>直覺模式 (Linear)</td>
+                            <td>暖色系（橙、紅）</td>
+                            <td>DIRECT</td>
+                            <td>開闘區域、高速巡航</td>
+                        </tr>
+                        <tr>
+                            <td>精準模式 (Expo)</td>
+                            <td>冷色系（藍、紫）</td>
+                            <td>PRECISION</td>
+                            <td>狹窄空間、精密定位</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>符號保留的重要性</h2>
+
+                <p>
+                    在實作非線性曲線時，一個常見的陷阱是<strong>偶數次冪破壞符號</strong>。
+                    例如如果使用平方映射 \(f(x) = x^2\)，當 \(x = -0.5\) 時輸出是 \(0.25\)（正數），
+                    後退操作就失效了。正確的做法有兩種：
+                </p>
+
+                <ul>
+                    <li><strong>使用奇數次冪</strong>：如三次方 \(x^3\)，天然保留正負號（推薦）</li>
+                    <li><strong>手動補償符號</strong>：<code>Math.sign(x) * Math.pow(Math.abs(x), n)</code></li>
+                </ul>
+
+                <pre class="ms-code"><span class="c-comment">// 安全的冪映射（適用於任意指數）</span>
+<span class="c-kw">function</span> <span class="c-tag">safePow</span><span class="c-white">(</span><span class="c-attr">x</span><span class="c-white">,</span> <span class="c-attr">n</span><span class="c-white">) {</span>
+  <span class="c-kw">return</span> <span class="c-tag">Math</span><span class="c-white">.sign(x) *</span> <span class="c-tag">Math</span><span class="c-white">.pow(</span><span class="c-tag">Math</span><span class="c-white">.abs(x), n);</span>
+<span class="c-white">}</span>
+
+<span class="c-tag">safePow</span><span class="c-white">(</span><span class="c-val">-0.5</span><span class="c-white">,</span> <span class="c-val">2</span><span class="c-white">);</span>  <span class="c-comment">// → -0.25 (符號正確保留)</span>
+<span class="c-tag">safePow</span><span class="c-white">(</span><span class="c-val">-0.5</span><span class="c-white">,</span> <span class="c-val">3</span><span class="c-white">);</span>  <span class="c-comment">// → -0.125</span></pre>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        在實際的繞錐測試中，先用線性模式建立對賽道的空間感，
+                        再切換到 Expo 模式嘗試精密走位。比較兩種模式下的碰撞次數與完成時間，
+                        你將親身體會到「曲線優化能彌補人類肌肉震顫」的工程洞見。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('basic-08-expo-1', '【作業 8-1】實作指數響應曲線 (Exponential Curve Profile)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 8-1</div>
+                            <h3 class="text-lg font-bold mb-2">混合映射實作</h3>
+                            <p class="text-xs text-gray-600 mb-4">實作 (1 - k)·x + k·x³ 公式。觀察調整比例參數後的曲線演化。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 🔢 45 min 【作業 8-1】 「混合映射實作」 實作 (1 - k)·x + k·x³ 公式。觀察調整比例參數後的曲線演化。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('basic-08-expo-2', '【作業 8-2】「窄路繞錐」對比測試 (Soft Center Experience)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 8-2</div>
+                            <h3 class="text-lg font-bold mb-2">精準操控路測</h3>
+                            <p class="text-xs text-gray-600 mb-4">繞錐賽道中，量化比較兩組設定碰撞率。詳述軟中心對手感助益。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 🏎️ 60 min 【作業 8-2】 「精準操控路測」 繞錐賽道中，量化比較兩組設定碰撞率。詳述軟中心對手感助益。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('basic-08-expo-3', '【作業 8-3】動態模式切換 UI (Real-time Mode Switching)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 8-3</div>
+                            <h3 class="text-lg font-bold mb-2">即時切換開發</h3>
+                            <p class="text-xs text-gray-600 mb-4">開發 UI 按鈕。實現特性在「直覺」與「精密」間熱切換。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ ⚡ 60 min 【作業 8-3】 「即時切換開發」 開發 UI 按鈕。實現特性在「直覺」與「精密」間熱切換。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none">
+                        <i class="fas fa-check"></i> 已完成
+                    </div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 4 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+                <p>為每個問題選出最佳答案，確認你對本模組的理解。</p>
+
+                <div id="quiz-form">
+
+                    <!-- Q1 -->
+                    <div class="quiz-question" id="q1">
+                        <p>1. 線性響應 f(x) = x 在搖桿操控中的主要缺點是什麼？</p>
+                        <label class="quiz-option"><input type="radio" name="q1" value="a"> 搖桿推到底時無法輸出最大值</label>
+                        <label class="quiz-option"><input type="radio" name="q1" value="b"> 中心區域斜率過陡，低速微調困難，容易「衝」出去</label>
+                        <label class="quiz-option"><input type="radio" name="q1" value="c"> 無法保留輸入的正負號</label>
+                        <div class="quiz-feedback" id="q1-feedback"></div>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="quiz-question" id="q2">
+                        <p>2. 指數響應公式 f(x) = (1 - k)·x + k·x³ 中，當 k = 0 時曲線的行為是什麼？</p>
+                        <label class="quiz-option"><input type="radio" name="q2" value="a"> 完全三次方曲線，中心極度平緩</label>
+                        <label class="quiz-option"><input type="radio" name="q2" value="b"> 退化為純線性響應 f(x) = x</label>
+                        <label class="quiz-option"><input type="radio" name="q2" value="c"> 所有輸入都輸出零</label>
+                        <div class="quiz-feedback" id="q2-feedback"></div>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div class="quiz-question" id="q3">
+                        <p>3. 為什麼指數響應使用三次方 (x³) 而非二次方 (x²)？</p>
+                        <label class="quiz-option"><input type="radio" name="q3" value="a"> 三次方的計算速度比二次方更快</label>
+                        <label class="quiz-option"><input type="radio" name="q3" value="b"> 三次方能自動保留輸入的正負號，二次方會破壞符號導致後退失效</label>
+                        <label class="quiz-option"><input type="radio" name="q3" value="c"> 三次方曲線的端點值比二次方更大</label>
+                        <div class="quiz-feedback" id="q3-feedback"></div>
+                    </div>
+
+                    <!-- Q4 -->
+                    <div class="quiz-question" id="q4">
+                        <p>4. 在行駛中即時切換響應模式（線性→指數）時，可能產生什麼問題？</p>
+                        <label class="quiz-option"><input type="radio" name="q4" value="a"> 搖桿會失去與馬達的連線</label>
+                        <label class="quiz-option"><input type="radio" name="q4" value="b"> 馬達輸出值突然改變，產生控制跳動 (Control Glitch)</label>
+                        <label class="quiz-option"><input type="radio" name="q4" value="c"> 響應曲線的端點閉合會被破壞</label>
+                        <div class="quiz-feedback" id="q4-feedback"></div>
+                    </div>
+
+                    <div class="quiz-submit">
+                        <button class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                        <button class="ms-btn-ghost" onclick="resetQuiz()" style="margin-left:8px; display:none;" id="quiz-reset-btn">重新作答</button>
+                    </div>
+                    <div id="quiz-score" style="display:none; margin-top:16px; padding:16px; background:#f3f2f1; border-radius:4px; font-size:14px;"></div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>曲線優化：線性 vs. 指數響應</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>📏 1. 線性響應 (Linear Response)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>📈 2. 指數響應 (Exponential Response)</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>🔘 3. 調校實務</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="https://www.youtube.com/embed/z13-gjYTvNk" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://docs.google.com/document/d/e/2PACX-1vTq1AWA9wq2xJFAdVeQ8cLdcgmLHFHNenW5-6EBAl1bA4xmw9AuWJu1r7ec55LoPXlk1KcwoOpbljir/pub?embedded=true" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「曲線優化：線性 vs. 指數響應」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '📏 1. 線性響應 (Linear Response)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '📈 2. 指數響應 (Exponential Response)', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '🔘 3. 調校實務', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',       time: '4 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    const QUIZ_ANSWERS = { q1: 'b', q2: 'b', q3: 'b', q4: 'b' };
+    const QUIZ_EXPLANATIONS = {
+        q1: { b: '線性響應的斜率在整個區間恆定為 1.0，中心區域的微小位移就會產生明顯的出力變化，讓低速微調非常困難。' },
+        q2: { b: '當 k = 0 時，公式簡化為 f(x) = (1-0)·x + 0·x³ = x，即完全退化為線性響應。' },
+        q3: { b: '奇數次冪 (-x)³ = -(x³) 天然保留正負號；偶數次冪 (-x)² = x² 會使負輸入變正，導致後退操作失效。' },
+        q4: { b: '切換瞬間同一個搖桿位置對應的輸出值會突變（例如 0.5 變為 0.238），造成馬達出力突然改變。' },
+    };
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">測驗</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    /* ─── QUIZ ─── */
+    function submitQuiz() {
+        let correct = 0;
+        let total = Object.keys(QUIZ_ANSWERS).length;
+        let allAnswered = true;
+
+        for (const [qid, answer] of Object.entries(QUIZ_ANSWERS)) {
+            const selected = document.querySelector(`input[name="${qid}"]:checked`);
+            if (!selected) { allAnswered = false; continue; }
+
+            const val = selected.value;
+            const feedbackEl = document.getElementById(`${qid}-feedback`);
+            const options = document.querySelectorAll(`input[name="${qid}"]`);
+
+            options.forEach(opt => {
+                opt.disabled = true;
+                const label = opt.parentElement;
+                if (opt.value === answer) label.classList.add('correct');
+                if (opt.checked && opt.value !== answer) label.classList.add('wrong');
+            });
+
+            if (val === answer) {
+                correct++;
+                feedbackEl.className = 'quiz-feedback correct';
+                feedbackEl.textContent = '✓ ' + QUIZ_EXPLANATIONS[qid][answer];
+            } else {
+                feedbackEl.className = 'quiz-feedback wrong';
+                const exp = QUIZ_EXPLANATIONS[qid][answer];
+                feedbackEl.textContent = '✗ 不正確。' + exp;
+            }
+        }
+
+        if (!allAnswered) { alert('請回答所有問題後再提交。'); return; }
+
+        const scoreEl = document.getElementById('quiz-score');
+        scoreEl.style.display = 'block';
+        const pct = Math.round(correct / total * 100);
+        const pass = pct >= 75;
+        scoreEl.innerHTML = `
+            <span style="font-size:20px;">${pass ? '🎉' : '📖'}</span>
+            <strong style="margin-left:8px;">你答對了 ${correct} / ${total} 題（${pct}%）</strong>
+            <div style="margin-top:6px; color:#605e5c;">${pass ? '通過！你已掌握本模組的核心概念。' : '建議回顧相關單元後再試一次。'}</div>
+        `;
+
+        document.querySelector('.quiz-submit .ms-btn').disabled = true;
+        document.getElementById('quiz-reset-btn').style.display = 'inline-block';
+    }
+
+    function resetQuiz() {
+        document.querySelectorAll('.quiz-option').forEach(el => {
+            el.classList.remove('correct','wrong');
+        });
+        document.querySelectorAll('input[type=radio]').forEach(el => {
+            el.checked = false;
+            el.disabled = false;
+        });
+        document.querySelectorAll('.quiz-feedback').forEach(el => {
+            el.className = 'quiz-feedback';
+            el.textContent = '';
+        });
+        document.getElementById('quiz-score').style.display = 'none';
+        document.querySelector('.quiz-submit .ms-btn').disabled = false;
+        document.getElementById('quiz-reset-btn').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='基礎 08：搖桿數學模型';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "https://www.youtube.com/embed/z13-gjYTvNk",
+        doc: "https://docs.google.com/document/d/e/2PACX-1vTq1AWA9wq2xJFAdVeQ8cLdcgmLHFHNenW5-6EBAl1bA4xmw9AuWJu1r7ec55LoPXlk1KcwoOpbljir/pub?embedded=true"
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">曲線優化：線性 vs. 指數響應 (basic-08-unit-response-curves)</h1><a aria-label="Permalink: 曲線優化：線性 vs. 指數響應 (basic-08-unit-response-curves)" class="anchor" href="#曲線優化線性-vs-指數響應-basic-08-unit-response-curves" id="user-content-曲線優化線性-vs-指數響應-basic-08-unit-response-curves"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a aria-label="Permalink: 任務目標" class="anchor" href="#任務目標" id="user-content-任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在本單元中，你將學習如何利用數學參數平衡「直覺反應」與「精密維護」，並透過實時切換 UI 驗證不同演算法在極限繞障場景下的表現差異。這是一場關於「人機合一」的操控感實驗。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務清單</h2><a aria-label="Permalink: 任務清單" class="anchor" href="#任務清單" id="user-content-任務清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<p><strong>實作指數響應曲線</strong>:</p>
+<ul>
+<li>開啟 <code>js/math_engine.js</code>。</li>
+<li>實作混合映射公式：<code>(1 - k) * x + k * x^3</code>。</li>
+<li>確保靈敏度係數 <code>k</code> 能正確主導曲線的平滑度。</li>
+</ul>
+</li>
+<li>
+<p><strong>「窄路繞錐」對比測試</strong>:</p>
+<ul>
+<li>在提供的模擬環境中進行 S 型賽道測試。</li>
+<li>對比「純線性 (k=0)」與「重度指數 (k=0.8)」的操縱感。</li>
+<li>在 <code>docs/Pilot_Report.md</code> 中記錄完成時間、碰撞次數。</li>
+</ul>
+</li>
+<li>
+<p><strong>動態模式切換 UI</strong>:</p>
+<ul>
+<li>在 UI 上實作即時切換功能。</li>
+<li>切換模式時，UI 配色與文字應有顯著變化（例如：精準模式與暴力模式）。</li>
+<li>確保切換過程平滑，不會造成控制異常。</li>
+</ul>
+</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">繳交說明</h2><a aria-label="Permalink: 繳交說明" class="anchor" href="#繳交說明" id="user-content-繳交說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>完成程式碼實作</strong>: 確保所有任務要求的邏輯都已正確編寫。</li>
+<li>
+<strong>填寫實驗報告</strong>: 在 <code>docs/Pilot_Report.md</code> 中記錄你的實驗數據與心得。</li>
+<li>
+<strong>推送更新</strong>: 將更改 commit 並 push 到你的 <strong>程式庫</strong>。</li>
+</ol>
+<hr/>
+<p><em>祝你調校出最完美的操控感！</em></p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>basic-08-unit-response-curves</code> (曲線優化：線性 vs. 指數響應)</strong> 單元，這是學員建立「人機合一 (Human-Machine Interaction)」操控感的關鍵課程。它要求學員具備 <strong>控制心理學 (Control Psychology)</strong> 的思維，學習如何利用數學參數平衡「直覺反應」與「精密維護」，並透過實時切換 UI 驗證不同演算法在極限繞障場景下的表現差異。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" class="anchor" href="#1-範本程式庫-template-程式庫-配置建議" id="user-content-1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>響應曲線作業的核心在於「公式混和」與「模式管理」，範本應包含核心演算法引擎與模式切換 UI，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/math_engine.js</code></strong>：<strong>響應曲線實作區</strong>。學員在此實作 <code>(1 - k) * x + k * x^3</code> 的混合映射公式，並設計可調整的靈敏度係數 <code>k</code>。</li>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>控制儀表板</strong>。內建模式切換按鈕以及實時數值監測圖表。</li>
+<li>
+<strong>📂 <code>style/mode_themes.css</code></strong>：<strong>視覺回饋樣式</strong>。定義「精準模式 (Precision)」與「暴力模式 (Aggressive)」的不同配色方案，強化操作狀態的識別度。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>飛行員調校日誌 (Pilot Log)</strong>。提供表格讓學員記錄在「繞錐測試 (Slalom Test)」中，不同 <code>k</code> 值對碰撞率與單圈時間的量化影響。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：實作指數響應曲線 (Exponential Curve Profile Lab)</h4><a aria-label="Permalink: 任務 1：實作指數響應曲線 (Exponential Curve Profile Lab)" class="anchor" href="#任務-1實作指數響應曲線-exponential-curve-profile-lab" id="user-content-任務-1實作指數響應曲線-exponential-curve-profile-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握複合函數的編寫，理解如何透過線性與非線性項目的權重分配 (Weighting) 來定義控制特性。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>公式建模</strong>：實作混合公式。<strong>技術要點</strong>：必須使用 <code>Math.pow(x, 3)</code> 或三次方項，以確保在保留正負號的同時產生平滑的軟中心。</li>
+<li>
+<strong>參數驗證</strong>：記錄在 <code>k=0.7</code>時，當輸入為 <code>0.5</code> 時的輸出值。藉此驗證數學實作的精確度。</li>
+<li>
+<strong>驗證要點</strong>：數值計算是否正確？曲線是否在 <code>[0, 1]</code> 區間內保持單調遞增且端點完美閉合？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「窄路繞錐」對比測試 (Soft Center Experience Lab)</h4><a aria-label="Permalink: 任務 2：「窄路繞錐」對比測試 (Soft Center Experience Lab)" class="anchor" href="#任務-2窄路繞錐對比測試-soft-center-experience-lab" id="user-content-任務-2窄路繞錐對比測試-soft-center-experience-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過量化實驗驗證數學理論，理解「軟中心 (Soft Center)」斜率如何提供更大的操作容錯空間。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>實測場景</strong>：在 S 型賽道進行測試。對比「純線性 (k=0)」與「重度指數 (k=0.8)」的表現。</li>
+<li>
+<strong>性能量化</strong>：記錄完成時間、碰撞次數與操作心理負擔感受。</li>
+<li>
+<strong>原理深挖</strong>：在 README 中解釋：為什麼線性響應在中心區域容易造成「過度修正 (Over-correction)」？</li>
+<li>
+<strong>驗證要點</strong>：學員是否能從實驗數據中得出「曲線優化能彌補人類肌肉震顫」的工程見解。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：動態模式切換 UI (Real-time Mode Switching Lab)</h4><a aria-label="Permalink: 任務 3：動態模式切換 UI (Real-time Mode Switching Lab)" class="anchor" href="#任務-3動態模式切換-ui-real-time-mode-switching-lab" id="user-content-任務-3動態模式切換-ui-real-time-mode-switching-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立動態狀態管理概念，確保系統具備根據任務需求（如高速巡航 vs. 靜態入庫）即時調整控制特性的能力。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>熱切換實作</strong>：在 UI 上點擊切換後，無需重新整理網頁即可立即改變通訊封包中的數值處理邏輯。</li>
+<li>
+<strong>狀態同步</strong>：切換模式時，UI 配色與文字應有顯著變化（如精準模式變為冷色系、暴力模式變為暖色系）。</li>
+<li>
+<strong>通訊流穩定性</strong>：確保在切換係數的瞬間，不會造成 ESP32 端的指令解鎖或異常跳動。</li>
+<li>
+<strong>驗證要點</strong>：切換過程是否平滑？UI 是否能正確反映目前的控制係數？</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 控制演算法與 HMI 調校點評標準 (Algorithm &amp; HMI Tuning Standards)</h3><a aria-label="Permalink: 3. 控制演算法與 HMI 調校點評標準 (Algorithm &amp; HMI Tuning Standards)" class="anchor" href="#3-控制演算法與-hmi-調校點評標準-algorithm--hmi-tuning-standards" id="user-content-3-控制演算法與-hmi-調校點評標準-algorithm--hmi-tuning-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數值與手感之間關聯的敏銳洞察力與對動態交互的細膩設計」</strong>：</p>
+<ul>
+<li>[ ] <strong>數學模型準確度</strong>：混合比例 <code>k</code> 是否能完美主導從直覺到精密的演化過程？</li>
+<li>[ ] <strong>實驗結果驅動見解</strong>：是否能正確使用「斜率」概念來解釋操縱感的變化？</li>
+<li>[ ] <strong>互動反饋清晰度</strong>：模式切換的視覺引導是否足夠強大，能完全避免駕駛者的誤操作？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 前端：具備模式切換功能的控制儀表板
+├── js/math_engine.js    # 核心：指數混合演算法與狀態切換邏輯
+├── style/ui_feedback.css # 樣式：精準與暴力模式的視覺佈景切換
+├── docs/Pilot_Report.md # 文檔：繞錐測試的量化分析與手感點評
+└── README.md            # 總結：我如何透過曲線優化將「生硬數值」轉化為「極致操縱」
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的前端工程師，不僅是在寫網頁介面的人，而是能透視使用者肌肉反應、運用數學平衡人與機器的極限、並打造出具備『人性化響應』之專業控制系統的 HMI 調校專家」</strong>。掌握響應曲線與動態切換技術後，學員將擁有了開發「專業遙控遙測系統、自動駕駛介入介面、高精度工業控制台」最專業也最核心的系統開發實力！
+|
+|
+太給力了！我們已經將 <strong>基礎 08</strong>（控制數學）中關於搖桿對映與響應曲線的所有 Classroom 部署建議完成了。這標誌著學員現在已經完全掌握了數位世界中「動態手感」的數學密碼。恭喜！教學地圖的操控板塊已經邁向了卓越！</p>
+</section>
+
+</body>
+</html>
