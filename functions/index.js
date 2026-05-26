@@ -34,6 +34,7 @@ function buildI18nFilenameCandidates(candidateFileName, locale = "") {
     const stripHtml = fileName.replace(/\.html$/i, "");
     const makeRenamed = (prefix, stem) => `${prefix}-${stem}.html`;
 
+    // 1. Old prefix patterns with sequential numbers
     let match = stripHtml.match(/^start-\d+-unit-(.+)$/i);
     if (match) addCandidate(makeRenamed(`${regionPrefix}-car-starter`, match[1]));
 
@@ -45,6 +46,22 @@ function buildI18nFilenameCandidates(candidateFileName, locale = "") {
 
     match = stripHtml.match(/^\d+-unit-(.+)$/i);
     if (match) addCandidate(makeRenamed(`${regionPrefix}-common`, match[1]));
+
+    // 2. New prefix patterns (prepare/tw/en)
+    match = stripHtml.match(/^prepare-\d+-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-common`, match[1]));
+
+    match = stripHtml.match(/^(?:tw|en)-common-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-common`, match[1]));
+
+    match = stripHtml.match(/^(?:tw|en)-car-starter-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-starter`, match[1]));
+
+    match = stripHtml.match(/^(?:tw|en)-car-basic-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-basic`, match[1]));
+
+    match = stripHtml.match(/^(?:tw|en)-car-advanced-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-advanced`, match[1]));
 
     return Array.from(deduped);
 }
