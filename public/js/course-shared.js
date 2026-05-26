@@ -13,6 +13,9 @@ window.__courseSharedLoaded = true;
 // Initializer
 function init() {
     console.log("[CourseShared] Initializing...");
+    // Cleanup legacy style that may hide dashboard FAB from previous builds.
+    const staleFabHide = document.getElementById('hide-dashboard-fab-style');
+    if (staleFabHide) staleFabHide.remove();
     hideGlobalNavOnCoursePage();
     ensureGlobalNavOnCoursePage();
     applyHideTabsPreference();
