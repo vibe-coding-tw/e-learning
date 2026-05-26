@@ -347,19 +347,25 @@ function injectDashboardFAB() {
     const path = decodeURIComponent(window.location.pathname);
     const filename = path.split('/').pop();
 
-    const isCourseUnit = filename.includes('unit-');
-    if (!isCourseUnit) return;
+    const excluded = new Set([
+        '',
+        'index.html',
+        'prepare.html',
+        'start.html',
+        'basic.html',
+        'advanced.html',
+        'students.html',
+        'tutors.html',
+        'dashboard.html',
+        'cart.html',
+        'login.html',
+        'payment-return.html'
+    ]);
+    const isHtml = filename.endsWith('.html');
+    const shouldShowFab = isHtml && !excluded.has(filename);
+    if (!shouldShowFab) return;
 
-    let courseParam = '';
-    if (filename) {
-        let idPrefix = null;
-        if (filename.includes('-unit')) { idPrefix = filename.split('-unit')[0]; }
-        else {
-            const match = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/);
-            if (match) idPrefix = match[1];
-        }
-        if (idPrefix) { courseParam = `?courseId=${idPrefix}`; }
-    }
+    const courseParam = `?unitId=${encodeURIComponent(filename)}`;
 
     const fab = document.createElement('button');
     fab.id = 'dashboard-fab';
