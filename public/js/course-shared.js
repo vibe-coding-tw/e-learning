@@ -37,13 +37,7 @@ function normalizeCourseTopNav() {
         const topNav = document.querySelector('.ms-topnav');
         if (!topNav) return;
 
-        // 1) Prepare pages: hide the blue course top nav entirely.
-        if (file.startsWith('prepare-')) {
-            topNav.style.setProperty('display', 'none', 'important');
-            return;
-        }
-
-        // 2) Other course pages: fix broken brand href.
+        // Fix broken brand href for unit pages (especially start pages).
         const brandLink = topNav.querySelector('.brand');
         if (!brandLink) return;
 
@@ -66,7 +60,10 @@ function normalizeCourseTopNav() {
 function hideGlobalNavOnCoursePage() {
     try {
         const path = window.location.pathname || '';
-        if (!path.startsWith('/courses/')) return;
+        const file = (path.split('/').pop() || '').toLowerCase();
+        const isCourseRoute = path.startsWith('/courses/');
+        const isPrepareUnit = /^prepare-\d+.*\.html$/.test(file);
+        if (!isCourseRoute && !isPrepareUnit) return;
         if (document.getElementById('course-hide-main-nav-style')) return;
 
         const style = document.createElement('style');
