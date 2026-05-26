@@ -389,12 +389,12 @@ Admin needs:
 - [x] Add `entryUnitId` to `metadata_lessons`
 - [x] Add `contentRef` to `metadata_lessons`
 - [x] Normalize known non-canonical metadata records into explicit product types (`metadataType=product|legacy_product`)
-- [ ] Add `locale` to `users`
-- [ ] Add `region` to `users`
-- [ ] Add `region` to `orders`
-- [ ] Add `channelType` to `orders`
-- [ ] Add `policyId` to `orders`
-- [ ] Add `pricingVersion` to `orders`
+- [x] Add `locale` to `users`
+- [x] Add `region` to `users`
+- [x] Add `region` to `orders`
+- [x] Add `channelType` to `orders`
+- [x] Add `policyId` to `orders`
+- [x] Add `pricingVersion` to `orders`
 - [ ] Create `revenue_share_policies` collection
 
 ### 7.2 Content routing and serving
@@ -469,6 +469,14 @@ Reference artifacts:
 3. Prepare first external content repo pilot (`zh-TW` + `en`, one unit each).
 4. Plan master-page retirement for `start/basic/advanced` after tabs are replaced by unit-page native navigation.
 5. Collect 46 missing video/doc URLs for advanced course files from content owners.
+
+Status update (2026-05-26):
+
+- Step 1 completed via:
+  - `functions/scripts/backfill_users_orders_region_fields.js --apply`
+  - Applied defaults:
+    - users: `locale=zh-TW`, `region=TW`
+    - orders: `region=TW`, `channelType=direct`, `policyId=""`, `pricingVersion=v1`
 
 ---
 

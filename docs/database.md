@@ -18,6 +18,8 @@
 | `unitAssignments` | map | 學生單元指派導師。Key = unitId，Value = tutorEmail。 |
 | `unitAssignmentMeta` | map | 學生單元綁定資訊。Key = unitId，常見欄位：`tutorUid`, `tutorEmail`, `promotionCode`, `linkedAt`。 |
 | `promotionCode` | string | Tutor 專屬 Promotion code（全域唯一）。 |
+| `locale` | string | 使用者語系（例：`zh-TW`）。 |
+| `region` | string | 使用者地區（例：`TW`）。 |
 | `courseProgress` | map | 學習進度聚合資料。 |
 | `orders` | array | 主要為 Dashboard 聚合回傳欄位，非主要持久化來源（實際訂單以 `orders` 集合為準）。 |
 | `updatedAt` | timestamp | 最後更新時間。 |
@@ -38,6 +40,10 @@
 | `status` | string | 目前主流程實際寫入 `PENDING`, `SUCCESS`（`FAILED` 保留為擴充狀態）。 |
 | `items` | map | 訂單項目。Key 為 itemId，value 可含 `name`, `price`, `quantity`, `isPhysical`。 |
 | `gateway` | string | 付款閘道（例如 `ECPAY`）。 |
+| `region` | string | 訂單地區（例：`TW`）。 |
+| `channelType` | string | 訂單渠道類型（例：`direct`, `agent`）。 |
+| `policyId` | string | 分潤政策識別碼（供月結計算讀取）。 |
+| `pricingVersion` | string | 價格版本識別碼（供定價追蹤）。 |
 | `paidAt` | timestamp | 付款完成時間。 |
 | `paymentDate` | string | 金流回傳付款時間字串。 |
 | `expiryDate` | timestamp | 課程權限到期時間。 |
