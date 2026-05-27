@@ -127,6 +127,7 @@ const CONTENT_FILE_CACHE = new Map();
 
 // Exact mappings of legacy master pages to canonical unit IDs
 const LEGACY_MASTER_TO_CANONICAL = {
+    '03-unit-github-classroom.html': 'tw-common-github-classroom.html',
     '01-master-getting-started.html': 'tw-common-developer-identity.html',
     '02-master-ai-agents.html': 'tw-common-agent-mode.html',
     '03-master-wifi-motor.html': 'tw-common-github-classroom.html',
