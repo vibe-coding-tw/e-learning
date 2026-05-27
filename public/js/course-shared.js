@@ -208,7 +208,13 @@ async function ensureDynamicUnitTabsFromFirestore() {
                 });
             }
 
-            btn.innerHTML = `<span>${formatUnitTabTitle(unitFile, idx)}</span>`;
+            let titleText = '';
+            if (matchedCourse && Array.isArray(matchedCourse.courseUnitTitles) && matchedCourse.courseUnitTitles[idx]) {
+                titleText = `${idx + 1} ${matchedCourse.courseUnitTitles[idx]}`;
+            } else {
+                titleText = formatUnitTabTitle(unitFile, idx);
+            }
+            btn.innerHTML = `<span>${titleText}</span>`;
             btn.addEventListener('click', () => {
                 window.location.href = buildUnitAuthUrl(unitFile);
             });

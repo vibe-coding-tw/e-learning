@@ -260,20 +260,12 @@
       let rows = catalogCourses
         .filter((x) => categoryFromLesson(x) === pathKey)
         .filter((x) => !shouldHideCourse(x));
-      let hardwareRows = pathKey === "tw-common"
-        ? lessons.filter((x) => x?.hiddenFromCatalog !== true && x?.isPhysical === true)
-        : [];
-      if (pathKey === "tw-common") {
-        const carPreferredIds = new Set(["car-intro", "car-advanced"]);
-        const espFallbackIds = new Set(["esp32-c3", "esp32-s3"]);
-        const carRows = hardwareRows.filter((x) => carPreferredIds.has(String(x.courseId || "").toLowerCase()));
-        if (carRows.length) {
-          hardwareRows = carRows;
-        } else {
-          const espRows = hardwareRows.filter((x) => espFallbackIds.has(String(x.courseId || "").toLowerCase()));
-          hardwareRows = espRows.length ? espRows : hardwareRows.slice(0, 2);
-        }
-      }
+      let hardwareRows = lessons.filter(
+        (x) => x?.isPhysical === true &&
+               x?.hiddenFromCatalog !== true &&
+               Array.isArray(x?.learningPaths) &&
+               x.learningPaths.includes(pathKey)
+      );
       if (!rows.length && !hardwareRows.length && pathKey !== "tw-common") {
         container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">目前此分類尚無課程。</p>`;
         return;
@@ -370,7 +362,11 @@
         `;
       }).join("");
 
-      const specsRows = lessons.filter(x => x?.metadataType === "spec");
+      const specsRows = lessons.filter(
+        (x) => x?.metadataType === "spec" &&
+               Array.isArray(x?.learningPaths) &&
+               x.learningPaths.includes(pathKey)
+      );
       const specsHtml = specsRows.map((spec) => {
         const specImg = pickImage(spec);
         const specSummary = String(spec.summary || spec.description || "");
@@ -388,7 +384,7 @@
       let pageHtml = "";
       if (courseHtml) pageHtml += renderSection("", courseHtml);
       if (hardwareHtml) pageHtml += renderSection("硬體設備", hardwareHtml);
-      if (pathKey === "tw-common") pageHtml += renderSection("電腦規格推薦", specsHtml);
+      if (specsHtml) pageHtml += renderSection("電腦規格推薦", specsHtml);
       container.innerHTML = pageHtml;
 
       container.querySelectorAll(".video-btn").forEach((btn, i) => {
