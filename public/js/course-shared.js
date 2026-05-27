@@ -16,6 +16,7 @@ function init() {
     // Cleanup legacy style that may hide dashboard FAB from previous builds.
     const staleFabHide = document.getElementById('hide-dashboard-fab-style');
     if (staleFabHide) staleFabHide.remove();
+    ensureUnitTabsTheme();
     normalizeCourseTopNav();
     ensureDynamicUnitTabsFromFirestore();
     hideGlobalNavOnCoursePage();
@@ -30,6 +31,60 @@ function init() {
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
     ensureDashboardFabFallback();
+}
+
+function ensureUnitTabsTheme() {
+    try {
+        if (document.getElementById('unit-tabs-theme')) return;
+        const style = document.createElement('style');
+        style.id = 'unit-tabs-theme';
+        style.textContent = `
+            .unit-tabs-wrapper {
+                display: block !important;
+                background: #f8fafc !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+                padding: 10px 16px !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+            }
+            .unit-tabs-container { display: block !important; min-width: max-content !important; }
+            .unit-tabs-flex {
+                display: inline-flex !important;
+                gap: 10px !important;
+                align-items: center !important;
+            }
+            .unit-tab-btn {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border: 1px solid #cbd5e1 !important;
+                background: #ffffff !important;
+                color: #334155 !important;
+                border-radius: 999px !important;
+                padding: 8px 14px !important;
+                margin: 0 !important;
+                font-size: 14px !important;
+                font-weight: 700 !important;
+                line-height: 1.2 !important;
+                cursor: pointer !important;
+                transition: all .16s ease !important;
+            }
+            .unit-tab-btn:hover {
+                border-color: #3b82f6 !important;
+                color: #1d4ed8 !important;
+                background: #eff6ff !important;
+            }
+            .unit-tab-btn.active {
+                border-color: #2563eb !important;
+                background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
+                color: #fff !important;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, .25) !important;
+            }
+        `;
+        document.head.appendChild(style);
+    } catch (e) {
+        console.warn('[CourseShared] ensureUnitTabsTheme failed:', e);
+    }
 }
 
 function normalizeUnitFilenameForRoute(file = '') {
@@ -76,10 +131,13 @@ async function ensureDynamicUnitTabsFromFirestore() {
         if (!Array.isArray(globalLessonsData) || globalLessonsData.length === 0) return;
 
         const normalizeLooseKey = (value = '') => String(value || '').split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
-        const targetKey = normalizeLooseKey(fileName);
+        const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(fileName));
         const matchedCourse = globalLessonsData.find((course) => {
             const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
-            return units.map(normalizeLooseKey).includes(targetKey);
+            return units
+                .map(normalizeUnitFilenameForRoute)
+                .map(normalizeLooseKey)
+                .includes(targetKey);
         });
         if (!matchedCourse) return;
 
@@ -132,8 +190,15 @@ function normalizeCourseTopNav() {
 
         // Normalize course bucket label to keep all units visually consistent.
         const navLabel = topNav.querySelector('.nav-label');
+        const navLabelLink = topNav.querySelector('.nav-label-link');
         if (navLabel) {
-            if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) navLabel.textContent = '入門課程';
+            if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) {
+                navLabel.textContent = '入門課程';
+                if (navLabelLink) {
+                    navLabelLink.setAttribute('href', 'https://vibe-coding.tw/learning-path.html?path=tw-car-starter');
+                    navLabelLink.setAttribute('target', '_top');
+                }
+            }
             else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) navLabel.textContent = '基礎課程';
             else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) navLabel.textContent = '進階課程';
             else if (file.startsWith('prepare-') || file.startsWith('tw-common-')) navLabel.textContent = '準備課程';
@@ -146,16 +211,7 @@ function normalizeCourseTopNav() {
         // Normalize brand text/icon style using the current production baseline.
         brandLink.innerHTML = '<i class="fas fa-rocket"></i> Vibe Coding';
 
-        const currentHref = (brandLink.getAttribute('href') || '').trim();
-        const isBroken = !currentHref || currentHref === '#' || currentHref === './#';
-        if (!isBroken) return;
-
-        let target = '/';
-        if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) target = '/start.html';
-        else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) target = '/basic.html';
-        else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) target = '/advanced.html';
-
-        brandLink.setAttribute('href', target);
+        brandLink.setAttribute('href', '/index.html');
         brandLink.setAttribute('target', '_top');
     } catch (e) {
         console.warn('[CourseShared] normalizeCourseTopNav failed:', e);
@@ -697,7 +753,7 @@ async function toggleUnitTabsVisibility() {
         const tabWrapper = tabs.closest('.relative.z-40') || tabs.parentElement?.parentElement;
         const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
         const normalizeLooseKey = (value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
-        const targetKey = normalizeLooseKey(fileName);
+        const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(fileName));
 
         if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
             globalLessonsData = await vibeFetchLessons();
@@ -707,7 +763,9 @@ async function toggleUnitTabsVisibility() {
         if (Array.isArray(globalLessonsData) && globalLessonsData.length > 0) {
             const matchedCourse = globalLessonsData.find((course) => {
                 const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
-                const unitKeys = units.map(normalizeLooseKey);
+                const unitKeys = units
+                    .map(normalizeUnitFilenameForRoute)
+                    .map(normalizeLooseKey);
                 return unitKeys.includes(targetKey);
             });
 
