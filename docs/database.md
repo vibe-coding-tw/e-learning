@@ -289,17 +289,33 @@
 
 ---
 
-## 10. 遷移備註 (Migration Notes)
-1. 角色已統一為 `admin` 與 `user`，歷史 `student` 角色需遷移為 `user`。
-2. 申請/推薦/審核流程以 `tutor_applications` 為單一真實來源（Source of Truth）；`users.tutorApplications` 僅作歷史快照，不得作為執行期判斷來源。
-3. 單元 key 含 `.html` 時，Firestore update 請使用 `FieldPath` 或一致正規化，避免 dot-in-key 巢狀化問題。
-4. 禁止新增白名單、相容名單、legacyMap 類型的執行期判斷層；需先完成 Firestore 資料遷移再上線。
-5. `courseId` 已於 2026-05-27 統一遷移為 canonical page URL（以 Firestore `metadata_lessons` 實際值為準），使用可直接開課之首個單元對應網頁，不再使用任何 `*-master-*`。
-6. 舊版學員持有的 legacy `*-master-*` 書籤、Token 與授權：
-   - 已由 `serveCourse` 設有 301 重導向機制，可自動對照 `LEGACY_MASTER_TO_CANONICAL` 轉址。
-   - 歷史付款授權相容性：針對遷移前成立的歷史訂單，其 `items` 中所購買的項目鍵值仍是舊版 master 頁面（例如 `start-01-master-web-app.html`）。為免授權失效，後端的 `resolveCanonicalUnitId` 與 `itemContainsUnit` 均已整合 `LEGACY_MASTER_TO_CANONICAL` 轉換，以在比對訂單時自動將其對照為最新的 canonical courseId 並成功開通課程。
-   - 所有舊 `courseId` 遷移至 canonical page URL 之一次性遷移腳本為 `functions/scripts/migrate_lessons_classroom_urls.js`。
-   - 遷移已於 2026-05-27 生產環境執行完畢，後續新課程新增直接設定對應的 entryUnitId 與 canonical URL 即可。
+## 10. 規格定義與遷移備註 (Specs & Migration Notes)
+
+> [!NOTE]
+> 本章節區分現行生產規格、歷史相容機制與過去之遷移備註，以便維護者能快速釐清何者為「當前運作規範」，何者為「相容性歷史痕跡」。
+
+### 10.1 Live Production Specification (現行生產規格)
+
+1. **唯一真實來源 (Firestore-first)**：所有單元、課程、推薦碼、付款授權、導師身分判定均以 Firestore 為 runtime 唯一真實來源。
+2. **角色與權限模型**：系統只區分全域 `role: admin` 與 `role: user`，導師資格由 `users.tutorConfigs[unitId].authorized` 判定。
+3. **頁面路由與導覽**：前台學習路徑、課程卡片及所有導覽，一律使用 canonical page URL（可直接開課之首個單元，例如 `/courses/tw-common-github-classroom.html`）。
+4. **ID 命名歸一化**：比對 `unitId` 或 `courseId` 時，一律做歸一化（如移除 `.html` 後綴）。
+
+### 10.2 Legacy Master Pages Retirement Spec (主頁面退役與相容規格)
+
+1. **退役計畫狀態**：`*-master-*.html` 頁面在架構上已退役，新生產網頁不再使用此命名。然而，**代碼與資料庫中的相容層仍處於啟用（ACTIVE）狀態**，不可直接移除。
+2. **舊網址重導向**：已在 Cloud Functions 的 `serveCourse` 實作 301 轉址，將歷史書籤重導向至 canonical courseId。
+3. **歷史訂單授權相容性**：因遷移前成立之歷史訂單中 `items` 仍使用 legacy master 鍵值（例如 `start-01-master-web-app.html`），後端 `resolveCanonicalUnitId` 與 `itemContainsUnit` 仍會讀取 `LEGACY_MASTER_TO_CANONICAL` 進行對照轉換，確保歷史學員權益。
+4. **完全移除相容層之門檻**：相容代碼（如 `functions/index.js` 中的 `LEGACY_MASTER_TO_CANONICAL`）只有在以下條件皆滿足後，方可刪除：
+   - 歷史訂單全部完成資料遷移（將 items/courseId 統一更新為 canonical page URL）。
+   - 經過至少一次完整生產環境 pilot validation，確認無任何歷史用戶存取異常。
+
+### 10.3 Historical Migration Notes (歷史遷移備註)
+
+- **2026-05-27 系統升級**：
+  - 角色統一：歷史 `student` 角色已全部遷移為 `user`。
+  - 單元對照：將舊版 `03-unit-github-classroom.html` 等重複課程卡片移除，改由 Cloud Functions `LEGACY_MASTER_TO_CANONICAL` 及 `public/js/dashboard.js` 的 `LEGACY_TO_CANONICAL` 進行動態對照轉址。
+  - 一次性遷移腳本為 `functions/scripts/migrate_lessons_classroom_urls.js`。
 
 ---
 
