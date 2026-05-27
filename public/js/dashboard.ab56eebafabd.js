@@ -357,7 +357,11 @@ function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor =
     const { filterUnitId } = getCurrentDashboardContext();
     const isUnitContext = !!filterUnitId;
     const isGlobalAdmin = !isUnitContext && isAdmin;
-    const canViewSettings = isUnitContext && (isQualifiedTutor || adminTutorMode);
+    // Rule: In unit context, admin can view Settings only when TutorMode is ON.
+    // Non-admin users can view Settings only when they are qualified tutors.
+    const canViewSettings = isUnitContext && (
+        isAdmin ? !!adminTutorMode : !!isQualifiedTutor
+    );
     const canViewAssignments = isGlobalAdmin || (isUnitContext && !canViewSettings);
     
     currentDashboardPermissions = {
