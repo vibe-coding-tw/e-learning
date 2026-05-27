@@ -473,7 +473,7 @@ function getPreferredUnitId(unitId, courseUnits = [], extraKeys = []) {
 }
 
 function isRenderableUnitFile(fileName) {
-    return typeof fileName === 'string' && fileName.endsWith('.html') && !fileName.includes('-master-');
+    return typeof fileName === 'string' && fileName.endsWith('.html');
 }
 
 function normalizeTutorAdminUnitId(unitId) {
@@ -3297,7 +3297,7 @@ async function renderSettingsTab(filterUnitId = null) {
             if (myRole === 'admin' && adminTutorMode) return true;
 
             const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
-            const allFiles = Array.from(new Set(units)).filter(f => f && !f.includes('-master-'));
+            const allFiles = Array.from(new Set(units)).filter(Boolean);
 
             return allFiles.some(f => isUserAuthorizedForUnit(f, course.courseId, userEmail));
         });
@@ -3341,9 +3341,7 @@ async function renderSettingsTab(filterUnitId = null) {
             const attachSegments = guideConfig.attachmentGuide || {};
 
             const filteredUnits = units.filter(f => {
-                const isMaster = f.includes('-master-');
-                if (isMaster && filterUnitId && !unitIdsMatch(f, filterUnitId)) return false;
-                if (filterUnitId && !filterUnitId.includes('-master-')) {
+                if (filterUnitId) {
                     return unitIdsMatch(f, filterUnitId);
                 }
                 return true;
@@ -3361,7 +3359,7 @@ async function renderSettingsTab(filterUnitId = null) {
                 if (!isRenderableUnitFile(preferredFileName)) return;
                 
                 if (!unitToDataMap.has(preferredFileName)) {
-                    const realUnitsOnly = units.filter(u => !u.includes('-master-'));
+                    const realUnitsOnly = units;
                     const unitIdx = realUnitsOnly.indexOf(preferredFileName);
                     const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
                     const tutorSegment = guideData.segments[preferredFileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
@@ -3510,12 +3508,8 @@ window.robustExtractGuideSegments = window.robustExtractGuideSegments || functio
     if (tutorInput && typeof tutorInput === 'object' && !Array.isArray(tutorInput)) {
         Object.entries(tutorInput).forEach(([fileName, content]) => {
             if (typeof content !== 'string') return;
-            if (fileName.includes('-master-')) {
-                result.footer += (result.footer ? "<hr>" : "") + content;
-            } else {
-                // [MODIFIED] No more legacy extraction. Use raw content.
-                result.segments[fileName] = content;
-            }
+            // [MODIFIED] No more legacy extraction. Use raw content.
+            result.segments[fileName] = content;
         });
     } else if (typeof tutorInput === 'string') {
         // [MODIFIED] Simplified fallback: treat as footer/header total if raw string
