@@ -266,6 +266,12 @@ async function loadDashboard() {
         updateCurrentDashboardPermissions({ isAdmin, isQualifiedTutor, isPaidStudent });
         const requestedTab = getRequestedTabFromUrl();
 
+        // Determine the default tab to switch to on initial load
+        let preferredTab = requestedTab;
+        if (!preferredTab && filterUnitId) {
+            preferredTab = getPreferredDashboardTab(filterUnitId);
+        }
+
         if (isAdmin || isQualifiedTutor) {
             // Admin/Tutor View (Management)
             setupAdminFeatures();
@@ -273,21 +279,14 @@ async function loadDashboard() {
             setupSettingsFeature();
             renderAdminDashboard(data, filterUnitId);
 
-            // [MODIFIED] Automatically refresh the UI and handle tab switching for filtered units
-            const activeTab = document.querySelector('.tab-btn.text-blue-600');
-            if (activeTab) {
-                const tabId = activeTab.id.replace('tab-btn-', '');
-
-                if (requestedTab) {
-                    switchTab(requestedTab);
-                } else if (filterUnitId && tabId === 'overview') {
-                    switchTab(getPreferredDashboardTab(filterUnitId));
-                } else {
+            if (preferredTab) {
+                switchTab(preferredTab);
+            } else {
+                const activeTab = document.querySelector('.tab-btn.text-blue-600');
+                if (activeTab) {
+                    const tabId = activeTab.id.replace('tab-btn-', '');
                     if (tabId === 'tutors') renderAdminConsole();
                     if (tabId === 'settings') renderSettingsTab(filterUnitId);
-                    if (tabId === 'assignments' && canCurrentUserViewAssignmentsTab()) {
-                        // Handled by renderAdminDashboard or switchTab
-                    }
                 }
             }
             
@@ -298,7 +297,9 @@ async function loadDashboard() {
         } else if (isPaidStudent) {
             // Paid student unit view
             renderStudentDashboard(data, filterUnitId);
-            if (requestedTab) switchTab(requestedTab);
+            if (preferredTab) {
+                switchTab(preferredTab);
+            }
         } else {
             showAccessDenied();
         }
@@ -1427,7 +1428,9 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
     const { showGuide = true } = options;
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
     const isAdmin = myRole === 'admin';
-    const canManageAssignments = isUserAuthorizedForUnit(filterUnitId, filterCourseId, myEmail) || (isAdmin && !filterUnitId);
+    // [MODIFIED] Ensure students can never manage assignments (even if they have unit access authorization)
+    const isStudent = !currentDashboardPermissions.isAdmin && !currentDashboardPermissions.isQualifiedTutor;
+    const canManageAssignments = !isStudent && (isUserAuthorizedForUnit(filterUnitId, filterCourseId, myEmail) || (isAdmin && !filterUnitId));
 
     // [Cleanup] Remove old guides
     const possibleContainers = [
@@ -1806,14 +1809,21 @@ window.switchTab = function (tabName) {
         tabName = getPreferredDashboardTab(filterUnitId);
     }
 
+    // [MODIFIED] Determine if current user is a student view context
+    const isStudent = !currentDashboardPermissions.isAdmin && !currentDashboardPermissions.isQualifiedTutor;
+    let paneName = tabName;
+    if (isStudent && tabName === 'assignments' && isUnitContext) {
+        paneName = 'overview';
+    }
+
     // Hide all contents
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     // Show target content
-    const targetPane = document.getElementById(`view-${tabName}`);
+    const targetPane = document.getElementById(`view-${paneName}`);
     if (targetPane) {
         targetPane.classList.remove('hidden');
     } else {
-        console.error(`[Dashboard] Tab pane not found: view-${tabName}`);
+        console.error(`[Dashboard] Tab pane not found: view-${paneName}`);
         return;
     }
 
@@ -1884,30 +1894,38 @@ window.switchTab = function (tabName) {
         const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
         let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
-        console.log("[DebugTab] tab assignments: filterUnitId=", filterUnitId, "total raw counts:", dashboardData.assignments.length);
-        let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
-        console.log("[DebugTab] tab assignments: count after permissions filter:", displayAssignments.length);
+        const isStudent = !currentDashboardPermissions.isAdmin && !currentDashboardPermissions.isQualifiedTutor;
+        if (!isStudent) {
+            console.log("[DebugTab] tab assignments: filterUnitId=", filterUnitId, "total raw counts:", dashboardData.assignments.length);
+            let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
+            console.log("[DebugTab] tab assignments: count after permissions filter:", displayAssignments.length);
 
-        if (filterUnitId) {
-            // Same here: prioritize unitId and relax courseId requirement for unit-specific view
-            displayAssignments = displayAssignments.filter(a => {
-                const match = unitIdsMatch(a.unitId, filterUnitId);
-                if (normalizeEmail(a.studentEmail).includes('rover.k.chen')) {
-                     console.log(`[DebugAssignmentTab] Checking Rover's doc ${a.id}: unitId=${a.unitId}, match=${match}`);
-                }
-                return match;
-            });
-        } else if (filterCourseId) {
-            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
-        }
-        console.log("[DebugTab] tab assignments: Final count to render:", displayAssignments.length);
+            if (filterUnitId) {
+                // Same here: prioritize unitId and relax courseId requirement for unit-specific view
+                displayAssignments = displayAssignments.filter(a => {
+                    const match = unitIdsMatch(a.unitId, filterUnitId);
+                    if (normalizeEmail(a.studentEmail).includes('rover.k.chen')) {
+                         console.log(`[DebugAssignmentTab] Checking Rover's doc ${a.id}: unitId=${a.unitId}, match=${match}`);
+                    }
+                    return match;
+                });
+            } else if (filterCourseId) {
+                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+            }
+            console.log("[DebugTab] tab assignments: Final count to render:", displayAssignments.length);
 
-        let assignmentGuideContent = "";
-        if (filterUnitId) {
-            assignmentGuideContent = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
+            let assignmentGuideContent = "";
+            if (filterUnitId) {
+                assignmentGuideContent = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
+            }
+            renderAssignments(displayAssignments, assignmentGuideContent, { showGuide: !!assignmentGuideContent });
+            renderAssignmentsGuideMain(filterUnitId);
+        } else {
+            // [MODIFIED] For students, we just refresh the README instruction placeholder
+            if (filterUnitId) {
+                vibeRefreshReadmeContent(filterUnitId);
+            }
         }
-        renderAssignments(displayAssignments, assignmentGuideContent, { showGuide: !!assignmentGuideContent });
-        renderAssignmentsGuideMain(filterUnitId);
     }
     if (tabName === 'tutors') {
         renderAdminConsole();
