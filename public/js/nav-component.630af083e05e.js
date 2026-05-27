@@ -76,11 +76,8 @@ function resolveCategoryFromLesson(lesson = {}) {
 }
 
 function getCategoryHref(categoryKey = "") {
-    const key = String(categoryKey || "").toLowerCase();
-    if (key.endsWith("-starter") || key === "tw-car-starter") return "start.html";
-    if (key.endsWith("-basic") || key === "tw-car-basic") return "basic.html";
-    if (key.endsWith("-advanced") || key === "tw-car-advanced") return "advanced.html";
-    return "prepare.html";
+    const key = encodeURIComponent(String(categoryKey || "").toLowerCase());
+    return `learning-path.html?path=${key}`;
 }
 
 function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {

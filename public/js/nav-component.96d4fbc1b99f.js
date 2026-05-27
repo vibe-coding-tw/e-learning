@@ -15,10 +15,10 @@ const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v1";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
-    { key: "tw-common", href: "prepare.html", icon: "fa-book-open", label: "課前準備" },
-    { key: "tw-car-starter", href: "start.html", icon: "fa-rocket", label: "入門課程" },
-    { key: "tw-car-basic", href: "basic.html", icon: "fa-code", label: "基礎課程" },
-    { key: "tw-car-advanced", href: "advanced.html", icon: "fa-microchip", label: "進階課程" }
+    { key: "tw-common", href: "prepare.html", icon: "fa-book-open", labelZh: "準備課程", labelEn: "Common Prep" },
+    { key: "tw-car-starter", href: "start.html", icon: "fa-rocket", labelZh: "入門課程", labelEn: "Starter Course" },
+    { key: "tw-car-basic", href: "basic.html", icon: "fa-code", labelZh: "基礎課程", labelEn: "Basic Course" },
+    { key: "tw-car-advanced", href: "advanced.html", icon: "fa-microchip", labelZh: "進階課程", labelEn: "Advanced Course" }
 ];
 
 function detectUiLocale() {
@@ -83,53 +83,40 @@ function getCategoryHref(categoryKey = "") {
     return "prepare.html";
 }
 
-function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
-    const _ = uiLocale;
-    const key = String(categoryKey || "").trim();
-    return key
-        .split("-")
-        .filter(Boolean)
-        .map((part, index) => {
-            if (index === 0 && part.length <= 3) return part.toUpperCase();
-            return part.charAt(0).toUpperCase() + part.slice(1);
-        })
-        .join(" ");
+function categoryLabel(categoryKey = "", locale = "zh-TW") {
+    const key = String(categoryKey || "").toLowerCase();
+    const zh = isZhLocale(locale);
+    if (key === "tw-common") return zh ? "準備課程" : "TW Common";
+    if (key === "tw-car-starter") return zh ? "入門課程" : "TW Car Starter";
+    if (key === "tw-car-basic") return zh ? "基礎課程" : "TW Car Basic";
+    if (key === "tw-car-advanced") return zh ? "進階課程" : "TW Car Advanced";
+    return key.replace(/-/g, " ");
 }
 
-function pickLessonCategoryLabel(lesson = {}, uiLocale = "zh-TW") {
-    const candidates = [];
+function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
     const zh = isZhLocale(uiLocale);
-    const i18n = lesson?.i18n || {};
-    const nav = i18n?.nav || {};
-    const lp = lesson?.learningPath || {};
+    const key = String(categoryKey || "").toLowerCase();
+    const parts = key.split("-");
+    const lang = parts[0] || "tw";
+    const maybeTrack = parts.length >= 3 ? parts[1] : "common";
+    const level = parts.length >= 3 ? parts[2] : (parts[1] || "common");
+    const track = parts.length >= 3 ? maybeTrack : "common";
 
+    const TRACK_ZH = { common: "通用", car: "無人車", drone: "無人機", robot: "機器人" };
+    const TRACK_EN = { common: "Common", car: "Car", drone: "Drone", robot: "Robot" };
+    const LEVEL_ZH = { common: "準備課程", starter: "入門課程", basic: "基礎課程", advanced: "進階課程" };
+    const LEVEL_EN = { common: "Common Prep", starter: "Starter Course", basic: "Basic Course", advanced: "Advanced Course" };
+
+    if (lang === "tw" && track === "common" && LEVEL_ZH[level]) return LEVEL_ZH[level];
+    if (lang === "tw" && track === "car" && LEVEL_ZH[level]) return LEVEL_ZH[level];
     if (zh) {
-        candidates.push(
-            lesson?.learningPathLabelZh,
-            lesson?.categoryLabelZh,
-            lesson?.navLabelZh,
-            lp?.labelZh,
-            nav?.labelZh
-        );
-    } else {
-        candidates.push(
-            lesson?.learningPathLabelEn,
-            lesson?.categoryLabelEn,
-            lesson?.navLabelEn,
-            lp?.labelEn,
-            nav?.labelEn
-        );
+        const t = TRACK_ZH[track] || track.toUpperCase();
+        const l = LEVEL_ZH[level] || level;
+        return `${t} ${l}`.trim();
     }
-    candidates.push(
-        lesson?.learningPathLabel,
-        lesson?.categoryLabel,
-        lesson?.navLabel,
-        lp?.label,
-        nav?.label
-    );
-
-    const hit = candidates.find((v) => typeof v === "string" && v.trim());
-    return hit ? hit.trim() : "";
+    const t = TRACK_EN[track] || track.toUpperCase();
+    const l = LEVEL_EN[level] || level;
+    return `${t} ${l}`.trim();
 }
 
 function sortCategoryKeys(keys = [], uiLocale = "zh-TW") {
@@ -161,25 +148,6 @@ function sortCategoryKeys(keys = [], uiLocale = "zh-TW") {
         if (lvA !== lvB) return lvA - lvB;
         return va.localeCompare(vb);
     });
-}
-
-function isCatalogCourseLesson(lesson = {}) {
-    const metadataType = String(lesson?.metadataType || "").toLowerCase();
-    const isHidden = lesson?.hiddenFromCatalog === true;
-    const isPhysical = lesson?.isPhysical === true;
-    const price = Number(lesson?.price);
-
-    if (isHidden) return false;
-    if (isPhysical) return false;
-    if (metadataType === "product" || metadataType === "legacy_product") return false;
-    if (metadataType === "course") return true;
-
-    const hasCourseUnits = Array.isArray(lesson?.courseUnits) && lesson.courseUnits.length > 0;
-    const hasEntry = typeof lesson?.entryUnitId === "string" && lesson.entryUnitId.trim().length > 0;
-    const hasCourseId = typeof lesson?.courseId === "string" && lesson.courseId.trim().toLowerCase().endsWith(".html");
-    const looksCourseLike = hasCourseUnits || hasEntry || hasCourseId;
-    const validPrice = Number.isFinite(price) && price >= 0;
-    return looksCourseLike && validPrice;
 }
 
 function getLearningPathsFromCache() {
@@ -215,13 +183,13 @@ function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS,
 
     desktop.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${item.label || categoryLabelFromParts(item.key, locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${categoryLabelFromParts(item.key, locale)}
         </a>
     `).join("");
 
     mobile.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${item.label || categoryLabelFromParts(item.key, locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${categoryLabelFromParts(item.key, locale)}
         </a>
     `).join("");
 }
@@ -232,10 +200,8 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
     try {
         const getLessons = httpsCallable(functions, "getLessonsMetadata");
         const res = await getLessons({});
-        const allLessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
-        const lessons = allLessons.filter(isCatalogCourseLesson);
+        const lessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
         const keys = new Set();
-        const labels = new Map();
         lessons.forEach((lesson) => {
             let key = resolveCategoryFromLesson(lesson);
             if (!key) {
@@ -248,44 +214,20 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
                 ).split("/").pop().split("?")[0];
                 key = resolveCategoryFromFilename(filename);
             }
-            if (key) {
-                keys.add(key);
-                if (!labels.has(key)) {
-                    const label = pickLessonCategoryLabel(lesson, uiLocale);
-                    if (label) labels.set(key, label);
-                }
-            }
+            if (key) keys.add(key);
         });
         const dynamic = sortCategoryKeys(Array.from(keys), uiLocale).map((key) => ({
             key,
             href: getCategoryHref(key),
-            label: labels.get(key) || "",
             icon: key.includes("advanced") ? "fa-microchip" :
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"
         }));
         const finalPaths = dynamic.length ? dynamic : DEFAULT_LEARNING_PATHS;
-        window.__vibeLearningPathDebug = {
-            locale: uiLocale,
-            lessonsCount: lessons.length,
-            sourceLessonsCount: allLessons.length,
-            categories: finalPaths.map((x) => x.key),
-            generatedAt: new Date().toISOString(),
-            source: dynamic.length ? "firestore-metadata_lessons" : "fallback-default"
-        };
-        console.info("[NavComp] learning paths generated:", window.__vibeLearningPathDebug);
         setLearningPathsCache(finalPaths);
         return finalPaths;
     } catch (e) {
         console.warn("[NavComp] loadLearningPathsDynamic failed:", e);
-        window.__vibeLearningPathDebug = {
-            locale: uiLocale,
-            lessonsCount: 0,
-            categories: DEFAULT_LEARNING_PATHS.map((x) => x.key),
-            generatedAt: new Date().toISOString(),
-            source: "fallback-default-error"
-        };
-        console.info("[NavComp] learning paths generated (fallback):", window.__vibeLearningPathDebug);
         return DEFAULT_LEARNING_PATHS;
     }
 }
