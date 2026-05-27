@@ -81,17 +81,27 @@
       };
       return m[path] || path;
     }
-    function resolveEntryUrl(lesson = {}, fallbackUrl = "") {
+    function resolveUnitFile(lesson = {}) {
       const pickFile = (value = "") => String(value || "").split("/").pop().split("?")[0];
-      if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
-        const file = pickFile(lesson.classroomUrl);
-        if (file) return `/courses/${file}`;
-      }
-      if (lesson.entryUnitId) return `/courses/${lesson.entryUnitId}`;
+      if (lesson.entryUnitId) return pickFile(lesson.entryUnitId);
       if (lesson.contentRef) {
         const file = pickFile(lesson.contentRef);
-        if (file) return `/courses/${file}`;
+        if (file) return file;
       }
+      if (Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0) {
+        const file = pickFile(lesson.courseUnits[0]);
+        if (file) return file;
+      }
+      if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
+        const file = pickFile(lesson.classroomUrl);
+        if (file) return file;
+      }
+      return "";
+    }
+
+    function resolveEntryUrl(lesson = {}, fallbackUrl = "") {
+      const unitFile = resolveUnitFile(lesson);
+      if (unitFile) return `/courses/${unitFile}`;
       return lesson.classroomUrl || fallbackUrl || "";
     }
 
@@ -107,6 +117,7 @@
       const btn = card.querySelector(".action-btn");
       if (!btn) return;
       const courseId = card.dataset.courseId;
+      const authPageId = card.dataset.authPageId || courseId;
       const courseName = card.dataset.courseName;
       const coursePrice = Number(card.dataset.coursePrice || 0);
       const isPhysical = card.dataset.isPhysical === "true";
@@ -130,7 +141,7 @@
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (!classroomUrl) return alert("⚠️ 課程連結尚未備妥，請聯繫客服。");
-          window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${encodeURIComponent(courseId)}&price=${coursePrice}`;
+          window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${encodeURIComponent(authPageId)}&price=${coursePrice}`;
         };
         return;
       }
@@ -157,11 +168,12 @@
     async function checkLessonAuthorization(card, user) {
       updateCardAction(card, "LOADING");
       const courseId = card.dataset.courseId;
+      const authPageId = card.dataset.authPageId || courseId;
       const isFreeCourse = Number(card.dataset.coursePrice || 0) === 0;
       if (isFreeCourse && user) return updateCardAction(card, "AUTHORIZED");
       const tutorModeActive = localStorage.getItem("adminTutorMode") === "true";
       try {
-        const result = await checkAuthFunction({ pageId: courseId, tutorMode: tutorModeActive });
+        const result = await checkAuthFunction({ pageId: authPageId, tutorMode: tutorModeActive });
         updateCardAction(card, result?.data?.authorized ? "AUTHORIZED" : "UNAUTHORIZED");
       } catch (_) {
         updateCardAction(card, "UNAUTHORIZED");
@@ -257,6 +269,7 @@
       }
       const courseHtml = rows.map((lesson) => {
         const entryUrl = resolveEntryUrl(lesson);
+        const unitFile = resolveUnitFile(lesson);
         const price = Number(lesson.price || 0);
         const contentList = toList(lesson.coreContent).slice(0, 4);
         const summary = String(lesson.summary || lesson.description || "課程內容由系統資料動態載入。");
@@ -278,6 +291,7 @@
         return `
           <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
                data-course-id="${lesson.courseId || ""}"
+               data-auth-page-id="${unitFile || lesson.courseId || ""}"
                data-course-name="${lesson.title || ""}"
                data-course-price="${price}"
                data-is-physical="${lesson.isPhysical === true}"
@@ -307,6 +321,7 @@
 
       const hardwareHtml = hardwareRows.map((lesson) => {
         const entryUrl = resolveEntryUrl(lesson);
+        const unitFile = resolveUnitFile(lesson);
         const price = Number(lesson.price || 0);
         const imageUrl = pickImage(lesson);
         const summary = String(lesson.summary || lesson.description || "硬體設備推薦");
@@ -320,6 +335,7 @@
         return `
           <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
                data-course-id="${lesson.courseId || ""}"
+               data-auth-page-id="${unitFile || lesson.courseId || ""}"
                data-course-name="${lesson.title || ""}"
                data-course-price="${price}"
                data-is-physical="true"
