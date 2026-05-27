@@ -15,10 +15,10 @@ const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v1";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
-    { key: "tw-common", href: "prepare.html", icon: "fa-book-open", label: "課前準備" },
-    { key: "tw-car-starter", href: "start.html", icon: "fa-rocket", label: "入門課程" },
-    { key: "tw-car-basic", href: "basic.html", icon: "fa-code", label: "基礎課程" },
-    { key: "tw-car-advanced", href: "advanced.html", icon: "fa-microchip", label: "進階課程" }
+    { key: "tw-common", href: "learning-path.html?path=tw-common", icon: "fa-book-open", label: "課前準備" },
+    { key: "tw-car-starter", href: "learning-path.html?path=tw-car-starter", icon: "fa-rocket", label: "入門課程" },
+    { key: "tw-car-basic", href: "learning-path.html?path=tw-car-basic", icon: "fa-code", label: "基礎課程" },
+    { key: "tw-car-advanced", href: "learning-path.html?path=tw-car-advanced", icon: "fa-microchip", label: "進階課程" }
 ];
 
 function detectUiLocale() {
@@ -618,7 +618,8 @@ function injectDashboardFAB() {
         'dashboard.html',
         'cart.html',
         'login.html',
-        'payment-return.html'
+        'payment-return.html',
+        'learning-path.html'
     ]);
     const pathIsCourseRoute = path.startsWith('/courses/');
     const looksLikeUnitPage = filename.includes('-unit-') || filename.includes('-master-') || /^prepare-\d+/.test(filename);
@@ -656,10 +657,10 @@ function normalizeCourseTopNavBrandLink() {
         if (href && href !== '#' && href !== './#') return;
 
         let target = '/';
-        if (file.startsWith('start-')) target = '/start.html';
-        else if (file.startsWith('basic-')) target = '/basic.html';
-        else if (file.startsWith('adv-')) target = '/advanced.html';
-        else if (file.startsWith('prepare-')) target = '/prepare.html';
+        if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) target = '/learning-path.html?path=tw-car-starter';
+        else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) target = '/learning-path.html?path=tw-car-basic';
+        else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) target = '/learning-path.html?path=tw-car-advanced';
+        else if (file.startsWith('prepare-') || file.startsWith('tw-common-')) target = '/learning-path.html?path=tw-common';
         brand.setAttribute('href', target);
         brand.setAttribute('target', '_top');
     } catch (e) {

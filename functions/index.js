@@ -1,6 +1,7 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { setGlobalOptions } = require("firebase-functions/v2");
+const { defineSecret } = require("firebase-functions/params");
 const functionsV1 = require("firebase-functions/v1");
 
 // Load .env explicitly if not in production/deploy environment or as backup
@@ -117,7 +118,7 @@ const ECPAY_LOGISTICS_MAP_URL = process.env.ECPAY_LOGISTICS_MAP_URL;
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 const GITHUB_CLASSROOM_ORG = process.env.GITHUB_CLASSROOM_ORG || "vibe-coding-classroom";
 const GITHUB_ORG_ADMIN_TOKEN = process.env.GITHUB_ORG_ADMIN_TOKEN || "";
-const CONTENT_REPO_TOKEN = process.env.CONTENT_REPO_TOKEN || "";
+const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
 const CONTENT_RUNTIME_CACHE = {
     config: null,
@@ -130,7 +131,7 @@ async function getContentRuntimeConfig() {
         return CONTENT_RUNTIME_CACHE.config;
     }
     const defaults = {
-        enabled: false,
+        enabled: true,
         repoOwner: "vibe-coding-tw",
         repoName: "content-repo",
         contentVersion: "main",
@@ -1420,7 +1421,7 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
 
 // 4. 安全檔案服務 (serveCourse)
 // ==========================================
-exports.serveCourse = onRequest(async (req, res) => {
+exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, res) => {
     const normalizeLocale = (locale = "") => {
         const raw = String(locale || "").trim();
         if (!raw) return "";
@@ -1454,7 +1455,9 @@ exports.serveCourse = onRequest(async (req, res) => {
     };
     const fetchExternalCourseContent = async (candidateFileName, runtimeConfig) => {
         if (!runtimeConfig?.enabled) return null;
-        if (!CONTENT_REPO_TOKEN) {
+        const contentRepoToken = CONTENT_REPO_TOKEN.value();
+        const hasContentToken = Boolean(contentRepoToken);
+        if (!hasContentToken) {
             console.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
             return null;
         }
@@ -1474,13 +1477,14 @@ exports.serveCourse = onRequest(async (req, res) => {
                 const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/contents/${contentPath}?ref=${encodeURIComponent(ref)}`;
                 try {
                     const startedAt = Date.now();
+                    const headers = {
+                        "Authorization": `Bearer ${contentRepoToken}`,
+                        "Accept": "application/vnd.github+json",
+                        "User-Agent": "vibe-coding-runtime"
+                    };
                     const resp = await fetch(apiUrl, {
                         method: "GET",
-                        headers: {
-                            "Authorization": `Bearer ${CONTENT_REPO_TOKEN}`,
-                            "Accept": "application/vnd.github+json",
-                            "User-Agent": "vibe-coding-runtime"
-                        }
+                        headers
                     });
                     if (!resp.ok) {
                         if (resp.status !== 404) {
@@ -1718,6 +1722,17 @@ exports.serveCourse = onRequest(async (req, res) => {
             return res.status(404).send("File not found.");
         }
 
+        // [NEW] Ensure core course scripts are always present even when content-repo keeps old hashed asset links.
+        const hasStableCourseSharedScript = /\/js\/course-shared\.js/i.test(content);
+        const hasStableNavComponentScript = /\/js\/nav-component\.js/i.test(content);
+        const runtimeScripts = [];
+        if (!hasStableCourseSharedScript) {
+            runtimeScripts.push('<script src="/js/course-shared.js"></script>');
+        }
+        if (!hasStableNavComponentScript) {
+            runtimeScripts.push('<script type="module" src="/js/nav-component.js"></script>');
+        }
+
         // [NEW v11.3.15] Inject Firebase SDK & Bootstrapper for Auto-Tracking
         if (!content) {
             content = fs.readFileSync(filePath, 'utf8');
@@ -1751,11 +1766,15 @@ exports.serveCourse = onRequest(async (req, res) => {
         </script>
         `;
 
+        const runtimeScriptBlock = runtimeScripts.length
+            ? `\n<!-- [Runtime Script Fallback] -->\n${runtimeScripts.join("\n")}\n`
+            : "";
+
         // Insert before </body> or at the end
         if (content.includes('</body>')) {
-            content = content.replace('</body>', `${bootstrapper}</body>`);
+            content = content.replace('</body>', `${runtimeScriptBlock}${bootstrapper}</body>`);
         } else {
-            content += bootstrapper;
+            content += runtimeScriptBlock + bootstrapper;
         }
 
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
