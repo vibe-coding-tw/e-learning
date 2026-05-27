@@ -11,8 +11,8 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.630af083e05e.js"></script>
-  <script src="./js/course-shared.66d32c836149.js"></script>
+  <script type="module" src="./js/nav-component.44049b428e5d.js"></script>
+  <script src="./js/course-shared.e7653b4f53d7.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -239,6 +239,7 @@
         id: "spec-recommend-lite",
         title: "電腦規格建議（基本）",
         summary: "可完成課前準備與入門課程。",
+        imageUrl: "https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png",
         coreContent: [
           "Windows 10/11 或 macOS 13+",
           "RAM 8GB",
@@ -250,6 +251,7 @@
         id: "spec-recommend-pro",
         title: "電腦規格建議（進階）",
         summary: "建議用於基礎/進階課程與較長時間開發。",
+        imageUrl: "https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg",
         coreContent: [
           "Windows 11 或 macOS 14+",
           "RAM 16GB+",
@@ -258,25 +260,81 @@
         ]
       }
     ];
+    const PREPARE_LEGACY_COURSES = [
+      { unitId: "tw-common-developer-identity.html", title: "雲端身分 (Identity)", summary: "建立開發者專業形象：GitHub 帳號、Copilot 授權與 SSH 金鑰設定。", courseId: "01-master-getting-started.html" },
+      { unitId: "tw-common-vscode-setup.html", title: "開發環境 (VS Code)", summary: "打造最強 IDE：VS Code 安裝、中文化與 GitHub 擴充功能。", courseId: "01-master-getting-started.html" },
+      { unitId: "tw-common-vscode-online.html", title: "VS Code Online", summary: "隨處皆可開發：掌握 Web-based IDE 的優勢與雲端工作區。", courseId: "01-master-getting-started.html" },
+      { unitId: "tw-common-agent-mode.html", title: "AI Agent 模式", summary: "從需求到實作，掌握 Agent 流程與高效除錯。", courseId: "02-master-ai-agents.html" },
+      { unitId: "tw-common-web-agents.html", title: "網頁版 AI 代理人", summary: "練習瀏覽器型 AI 代理協作流程與任務拆解。", courseId: "02-master-ai-agents.html" },
+      { unitId: "tw-common-vibe-coding.html", title: "Vibe Coding 實戰", summary: "用最短路徑完成可運作成果，建立實戰節奏。", courseId: "02-master-ai-agents.html" },
+      { unitId: "tw-common-github-classroom.html", title: "GitHub Classroom", summary: "理解作業邀請、提交、評分回寫與協作流程。", courseId: "03-master-wifi-motor.html" },
+      { unitId: "tw-common-wifi-setup.html", title: "WiFi 組態設定", summary: "完成 ESP32 WiFi 連線與診斷流程。", courseId: "03-master-wifi-motor.html" },
+      { unitId: "tw-common-motor-ramping.html", title: "馬達 Ramping 控制", summary: "建立平滑啟停控制，避免突波與不穩定。", courseId: "03-master-wifi-motor.html" }
+    ];
 
     function renderSection(title, html) {
+      const titleHtml = title ? `<h2 class="text-2xl font-bold text-slate-800 mb-4">${title}</h2>` : "";
       return `
         <section class="mb-10">
-          <h2 class="text-2xl font-bold text-slate-800 mb-4">${title}</h2>
+          ${titleHtml}
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-2">${html}</div>
         </section>
       `;
     }
 
     function renderLessons(lessons, pathKey) {
+      const PREVIEW_DISABLED_UNITS = new Set([
+        "tw-common-vscode-setup.html",
+        "tw-common-agent-mode.html",
+        "tw-common-web-agents.html",
+        "tw-common-vibe-coding.html"
+      ]);
       const container = document.getElementById("lesson-container");
       const title = document.getElementById("page-title");
       title.textContent = categoryLabel(pathKey);
       const catalogCourses = lessons.filter(isCatalogCourseLesson);
-      const rows = catalogCourses.filter((x) => categoryFromLesson(x) === pathKey);
-      const hardwareRows = pathKey === "tw-common"
+      let rows = catalogCourses.filter((x) => categoryFromLesson(x) === pathKey);
+      if (pathKey === "tw-common") {
+        const byUnit = new Map();
+        rows.forEach((r) => {
+          const unit = resolveUnitFile(r);
+          if (unit) byUnit.set(unit, r);
+        });
+        rows = PREPARE_LEGACY_COURSES.map((preset) => {
+          const live = byUnit.get(preset.unitId);
+          if (live) return live;
+          return {
+            courseId: preset.courseId,
+            courseKey: preset.unitId.replace(".html", ""),
+            title: preset.title,
+            summary: preset.summary,
+            price: 0,
+            metadataType: "course",
+            level: "common",
+            track: "common",
+            locale: "zh-TW",
+            hiddenFromCatalog: false,
+            contentRef: preset.unitId,
+            entryUnitId: preset.unitId,
+            classroomUrl: `/courses/${preset.unitId}`
+          };
+        });
+      }
+
+      let hardwareRows = pathKey === "tw-common"
         ? lessons.filter((x) => x?.hiddenFromCatalog !== true && x?.isPhysical === true)
         : [];
+      if (pathKey === "tw-common") {
+        const carPreferredIds = new Set(["car-intro", "car-advanced"]);
+        const espFallbackIds = new Set(["esp32-c3", "esp32-s3"]);
+        const carRows = hardwareRows.filter((x) => carPreferredIds.has(String(x.courseId || "").toLowerCase()));
+        if (carRows.length) {
+          hardwareRows = carRows;
+        } else {
+          const espRows = hardwareRows.filter((x) => espFallbackIds.has(String(x.courseId || "").toLowerCase()));
+          hardwareRows = espRows.length ? espRows : hardwareRows.slice(0, 2);
+        }
+      }
       if (!rows.length && !hardwareRows.length && pathKey !== "tw-common") {
         container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">目前此分類尚無課程。</p>`;
         return;
@@ -288,11 +346,13 @@
         const contentList = toList(lesson.coreContent).slice(0, 4);
         const summary = String(lesson.summary || lesson.description || "課程內容由系統資料動態載入。");
         const duration = String(lesson.duration || lesson.estimatedDuration || "");
-        const lessonLabel = String(lesson.lessonLabel || lesson.tagText || "");
+        const lessonLabel = String(lesson.lessonLabel || lesson.tagText || "").trim();
+        const displayLessonLabel = lessonLabel || "課程單元";
         const icon = String(lesson.cardIcon || lesson.icon || "📘");
         const imageUrl = pickImage(lesson);
         const videoUrl = pickVideo(lesson);
-        const videoButton = videoUrl
+        const disablePreview = pathKey === "tw-common" && PREVIEW_DISABLED_UNITS.has(unitFile);
+        const videoButton = (videoUrl && !disablePreview)
           ? `<button class="video-btn flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors">▶ 課程預覽</button>`
           : "";
         const actionButtonClass = videoUrl ? "flex-1" : "w-full";
@@ -315,7 +375,7 @@
               ${duration ? `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${duration}</span>` : ""}
             </div>
             <h2 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || lesson.courseId || "未命名課程"}</h2>
-            ${lessonLabel ? `<div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${lessonLabel}</div>` : ""}
+            <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${displayLessonLabel}</div>
             ${imageHtml}
             <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary}</div>
             <div class="text-sm text-slate-700 mb-4">
@@ -337,14 +397,17 @@
         const entryUrl = resolveEntryUrl(lesson);
         const unitFile = resolveUnitFile(lesson);
         const price = Number(lesson.price || 0);
+        const hardwareId = String(lesson.courseId || "").toLowerCase();
         const imageUrl = pickImage(lesson);
         const summary = String(lesson.summary || lesson.description || "硬體設備推薦");
         const contentList = toList(lesson.coreContent).slice(0, 4);
         const listHtml = contentList.length
           ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
           : `<p class="text-sm text-slate-500">${summary}</p>`;
+        const objectPos = hardwareId === "car-intro" ? "50% 50%" : (hardwareId === "car-advanced" ? "50% 28%" : "50% 50%");
+        const objectScale = hardwareId === "car-advanced" ? "scale(1.08)" : (hardwareId === "car-intro" ? "scale(1.02)" : "scale(1)");
         const imageHtml = imageUrl
-          ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${imageUrl}" alt="${lesson.title || "hardware"}" class="w-full h-40 object-cover"></div>`
+          ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-white mb-3 h-56"><img src="${imageUrl}" alt="${lesson.title || "hardware"}" class="w-full h-full object-cover" style="object-position:${objectPos}; transform:${objectScale};"></div>`
           : "";
         return `
           <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
@@ -370,6 +433,7 @@
 
       const specsHtml = PREPARE_SPECS.map((spec) => `
         <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          ${spec.imageUrl ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${spec.imageUrl}" alt="${spec.title}" class="w-full h-40 object-cover"></div>` : ""}
           <h3 class="text-xl font-bold text-slate-800 mb-2">${spec.title}</h3>
           <p class="text-sm text-slate-600 mb-3">${spec.summary}</p>
           <ul class="list-disc pl-5 space-y-1 text-sm text-slate-700">${spec.coreContent.map((x) => `<li>${x}</li>`).join("")}</ul>
@@ -377,7 +441,7 @@
       `).join("");
 
       let pageHtml = "";
-      if (courseHtml) pageHtml += renderSection("課程單元", courseHtml);
+      if (courseHtml) pageHtml += renderSection("", courseHtml);
       if (hardwareHtml) pageHtml += renderSection("硬體設備", hardwareHtml);
       if (pathKey === "tw-common") pageHtml += renderSection("電腦規格推薦", specsHtml);
       container.innerHTML = pageHtml;
