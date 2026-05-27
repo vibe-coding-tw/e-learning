@@ -13,7 +13,7 @@ const admin = require("firebase-admin");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const PRIVATE_COURSES_DIR = path.join(__dirname, "private_courses");
+
 
 function buildI18nFilenameCandidates(candidateFileName, locale = "") {
     const fileName = String(candidateFileName || "").trim();
@@ -1477,11 +1477,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         if (!chain.includes(defaultLocale)) chain.push(defaultLocale);
         return chain;
     };
-    const resolveLocalCourseFilePath = (candidateFileName) => {
-        // local mirror (private_courses_i18n) 已廢除，直接查 legacy private_courses 目錄
-        const fallback = path.join(PRIVATE_COURSES_DIR, candidateFileName);
-        return fs.existsSync(fallback) ? fallback : "";
-    };
+
     const fetchExternalCourseContent = async (candidateFileName, runtimeConfig) => {
         if (!runtimeConfig?.enabled) return null;
         const contentRepoToken = CONTENT_REPO_TOKEN.value();
@@ -1644,11 +1640,8 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         const runtimeConfig = await getContentRuntimeConfig();
 
         if (fileName.match(/^0[1-5]-/) && !fileName.includes('-master-')) {
-            const asIsPath = resolveLocalCourseFilePath(fileName, runtimeConfig);
-            if (!fs.existsSync(asIsPath)) {
-                normalizedFileName = 'start-' + fileName;
-                console.log(`[serveCourse] Early Normalization (Conditional): ${fileName} -> ${normalizedFileName}`);
-            }
+            normalizedFileName = 'start-' + fileName;
+            console.log(`[serveCourse] Early Normalization (Conditional): ${fileName} -> ${normalizedFileName}`);
         }
 
         const normalizedScopePart = normalizeCourseFile(scopePart);
@@ -1710,17 +1703,13 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         const finalServeName = normalizedFileName; 
         let resolvedSource = "none";
         let content = "";
-        let filePath = "";
+        
         const externalHit = await fetchExternalCourseContent(finalServeName, runtimeConfig);
         if (externalHit && externalHit.content) {
             content = externalHit.content;
             resolvedSource = externalHit.source;
         } else {
-            filePath = resolveLocalCourseFilePath(finalServeName);
-        }
-
-        // [NEW v11.3.9] Legacy Name Fallback (01- to 00-)
-        if (!fs.existsSync(filePath)) {
+            // [NEW v11.3.9] Legacy Name Fallback (01- to start-01- / start-01- to 01-) via external content repo
             let altFileName;
             if (fileName.startsWith('start-')) altFileName = fileName.replace('start-', '');
             else if (fileName.match(/^0[1-5]-/)) altFileName = 'start-' + fileName;
@@ -1731,19 +1720,11 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
                     console.log(`[serveCourse] Legacy Fallback via external: ${fileName} -> ${altFileName}`);
                     content = altExternalHit.content;
                     resolvedSource = altExternalHit.source;
-                    filePath = "";
-                }
-                const altPath = resolveLocalCourseFilePath(altFileName);
-                if (fs.existsSync(altPath)) {
-                    console.log(`[serveCourse] Legacy Fallback: ${fileName} -> ${altFileName}`);
-                    filePath = altPath;
-                    content = "";
-                    resolvedSource = "local";
                 }
             }
         }
 
-        if (!content && !fs.existsSync(filePath)) {
+        if (!content) {
             return res.status(404).send("File not found.");
         }
 
@@ -1756,12 +1737,6 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         }
         if (!hasStableNavComponentScript) {
             runtimeScripts.push('<script type="module" src="/js/nav-component.js"></script>');
-        }
-
-        // [NEW v11.3.15] Inject Firebase SDK & Bootstrapper for Auto-Tracking
-        if (!content) {
-            content = fs.readFileSync(filePath, 'utf8');
-            resolvedSource = "local";
         }
         console.log(`[serveCourse] content_source=${resolvedSource} file=${finalServeName}`);
         const firebaseConfig = {
