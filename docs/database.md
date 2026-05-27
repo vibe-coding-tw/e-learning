@@ -296,6 +296,7 @@
 5. `courseId` 已於 2026-05-27 統一遷移為 canonical page URL（以 Firestore `metadata_lessons` 實際值為準），使用可直接開課之首個單元對應網頁，不再使用任何 `*-master-*`。
 6. 舊版學員持有的 legacy `*-master-*` 書籤、Token 與授權：
    - 已由 `serveCourse` 設有 301 重導向機制，可自動對照 `LEGACY_MASTER_TO_CANONICAL` 轉址。
+   - 歷史付款授權相容性：針對遷移前成立的歷史訂單，其 `items` 中所購買的項目鍵值仍是舊版 master 頁面（例如 `start-01-master-web-app.html`）。為免授權失效，後端的 `resolveCanonicalUnitId` 與 `itemContainsUnit` 均已整合 `LEGACY_MASTER_TO_CANONICAL` 轉換，以在比對訂單時自動將其對照為最新的 canonical courseId 並成功開通課程。
    - 所有舊 `courseId` 遷移至 canonical page URL 之一次性遷移腳本為 `functions/scripts/migrate_lessons_classroom_urls.js`。
    - 遷移已於 2026-05-27 生產環境執行完畢，後續新課程新增直接設定對應的 entryUnitId 與 canonical URL 即可。
 
