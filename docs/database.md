@@ -86,9 +86,9 @@
 > - `ai-agents-vibe.courseUnits` 已切換為 `02-unit-agent-mode.html`, `02-unit-web-agents.html`, `02-unit-vibe-coding.html`
 > - `github-classroom.courseUnits` 已整併為 `03-unit-github-classroom.html`
 
-### `metadata_lessons` 規劃中欄位（Platform Expansion Plan）
+### `metadata_lessons` 新增與整合欄位（已實作）
 
-下列欄位尚屬下一階段規劃，作為課程架構升級與外部內容倉遷移使用：
+下列欄位已於 2026-05-27 系統升級中正式實作與啟用，用以取代傳統的 `*-master-*.html` 頁面：
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
@@ -293,11 +293,11 @@
 2. 申請/推薦/審核流程以 `tutor_applications` 為單一真實來源（Source of Truth）；`users.tutorApplications` 僅作歷史快照，不得作為執行期判斷來源。
 3. 單元 key 含 `.html` 時，Firestore update 請使用 `FieldPath` 或一致正規化，避免 dot-in-key 巢狀化問題。
 4. 禁止新增白名單、相容名單、legacyMap 類型的執行期判斷層；需先完成 Firestore 資料遷移再上線。
-5. `courseId` 建議統一採用 canonical 課程/單元 page URL（以 Firestore `metadata_lessons` 實際值為準），優先使用可直接開課之 `entryUnitId` 對應頁面，不再以 `*-master-*` 作為新資料主鍵。
-6. 若要從舊 `courseId`（短碼/舊字串/`*-master-*`）遷移至 canonical page URL，請使用：
-   - `node functions/scripts/migrate_courseid_to_page_url.js --dry-run`
-   - `node functions/scripts/migrate_courseid_to_page_url.js --apply`
-   - 來源映射會以 `metadata_lessons.classroomUrl` 的檔名為準，並同步更新 `orders`、`assignments`、`users.courseProgress`、`users.tutorConfigs` 的課程層 key。
+5. `courseId` 已於 2026-05-27 統一遷移為 canonical page URL（以 Firestore `metadata_lessons` 實際值為準），使用可直接開課之首個單元對應網頁，不再使用任何 `*-master-*`。
+6. 舊版學員持有的 legacy `*-master-*` 書籤、Token 與授權：
+   - 已由 `serveCourse` 設有 301 重導向機制，可自動對照 `LEGACY_MASTER_TO_CANONICAL` 轉址。
+   - 所有舊 `courseId` 遷移至 canonical page URL 之一次性遷移腳本為 `functions/scripts/migrate_lessons_classroom_urls.js`。
+   - 遷移已於 2026-05-27 生產環境執行完畢，後續新課程新增直接設定對應的 entryUnitId 與 canonical URL 即可。
 
 ---
 
