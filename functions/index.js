@@ -467,6 +467,31 @@ exports.initiatePayment = onRequest(async (req, res) => {
             lessons
         );
 
+        // [NEW] Prevent duplicate course purchase if original course has not expired
+        if (uid !== "GUEST") {
+            const db = admin.firestore();
+            const ordersSnapshot = await db.collection('orders')
+                .where('uid', '==', uid)
+                .where('status', '==', 'SUCCESS')
+                .get();
+
+            if (!ordersSnapshot.empty) {
+                for (const itemKey of Object.keys(normalizedItems)) {
+                    const lesson = lessons.find(l => l.courseId === itemKey) || findCourseByPageOrUnit(itemKey, itemKey, lessons);
+                    if (lesson && lesson.isPhysical !== true) {
+                        const hasPaid = hasActiveOrderForCourse(ordersSnapshot, lesson.courseId, lessons);
+                        if (hasPaid) {
+                            return res.status(400).json({
+                                error: {
+                                    message: `您已擁有「${lesson.title || '本課程'}」且尚在授權期內，無需重複購買。`
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
         // Guardrail: physical-product orders must include complete logistics info.
         const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
         const hasPhysicalItem = Object.keys(normalizedItems || {}).some(id => {
