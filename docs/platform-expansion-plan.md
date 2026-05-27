@@ -227,13 +227,18 @@ All unit files now follow a consistent structure:
 
 ---
 
-## 4. I18N Content Repo MVP
+## 4. I18N Content Repo (Runtime Fetching)
+
+> **2026-05-27 決策**：`private_courses_i18n` local mirror 設計已廢除。
+> 課程內容將直接由 functions 在 runtime 從 GitHub content-repo 拉取並進行記憶體快取。
+> 原本的 `scripts/sync_i18n_private_courses.sh` 同步腳本已移除。
 
 ### 4.1 Objectives
 
 - Move course content into an external private content repo.
 - Support `zh-TW` and `en` first.
 - Keep current auth/token behavior unchanged.
+- Perform runtime resolution with high performance using memory cache.
 
 ### 4.2 External content repo structure
 
@@ -259,28 +264,16 @@ Current decision:
 
 ### 4.3 Runtime lookup
 
-`serveCourse` should resolve in this order:
+`serveCourse` resolves content using the following priority (defined in `docs/content-runtime-v2.md`):
 
-1. `functions/private_courses_i18n/<query.lang>/<fileName>`
-2. `functions/private_courses_i18n/<accept-language primary>/<fileName>`
-3. `functions/private_courses_i18n/zh-TW/<fileName>`
-4. `functions/private_courses/<fileName>`
+1. External repo (`content-repo`) at pinned `contentVersion` (Primary)
+2. Legacy local: `functions/private_courses/<fileName>` (Legacy fallback)
 
-### 4.4 Sync flow
+### 4.4 Release / Update flow
 
-MVP sync command:
-
-```bash
-scripts/sync_i18n_private_courses.sh \
-  --source=/ABS/PATH/TO/content-repo \
-  --locales=zh-TW,en
-```
-
-Release flow:
-
-1. Update localized HTML in external content repo
-2. Sync into this project
-3. Deploy
+1. Update localized HTML in the external `content-repo` (PR -> merge).
+2. Get the commit SHA.
+3. Update `metadata_settings/content_runtime.contentVersion` in Firestore to that SHA.
 
 ---
 
@@ -441,14 +434,11 @@ Admin needs:
 
 ### 7.3 External content repo MVP
 
-- [x] Create `sync_i18n_private_courses.sh` MVP tool
-- [x] Add `--dry-run` support
-- [x] Add stale-file detection
-- [x] Add optional stale-file deletion via `--apply-delete`
+- [x] Create `sync_i18n_private_courses.sh` MVP tool (已廢除且於 2026-05-27 刪除)
 - [x] Create external private content repo
 - [x] Add first `zh-TW` pilot content
 - [x] Add first `en` pilot content
-- [x] Define publish SOP: update repo -> sync -> deploy
+- [x] Define runtime fetch resolution & caching (替代原本的 local mirror 同步流程，已實作於 serveCourse)
 - [x] Verify fallback order with one migrated unit
 
 ### 7.4 Naming migration
