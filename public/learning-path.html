@@ -249,6 +249,24 @@
     }
 
     function renderLessons(lessons, pathKey) {
+      const HIDDEN_COURSE_KEYS = new Set([
+        "03-unit-github-classroom",
+        "03-unit-github-classroom.html",
+        "tw-common-github-classroom",
+        "tw-common-github-classroom.html"
+      ]);
+      const shouldHideCourse = (lesson = {}) => {
+        const keys = [
+          lesson.courseId,
+          lesson.courseKey,
+          lesson.entryUnitId,
+          ...(Array.isArray(lesson.courseUnits) ? lesson.courseUnits : [])
+        ]
+          .filter(Boolean)
+          .map(v => String(v).toLowerCase());
+        return keys.some(k => HIDDEN_COURSE_KEYS.has(k));
+      };
+
       const PREVIEW_DISABLED_UNITS = new Set([
         "tw-common-vscode-setup.html",
         "tw-common-agent-mode.html",
@@ -259,7 +277,9 @@
       const title = document.getElementById("page-title");
       title.textContent = categoryLabel(pathKey);
       const catalogCourses = lessons.filter(isCatalogCourseLesson);
-      let rows = catalogCourses.filter((x) => categoryFromLesson(x) === pathKey);
+      let rows = catalogCourses
+        .filter((x) => categoryFromLesson(x) === pathKey)
+        .filter((x) => !shouldHideCourse(x));
       let hardwareRows = pathKey === "tw-common"
         ? lessons.filter((x) => x?.hiddenFromCatalog !== true && x?.isPhysical === true)
         : [];

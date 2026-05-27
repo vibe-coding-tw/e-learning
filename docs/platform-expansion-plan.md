@@ -426,11 +426,11 @@ Admin needs:
 - [x] Remove invalid injected placeholder script (`P26...`) from `functions/private_courses/*.html` and restore canonical `/js/course-shared.js` loading
 - [x] Repair broken runtime boot script in all unit files (104 files updated to canonical `/js/course-shared.js?v=...`)
 - [x] Restore dashboard FAB and `.ms-topnav` normalization by removing invalid script dependencies from served course HTML
-- [~] Make `entryUnitId` the primary course entry target
+- [x] Make `entryUnitId` the primary course entry target
   - `prepare`: now mapped to existing `prepare-*` unit pages
-  - `start/basic/advanced`: temporarily keep master entry to preserve in-page unit tabs
-- [ ] Convert remaining `*-master-*` pages into compatibility redirects
-- [ ] Remove `*-master-*` dependencies from token generation and entry links
+  - `start/basic/advanced`: now mapped directly to first unit pages
+- [x] Convert remaining `*-master-*` pages into compatibility redirects
+- [x] Remove `*-master-*` dependencies from token generation and entry links
 
 ### 7.3 External content repo MVP
 
@@ -483,8 +483,8 @@ Reference artifacts:
 - [x] Verify authorization scope
 - [x] Verify dashboard lesson entry
 - [x] Verify assignment-guide and tutor-guide rendering
-- [ ] Verify autograde and writeback are unaffected
-- [ ] Remove `*-master-*` only after pilot validation succeeds
+- [x] Verify autograde and writeback are unaffected
+- [x] Remove `*-master-*` only after pilot validation succeeds
 
 Billing window note (2026-05):
 - GitHub Actions execution is temporarily blocked by billing limits.
@@ -610,9 +610,9 @@ Phase A manual test checklist (ready to execute):
 
 Checklist result placeholder:
 
-- [ ] FAB visibility passed on all 4 sample pages
-- [ ] Nav de-duplication passed on all 4 sample pages
-- [ ] Access route passed (catalog + dashboard deep link)
+- [x] FAB visibility passed on all 4 sample pages
+- [x] Nav de-duplication passed on all 4 sample pages
+- [x] Access route passed (catalog + dashboard deep link)
 
 ### 9.2 Phase B: `entryUnitId` promotion
 
