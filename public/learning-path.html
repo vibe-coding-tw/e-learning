@@ -11,8 +11,8 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.js"></script>
-  <script src="./js/course-shared.js"></script>
+  <script type="module" src="./js/nav-component.630af083e05e.js"></script>
+  <script src="./js/course-shared.66d32c836149.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -23,7 +23,7 @@
   </div>
 
   <div id="footer-placeholder" data-root="."></div>
-  <script src="./js/footer-component.js"></script>
+  <script src="./js/footer-component.c218d85ceab4.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -175,6 +175,37 @@
       return Array.isArray(lesson?.courseUnits) || String(lesson?.courseId || "").endsWith(".html");
     }
 
+    function toList(value) {
+      if (Array.isArray(value)) return value.filter(Boolean).map(String);
+      if (typeof value === "string" && value.trim()) return [value.trim()];
+      return [];
+    }
+
+    function pickImage(lesson = {}) {
+      return (
+        lesson.cardImageUrl ||
+        lesson.imageUrl ||
+        lesson.thumbnailUrl ||
+        lesson.bannerUrl ||
+        "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1200&auto=format&fit=crop"
+      );
+    }
+
+    function pickVideo(lesson = {}) {
+      if (lesson.videoId) return `https://www.youtube.com/embed/${lesson.videoId}?autoplay=1&enablejsapi=1`;
+      if (lesson.videoUrl) return lesson.videoUrl;
+      return "";
+    }
+
+    function openVideo(url = "") {
+      if (!url) return;
+      if (typeof window.enterMediaMode === "function") {
+        window.enterMediaMode("video", url);
+        return;
+      }
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
     function renderLessons(lessons, pathKey) {
       const container = document.getElementById("lesson-container");
       const title = document.getElementById("page-title");
@@ -187,25 +218,56 @@
       container.innerHTML = rows.map((lesson) => {
         const entryUrl = resolveEntryUrl(lesson);
         const price = Number(lesson.price || 0);
+        const contentList = toList(lesson.coreContent).slice(0, 4);
+        const summary = String(lesson.summary || lesson.description || "課程內容由系統資料動態載入。");
+        const duration = String(lesson.duration || lesson.estimatedDuration || "");
+        const lessonLabel = String(lesson.lessonLabel || lesson.tagText || "");
+        const icon = String(lesson.cardIcon || lesson.icon || "📘");
+        const imageUrl = pickImage(lesson);
+        const videoUrl = pickVideo(lesson);
+        const videoButton = videoUrl
+          ? `<button class="video-btn flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors">▶ 課程預覽</button>`
+          : "";
+        const actionButtonClass = videoUrl ? "flex-1" : "w-full";
+        const listHtml = contentList.length
+          ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
+          : `<p class="text-sm text-slate-500">${summary}</p>`;
         return `
-          <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"
+          <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
                data-course-id="${lesson.courseId || ""}"
                data-course-name="${lesson.title || ""}"
                data-course-price="${price}"
                data-is-physical="${lesson.isPhysical === true}"
                data-classroom-url="${entryUrl}">
-            <div class="text-xs text-slate-500 mb-2">${lesson.courseKey || lesson.courseId || ""}</div>
-            <h2 class="text-xl font-bold text-slate-800 mb-3">${lesson.title || lesson.courseId || "未命名課程"}</h2>
-            <p class="text-sm text-slate-600 mb-4">${(lesson.description || lesson.summary || "").slice(0, 120) || "課程內容由系統資料動態載入。"}</p>
+            <div class="flex items-center justify-between mb-3">
+              <div class="text-xs text-slate-500">${lesson.courseKey || lesson.courseId || ""}</div>
+              ${duration ? `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${duration}</span>` : ""}
+            </div>
+            <h2 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || lesson.courseId || "未命名課程"}</h2>
+            ${lessonLabel ? `<div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${lessonLabel}</div>` : ""}
+            <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3">
+              <img src="${imageUrl}" alt="${lesson.title || "course"}" class="w-full h-40 object-cover">
+            </div>
+            <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary}</div>
+            <div class="text-sm text-slate-700 mb-4">
+              <strong class="text-slate-900 block mb-1">核心內容：</strong>
+              ${listHtml}
+            </div>
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
               <span class="text-2xl font-bold text-blue-600">${price === 0 ? "免費" : `NT$ ${price.toLocaleString()}`}</span>
             </div>
-            <div class="mt-3">
-              <button class="action-btn w-full py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>載入中...</button>
+            <div class="mt-3 flex gap-2">
+              ${videoButton}
+              <button class="action-btn ${actionButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>載入中...</button>
             </div>
           </div>
         `;
       }).join("");
+
+      container.querySelectorAll(".video-btn").forEach((btn, i) => {
+        const videoUrl = pickVideo(rows[i] || {});
+        btn.addEventListener("click", () => openVideo(videoUrl));
+      });
     }
 
     async function init() {
