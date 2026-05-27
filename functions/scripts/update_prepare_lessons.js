@@ -126,6 +126,49 @@ const prepareCourses = [
   },
 ];
 
+const prepareSpecs = [
+  {
+    id: 'spec-recommend-lite',
+    courseId: '',
+    courseKey: 'spec-recommend-lite',
+    title: '電腦規格建議（基本）',
+    summary: '可完成課前準備與入門課程。',
+    imageUrl: 'https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png',
+    coreContent: [
+      'Windows 10/11 或 macOS 13+',
+      'RAM 8GB',
+      '可用儲存空間 20GB+',
+      '穩定 Wi‑Fi 與 Chrome/Edge'
+    ],
+    metadataType: 'spec',
+    hiddenFromCatalog: true,
+    price: 0,
+    category: 'prepare',
+    orderWeight: 501,
+    isPhysical: false,
+  },
+  {
+    id: 'spec-recommend-pro',
+    courseId: '',
+    courseKey: 'spec-recommend-pro',
+    title: '電腦規格建議（進階）',
+    summary: '建議用於基礎/進階課程與較長時間開發。',
+    imageUrl: 'https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg',
+    coreContent: [
+      'Windows 11 或 macOS 14+',
+      'RAM 16GB+',
+      '可用儲存空間 50GB+',
+      '建議搭配雙螢幕與外接鍵盤滑鼠'
+    ],
+    metadataType: 'spec',
+    hiddenFromCatalog: true,
+    price: 0,
+    category: 'prepare',
+    orderWeight: 502,
+    isPhysical: false,
+  },
+];
+
 function buildContentRef(entryUnitId) {
   const file = String(entryUnitId || '').replace(/\.html$/i, '');
   if (!file) return '';
@@ -165,11 +208,21 @@ async function run() {
     // 2. Delete the old composite card 'tw-common-wifi-motor'
     await db.collection("metadata_lessons").doc("tw-common-wifi-motor").delete();
     console.log(`  🗑️ Deleted legacy card 'tw-common-wifi-motor'`);
+
+    // 3. Write the specs
+    for (const spec of prepareSpecs) {
+      const { id, ...payload } = spec;
+      await db.collection("metadata_lessons").doc(id).set(payload);
+      console.log(`  ✅ Written spec: ${id}`);
+    }
   } else {
     for (const docData of processed) {
       console.log(`  [DRY RUN] Will write card: ${docData.id}`);
     }
     console.log(`  [DRY RUN] Will delete legacy card 'tw-common-wifi-motor'`);
+    for (const spec of prepareSpecs) {
+      console.log(`  [DRY RUN] Will write spec: ${spec.id}`);
+    }
   }
 
   console.log("\nDone!");

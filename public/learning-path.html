@@ -238,33 +238,6 @@
       window.open(url, "_blank", "noopener,noreferrer");
     }
 
-    const PREPARE_SPECS = [
-      {
-        id: "spec-recommend-lite",
-        title: "電腦規格建議（基本）",
-        summary: "可完成課前準備與入門課程。",
-        imageUrl: "https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png",
-        coreContent: [
-          "Windows 10/11 或 macOS 13+",
-          "RAM 8GB",
-          "可用儲存空間 20GB+",
-          "穩定 Wi‑Fi 與 Chrome/Edge"
-        ]
-      },
-      {
-        id: "spec-recommend-pro",
-        title: "電腦規格建議（進階）",
-        summary: "建議用於基礎/進階課程與較長時間開發。",
-        imageUrl: "https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg",
-        coreContent: [
-          "Windows 11 或 macOS 14+",
-          "RAM 16GB+",
-          "可用儲存空間 50GB+",
-          "建議搭配雙螢幕與外接鍵盤滑鼠"
-        ]
-      }
-    ];
-
     function renderSection(title, html) {
       const titleHtml = title ? `<h2 class="text-2xl font-bold text-slate-800 mb-4">${title}</h2>` : "";
       return `
@@ -397,14 +370,20 @@
         `;
       }).join("");
 
-      const specsHtml = PREPARE_SPECS.map((spec) => `
-        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          ${spec.imageUrl ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${spec.imageUrl}" alt="${spec.title}" class="w-full h-40 object-cover"></div>` : ""}
-          <h3 class="text-xl font-bold text-slate-800 mb-2">${spec.title}</h3>
-          <p class="text-sm text-slate-600 mb-3">${spec.summary}</p>
-          <ul class="list-disc pl-5 space-y-1 text-sm text-slate-700">${spec.coreContent.map((x) => `<li>${x}</li>`).join("")}</ul>
-        </div>
-      `).join("");
+      const specsRows = lessons.filter(x => x?.metadataType === "spec");
+      const specsHtml = specsRows.map((spec) => {
+        const specImg = pickImage(spec);
+        const specSummary = String(spec.summary || spec.description || "");
+        const specContentList = toList(spec.coreContent);
+        return `
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            ${specImg ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${specImg}" alt="${spec.title}" class="w-full h-40 object-cover"></div>` : ""}
+            <h3 class="text-xl font-bold text-slate-800 mb-2">${spec.title || ""}</h3>
+            <p class="text-sm text-slate-600 mb-3">${specSummary}</p>
+            <ul class="list-disc pl-5 space-y-1 text-sm text-slate-700">${specContentList.map((x) => `<li>${x}</li>`).join("")}</ul>
+          </div>
+        `;
+      }).join("");
 
       let pageHtml = "";
       if (courseHtml) pageHtml += renderSection("", courseHtml);

@@ -33,6 +33,18 @@ function resolveCanonicalCourseId(course) {
 }
 
 function withEntryMetadata(course) {
+  if (course.metadataType === 'spec') {
+    return {
+      ...course,
+      courseId: course.courseId || '',
+      courseKey: course.courseKey || '',
+      track: course.track || 'common',
+      level: course.level || 'common',
+      entryUnitId: '',
+      contentRef: '',
+      classroomUrl: '',
+    };
+  }
   const firstUnit = Array.isArray(course.courseUnits) && course.courseUnits.length > 0 ? course.courseUnits[0] : '';
   const resolvedEntryUnitId = course.entryUnitId || firstUnit;
   const canonicalCourseId = resolveCanonicalCourseId({
@@ -510,6 +522,46 @@ const courses = [
     coreContent: ['資料流設計', 'BLE 非同步架構', '影像 DMA', 'PID 模擬'],
     classroomUrl: '/courses/adv-15-master-architecture.html',
     orderWeight: 44, isPhysical: false,
+  },
+  {
+    id: 'spec-recommend-lite',
+    courseId: '',
+    courseKey: 'spec-recommend-lite',
+    title: '電腦規格建議（基本）',
+    summary: '可完成課前準備與入門課程。',
+    imageUrl: 'https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png',
+    coreContent: [
+      'Windows 10/11 或 macOS 13+',
+      'RAM 8GB',
+      '可用儲存空間 20GB+',
+      '穩定 Wi‑Fi 與 Chrome/Edge'
+    ],
+    metadataType: 'spec',
+    hiddenFromCatalog: true,
+    price: 0,
+    category: 'prepare',
+    orderWeight: 501,
+    isPhysical: false,
+  },
+  {
+    id: 'spec-recommend-pro',
+    courseId: '',
+    courseKey: 'spec-recommend-pro',
+    title: '電腦規格建議（進階）',
+    summary: '建議用於基礎/進階課程與較長時間開發。',
+    imageUrl: 'https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg',
+    coreContent: [
+      'Windows 11 或 macOS 14+',
+      'RAM 16GB+',
+      '可用儲存空間 50GB+',
+      '建議搭配雙螢幕與外接鍵盤滑鼠'
+    ],
+    metadataType: 'spec',
+    hiddenFromCatalog: true,
+    price: 0,
+    category: 'prepare',
+    orderWeight: 502,
+    isPhysical: false,
   },
 ];
 
