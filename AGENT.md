@@ -108,6 +108,7 @@
   - commit message **必須**包含 `[skip ci]`，避免觸發無學生提交檔案的 workflow。
 - Push 到 **`vibe-coding-template/*`** 下的任何 repo 時：
   - commit message **必須**包含 `[skip ci]`，避免觸發 `classroom.yml` / `autograde-sync-vibe-coding.yml`。
+- **所有的 agents 在 push 資料到 GitHub 時，都必須先關閉 Actions 的功能，以節省使用額度**。
 - 避免自動化推送觸發大量不必要的 workflow 執行。
 
 ```
