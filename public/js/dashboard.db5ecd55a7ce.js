@@ -1131,6 +1131,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
         // Generate Course Detail Rows
         // Legacy ID mapping to canonical IDs for compatibility
         const LEGACY_TO_CANONICAL = {
+            '03-unit-github-classroom.html': 'tw-common-github-classroom.html',
             'ydb63bg': 'start-01-unit-flexbox-layout.html',
             'a45cwlak': 'start-02-unit-ble-async.html',
             'a7smdfeq': 'start-03-unit-control-panel.html',
