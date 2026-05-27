@@ -19,6 +19,7 @@ function init() {
     normalizeCourseTopNav();
     hideGlobalNavOnCoursePage();
     applyHideTabsPreference();
+    toggleUnitTabsVisibility();
     upgradeLegacyStartUnitToMsLayout();
     applyStartUnitModernTheme();
     injectMediaOverlay();
@@ -593,6 +594,34 @@ function applyHideTabsPreference() {
     }
 }
 
+
+function toggleUnitTabsVisibility() {
+    try {
+        const tabs = document.getElementById('course-tabs-container');
+        if (!tabs) return;
+
+        const tabButtons = tabs.querySelectorAll('.unit-tab-btn, [data-unit-target], button');
+        const visibleCount = Array.from(tabButtons).filter((btn) => {
+            if (!(btn instanceof HTMLElement)) return false;
+            const style = window.getComputedStyle(btn);
+            return style.display !== 'none' && style.visibility !== 'hidden';
+        }).length;
+
+        const tabWrapper = tabs.closest('.relative.z-40') || tabs.parentElement?.parentElement;
+        const shouldHide = visibleCount <= 1;
+
+        if (shouldHide) {
+            tabs.style.setProperty('display', 'none', 'important');
+            if (tabWrapper) tabWrapper.style.setProperty('display', 'none', 'important');
+        } else {
+            tabs.style.removeProperty('display');
+            if (tabWrapper) tabWrapper.style.removeProperty('display');
+        }
+    } catch (e) {
+        console.warn('[CourseShared] toggleUnitTabsVisibility failed:', e);
+    }
+}
+
 // Robust Initialization Logic
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -606,6 +635,7 @@ window.addEventListener('load', () => {
     console.log("[CourseShared] Window Load fallback check");
     initAnimations();
     enhanceAssignmentEntryButtons();
+    toggleUnitTabsVisibility();
 });
 
 // Global State (Using var for redeclaration safety in Master/Unit contexts)
