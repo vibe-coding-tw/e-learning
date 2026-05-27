@@ -12,7 +12,7 @@
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
   <script type="module" src="./js/nav-component.1e870da75434.js"></script>
-  <script src="./js/course-shared.a54f26fbe063.js"></script>
+  <script src="./js/course-shared.c1de4e7079ae.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -260,17 +260,6 @@
         ]
       }
     ];
-    const PREPARE_LEGACY_COURSES = [
-      { unitId: "tw-common-developer-identity.html", title: "雲端身分 (Identity)", summary: "建立開發者專業形象：GitHub 帳號、Copilot 授權與 SSH 金鑰設定。", courseId: "01-master-getting-started.html" },
-      { unitId: "tw-common-vscode-setup.html", title: "開發環境 (VS Code)", summary: "打造最強 IDE：VS Code 安裝、中文化與 GitHub 擴充功能。", courseId: "01-master-getting-started.html" },
-      { unitId: "tw-common-vscode-online.html", title: "VS Code Online", summary: "隨處皆可開發：掌握 Web-based IDE 的優勢與雲端工作區。", courseId: "01-master-getting-started.html" },
-      { unitId: "tw-common-agent-mode.html", title: "AI Agent 模式", summary: "從需求到實作，掌握 Agent 流程與高效除錯。", courseId: "02-master-ai-agents.html" },
-      { unitId: "tw-common-web-agents.html", title: "網頁版 AI 代理人", summary: "練習瀏覽器型 AI 代理協作流程與任務拆解。", courseId: "02-master-ai-agents.html" },
-      { unitId: "tw-common-vibe-coding.html", title: "Vibe Coding 實戰", summary: "用最短路徑完成可運作成果，建立實戰節奏。", courseId: "02-master-ai-agents.html" },
-      { unitId: "tw-common-github-classroom.html", title: "GitHub Classroom", summary: "理解作業邀請、提交、評分回寫與協作流程。", courseId: "03-master-wifi-motor.html" },
-      { unitId: "tw-common-wifi-setup.html", title: "WiFi 組態設定", summary: "完成 ESP32 WiFi 連線與診斷流程。", courseId: "03-master-wifi-motor.html" },
-      { unitId: "tw-common-motor-ramping.html", title: "馬達 Ramping 控制", summary: "建立平滑啟停控制，避免突波與不穩定。", courseId: "03-master-wifi-motor.html" }
-    ];
 
     function renderSection(title, html) {
       const titleHtml = title ? `<h2 class="text-2xl font-bold text-slate-800 mb-4">${title}</h2>` : "";
@@ -294,33 +283,6 @@
       title.textContent = categoryLabel(pathKey);
       const catalogCourses = lessons.filter(isCatalogCourseLesson);
       let rows = catalogCourses.filter((x) => categoryFromLesson(x) === pathKey);
-      if (pathKey === "tw-common") {
-        const byUnit = new Map();
-        rows.forEach((r) => {
-          const unit = resolveUnitFile(r);
-          if (unit) byUnit.set(unit, r);
-        });
-        rows = PREPARE_LEGACY_COURSES.map((preset) => {
-          const live = byUnit.get(preset.unitId);
-          if (live) return live;
-          return {
-            courseId: preset.courseId,
-            courseKey: preset.unitId.replace(".html", ""),
-            title: preset.title,
-            summary: preset.summary,
-            price: 0,
-            metadataType: "course",
-            level: "common",
-            track: "common",
-            locale: "zh-TW",
-            hiddenFromCatalog: false,
-            contentRef: preset.unitId,
-            entryUnitId: preset.unitId,
-            classroomUrl: `/courses/${preset.unitId}`
-          };
-        });
-      }
-
       let hardwareRows = pathKey === "tw-common"
         ? lessons.filter((x) => x?.hiddenFromCatalog !== true && x?.isPhysical === true)
         : [];

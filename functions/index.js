@@ -14,7 +14,6 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const PRIVATE_COURSES_DIR = path.join(__dirname, "private_courses");
-const I18N_COURSES_DIR = path.join(__dirname, "private_courses_i18n");
 
 function buildI18nFilenameCandidates(candidateFileName, locale = "") {
     const fileName = String(candidateFileName || "").trim();
@@ -1441,15 +1440,8 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         if (!chain.includes(defaultLocale)) chain.push(defaultLocale);
         return chain;
     };
-    const resolveLocalCourseFilePath = (candidateFileName, runtimeConfig = null) => {
-        const locales = resolvePreferredLocales(runtimeConfig);
-        for (const locale of locales) {
-            const localeCandidates = buildI18nFilenameCandidates(candidateFileName, locale);
-            for (const localeCandidate of localeCandidates) {
-                const p = path.join(I18N_COURSES_DIR, locale, localeCandidate);
-                if (fs.existsSync(p)) return p;
-            }
-        }
+    const resolveLocalCourseFilePath = (candidateFileName) => {
+        // local mirror (private_courses_i18n) 已廢除，直接查 legacy private_courses 目錄
         const fallback = path.join(PRIVATE_COURSES_DIR, candidateFileName);
         return fs.existsSync(fallback) ? fallback : "";
     };
@@ -1691,7 +1683,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
             content = externalHit.content;
             resolvedSource = externalHit.source;
         } else {
-            filePath = resolveLocalCourseFilePath(finalServeName, runtimeConfig);
+            filePath = resolveLocalCourseFilePath(finalServeName);
         }
 
         // [NEW v11.3.9] Legacy Name Fallback (01- to 00-)
@@ -1708,7 +1700,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
                     resolvedSource = altExternalHit.source;
                     filePath = "";
                 }
-                const altPath = resolveLocalCourseFilePath(altFileName, runtimeConfig);
+                const altPath = resolveLocalCourseFilePath(altFileName);
                 if (fs.existsSync(altPath)) {
                     console.log(`[serveCourse] Legacy Fallback: ${fileName} -> ${altFileName}`);
                     filePath = altPath;

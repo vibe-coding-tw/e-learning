@@ -127,10 +127,6 @@ function main() {
   if (fs.existsSync(privateCoursesDir)) {
     htmlRoots.push(privateCoursesDir);
   }
-  const i18nDir = path.join(rootDir, 'functions', 'private_courses_i18n');
-  if (fs.existsSync(i18nDir)) {
-    htmlRoots.push(i18nDir);
-  }
   const htmlFiles = htmlRoots
     .flatMap((dir) => walkFiles(dir))
     .filter((f) => f.endsWith('.html'));

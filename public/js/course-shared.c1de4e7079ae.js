@@ -598,20 +598,36 @@ function applyHideTabsPreference() {
 }
 
 
-function toggleUnitTabsVisibility() {
+async function toggleUnitTabsVisibility() {
     try {
         const tabs = document.getElementById('course-tabs-container');
         if (!tabs) return;
 
-        const tabButtons = tabs.querySelectorAll('.unit-tab-btn, [data-unit-target], button');
-        const visibleCount = Array.from(tabButtons).filter((btn) => {
-            if (!(btn instanceof HTMLElement)) return false;
-            const style = window.getComputedStyle(btn);
-            return style.display !== 'none' && style.visibility !== 'hidden';
-        }).length;
-
         const tabWrapper = tabs.closest('.relative.z-40') || tabs.parentElement?.parentElement;
-        const shouldHide = visibleCount <= 1;
+        const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        const normalizeLooseKey = (value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
+        const targetKey = normalizeLooseKey(fileName);
+
+        if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
+            globalLessonsData = await vibeFetchLessons();
+        }
+
+        let shouldHide = false;
+        if (Array.isArray(globalLessonsData) && globalLessonsData.length > 0) {
+            const matchedCourse = globalLessonsData.find((course) => {
+                const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
+                const unitKeys = units.map(normalizeLooseKey);
+                return unitKeys.includes(targetKey);
+            });
+
+            if (matchedCourse) {
+                const unitCount = (Array.isArray(matchedCourse.courseUnits) ? matchedCourse.courseUnits : []).length;
+                shouldHide = unitCount <= 1;
+            } else {
+                // No Firestore mapping found: keep tabs visible to avoid accidental hide.
+                shouldHide = false;
+            }
+        }
 
         if (shouldHide) {
             tabs.style.setProperty('display', 'none', 'important');
