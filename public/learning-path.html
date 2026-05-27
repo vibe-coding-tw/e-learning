@@ -111,12 +111,14 @@
       const coursePrice = Number(card.dataset.coursePrice || 0);
       const isPhysical = card.dataset.isPhysical === "true";
       const classroomUrl = card.dataset.classroomUrl;
+      const hasVideoButton = !!card.querySelector(".video-btn");
+      const widthClass = hasVideoButton ? "flex-1" : "w-full";
       btn.onclick = null;
       btn.disabled = false;
 
       if (isPhysical && coursePrice > 0) {
         btn.textContent = "🛒 加入購物車";
-        btn.className = "action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition";
+        btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (addToCart(courseId, courseName, coursePrice, isPhysical)) window.location.href = CART_URL;
           else alert(`⚠️ 「${courseName}」已在購物車中！`);
@@ -125,7 +127,7 @@
       }
       if (status === "AUTHORIZED") {
         btn.textContent = "✅ 進入課程內容";
-        btn.className = "action-btn w-full py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition";
+        btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (!classroomUrl) return alert("⚠️ 課程連結尚未備妥，請聯繫客服。");
           window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${encodeURIComponent(courseId)}&price=${coursePrice}`;
@@ -134,13 +136,13 @@
       }
       if (status === "NOT_LOGGED_IN") {
         btn.textContent = coursePrice === 0 ? "👤 請先登入 (免費)" : "👤 請先登入";
-        btn.className = "action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition";
+        btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
         return;
       }
       if (status === "UNAUTHORIZED" || status === "ERROR") {
         btn.textContent = "🛒 加入購物車";
-        btn.className = "action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition";
+        btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (addToCart(courseId, courseName, coursePrice, isPhysical)) window.location.href = CART_URL;
           else alert(`⚠️ 「${courseName}」已在購物車中！`);
@@ -148,7 +150,7 @@
         return;
       }
       btn.textContent = "載入中...";
-      btn.className = "action-btn w-full py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed";
+      btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
       btn.disabled = true;
     }
 
