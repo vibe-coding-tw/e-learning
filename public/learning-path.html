@@ -114,6 +114,10 @@
     }
 
     function resolveEntryUrl(lesson = {}, fallbackUrl = "") {
+      const firstUnit = Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0
+        ? normalizeLegacyUnitFilename(String(lesson.courseUnits[0]))
+        : "";
+      if (firstUnit) return `/courses/${firstUnit}`;
       const unitFile = resolveUnitFile(lesson);
       if (unitFile) return `/courses/${unitFile}`;
       return lesson.classroomUrl || fallbackUrl || "";
