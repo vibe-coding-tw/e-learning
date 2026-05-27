@@ -666,6 +666,58 @@ exports.paymentNotify = onRequest(async (req, res) => {
                 const oDoc = await db.collection("orders").doc(orderId).get();
                 const oData = oDoc.data();
                 const oItems = oData.items || {};
+
+                // [NEW] Post-payment activation validation check
+                const validationAlerts = [];
+                try {
+                    const lessons = await getLessons();
+                    for (const itemKey of Object.keys(oItems)) {
+                        // 1. Verify item maps to a canonical course
+                        const mappedItemKey = LEGACY_MASTER_TO_CANONICAL[itemKey] || itemKey;
+                        const lesson = lessons.find(l => l.courseId === mappedItemKey) || findCourseByPageOrUnit(mappedItemKey, mappedItemKey, lessons);
+                        if (!lesson) {
+                            validationAlerts.push(`Item '${itemKey}' does not map to any canonical course.`);
+                            continue;
+                        }
+
+                        // 2. Verify canonical course resolves to valid units
+                        if (!Array.isArray(lesson.courseUnits) || lesson.courseUnits.length === 0) {
+                            validationAlerts.push(`Course '${lesson.courseId}' has no units defined.`);
+                            continue;
+                        }
+
+                        // 3. Verify student can pass checkPaymentAuthorization (resolveStudentAssignmentAccess)
+                        const firstUnitId = lesson.courseUnits[0];
+                        const access = await resolveStudentAssignmentAccess(db, oData.uid, lesson.courseId, firstUnitId, lessons, false);
+                        if (!access.authorized) {
+                            validationAlerts.push(`Student authorization check failed for course '${lesson.courseId}' / unit '${firstUnitId}': ${access.reason || 'unknown'}`);
+                        }
+                    }
+
+                    if (validationAlerts.length > 0) {
+                        console.error(`[paymentNotify] Order activation validation failed for order ${orderId}: ${validationAlerts.join('; ')}`);
+                        await db.collection("orders").doc(orderId).update({
+                            activationAlerts: validationAlerts,
+                            activationValidated: true,
+                            activationValidationFailed: true
+                        });
+                        const adminEmail = process.env.ADMIN_EMAIL || process.env.MAIL_USER;
+                        if (adminEmail) {
+                            await sendAutogradeFailureAlertEmail(
+                                adminEmail,
+                                `Order Activation Failure: ${orderId}`,
+                                { orderId, uid: oData.uid, alerts: validationAlerts }
+                            );
+                        }
+                    } else {
+                        await db.collection("orders").doc(orderId).update({
+                            activationValidated: true,
+                            activationValidationFailed: false
+                        });
+                    }
+                } catch (valErr) {
+                    console.error("[paymentNotify] Order activation validation errored:", valErr);
+                }
                 
                 let updatedItems = false;
                 for (const [key, val] of Object.entries(oItems)) {
@@ -1435,8 +1487,17 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
 exports.getLessonsMetadata = onCall(async (request) => {
     console.log("[getLessonsMetadata] Starting onCall request...");
     const lessons = await getLessons();
-    console.log(`[getLessonsMetadata] Returning ${lessons.length} lessons to caller.`);
-    return { lessons: lessons };
+    let categoryLabels = {};
+    try {
+        const settingsSnap = await admin.firestore().collection('metadata_settings').doc('learning_paths').get();
+        if (settingsSnap.exists) {
+            categoryLabels = settingsSnap.data().categoryLabels || {};
+        }
+    } catch (e) {
+        console.error("[getLessonsMetadata] Failed to fetch learning_paths settings:", e);
+    }
+    console.log(`[getLessonsMetadata] Returning ${lessons.length} lessons and categoryLabels to caller.`);
+    return { lessons: lessons, categoryLabels: categoryLabels };
 });
 
 
