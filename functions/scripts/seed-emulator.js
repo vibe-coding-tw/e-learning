@@ -64,7 +64,7 @@ function withEntryMetadata(course) {
     ),
     entryUnitId: resolvedEntryUnitId,
     contentRef: course.contentRef || buildContentRef(resolvedEntryUnitId),
-    classroomUrl: (course.category === 'prepare' && resolvedEntryUnitId) ? `/courses/${resolvedEntryUnitId}` : (course.classroomUrl || ''),
+    classroomUrl: resolvedEntryUnitId ? `/courses/${resolvedEntryUnitId}` : '',
   };
 }
 
