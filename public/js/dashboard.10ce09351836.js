@@ -217,6 +217,7 @@ function syncLessonsAndUnitsMap(lessons) {
 // --- Main Data Fetching ---
 async function loadDashboard() {
     try {
+        updateFooterVisibilityForUnitContext();
         const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
         const hasUnitContext = !!filterUnitId;
         
@@ -353,10 +354,10 @@ function showAccessDenied(errorType = "") {
 
 function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor = false, isPaidStudent = false } = {}) {
     const { filterUnitId } = getCurrentDashboardContext();
-    const isGlobalAdmin = !filterUnitId && isAdmin;
-    const canViewAssignments = isGlobalAdmin ||
-        (!!filterUnitId && (isQualifiedTutor ? !adminTutorMode : isPaidStudent));
-    const canViewSettings = !!filterUnitId && (isQualifiedTutor || (isAdmin && adminTutorMode));
+    const isUnitContext = !!filterUnitId;
+    const isGlobalAdmin = !isUnitContext && isAdmin;
+    const canViewSettings = isUnitContext && (isQualifiedTutor || adminTutorMode);
+    const canViewAssignments = isGlobalAdmin || (isUnitContext && !canViewSettings);
     
     currentDashboardPermissions = {
         isAdmin,
@@ -383,6 +384,13 @@ function getPreferredDashboardTab(filterUnitId = null) {
     if (canCurrentUserViewAssignmentsTab()) return 'assignments';
     if (myRole === 'admin') return 'tutors';
     return 'overview';
+}
+
+function updateFooterVisibilityForUnitContext() {
+    const { filterUnitId } = getCurrentDashboardContext();
+    const footerPlaceholder = document.getElementById('footer-placeholder');
+    if (!footerPlaceholder) return;
+    footerPlaceholder.classList.toggle('hidden', !!filterUnitId);
 }
 
 // Helper: Resolve URL param (e.g. "basic-01") to Course UUID
@@ -1778,7 +1786,7 @@ window.switchTab = function (tabName) {
 
     // Unit context hard rule: only assignments/settings are visible tabs.
     if (isUnitContext && (tabName === 'overview' || tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'earnings')) {
-        tabName = 'assignments';
+        tabName = getPreferredDashboardTab(filterUnitId);
     }
 
     // Role-based restrictions for other tabs
