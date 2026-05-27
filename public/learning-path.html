@@ -83,20 +83,34 @@
     }
     function resolveUnitFile(lesson = {}) {
       const pickFile = (value = "") => String(value || "").split("/").pop().split("?")[0];
-      if (lesson.entryUnitId) return pickFile(lesson.entryUnitId);
       if (lesson.contentRef) {
         const file = pickFile(lesson.contentRef);
-        if (file) return file;
+        if (file) return normalizeLegacyUnitFilename(file);
+      }
+      if (lesson.entryUnitId) {
+        const file = pickFile(lesson.entryUnitId);
+        if (file) return normalizeLegacyUnitFilename(file);
       }
       if (Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0) {
         const file = pickFile(lesson.courseUnits[0]);
-        if (file) return file;
+        if (file) return normalizeLegacyUnitFilename(file);
       }
       if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
         const file = pickFile(lesson.classroomUrl);
-        if (file) return file;
+        if (file) return normalizeLegacyUnitFilename(file);
       }
       return "";
+    }
+
+    function normalizeLegacyUnitFilename(file = "") {
+      const v = String(file || "").trim();
+      if (!v) return "";
+      if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v;
+      if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, "tw-car-starter-");
+      if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, "tw-car-basic-");
+      if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, "tw-car-advanced-");
+      if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, "tw-common-");
+      return v;
     }
 
     function resolveEntryUrl(lesson = {}, fallbackUrl = "") {
