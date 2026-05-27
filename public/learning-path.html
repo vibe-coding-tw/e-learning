@@ -19,7 +19,7 @@
       <h1 id="page-title" class="text-3xl font-bold text-gray-800">學習路徑</h1>
       <div class="section-title-underline"></div>
     </div>
-    <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"></div>
+    <div id="lesson-container" class="p-2"></div>
   </div>
 
   <div id="footer-placeholder" data-root="."></div>
@@ -187,7 +187,7 @@
         lesson.imageUrl ||
         lesson.thumbnailUrl ||
         lesson.bannerUrl ||
-        "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1200&auto=format&fit=crop"
+        ""
       );
     }
 
@@ -206,16 +206,54 @@
       window.open(url, "_blank", "noopener,noreferrer");
     }
 
+    const PREPARE_SPECS = [
+      {
+        id: "spec-recommend-lite",
+        title: "電腦規格建議（基本）",
+        summary: "可完成課前準備與入門課程。",
+        coreContent: [
+          "Windows 10/11 或 macOS 13+",
+          "RAM 8GB",
+          "可用儲存空間 20GB+",
+          "穩定 Wi‑Fi 與 Chrome/Edge"
+        ]
+      },
+      {
+        id: "spec-recommend-pro",
+        title: "電腦規格建議（進階）",
+        summary: "建議用於基礎/進階課程與較長時間開發。",
+        coreContent: [
+          "Windows 11 或 macOS 14+",
+          "RAM 16GB+",
+          "可用儲存空間 50GB+",
+          "建議搭配雙螢幕與外接鍵盤滑鼠"
+        ]
+      }
+    ];
+
+    function renderSection(title, html) {
+      return `
+        <section class="mb-10">
+          <h2 class="text-2xl font-bold text-slate-800 mb-4">${title}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-2">${html}</div>
+        </section>
+      `;
+    }
+
     function renderLessons(lessons, pathKey) {
       const container = document.getElementById("lesson-container");
       const title = document.getElementById("page-title");
       title.textContent = categoryLabel(pathKey);
-      const rows = lessons.filter(isCatalogCourseLesson).filter((x) => categoryFromLesson(x) === pathKey);
-      if (!rows.length) {
+      const catalogCourses = lessons.filter(isCatalogCourseLesson);
+      const rows = catalogCourses.filter((x) => categoryFromLesson(x) === pathKey);
+      const hardwareRows = pathKey === "tw-common"
+        ? lessons.filter((x) => x?.hiddenFromCatalog !== true && x?.isPhysical === true)
+        : [];
+      if (!rows.length && !hardwareRows.length && pathKey !== "tw-common") {
         container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">目前此分類尚無課程。</p>`;
         return;
       }
-      container.innerHTML = rows.map((lesson) => {
+      const courseHtml = rows.map((lesson) => {
         const entryUrl = resolveEntryUrl(lesson);
         const price = Number(lesson.price || 0);
         const contentList = toList(lesson.coreContent).slice(0, 4);
@@ -232,6 +270,9 @@
         const listHtml = contentList.length
           ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
           : `<p class="text-sm text-slate-500">${summary}</p>`;
+        const imageHtml = imageUrl
+          ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${imageUrl}" alt="${lesson.title || "course"}" class="w-full h-40 object-cover"></div>`
+          : "";
         return `
           <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
                data-course-id="${lesson.courseId || ""}"
@@ -245,9 +286,7 @@
             </div>
             <h2 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || lesson.courseId || "未命名課程"}</h2>
             ${lessonLabel ? `<div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${lessonLabel}</div>` : ""}
-            <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3">
-              <img src="${imageUrl}" alt="${lesson.title || "course"}" class="w-full h-40 object-cover">
-            </div>
+            ${imageHtml}
             <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary}</div>
             <div class="text-sm text-slate-700 mb-4">
               <strong class="text-slate-900 block mb-1">核心內容：</strong>
@@ -263,6 +302,53 @@
           </div>
         `;
       }).join("");
+
+      const hardwareHtml = hardwareRows.map((lesson) => {
+        const entryUrl = resolveEntryUrl(lesson);
+        const price = Number(lesson.price || 0);
+        const imageUrl = pickImage(lesson);
+        const summary = String(lesson.summary || lesson.description || "硬體設備推薦");
+        const contentList = toList(lesson.coreContent).slice(0, 4);
+        const listHtml = contentList.length
+          ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
+          : `<p class="text-sm text-slate-500">${summary}</p>`;
+        const imageHtml = imageUrl
+          ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${imageUrl}" alt="${lesson.title || "hardware"}" class="w-full h-40 object-cover"></div>`
+          : "";
+        return `
+          <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
+               data-course-id="${lesson.courseId || ""}"
+               data-course-name="${lesson.title || ""}"
+               data-course-price="${price}"
+               data-is-physical="true"
+               data-classroom-url="${entryUrl}">
+            <div class="text-xs text-slate-500 mb-2">${lesson.courseKey || lesson.courseId || ""}</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || "硬體設備"}</h3>
+            ${imageHtml}
+            <div class="text-sm text-slate-700 mb-4">${listHtml}</div>
+            <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+              <span class="text-2xl font-bold text-blue-600">${price === 0 ? "免費" : `NT$ ${price.toLocaleString()}`}</span>
+            </div>
+            <div class="mt-3">
+              <button class="action-btn w-full py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>載入中...</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const specsHtml = PREPARE_SPECS.map((spec) => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h3 class="text-xl font-bold text-slate-800 mb-2">${spec.title}</h3>
+          <p class="text-sm text-slate-600 mb-3">${spec.summary}</p>
+          <ul class="list-disc pl-5 space-y-1 text-sm text-slate-700">${spec.coreContent.map((x) => `<li>${x}</li>`).join("")}</ul>
+        </div>
+      `).join("");
+
+      let pageHtml = "";
+      if (courseHtml) pageHtml += renderSection("課程單元", courseHtml);
+      if (hardwareHtml) pageHtml += renderSection("硬體設備", hardwareHtml);
+      if (pathKey === "tw-common") pageHtml += renderSection("電腦規格推薦", specsHtml);
+      container.innerHTML = pageHtml;
 
       container.querySelectorAll(".video-btn").forEach((btn, i) => {
         const videoUrl = pickVideo(rows[i] || {});
