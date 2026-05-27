@@ -151,9 +151,16 @@ async function ensureDynamicUnitTabsFromFirestore() {
 
         const wrapper = document.createElement('div');
         wrapper.className = 'unit-tabs-wrapper relative z-40';
+        wrapper.style.display = 'block';
+        wrapper.style.backgroundColor = '#f8fafc';
+        wrapper.style.borderBottom = '1px solid #e2e8f0';
+        wrapper.style.padding = '12px 20px';
+        wrapper.style.overflowX = 'auto';
+        wrapper.style.whiteSpace = 'nowrap';
+
         wrapper.innerHTML = `
-            <div id="course-tabs-container" class="unit-tabs-container">
-                <div class="unit-tabs-flex"></div>
+            <div id="course-tabs-container" class="unit-tabs-container" style="display: block; min-width: max-content;">
+                <div class="unit-tabs-flex" style="display: inline-flex; gap: 10px; align-items: center;"></div>
             </div>
         `;
         const flex = wrapper.querySelector('.unit-tabs-flex');
@@ -161,7 +168,46 @@ async function ensureDynamicUnitTabsFromFirestore() {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'unit-tab-btn';
-            if (normalizeLooseKey(unitFile) === targetKey) btn.classList.add('active');
+            const isActive = normalizeLooseKey(unitFile) === targetKey;
+
+            // Apply high-quality styles inline to completely bypass any external stylesheet resets
+            btn.style.display = 'inline-flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.style.padding = '8px 18px';
+            btn.style.fontSize = '14px';
+            btn.style.fontWeight = '600';
+            btn.style.borderRadius = '999px';
+            btn.style.cursor = 'pointer';
+            btn.style.transition = 'all 0.16s ease-in-out';
+            btn.style.border = '1px solid';
+            btn.style.whiteSpace = 'nowrap';
+            btn.style.margin = '0';
+            btn.style.outline = 'none';
+
+            if (isActive) {
+                btn.style.background = 'linear-gradient(135deg, #0078d4, #005a9e)';
+                btn.style.color = '#ffffff';
+                btn.style.borderColor = '#005a9e';
+                btn.style.boxShadow = '0 3px 8px rgba(0, 120, 212, 0.3)';
+            } else {
+                btn.style.backgroundColor = '#ffffff';
+                btn.style.color = '#475569';
+                btn.style.borderColor = '#cbd5e1';
+
+                // Setup hover dynamic updates
+                btn.addEventListener('mouseenter', () => {
+                    btn.style.borderColor = '#0078d4';
+                    btn.style.color = '#005a9e';
+                    btn.style.backgroundColor = '#eff6ff';
+                });
+                btn.addEventListener('mouseleave', () => {
+                    btn.style.borderColor = '#cbd5e1';
+                    btn.style.color = '#475569';
+                    btn.style.backgroundColor = '#ffffff';
+                });
+            }
+
             btn.innerHTML = `<span>${formatUnitTabTitle(unitFile, idx)}</span>`;
             btn.addEventListener('click', () => {
                 window.location.href = buildUnitAuthUrl(unitFile);
@@ -190,18 +236,27 @@ function normalizeCourseTopNav() {
 
         // Normalize course bucket label to keep all units visually consistent.
         const navLabel = topNav.querySelector('.nav-label');
-        const navLabelLink = topNav.querySelector('.nav-label-link');
         if (navLabel) {
             if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) {
                 navLabel.textContent = '入門課程';
-                if (navLabelLink) {
-                    navLabelLink.setAttribute('href', 'https://vibe-coding.tw/learning-path.html?path=tw-car-starter');
-                    navLabelLink.setAttribute('target', '_top');
-                }
+                navLabel.setAttribute('href', '/learning-path.html?path=tw-car-starter');
+                navLabel.setAttribute('target', '_top');
             }
-            else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) navLabel.textContent = '基礎課程';
-            else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) navLabel.textContent = '進階課程';
-            else if (file.startsWith('prepare-') || file.startsWith('tw-common-')) navLabel.textContent = '準備課程';
+            else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) {
+                navLabel.textContent = '基礎課程';
+                navLabel.setAttribute('href', '/learning-path.html?path=tw-car-basic');
+                navLabel.setAttribute('target', '_top');
+            }
+            else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) {
+                navLabel.textContent = '進階課程';
+                navLabel.setAttribute('href', '/learning-path.html?path=tw-car-advanced');
+                navLabel.setAttribute('target', '_top');
+            }
+            else if (file.startsWith('prepare-') || file.startsWith('tw-common-')) {
+                navLabel.textContent = '準備課程';
+                navLabel.setAttribute('href', '/learning-path.html?path=tw-common');
+                navLabel.setAttribute('target', '_top');
+            }
         }
 
         // Fix broken brand href for unit pages (especially start pages).
@@ -210,7 +265,6 @@ function normalizeCourseTopNav() {
 
         // Normalize brand text/icon style using the current production baseline.
         brandLink.innerHTML = '<i class="fas fa-rocket"></i> Vibe Coding';
-
         brandLink.setAttribute('href', '/index.html');
         brandLink.setAttribute('target', '_top');
     } catch (e) {
