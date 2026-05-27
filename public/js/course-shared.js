@@ -17,6 +17,7 @@ function init() {
     const staleFabHide = document.getElementById('hide-dashboard-fab-style');
     if (staleFabHide) staleFabHide.remove();
     normalizeCourseTopNav();
+    ensureDynamicUnitTabsFromFirestore();
     hideGlobalNavOnCoursePage();
     applyHideTabsPreference();
     toggleUnitTabsVisibility();
@@ -29,6 +30,96 @@ function init() {
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
     ensureDashboardFabFallback();
+}
+
+function normalizeUnitFilenameForRoute(file = '') {
+    const v = String(file || '').split('/').pop().split('?')[0].trim();
+    if (!v) return '';
+    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v;
+    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'tw-car-starter-');
+    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'tw-car-basic-');
+    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'tw-car-advanced-');
+    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'tw-common-');
+    return v;
+}
+
+function formatUnitTabTitle(unitFile = '', fallbackIndex = 0) {
+    const raw = String(unitFile || '').replace('.html', '');
+    const stem = raw
+        .replace(/^tw-(common|car-(starter|basic|advanced))-/i, '')
+        .replace(/^start-\d{2}-unit-/i, '')
+        .replace(/^basic-\d{2}-unit-/i, '')
+        .replace(/^(adv|advanced)-\d{2}-unit-/i, '')
+        .replace(/^\d{2}-unit-/i, '');
+    const title = stem
+        .split('-')
+        .filter(Boolean)
+        .map(part => part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+    return `${fallbackIndex + 1} ${title || `Unit ${fallbackIndex + 1}`}`;
+}
+
+function buildUnitAuthUrl(unitFile = '') {
+    const target = `/courses/${unitFile}`;
+    return `/auth.html?url=${encodeURIComponent(target)}&id=${encodeURIComponent(unitFile)}&price=0`;
+}
+
+async function ensureDynamicUnitTabsFromFirestore() {
+    try {
+        const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        const excluded = new Set(['', 'index.html', 'prepare.html', 'start.html', 'basic.html', 'advanced.html', 'learning-path.html', 'dashboard.html', 'students.html', 'tutors.html', 'cart.html', 'login.html', 'payment-return.html']);
+        if (!fileName.endsWith('.html') || excluded.has(fileName)) return;
+
+        if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
+            globalLessonsData = await vibeFetchLessons();
+        }
+        if (!Array.isArray(globalLessonsData) || globalLessonsData.length === 0) return;
+
+        const normalizeLooseKey = (value = '') => String(value || '').split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
+        const targetKey = normalizeLooseKey(fileName);
+        const matchedCourse = globalLessonsData.find((course) => {
+            const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
+            return units.map(normalizeLooseKey).includes(targetKey);
+        });
+        if (!matchedCourse) return;
+
+        const units = (Array.isArray(matchedCourse.courseUnits) ? matchedCourse.courseUnits : [])
+            .map(normalizeUnitFilenameForRoute)
+            .filter(Boolean);
+        if (units.length < 2) return;
+
+        const existingTabs = document.getElementById('course-tabs-container');
+        if (existingTabs && existingTabs.querySelector('.unit-tab-btn')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'unit-tabs-wrapper relative z-40';
+        wrapper.innerHTML = `
+            <div id="course-tabs-container" class="unit-tabs-container">
+                <div class="unit-tabs-flex"></div>
+            </div>
+        `;
+        const flex = wrapper.querySelector('.unit-tabs-flex');
+        units.forEach((unitFile, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'unit-tab-btn';
+            if (normalizeLooseKey(unitFile) === targetKey) btn.classList.add('active');
+            btn.innerHTML = `<span>${formatUnitTabTitle(unitFile, idx)}</span>`;
+            btn.addEventListener('click', () => {
+                window.location.href = buildUnitAuthUrl(unitFile);
+            });
+            flex.appendChild(btn);
+        });
+
+        const anchor = document.querySelector('.ms-topnav') || document.getElementById('main-nav') || document.querySelector('nav');
+        if (anchor && anchor.parentNode) {
+            anchor.parentNode.insertBefore(wrapper, anchor.nextSibling);
+        } else {
+            document.body.insertBefore(wrapper, document.body.firstChild);
+        }
+    } catch (e) {
+        console.warn('[CourseShared] ensureDynamicUnitTabsFromFirestore failed:', e);
+    }
 }
 
 function normalizeCourseTopNav() {
