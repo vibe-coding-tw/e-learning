@@ -13,6 +13,7 @@ const admin = require("firebase-admin");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const GitHubAPIHelper = require('./github-api-helper');
 
 
 function buildI18nFilenameCandidates(candidateFileName, locale = "") {
@@ -118,6 +119,7 @@ const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 const GITHUB_CLASSROOM_ORG = process.env.GITHUB_CLASSROOM_ORG || "vibe-coding-classroom";
 const GITHUB_ORG_ADMIN_TOKEN = process.env.GITHUB_ORG_ADMIN_TOKEN || "";
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
+const GITHUB_API_TOKEN = defineSecret("GITHUB_API_TOKEN");
 
 const CONTENT_RUNTIME_CACHE = {
     config: null,
@@ -5731,5 +5733,143 @@ exports.submitTutorCoachingLog = onCall(async (request) => {
         console.error("submitTutorCoachingLog Error:", e);
         if (e instanceof HttpsError) throw e;
         throw new HttpsError('internal', '操作失敗，請稍後再試');
+    }
+});
+
+/**
+ * Create a native GitHub repository for a student assignment with a Feedback PR.
+ */
+exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async (request) => {
+    const { data, auth } = request;
+    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+
+    const unitIdRaw = String(data?.unitId || '').trim();
+    const courseIdRaw = String(data?.courseId || '').trim();
+    const githubUsername = String(data?.githubUsername || '').trim(); // Student's GitHub username
+
+    if (!unitIdRaw) {
+        throw new HttpsError('invalid-argument', '缺少必要參數（unitId）');
+    }
+    if (!githubUsername) {
+        throw new HttpsError('invalid-argument', '缺少必要參數（githubUsername）');
+    }
+
+    const db = admin.firestore();
+    const uid = auth.uid;
+
+    try {
+        const lessons = await getLessons();
+        const canonicalUnitId = resolveCanonicalUnitId(unitIdRaw, lessons);
+        const effectiveCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons) || courseIdRaw;
+
+        // 1. 驗證學員課程權限
+        const access = await resolveStudentAssignmentAccess(db, uid, effectiveCourseId, canonicalUnitId, lessons);
+        if (!access.authorized) {
+            throw new HttpsError('permission-denied', '尚未取得此單元之付款授權。');
+        }
+
+        // 2. 檢查是否已經建立過此作業的 Repo
+        const normalizedUnitId = canonicalUnitId.replace('.html', '');
+        const assignmentDocId = `${uid}_${normalizedUnitId}`;
+        const assignmentDoc = await db.collection('assignments').doc(assignmentDocId).get();
+        const assignmentData = assignmentDoc.exists ? assignmentDoc.data() : null;
+
+        if (assignmentData && assignmentData.repositoryUrl) {
+            return {
+                repositoryUrl: assignmentData.repositoryUrl,
+                feedbackPullRequestUrl: assignmentData.feedbackPullRequestUrl || null
+            };
+        }
+
+        // 3. 取得導師配置的 Org 名稱（若無，預設使用 vibe-coding-classroom）
+        let targetOrg = 'vibe-coding-classroom';
+        let templateRepo = normalizedUnitId; // 預設樣板倉庫名稱與單元 ID 相同
+
+        const tutorEmail = access.assignedTutorEmail;
+        if (tutorEmail) {
+            const tutorSnap = await db.collection('users')
+                .where('email', '==', tutorEmail.toLowerCase())
+                .limit(1)
+                .get();
+            if (!tutorSnap.empty) {
+                const tutorData = tutorSnap.docs[0].data();
+                const config = tutorData.tutorConfigs?.[canonicalUnitId];
+                if (config) {
+                    if (config.githubOrg) {
+                        targetOrg = config.githubOrg;
+                    }
+                    if (config.templateRepo) {
+                        templateRepo = config.templateRepo;
+                    }
+                }
+            }
+        }
+
+        // 4. 取得 GitHub PAT Token
+        const token = GITHUB_API_TOKEN.value();
+        if (!token) {
+            throw new HttpsError('failed-precondition', '系統未配置 GITHUB_API_TOKEN');
+        }
+
+        // 5. 調用 API Helper 進行創庫、加人、開 PR 流程
+        const ghHelper = new GitHubAPIHelper(token);
+        const newRepoName = `${normalizedUnitId}-${uid.substring(0, 8)}`; // 例：tw-common-vscode-setup-abc12345
+
+        console.log(`[createStudentRepository] Creating repo ${newRepoName} from template ${templateRepo} in org ${targetOrg}...`);
+        const studentRepo = await ghHelper.createRepoFromTemplate(targetOrg, templateRepo, newRepoName, true);
+
+        console.log(`[createStudentRepository] Adding collaborator ${githubUsername} with push permission...`);
+        await ghHelper.addCollaborator(targetOrg, newRepoName, githubUsername, 'push');
+
+        console.log(`[createStudentRepository] Fetching main branch SHA...`);
+        const mainRef = await ghHelper.getRef(targetOrg, newRepoName, 'heads/main');
+        const mainSha = mainRef.object.sha;
+
+        console.log(`[createStudentRepository] Creating feedback branch...`);
+        await ghHelper.createRef(targetOrg, newRepoName, 'refs/heads/feedback', mainSha);
+
+        console.log(`[createStudentRepository] Opening Feedback PR...`);
+        const feedbackPR = await ghHelper.createPullRequest(
+            targetOrg,
+            newRepoName,
+            'classroom-feedback',
+            '這是您的作業回饋專區。您每次 push 程式碼後，自動評分結果與老師的評語都會顯示在這裡！\n\n⚠️ **請勿點擊 Merge 按鈕**，保持此 PR 開啟直到學期結束。',
+            'main',
+            'feedback'
+        );
+
+        // 6. 記錄與更新 Firestore
+        const now = admin.firestore.FieldValue.serverTimestamp();
+        const assignmentPayload = {
+            userId: uid,
+            userEmail: auth.token.email || '',
+            courseId: effectiveCourseId,
+            unitId: canonicalUnitId,
+            assignmentTitle: data.assignmentTitle || canonicalUnitId,
+            assignmentId: normalizedUnitId,
+            repositoryUrl: studentRepo.html_url,
+            repositoryName: newRepoName,
+            feedbackPullRequestUrl: feedbackPR.html_url,
+            createdVia: 'native-api',
+            currentStatus: 'started',
+            assignedTutorEmail: tutorEmail || '',
+            updatedAt: now
+        };
+
+        if (assignmentDoc.exists) {
+            await db.collection('assignments').doc(assignmentDocId).update(assignmentPayload);
+        } else {
+            assignmentPayload.createdAt = now;
+            await db.collection('assignments').doc(assignmentDocId).set(assignmentPayload);
+        }
+
+        return {
+            repositoryUrl: studentRepo.html_url,
+            feedbackPullRequestUrl: feedbackPR.html_url
+        };
+
+    } catch (error) {
+        console.error("[createStudentRepository] Failed with error:", error);
+        throw new HttpsError('internal', error.message || '作業倉庫建立失敗');
     }
 });
