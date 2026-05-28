@@ -19,6 +19,49 @@ const db = admin.firestore();
 
 // Helpers
 const cleanId = (id) => String(id || "").trim().replace(/\.html$/, "").toLowerCase();
+const normalizeLookupValue = (value = "") => String(value || "").split("/").pop().split("?")[0].replace(/\.html$/i, "").toLowerCase();
+
+function getLessonLookupKeys(lesson = {}) {
+  const keys = new Set();
+  const add = (value) => {
+    if (!value) return;
+    const raw = String(value).trim();
+    if (!raw) return;
+    keys.add(raw);
+    keys.add(raw.replace(/\.html$/i, ""));
+    keys.add(normalizeLookupValue(raw));
+    keys.add(cleanId(raw));
+  };
+
+  add(lesson.id);
+  add(lesson.courseId);
+  add(lesson.courseKey);
+  add(lesson.entryUnitId);
+  add(lesson.classroomUrl);
+  add(lesson.productId);
+  add(lesson.sku);
+  if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);
+  if (Array.isArray(lesson.legacyProductIds)) lesson.legacyProductIds.forEach(add);
+  if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
+  if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
+  return keys;
+}
+
+function resolveLessonForOrderItem(itemKey = "", lessons = []) {
+  const candidates = new Set([
+    itemKey,
+    String(itemKey).replace(/\.html$/i, ""),
+    normalizeLookupValue(itemKey),
+    cleanId(itemKey)
+  ]);
+  return lessons.find((lesson) => {
+    const keys = getLessonLookupKeys(lesson);
+    for (const candidate of candidates) {
+      if (keys.has(candidate)) return true;
+    }
+    return false;
+  }) || null;
+}
 
 function parseArgs(argv) {
   const out = {};
@@ -46,12 +89,16 @@ async function auditOrder(orderId) {
   console.log(`- Status: ${data.status}`);
   console.log(`- Amount: NT$ ${data.amount}`);
   console.log(`- User Email: ${data.userEmail}`);
-  console.log(`- User UID: ${data.userId}`);
+  console.log(`- User UID: ${data.uid || data.userId || "N/A"}`);
   console.log(`- Created At: ${data.createdAt ? data.createdAt.toDate().toISOString() : "N/A"}`);
   console.log(`- Activation Validated: ${data.activationValidated === true ? "✅ YES" : "❌ NO"}`);
+  console.log(`- Activation Status: ${data.activationValidationStatus || "N/A"}`);
   console.log(`- Activation Failed: ${data.activationValidationFailed === true ? "🚨 YES" : "✅ NO"}`);
   if (data.activationAlerts) {
     console.log(`- Activation Alerts:`, JSON.stringify(data.activationAlerts, null, 2));
+  }
+  if (data.activationCheckedItems) {
+    console.log(`- Activation Checked Items:`, JSON.stringify(data.activationCheckedItems, null, 2));
   }
   console.log(`- Items:`, JSON.stringify(data.items || {}, null, 2));
 
@@ -61,11 +108,11 @@ async function auditOrder(orderId) {
   const lessons = lessonsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   for (const itemKey of Object.keys(data.items || {})) {
-    const cleanItemKey = cleanId(itemKey);
-    // Find canonical course
-    const matchedLesson = lessons.find(l => cleanId(l.id) === cleanItemKey || cleanId(l.courseKey) === cleanItemKey);
+    const matchedLesson = resolveLessonForOrderItem(itemKey, lessons);
     if (matchedLesson) {
-      console.log(`  ✅ Item "${itemKey}" resolves to Canonical Course: "${matchedLesson.id}"`);
+      console.log(`  ✅ Item "${itemKey}" resolves to Course: "${matchedLesson.courseId || matchedLesson.id}"`);
+      console.log(`     Course Key: ${matchedLesson.courseKey || "N/A"}`);
+      console.log(`     Physical: ${matchedLesson.isPhysical === true ? "YES" : "NO"}`);
       console.log(`     Course Units:`, JSON.stringify(matchedLesson.courseUnits || [], null, 2));
     } else {
       console.log(`  ❌ Item "${itemKey}" DOES NOT resolve to any canonical course in metadata_lessons!`);
@@ -138,13 +185,13 @@ async function auditUser(userInput) {
 
   // Order history
   console.log(`\n- Order History:`);
-  const ordersSnap = await db.collection("orders").where("userId", "==", uid).get();
+  const ordersSnap = await db.collection("orders").where("uid", "==", uid).get();
   if (ordersSnap.empty) {
     console.log("  No orders found for this user.");
   } else {
     ordersSnap.docs.forEach(doc => {
       const o = doc.data();
-      console.log(`  * Order: ${doc.id} | Status: ${o.status} | Amount: NT$ ${o.amount} | Items: ${Object.keys(o.items || {}).join(", ")}`);
+      console.log(`  * Order: ${doc.id} | Status: ${o.status} | Activation: ${o.activationValidationStatus || "N/A"} | Amount: NT$ ${o.amount} | Items: ${Object.keys(o.items || {}).join(", ")}`);
     });
   }
 }
