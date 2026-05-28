@@ -2248,8 +2248,12 @@ function enhanceAssignmentEntryButtons() {
 
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'assignment-group-entry-btn w-full py-3 px-4 rounded-xl border-2 border-blue-500 text-blue-700 font-bold bg-white hover:bg-blue-50 transition shadow-sm';
-        btn.textContent = '前往教室寫作業';
+        btn.className = 'group assignment-group-entry-btn w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
+        btn.innerHTML = `
+            <i class="fab fa-github text-lg transition-transform group-hover:scale-110"></i>
+            <span>前往教室寫作業</span>
+            <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
+        `;
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -2304,8 +2308,9 @@ function injectAssignmentLinkModal() {
 
             <div class="flex flex-col gap-3">
                 <button id="btn-bind-tutor" onclick="submitBindTutorAction()"
-                    class="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-bold shadow-lg flex items-center justify-center gap-2">
-                    確認並前往作業
+                    class="group w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <span>確認並前往作業</span>
+                    <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
                 </button>
                 <button onclick="closeAssignmentLinkModal()"
                     class="w-full py-3 text-gray-400 hover:text-gray-600 transition font-medium text-sm">取消</button>
@@ -2348,7 +2353,10 @@ window.submitBindTutorAction = async function () {
         alert("❌ 錯誤：" + e.message);
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '確認並前往作業';
+        btn.innerHTML = `
+            <span>確認並前往作業</span>
+            <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
+        `;
     }
 };
 
