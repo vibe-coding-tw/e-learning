@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-import { firebaseConfig, connectFirebaseEmulators } from "./firebase-local.js";
+import { firebaseConfig, connectFirebaseEmulators, isLocalDev } from "./firebase-local.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -11,6 +11,33 @@ const functions = getFunctions(app, "asia-east1");
 connectFirebaseEmulators({ auth, db, functions });
 
 const NAV_STATE_VERSION = "2026.05.13.FINAL_V9";
+const GOOGLE_LOGIN_IN_PROGRESS_KEY = "vc_google_login_in_progress";
+
+async function consumeGoogleRedirectResult() {
+    try {
+        await getRedirectResult(auth);
+    } catch (error) {
+        console.error("[NavComp] Google redirect login failed:", error);
+        sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
+        alert("Google 登入失敗，請再試一次。");
+    }
+}
+
+async function startGoogleLogin() {
+    const provider = new GoogleAuthProvider();
+    try {
+        if (isLocalDev()) {
+            await signInWithPopup(auth, provider);
+            return;
+        }
+        sessionStorage.setItem(GOOGLE_LOGIN_IN_PROGRESS_KEY, "1");
+        await signInWithRedirect(auth, provider);
+    } catch (error) {
+        console.error("[NavComp] Google login failed:", error);
+        sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
+        alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請改用 login.html。");
+    }
+}
 const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v1";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
@@ -720,10 +747,7 @@ function initNavComponent() {
                     userDisplay.classList.remove('hidden');
                 }
                 loginBtn.innerText = '登入';
-                loginBtn.onclick = () => {
-                    const root = placeholder ? (placeholder.getAttribute('data-root') || '.') : '.';
-                    window.location.href = `${root}/login.html`.replace('//', '/');
-                };
+                loginBtn.onclick = () => startGoogleLogin();
             }
         };
 
@@ -745,6 +769,8 @@ function initNavComponent() {
         updateUI(mobileUser, mobileLogin);
     });
 }
+
+consumeGoogleRedirectResult();
 
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initNavComponent); }
 else { initNavComponent(); }

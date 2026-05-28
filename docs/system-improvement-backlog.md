@@ -17,12 +17,17 @@ This backlog captures the highest-value system improvements identified from revi
 
 Status:
 - Partial implementation completed:
+- Main navigation login now launches Google Auth directly (`signInWithRedirect` in production, `signInWithPopup` in local emulator) instead of routing ordinary users through `login.html` first.
+- Assignment CTA now prefers the direct Classroom path (`前往教室寫作業 -> Promotion code 綁定 -> GitHub Classroom`) and no longer opens the legacy `Submit for Review` modal by default.
 - `learning-path.html` now derives category labels from Firestore / lesson metadata first, with string fallback only as last resort.
 - Dashboard course summaries now resolve canonical course identity through lesson metadata lookup instead of a hardcoded legacy mapping table.
 - Backend legacy master mapping is now opt-in via explicit compatibility paths.
 - Historical `orders.items` have been normalized; order/referral runtime paths no longer rely on legacy master item keys.
-- Historical `referral_links.unitId` has been normalized down to 104 canonical entries; only 1 unresolved legacy record (`bee4arc4`) remains for manual review.
-- Remaining work is to remove the final URL/token-scope compatibility map after the last unresolved referral record and historical links are retired.
+- Historical `referral_links.unitId` has been fully normalized; malformed orphan index rows have been removed.
+- Referral runtime no longer resolves legacy master unit ids from `referral_links`.
+- Current token issuers (`learning-path.html`, `auth.html`, dashboard auth checks) now send canonical unit / entry-unit references rather than generating new `*-master-*` scopes.
+- Production log audit (2026-05-28) confirms `serveCourse` still receives active legacy master traffic, including `authorized via dynamic course-scope: start-01-master-web-app.html` and `Redirecting legacy master basic-01-master-environment.html`, so redirect/token-scope compatibility cannot be removed yet.
+- Remaining work is to remove the final URL/token-scope compatibility map after historical links are retired; current token-scope fallback only activates when the request or token still carries an explicit `*-master-*` page id.
 - Added support scripts:
 - `functions/scripts/audit_canonical_runtime_state.js`
 - `functions/scripts/normalize_runtime_canonical_fields.js`
@@ -54,8 +59,8 @@ Status:
 - Dashboard / backend canonical course resolution now uses lesson metadata lookup, with runtime identity preferring `courseKey` for courses and `productId` for physical products.
 - Firestore audit report now shows `metadata_lessons` canonical fields clean and `orders.items` unknown keys reduced to zero.
 - Historical `orders.items` legacy cleanup has been applied.
-- Historical `referral_links.unitId` cleanup has been applied for 8 safely mapped records.
-- Remaining work: resolve the final unknown referral unit (`bee4arc4`) and then continue shrinking compatibility paths that still accept legacy master page scopes.
+- Historical `referral_links.unitId` cleanup has been applied for 8 safely mapped records, plus 1 malformed orphan row removed.
+- Remaining work: continue shrinking compatibility paths that still accept explicit legacy master page scopes.
 
 Problem:
 - `courseId`, `courseKey`, and `unitId` are still mixed across payment, routing, tabs, and dashboard logic.

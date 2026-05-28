@@ -47,6 +47,7 @@ It is the source of truth for:
 ## 4. Deprecated / Legacy Notes
 1. `sendGradingNotification` currently exists as a legacy template from manual grading flow.
 2. Manual grading endpoint `gradeAssignment` is disabled; autograde is the active scoring path.
+3. `submitAssignment(status=submitted)` email path still exists as a legacy/manual fallback, but the default student flow is now `前往教室寫作業 -> Promotion code 綁定 -> 直接進 GitHub Classroom`.
 
 ## 5. Environment Variables
 - `MAIL_USER`

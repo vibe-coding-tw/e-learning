@@ -83,11 +83,12 @@ graph TD
 ## 7. Tutor Binding via Promotion Code (Updated 2026-05-20)
 - 綁定入口為作業頁（Assignment modal），由學生確認或輸入 Tutor 的 `Promotion code`。
 - 購物車流程不再輸入推薦連結或 Promotion code。
-- **點擊觸發機制**：學生每次點擊作業，都會先彈出確認/綁定視窗（`assignment-link-modal`），以便隨時進行導師確認或異動。
+- **點擊觸發機制**：學生點擊作業卡下方的「前往教室寫作業」按鈕後，會先彈出確認/綁定視窗（`assignment-link-modal`），以便隨時進行導師確認或異動。
 - **自動帶入代碼**：彈出視窗時，系統會自動透過 API 帶入該學生此單元目前已綁定的 `Promotion code`；如果尚未綁定，則欄位為空。
 - **留白與異動機制**：如果要異動，請輸入新導師的 Promotion code。若欄位留白並送出，系統會自動為學生指派預設導師 `rover.k.chen@gmail.com`。
 - **合格導師驗證**：若有輸入代碼，系統在儲存前會先驗證該 code 是否對應此單元的合格授權導師：
   - 依 `users.promotionCode` 找到 Tutor
   - 檢查 Tutor 在該單元 `tutorConfigs[unitId].authorized === true`
   - 檢查該單元已配置 `assignmentUrl/githubClassroomUrl`
-  - 驗證通過後，寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta` 並開啟作業；若未通過，則提示錯誤阻擋進入。
+  - 驗證通過後，寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`，並直接開啟 GitHub Classroom；若未通過，則提示錯誤阻擋進入。
+  - 舊版 `正式提交作業 (Submit for Review)` 視窗保留為手動 fallback，不再是一般學生的預設路徑。

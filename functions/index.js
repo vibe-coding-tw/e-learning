@@ -829,7 +829,7 @@ exports.paymentNotify = onRequest(async (req, res) => {
                             if (!referralDoc.exists) continue;
 
                             const referralData = referralDoc.data();
-                            const targetUnitId = resolveCanonicalUnitId(referralData.unitId, lessons, { allowLegacyMaster: true });
+                            const targetUnitId = resolveCanonicalUnitId(referralData.unitId, lessons);
 
                             if (targetUnitId && assignment.purchasedUnits.includes(targetUnitId) && referralData.tutorEmail) {
                                 // [V16.0] Cascade Assignment: Assign ALL purchased units to this tutor if the link matches any of them
@@ -931,6 +931,11 @@ function mapLegacyMasterToCanonical(value = '') {
     return LEGACY_MASTER_TO_CANONICAL[value] || value;
 }
 
+function isLegacyMasterPage(value = '') {
+    const normalized = String(value || '').split('/').pop().split('?')[0].trim();
+    return normalized.includes('-master-') && Object.prototype.hasOwnProperty.call(LEGACY_MASTER_TO_CANONICAL, normalized);
+}
+
 function resolveCanonicalUnitId(unitId, lessons = [], options = {}) {
     if (!unitId) return unitId;
     const { allowLegacyMaster = false } = options;
@@ -1011,11 +1016,6 @@ function findParentCourseIdByUnit(unitId, lessons = []) {
 }
 
 function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
-    const normalizeCourseFile = (value = '') => {
-        if (!value) return '';
-        const filePart = String(value).split('/').pop().split('?')[0];
-        return filePart;
-    };
     const normalizedPageId = normalizeCourseFile(pageId);
     const normalizedFileName = normalizeCourseFile(fileName);
     const normalizedPageIdNoHtml = normalizedPageId.replace(/\.html$/i, '');
@@ -1682,17 +1682,80 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
 
 
 
+const normalizeLocale = (locale = "") => {
+    const raw = String(locale || "").trim();
+    if (!raw) return "";
+    if (/^zh[-_]tw$/i.test(raw)) return "zh-TW";
+    if (/^zh/i.test(raw)) return "zh-TW";
+    if (/^en/i.test(raw)) return "en";
+    return raw;
+};
+
+const normalizeCourseFile = (value = '') => {
+    if (!value) return value;
+    const filePart = String(value).split('/').pop().split('?')[0];
+    return filePart;
+};
+
+async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig, locales) {
+    if (!runtimeConfig?.enabled) return null;
+    const contentRepoToken = CONTENT_REPO_TOKEN.value();
+    const hasContentToken = Boolean(contentRepoToken);
+    if (!hasContentToken) {
+        console.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
+        return null;
+    }
+    const repoOwner = runtimeConfig.repoOwner;
+    const repoName = runtimeConfig.repoName;
+    const ref = runtimeConfig.contentVersion || "main";
+    for (const locale of locales) {
+        const localeCandidates = buildI18nFilenameCandidates(candidateFileName, locale);
+        for (const localeCandidate of localeCandidates) {
+            const key = `${repoOwner}/${repoName}@${ref}|${locale}|${localeCandidate}`;
+            const cached = CONTENT_FILE_CACHE.get(key);
+            if (cached && cached.expiresAt > Date.now()) {
+                return { content: cached.content, source: "external-cache", locale, file: localeCandidate };
+            }
+            const contentPath = `courses/${locale}/${localeCandidate}`;
+            const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/contents/${contentPath}?ref=${encodeURIComponent(ref)}`;
+            try {
+                const startedAt = Date.now();
+                const headers = {
+                    "Authorization": `Bearer ${contentRepoToken}`,
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": "vibe-coding-runtime"
+                };
+                const resp = await fetch(apiUrl, {
+                    method: "GET",
+                    headers
+                });
+                if (!resp.ok) {
+                    if (resp.status !== 404) {
+                        console.warn(`[content-runtime] external fetch non-404: ${resp.status} ${contentPath}`);
+                    }
+                    continue;
+                }
+                const payload = await resp.json();
+                const encoded = String(payload?.content || "").replace(/\n/g, "");
+                if (!encoded) continue;
+                const content = Buffer.from(encoded, "base64").toString("utf8");
+                CONTENT_FILE_CACHE.set(key, {
+                    content,
+                    expiresAt: Date.now() + (Math.max(30, Number(runtimeConfig.cacheTtlSec || 300)) * 1000)
+                });
+                console.log(`[content-runtime] source=external file=${localeCandidate} locale=${locale} ms=${Date.now() - startedAt}`);
+                return { content, source: "external", locale, file: localeCandidate };
+            } catch (err) {
+                console.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
+            }
+        }
+    }
+    return null;
+}
+
 // 4. 安全檔案服務 (serveCourse)
 // ==========================================
 exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, res) => {
-    const normalizeLocale = (locale = "") => {
-        const raw = String(locale || "").trim();
-        if (!raw) return "";
-        if (/^zh[-_]tw$/i.test(raw)) return "zh-TW";
-        if (/^zh/i.test(raw)) return "zh-TW";
-        if (/^en/i.test(raw)) return "en";
-        return raw;
-    };
     const resolvePreferredLocales = (runtimeConfig = null) => {
         const queryLocale = normalizeLocale(req.query.lang || req.query.locale || "");
         const header = String(req.headers["accept-language"] || "");
@@ -1706,67 +1769,10 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
     };
 
     const fetchExternalCourseContent = async (candidateFileName, runtimeConfig) => {
-        if (!runtimeConfig?.enabled) return null;
-        const contentRepoToken = CONTENT_REPO_TOKEN.value();
-        const hasContentToken = Boolean(contentRepoToken);
-        if (!hasContentToken) {
-            console.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
-            return null;
-        }
         const locales = resolvePreferredLocales(runtimeConfig);
-        const repoOwner = runtimeConfig.repoOwner;
-        const repoName = runtimeConfig.repoName;
-        const ref = runtimeConfig.contentVersion || "main";
-        for (const locale of locales) {
-            const localeCandidates = buildI18nFilenameCandidates(candidateFileName, locale);
-            for (const localeCandidate of localeCandidates) {
-                const key = `${repoOwner}/${repoName}@${ref}|${locale}|${localeCandidate}`;
-                const cached = CONTENT_FILE_CACHE.get(key);
-                if (cached && cached.expiresAt > Date.now()) {
-                    return { content: cached.content, source: "external-cache", locale, file: localeCandidate };
-                }
-                const contentPath = `courses/${locale}/${localeCandidate}`;
-                const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/contents/${contentPath}?ref=${encodeURIComponent(ref)}`;
-                try {
-                    const startedAt = Date.now();
-                    const headers = {
-                        "Authorization": `Bearer ${contentRepoToken}`,
-                        "Accept": "application/vnd.github+json",
-                        "User-Agent": "vibe-coding-runtime"
-                    };
-                    const resp = await fetch(apiUrl, {
-                        method: "GET",
-                        headers
-                    });
-                    if (!resp.ok) {
-                        if (resp.status !== 404) {
-                            console.warn(`[content-runtime] external fetch non-404: ${resp.status} ${contentPath}`);
-                        }
-                        continue;
-                    }
-                    const payload = await resp.json();
-                    const encoded = String(payload?.content || "").replace(/\n/g, "");
-                    if (!encoded) continue;
-                    const content = Buffer.from(encoded, "base64").toString("utf8");
-                    CONTENT_FILE_CACHE.set(key, {
-                        content,
-                        expiresAt: Date.now() + (Math.max(30, Number(runtimeConfig.cacheTtlSec || 300)) * 1000)
-                    });
-                    console.log(`[content-runtime] source=external file=${localeCandidate} locale=${locale} ms=${Date.now() - startedAt}`);
-                    return { content, source: "external", locale, file: localeCandidate };
-                } catch (err) {
-                    console.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
-                }
-            }
-        }
-        return null;
+        return fetchExternalCourseContentHelper(candidateFileName, runtimeConfig, locales);
     };
 
-    const normalizeCourseFile = (value = '') => {
-        if (!value) return value;
-        const filePart = String(value).split('/').pop().split('?')[0];
-        return filePart;
-    };
     const normalizeLooseKey = (value = "") => normalizeCourseFile(String(value || "")).replace(/\.html$/i, '').toLowerCase();
     const buildAuthorizedFileCandidates = (course = {}) => {
         const candidates = new Set();
@@ -1892,8 +1898,16 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
                 // [MODIFIED] Map legacy scopePart/pageId values to canonical unit counterparts
                 // so they find and validate scoped candidates correctly against migrated canonical records.
                 const normalizedPageId = normalizeCourseFile(pageId || '');
-                const mappedScopePart = mapLegacyMasterToCanonical(normalizedScopePart);
-                const mappedPageId = mapLegacyMasterToCanonical(normalizedPageId);
+                const shouldApplyLegacyScopeCompatibility =
+                    isLegacyMasterPage(fileName) ||
+                    isLegacyMasterPage(normalizedScopePart) ||
+                    isLegacyMasterPage(normalizedPageId);
+                const mappedScopePart = shouldApplyLegacyScopeCompatibility
+                    ? mapLegacyMasterToCanonical(normalizedScopePart)
+                    : normalizedScopePart;
+                const mappedPageId = shouldApplyLegacyScopeCompatibility
+                    ? mapLegacyMasterToCanonical(normalizedPageId)
+                    : normalizedPageId;
 
                 // Find the course by pageId/courseId/courseKey/entryUnitId or scopePart
                 const course = findCourseForScope(lessons, mappedScopePart, mappedPageId);
@@ -2866,7 +2880,7 @@ exports.decideTutorApplication = onCall(async (request) => {
 
 // 8. 獲取儀表板數據 (getDashboardData)
 // ==========================================
-exports.getDashboardData = onCall(async (request) => {
+exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (request) => {
     const data = request.data || {};
     const auth = request.auth;
     console.log(`[getDashboardData] Start - UID: ${auth?.uid}, data: ${JSON.stringify(data)}`);
@@ -3091,6 +3105,13 @@ exports.getDashboardData = onCall(async (request) => {
         const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
         console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
 
+        const runtimeConfig = await getContentRuntimeConfig();
+        const preferredLocales = [];
+        if (data.locale) preferredLocales.push(data.locale);
+        if (userData.locale && !preferredLocales.includes(userData.locale)) preferredLocales.push(userData.locale);
+        if (!preferredLocales.includes("zh-TW")) preferredLocales.push("zh-TW");
+        if (!preferredLocales.includes("en")) preferredLocales.push("en");
+
         // If admin is in Tutor Mode, ensure all courses are considered for guide aggregation.
         if (requesterRole === 'admin' && data.tutorMode !== false) {
             lessons.forEach(l => {
@@ -3113,11 +3134,10 @@ exports.getDashboardData = onCall(async (request) => {
                         entryUnitId,
                         ...units,
                         (classroomFile && classroomFile.endsWith('.html')) ? classroomFile : ''
-                    ].filter(f => f && allFiles.includes(f))));
+                    ].filter(Boolean)));
                     let aggregatedGuides = {};
 
                     if (relatedFiles.length > 0) {
-                        // console.log(`[getDashboardData] Extracting logs for ${cid}. Files: ${relatedFiles.join(', ')}`);
                         relatedFiles.sort((a, b) => {
                             if (a === entryUnitId) return -1;
                             if (b === entryUnitId) return 1;
@@ -3126,10 +3146,47 @@ exports.getDashboardData = onCall(async (request) => {
 
                         console.log(`[getDashboardData] cid: ${cid}, relatedFiles: ${relatedFiles.join(', ')}`);
                         for (const file of relatedFiles) {
-                            const filePath = path.join(privateCoursesDir, file);
-                            if (!fs.existsSync(filePath)) continue;
+                            let html = "";
+                            let source = "none";
 
-                            const html = fs.readFileSync(filePath, 'utf8');
+                            // 1. Try external fetch if enabled
+                            if (runtimeConfig.enabled) {
+                                const externalHit = await fetchExternalCourseContentHelper(file, runtimeConfig, preferredLocales);
+                                if (externalHit && externalHit.content) {
+                                    html = externalHit.content;
+                                    source = externalHit.source;
+                                }
+                            }
+
+                            // 2. Fallback to local file if external failed/disabled
+                            if (!html) {
+                                let localFile = null;
+                                if (allFiles.includes(file)) {
+                                    localFile = file;
+                                } else {
+                                    for (const locale of preferredLocales) {
+                                        const candidates = buildI18nFilenameCandidates(file, locale);
+                                        const matched = candidates.find(c => allFiles.includes(c));
+                                        if (matched) {
+                                            localFile = matched;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (localFile) {
+                                    const filePath = path.join(privateCoursesDir, localFile);
+                                    if (fs.existsSync(filePath)) {
+                                        html = fs.readFileSync(filePath, 'utf8');
+                                        source = "local";
+                                    }
+                                }
+                            }
+
+                            if (!html) {
+                                console.log(`[getDashboardData] ❌ No HTML source found for ${file} in ${cid}`);
+                                continue;
+                            }
 
                             const guideContent = extractHiddenSectionContent(html, 'tutor-guide');
                             const attachContent = extractHiddenSectionContent(html, 'attachment-guide');
@@ -3143,17 +3200,17 @@ exports.getDashboardData = onCall(async (request) => {
                             if (guideContent) {
                                 if (!aggregatedGuides.tutor) aggregatedGuides.tutor = {};
                                 aggregatedGuides.tutor[file] = guideContent;
-                                console.log(`[getDashboardData] ✅ Found Tutor Guide for ${file} in ${cid}`);
+                                console.log(`[getDashboardData] ✅ Found Tutor Guide for ${file} in ${cid} (source: ${source})`);
                             } else {
-                                console.log(`[getDashboardData] ❌ No Tutor Guide match for ${file} in ${cid}`);
+                                console.log(`[getDashboardData] ❌ No Tutor Guide match for ${file} in ${cid} (source: ${source})`);
                             }
 
                             if (assignmentContent) {
                                 if (!aggregatedGuides.assignment) aggregatedGuides.assignment = {};
                                 aggregatedGuides.assignment[file] = assignmentContent;
-                                console.log(`[getDashboardData] ✅ Found Assignment Guide for ${file} in ${cid}`);
+                                console.log(`[getDashboardData] ✅ Found Assignment Guide for ${file} in ${cid} (source: ${source})`);
                             } else {
-                                console.log(`[getDashboardData] ❌ No Assignment Guide match for ${file} in ${cid}`);
+                                console.log(`[getDashboardData] ❌ No Assignment Guide match for ${file} in ${cid} (source: ${source})`);
                             }
 
                         }

@@ -7,8 +7,14 @@
 ## ✨ 平台特色 (Platform Highlights)
 
 ### 1. GitHub Classroom 深度整合
-每個學習單元可設定專屬 Classroom 邀請連結。系統支援「事後綁定」：學生在作業頁輸入 Tutor Promotion code 後，才會綁定導師與單元作業連結。  
-學生每次點擊作業都會先出現導師綁定對話框；Promotion code 可留白（會使用系統預設導師），若有輸入則必須是該單元合格導師的 code 才能通過。
+每個學習單元可設定專屬 Classroom 邀請連結。系統支援「事後綁定」：學生點擊「前往教室寫作業」後，會先輸入 Tutor Promotion code（或留白採用預設導師），綁定成功後直接開啟 GitHub Classroom。  
+Promotion code 若有輸入，必須是該單元合格導師的 code 才能通過；舊版 `正式提交作業 (Submit for Review)` 視窗僅保留作為手動 fallback，不是預設主流程。
+
+### 1.5 Google 帳號直接登入
+全站登入以 Google 帳號為主。主導航列的 `登入` 按鈕現在會直接發起 Google 授權：
+- 正式站使用 `signInWithRedirect`
+- 本地模擬器使用 `signInWithPopup`
+- `login.html` 保留作為備援入口，不再是一般使用者的預設登入流程
 
 ### 2. 智慧型多層級分潤 (Recursive Sharing)
 推薦系統支援遞迴式計算：
@@ -55,9 +61,9 @@
 ### 前端 (Frontend)
 - **技術棧**: 原生 HTML5 / CSS3 (Vanilla CSS) / JavaScript (ES6+), TailwindCSS (部分組件)。
 - **核心模組**:
-  - `nav-component.js`: 跨頁面統一導覽、純 CSS Hover 注入與身份驗證狀態管理。
+  - `nav-component.js`: 跨頁面統一導覽、純 CSS Hover 注入、身份驗證狀態管理與直接 Google 登入入口。
   - `footer-component.js`: 全站底欄渲染與相對路徑解析中心。
-  - `course-shared.js`: 單元內容渲染、進度追蹤、GitHub Classroom 整合與作業提交邏輯。
+  - `course-shared.js`: 單元內容渲染、進度追蹤、GitHub Classroom 整合，以及「前往教室寫作業 -> 導師綁定 -> 直接開啟 Classroom」主流程。
 - **數據通訊**: 透過 Firebase JS SDK 與 Firestore 及 Cloud Functions 交互。
 
 ### 後端 (Backend - Firebase)

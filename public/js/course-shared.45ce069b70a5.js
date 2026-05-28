@@ -2301,8 +2301,8 @@ function enhanceAssignmentEntryButtons() {
             e.stopPropagation();
             const primary = items[0];
             if (!primary) return;
-            // 呼叫統一的 openSubmissionModal，此函數會自動判斷學員是否已綁定導師及授權狀態
-            openSubmissionModal(primary.assignmentId, primary.assignmentTitle);
+            // 直接進入 Classroom flow：必要時先要求輸入 Promotion code，成功後開啟 GitHub Classroom。
+            openSubmissionModal(primary.assignmentId, primary.assignmentTitle, { preferDirectClassroom: true });
         });
 
         wrap.appendChild(btn);
@@ -2383,8 +2383,8 @@ window.submitBindTutorAction = async function () {
 
         if (result.data && result.data.success) {
             closeAssignmentLinkModal();
-            // Re-open the submission modal to refresh access state
-            openSubmissionModal(assignmentId, title, { skipTutorPrompt: true });
+            // 綁定成功後直接重走 Classroom 開啟流程，不再落回舊提交表單。
+            openSubmissionModal(assignmentId, title, { skipTutorPrompt: true, preferDirectClassroom: true });
         } else {
             alert("❌ 綁定失敗：" + (result.data.message || "未知錯誤"));
         }
@@ -2403,6 +2403,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
     const fileName = pathParts[pathParts.length - 1];
     const courseId = await findCourseIdByUnit(fileName);
     const normalizeLooseKey = (value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
+    const preferDirectClassroom = !!options?.preferDirectClassroom;
     let classroomUrl = null;
     let assignmentAccess = null;
     let shouldUseDirectClassroomLink = false;
@@ -2523,6 +2524,24 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
         }
 
         window.open(classroomUrl, '_blank');
+        return;
+    }
+
+    if (preferDirectClassroom) {
+        const accessMode = String(assignmentAccess?.accessMode || '');
+        if (!(assignmentAccess?.authorized === true || ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(accessMode))) {
+            alert("尚未取得此單元之付款或導師指派授權。");
+            return;
+        }
+        if (!classroomUrl) {
+            alert("此單元尚未設定 GitHub Classroom 作業連結，請通知管理員或導師修正。");
+            return;
+        }
+        if (isLikelyGitHubClassroomLink(classroomUrl) && !isValidGitHubClassroomInviteUrl(normalizeGitHubClassroomInviteUrl(classroomUrl))) {
+            alert("此單元設定的 Classroom 連結格式不正確，請通知管理員或導師修正。");
+            return;
+        }
+        alert("暫時無法直接開啟教室寫作業，請稍後再試。");
         return;
     }
 

@@ -76,6 +76,28 @@ function normalizeLoose(value = "") {
   return normalizeFile(value).replace(/\.html$/i, "").toLowerCase();
 }
 
+function normalizeGitHubUrl(url = "") {
+  let s = String(url || "").trim();
+  if (!s) return "";
+  s = s.replace(/^http:\/\//i, "https://");
+  if (!/^https?:\/\//i.test(s)) {
+    if (/^classroom\.github\.com\//i.test(s)) s = `https://${s}`;
+    else if (/^github\.com\/classroom\//i.test(s)) s = `https://${s}`;
+  }
+  try {
+    const u = new URL(s);
+    const host = u.hostname.toLowerCase();
+    const path = u.pathname.replace(/\/+$/, "");
+    if (host === "classroom.github.com" && /^\/a\/[A-Za-z0-9_-]+$/i.test(path)) {
+      return `https://classroom.github.com${path}`;
+    }
+    if (host === "github.com" && /^\/classroom\/a\/[A-Za-z0-9_-]+$/i.test(path)) {
+      return `https://github.com${path}`;
+    }
+  } catch (_) {}
+  return "";
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   const lessonsSnap = await db.collection("metadata_lessons").get();
@@ -97,6 +119,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     mode: args.apply ? "apply" : "dry-run",
     updated: [],
+    deletedMalformed: [],
     unresolved: []
   };
 
@@ -112,6 +135,20 @@ async function main() {
     const canonicalUnitId = unitAliasMap.get(normalizeLoose(mappedLegacy)) || "";
 
     if (!canonicalUnitId) {
+      const normalizedUrl = normalizeGitHubUrl(data.normalizedUrl || data.url || "");
+      if (!normalizedUrl) {
+        report.deletedMalformed.push({
+          docId: doc.id,
+          unitId: rawUnitId,
+          url: String(data.url || "").trim(),
+          normalizedUrl: String(data.normalizedUrl || "").trim(),
+          reason: "malformed-referral-index"
+        });
+        if (args.apply) {
+          await doc.ref.delete();
+        }
+        continue;
+      }
       report.unresolved.push({ docId: doc.id, unitId: rawUnitId, reason: "not-found-in-metadata" });
       continue;
     }
@@ -130,6 +167,7 @@ async function main() {
   const summary = {
     mode: report.mode,
     updated: report.updated.length,
+    deletedMalformed: report.deletedMalformed.length,
     unresolved: report.unresolved.length
   };
   console.log(JSON.stringify(summary, null, 2));
