@@ -1708,23 +1708,12 @@ async function vibeRefreshReadmeContent(filterUnitId, targetKinds = ['settings',
             let markdownHtml = null;
 
             if (isSettingsTab) {
-                // [V17.3] SETTINGS TAB: prefer direct unit page tutor-guide, then backend embedded tutor-guide, fallback to template repo tutor-guide.md
+                // Settings tutor-guide is now sourced only from the course page hidden section.
                 const unitHtml = await ensureUnitHtml();
                 const directTutorGuide = unitHtml ? extractSection(unitHtml, 'tutor-guide') : '';
                 if (directTutorGuide) {
                     markdownHtml = directTutorGuide;
                     console.log(`[V17.3] SettingsTab using direct tutor-guide section for unit: ${filterUnitId}`);
-                } else if (embeddedTutorGuide) {
-                    markdownHtml = embeddedTutorGuide;
-                    console.log(`[V17.3] SettingsTab using embedded tutor-guide for unit: ${filterUnitId}`);
-                } else {
-                    const fileUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/tutor-guide.md`;
-                    console.log(`[V17.3] SettingsTab fallback to GitHub tutor-guide: ${fileUrl}`);
-                    placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在抓取導師指南 tutor-guide.md...</div>`;
-                    const result = await loadMarkdown(fileUrl);
-                    if (result && !result.includes('無法讀取')) {
-                        markdownHtml = result;
-                    }
                 }
             } else {
                 // [V17.1] ASSIGNMENT TAB: prefer assignment-guide from private_courses, fallback to README.md
