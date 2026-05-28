@@ -50,6 +50,17 @@ const LEGACY_MASTER_TO_CANONICAL = {
   "start-05-master-joystick-lab.html": "start-05-unit-canvas-joystick.html"
 };
 
+const LEGACY_UNIT_TO_CANONICAL_UNIT = {
+  "01-unit-vscode-online.html": "tw-common-vscode-online.html",
+  "01-unit-vscode-setup.html": "tw-common-vscode-setup.html",
+  "02-unit-agent-mode.html": "tw-common-agent-mode.html",
+  "02-unit-vibe-coding.html": "tw-common-vibe-coding.html",
+  "02-unit-web-agents.html": "tw-common-web-agents.html",
+  "03-unit-github-classroom.html": "tw-common-github-classroom.html",
+  "03-unit-motor-ramping.html": "tw-common-motor-ramping.html",
+  "03-unit-wifi-setup.html": "tw-common-wifi-setup.html"
+};
+
 function parseArgs(argv) {
   return {
     apply: argv.includes("--apply"),
@@ -97,7 +108,7 @@ async function main() {
       continue;
     }
 
-    const mappedLegacy = LEGACY_MASTER_TO_CANONICAL[rawUnitId] || rawUnitId;
+    const mappedLegacy = LEGACY_UNIT_TO_CANONICAL_UNIT[rawUnitId] || LEGACY_MASTER_TO_CANONICAL[rawUnitId] || rawUnitId;
     const canonicalUnitId = unitAliasMap.get(normalizeLoose(mappedLegacy)) || "";
 
     if (!canonicalUnitId) {
