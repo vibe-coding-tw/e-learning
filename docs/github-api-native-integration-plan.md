@@ -298,6 +298,27 @@ jobs:
   3. 建立作業 Repo
   4. 回寫分潤明細
 
+#### 4.3 導師端自動化作業派發機制
+
+要讓自建的自動化系統（例如用 Python API 或網頁表單）能夠順暢運作，**「老師」只需要提供以下 4 項核心資料**，系統就能在背後完全自動化地把「學生」與「屬於他的作業程式庫」綁定在一起：
+
+##### 4.3.1 老師（系統管理員）需提供的 4 項核心資料
+- **個人存取權杖 (Personal Access Token, PAT)**：這是系統代表老師去向 GitHub 呼叫 API 的「數位通行證」。
+  - **建議類型**：使用 GitHub 新版的 **Fine-grained personal access tokens**。
+  - **權限範圍 (Permissions)**：
+    - **Repository permissions**: `Administration` (Read & Write), `Contents` (Read & Write), `Metadata` (Read-only)。
+    - **Organization permissions**: `Members` (Read-only，用來檢查學生帳號)。
+- **組織名稱 (Organization Name)**：作業程式庫要建立在外的哪一個 GitHub 組織空間（例如：`yuilaing-classroom`）。
+- **原始教材樣板名稱 (Template Repository Name)**：本次作業要複製哪一個母版教材。
+- **學生與學號對照名單 (Student Roster)**：一份包含學生識別碼與 GitHub 帳號的對照表（通常是由系統自動提供或匯入）。
+
+##### 4.3.2 自動化連結與建庫邏輯
+當系統取得上述 4 項資料後，後端的執行邏輯如下：
+1. **讀取學生資料**。
+2. **生成專屬名稱**：系統自動拼接出標準化的作業倉庫名稱，格式為：`作業前綴-學號`（例如：`tw-common-developer-identity-115001`）。
+3. **複製倉庫 (API)**：系統拿著老師的 `Token`，呼叫 GitHub API，命令組織從 `tw-common-developer-identity` 複製出一個名為 `tw-common-developer-identity-115001` 的 **Private Repository**。
+4. **直接綁定學生 (API)**：系統立刻呼叫新增協力者 API，將學生的 GitHub 帳號（例如 `xiaoming-chang`）直接加入 `tw-common-developer-identity-115001` 中，並給予 `Push`（寫入）權限。
+
 ---
 
 ### Phase 5：教材同步與 PR 機制（第 9-10 周）
@@ -403,6 +424,13 @@ async function createSyncPR(orgName, studentRepoName, templateRepoName) {
 - **作業連結管理**：統一配置所有單元的自建 Repo 連結
 - **同步審核面板**：批量審核與 Merge 教材更新 PR
 - **學生 Repo 列表**：篩選、搜尋、快速存取
+- **「新開班老師」最簡化作業派發介面**：
+  為新老師提供極簡的後台操作介面，僅需填寫/選擇以下四個主要欄位：
+  1. **GitHub Token 🔑** (個人存取權杖 PAT 輸入欄)
+  2. **Organization 名稱 🏢** (目標組織空間)
+  3. **Template Repo 名稱 📦** (作業樣板選擇)
+  4. **選課學生名單 👥** (學號與 GitHub 帳號對照表匯入)
+  * 提供「一鍵派發作業」按鈕。點擊後系統自動在背景建庫、完成授權，實現 **「Upstream (母版) ➔ Downstream (各班樣板) ➔ Student Repo (學生作業)」** 的完整生態系，降低老師的技術門檻。
 
 ---
 
