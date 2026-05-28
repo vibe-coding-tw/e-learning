@@ -3207,7 +3207,8 @@ window.executeNativeCreation = async function(githubUsername) {
             unitId: fileName,
             courseId,
             githubUsername,
-            assignmentTitle: title
+            assignmentTitle: title,
+            tutorMode: isAdminTutorModeActive()
         });
 
         if (result.data && result.data.repositoryUrl) {

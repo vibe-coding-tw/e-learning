@@ -1579,7 +1579,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         const now = Date.now();
         const userRecord = await admin.auth().getUser(uid);
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-        const isTrialCourse = !!(course && course.category === 'start' && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
+        const isTrialCourse = !!(course && (course.category === 'start' || course.category === 'started') && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
         if (isTrialCourse) {
             return { authorized: true, accessMode: 'trial_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
         }
@@ -5894,8 +5894,9 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
         const canonicalUnitId = resolveCanonicalUnitId(unitIdRaw, lessons);
         const effectiveCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons) || courseIdRaw;
 
+        const tutorMode = data?.tutorMode === true;
         // 1. 驗證學員課程權限
-        const access = await resolveStudentAssignmentAccess(db, uid, effectiveCourseId, canonicalUnitId, lessons);
+        const access = await resolveStudentAssignmentAccess(db, uid, effectiveCourseId, canonicalUnitId, lessons, tutorMode);
         if (!access.authorized) {
             throw new HttpsError('permission-denied', '尚未取得此單元之付款授權。');
         }
