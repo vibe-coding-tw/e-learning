@@ -449,26 +449,64 @@ async function createSyncPR(orgName, studentRepoName, templateRepoName) {
 
 ---
 
-## 4. 遷移策略
+## 4. 遷移策略與逐步取代計劃
 
-### 4.1 平行運行期（Phase 1-4 期間）
-- 新系統與 Classroom 同時運行
-- 學生可選擇使用「自建派發」或「Classroom 邀請」
-- 後端同時支援兩種作業提交方式
+為確保既有學生的學習體驗不受影響，同時讓自建系統得到充分驗證，我們採用**「漸進式替換與平行運行」**的策略，共分為以下七個關鍵步驟：
 
-### 4.2 逐步遷移（Week 9-12）
-- 預設新系統，Classroom 作為備選
-- 通知所有導師更新教材連結
-- 檢查現有作業 Repo 的自動評分是否正常轉移
+### 4.1 第一階段：基礎設施與 API 功能建立 (Infrastructure)
+1. **建立 GitHub 權杖與權限模型 (PAT)**：
+   - 在 GitHub 上為自建系統申請一個 **Fine-grained Personal Access Token (PAT)**，僅授權給目標教學組織。
+   - **權限設定**：
+     - Repository `Administration` (Read/Write) 用於創庫與保護分支。
+     - Repository `Contents` (Read/Write) 用於寫入代碼與配置。
+     - Organization `Members` (Read-only) 用於檢查學生的帳號狀態。
+   - **安全性**：將 Token 存入 Firebase Secret Manager，避免硬編碼在 Cloud Functions 中。
+2. **實作核心 API Helper**：
+   - 在 `functions` 下實作 GitHub API 調用模組，包含：
+     - 創庫：`createRepoFromTemplate` (呼叫 GitHub Template API)
+     - 加人：`addCollaborator` (設定學生為寫入權限)
+     - 回饋：`createRef` & `createPullRequest` (建立 `feedback` 分支與永遠不合併的 PR)
 
-### 4.3 完全棄用（Week 12+）
-- 關閉 Classroom 新邀請
-- 現有 Classroom Repo 標記為唯讀
-- 所有新學生強制使用自建系統
+### 4.2 第二階段：資料庫適配與架構調整 (Database Adjustments)
+3. **調整 Firestore 的資料欄位**：
+   - 為了同時支援 GitHub Classroom 與自建 API，調整 `assignments` 集合。
+   - 新增 `createdVia: "native-api" | "classroom"` 欄位。
+   - 擴充欄位包含 `repositoryUrl` (學生倉庫連結)、`repositoryName` (倉庫名稱) 及 `feedbackPullRequestUrl` (回饋 PR 連結)。
 
-### 4.4 回檔計劃
-- 保留所有 Classroom Repo 的 Git Mirror
-- 允許學生導出已完成的作業歷史
+### 4.3 第三階段：前端按鈕與流程改造 (Frontend Integration)
+4. **改造「寫作業」按鈕互動流程**：
+   - 當學生點擊「前往教室寫作業」時，不再直接導向 GitHub Classroom 的邀請連結，而是：
+     1. 呼叫 Cloud Function `createStudentRepository`。
+     2. 前端按鈕狀態變更為「正在為您建立專屬倉庫... (Loading)」。
+     3. 背景呼叫 GitHub API 完成創庫、加人、開 Feedback PR。
+     4. 成功後，前端按鈕變更為「進入作業 Repo」，並直接開啟該 Repo 網址。
+
+### 4.4 第四階段：自動評分機制移轉 (Autograding Integration)
+5. **移轉 Github Actions 評分結果回傳**：
+   - 自建系統中，必須將自動評分結果**直接回傳到 Vibe Coding API**。
+   - 在 Upstream 教材樣板中更新 `.github/workflows/autograde.yml`。
+   - 評分腳本執行完畢後，呼叫您的 API 端點（例如 `ingestGithubAutograde`）。
+   - API 驗證簽章（HMAC-SHA256）後，直接將分數回寫至學生的 `assignments.grade`，並將評分結果以 Comment API 貼在學生的 **Feedback PR** 內。
+
+### 4.5 第五階段：小規模試點驗證 (Pilot Testing)
+6. **選擇新課程或自願者班級進行測試**：
+   - 選擇一門新開設的小規模單元或招募部分學生作為測試對象。
+   - 設定這些單元的 `tutorConfigs[unitId].customAssignmentUrl` 為新系統的派發方式。
+   - 觀察創庫成功率、Actions 回傳分數的延遲度，以及 Feedback PR 的討論體驗是否流暢。
+
+### 4.6 第六階段：數據與學生遷移策略 (Migration)
+7. **漸進式切換與停用 GitHub Classroom**：
+   - **第一步：新學生/新班級預設使用自建系統**
+     - 新班級不再發放 GitHub Classroom 的邀請連結，全部走自建按鈕。
+   - **第二步：既有班級保持 Classroom 直至結業**
+     - 正在進行中的學生不需要強行遷移，讓他們在原有的 Classroom Repo 完成課程，避免 Git 歷史中斷。
+   - **第三步：關閉 Classroom 派發並封存**
+     - 學期結束後，將 GitHub Classroom 上的舊作業設定為「不接受新提交」（Set to inactive）。
+     - 備份/歸檔舊的 Classroom 倉庫，關閉舊的 Classroom 整合，完成 100% 自建化。
+
+### 4.7 回檔與容災計劃
+- 保留所有 Classroom Repo 的 Git Mirror。
+- 確保當 GitHub API 發生 Rate Limit 或異常時，允許自動切換回 Classroom 預備模式，保障教學連續性。
 
 ---
 
