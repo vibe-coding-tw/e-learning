@@ -2213,7 +2213,10 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
-    const filterCourseId = filterUnitId ? findParentCourseIdByUnit(filterUnitId) : resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+    let filterCourseId = filterUnitId ? findParentCourseIdByUnit(filterUnitId) : resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+    if (filterCourseId) {
+        filterCourseId = findCourseId(filterCourseId);
+    }
 
     const adminPanel = document.getElementById('admin-panel');
     if (!adminPanel) return;
@@ -3391,8 +3394,9 @@ async function renderSettingsTab(filterUnitId = null) {
 
         // [NEW] If filtered to a specific course
         const urlParams = new URLSearchParams(window.location.search);
-        const filterCourseId = filterUnitId ? findParentCourseIdByUnit(filterUnitId) : resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+        let filterCourseId = filterUnitId ? findParentCourseIdByUnit(filterUnitId) : resolveCourseIdFromUrlParam(urlParams.get('courseId'));
         if (filterCourseId) {
+            filterCourseId = findCourseId(filterCourseId);
             authorizedLessons = authorizedLessons.filter(l => l.courseId === filterCourseId);
         }
 
