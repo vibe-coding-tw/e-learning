@@ -238,22 +238,71 @@
                 <div class="text-indigo-600 text-3xl mb-4"><i class="fa-solid fa-user-graduate"></i></div>
                 <h5 class="font-bold text-xl mb-3">被推薦為合格導師後要做什麼？</h5>
                 <p class="text-sm text-slate-600 leading-relaxed">
-                    當學生收到「被推薦為合格導師候選」通知後，請提醒他先到 Dashboard 填寫該單元的 GitHub Classroom 邀請連結（<code class="bg-slate-100 px-1 rounded text-xs">https://classroom.github.com/a/...</code>）。
-                    學生送出後，系統才會通知 Admin 進入審核流程。
+                    當學生收到「被推薦為合格導師候選」通知後，請提醒他先到 Dashboard 填寫該單元的 GitHub Classroom 邀請連結（<code class="bg-slate-100 px-1 rounded text-xs">https://classroom.github.com/a/...</code>）或由管理員/您配置好原生 API 相關參數。學生送出後，系統才會通知 Admin 進入審核流程。
                 </p>
             </div>
 
-            <!-- GitHub Classroom 自動化機制 -->
+            <!-- GitHub 作業指派雙模式自動化機制 -->
             <div class="mt-16">
-                <h3 class="text-2xl font-bold text-center mb-10">📋 GitHub Classroom 背後的自動化機制</h3>
-                <p class="text-center text-slate-500 mb-12 max-w-3xl mx-auto">
-                    當學生點擊您的邀請連結按下「Accept this assignment」後，以下流程會自動完成。了解這些機制有助於您更精準地排除學生端問題。
+                <h3 class="text-2xl font-bold text-center mb-4">📋 GitHub 作業分發與自動化機制</h3>
+                <p class="text-center text-slate-500 mb-10 max-w-3xl mx-auto text-sm">
+                    本平台目前支援「GitHub Classroom」以及「自建原生 API (Native API)」雙模式。您可以根據教學需求自主選擇，了解機制有助於您更精準地排除學生端問題。
                 </p>
+
+                <!-- 模式對比與說明 -->
+                <div class="grid md:grid-cols-2 gap-8 mb-12">
+                    <div class="glass-card p-8 rounded-[2rem] border-indigo-200 bg-white shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                        <div class="text-2xl mb-4">🔗</div>
+                        <h4 class="font-bold text-xl mb-3 text-slate-800">模式 A：GitHub Classroom (標準邀請模式)</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                            適用於標準大型班級。導師僅需在 Dashboard 輸入 Classroom 專屬邀請連結即可完成對接。
+                        </p>
+                        <ul class="text-xs text-slate-600 space-y-2 border-t border-slate-100 pt-4">
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span>
+                                <span><strong>設定簡單：</strong>直接貼上 GitHub Classroom 產生的網址即可。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-500 font-bold">✓</span>
+                                <span><strong>防侵入：</strong>無須提供老師的個人 GitHub Access Token。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-amber-500 font-bold">⚠</span>
+                                <span><strong>組織阻礙：</strong>學生接受作業時若未順利加入組織，會遇到無權存取私有 Repository 的問題（需要導師引導接受 Pending 組織邀請）。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="glass-card p-8 rounded-[2rem] border-emerald-200 bg-white shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                        <div class="text-2xl mb-4">⚡</div>
+                        <h4 class="font-bold text-xl mb-3 text-slate-800">模式 B：自建原生 API (Native API - 推薦)</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                            專為極致順暢體驗設計。學生填寫 GitHub 帳號後，系統在背景全自動建立作業並直達寫作業頁面。
+                        </p>
+                        <ul class="text-xs text-slate-600 space-y-2 border-t border-slate-100 pt-4">
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span>
+                                <span><strong>免組織邀請：</strong>以「外部協作者 (Collaborator)」身份直接邀請學生，免除一切組織加入卡關點。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span>
+                                <span><strong>超低門檻：</strong>學生在平台上一鍵開通作業，3-8 秒即自動生成 Repo，無需前往 Classroom 網站操作。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 font-bold">✓</span>
+                                <span><strong>自由度高：</strong>導師可在後台填寫自訂的 <strong>GitHub Org</strong>、<strong>樣板 Repo</strong> 與 <strong>個人 Access Token (PAT)</strong>，支援一班一組織的安全隔離。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div class="glass-card p-6 rounded-2xl border-slate-200 shadow-sm">
                         <div class="text-2xl mb-3">📦</div>
                         <h5 class="font-bold text-lg mb-2">自動建立專屬程式庫</h5>
-                        <p class="text-sm text-slate-500">系統根據您設定的模板，自動建立命名為 <code class="bg-slate-100 px-1 rounded text-xs">作業名稱-學生帳號</code> 的 Repo。學生獲得 Write 權限，您擁有 Admin 權限。</p>
+                        <p class="text-sm text-slate-500">系統根據您設定的模板，自動建立命名為 <code class="bg-slate-100 px-1 rounded text-xs">樣板名稱-學生帳號</code> 的 Repo。學生獲得 Write 權限，您擁有 Admin 權限。</p>
                     </div>
                     <div class="glass-card p-6 rounded-2xl border-slate-200 shadow-sm">
                         <div class="text-2xl mb-3">📄</div>
@@ -268,7 +317,7 @@
                     <div class="glass-card p-6 rounded-2xl border-slate-200 shadow-sm">
                         <div class="text-2xl mb-3">💬</div>
                         <h5 class="font-bold text-lg mb-2">Feedback Pull Request</h5>
-                        <p class="text-sm text-slate-500">系統自動建立「Feedback」PR，您可直接在程式碼行旁留言，提供精準的教學引導與修正策略。</p>
+                        <p class="text-sm text-slate-500">系統自動建立「Feedback」PR（不進行合併的專屬分支 PR），您可直接在程式碼行旁留言，提供精準的教學引導與修正策略。</p>
                     </div>
                     <div class="glass-card p-6 rounded-2xl border-slate-200 shadow-sm">
                         <div class="text-2xl mb-3">⏰</div>
@@ -280,11 +329,6 @@
                         <h5 class="font-bold text-lg mb-2">隱私與防抄襲</h5>
                         <p class="text-sm text-slate-500">除非您設定為 Public，否則每個學生的 Repo 僅該生與您可見，有效保護隱私與預防抄襲。</p>
                     </div>
-                    <div class="glass-card p-6 rounded-2xl border-slate-200 shadow-sm">
-                        <div class="text-2xl mb-3">🎓</div>
-                        <h5 class="font-bold text-lg mb-2">師資推薦機制</h5>
-                        <p class="text-sm text-slate-500">若發現優秀學員，可在作業指導流程中點選「推薦成為合格教師」。學生收到通知後，需先填寫該單元的 GitHub Classroom 邀請連結；提交完成後，系統才會通知管理員進行最終審核。</p>
-                    </div>
                 </div>
 
                 <div class="mt-8 p-8 rounded-[2.5rem] bg-indigo-50 border border-indigo-100">
@@ -294,6 +338,7 @@
                                 <i class="fa-solid fa-user-check"></i> 如何確認學生是否成功加入？
                             </h5>
                             <p class="text-indigo-700 text-sm mb-4 leading-relaxed">
+                                <strong>如果您使用「GitHub Classroom 邀請連結」：</strong><br>
                                 這是導師最常遇到的卡關點：學生接受了作業，但沒有加入「組織 (Organization)」，導致無法存取私有儲存庫。
                             </p>
                             <div class="space-y-3">
@@ -314,14 +359,15 @@
                         </div>
                         <div class="md:w-1/2">
                             <h5 class="font-bold text-indigo-900 text-xl mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-lightbulb"></i> 專業導師小撇步
+                                <i class="fa-solid fa-lightbulb"></i> 專業導師與 API 整合小撇步
                             </h5>
-                            <p class="text-indigo-700 text-sm mb-6 leading-relaxed">
-                                在 GitHub Classroom 設定中，有一個選項是 <strong class="text-indigo-900">「自動邀請學生加入組織」</strong>。開啟此功能後，學生接受作業連結的同時，系統就會自動補發組織邀請，大幅降低溝通成本。
+                            <p class="text-indigo-700 text-sm mb-4 leading-relaxed">
+                                <strong>如果您使用「原生 GitHub API 模式」：</strong><br>
+                                系統會透過 API 將學生直接新增為專屬 Repository 的協作者。學生不需接受任何「組織邀請」就能直接寫作業！
                             </p>
-                            <div class="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg">
-                                <p class="text-xs font-bold mb-1 italic">📌 快速排解建議：</p>
-                                <p class="text-[11px] leading-relaxed">請學生先到 <span class="font-bold">https://github.com/settings/organizations</span> 接受待處理邀請，再回 Classroom 作業連結；通常可立即排除 Repository Access Issue。</p>
+                            <div class="p-4 bg-emerald-600 text-white rounded-2xl shadow-lg text-xs leading-relaxed">
+                                <p class="font-bold mb-1 italic">💡 溫馨提醒：</p>
+                                <p>原生 API 模式下，學生僅被加入單一專屬專案的外部協作者，並非組織成員，這完全避免了學生忘記接受組織邀請而造成的 Repository Access Issue 卡關！</p>
                             </div>
                         </div>
                     </div>

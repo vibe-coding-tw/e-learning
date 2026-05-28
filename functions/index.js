@@ -2208,39 +2208,91 @@ const saveTutorConfigsHandler = onCall(async (request) => {
         }
 
         try {
-            // --- PHASE 1: Propagate githubClassroomUrls and Authorizations to User Documents ---
-            if (configs.githubClassroomUrls) {
-            console.log(`[saveTutorConfigs] Syncing GitHub Classroom URLs to user documents for ${courseId}...`);
             const db = admin.firestore();
             
-            for (const [unitId, tutorsMap] of Object.entries(configs.githubClassroomUrls)) {
-                for (const [tEmail, url] of Object.entries(tutorsMap)) {
-                    try {
-                        const userRecord = await admin.auth().getUserByEmail(tEmail);
-                        const tutorUid = userRecord.uid;
-                        
-                        // 使用 FieldPath 或嵌套物件更新以避開點號問題，但在 set({merge: true}) 中直接傳遞對象是合規的
-                        await db.collection('users').doc(tutorUid).set({
-                            tutorConfigs: {
-                                [unitId]: {
-                                    githubClassroomUrl: url,
-                                    authorized: true,
-                                    email: tEmail,
-                                    updatedAt: new Date().toISOString()
+            // --- PHASE 1: Propagate githubClassroomUrls and Authorizations to User Documents ---
+            if (configs.githubClassroomUrls) {
+                console.log(`[saveTutorConfigs] Syncing GitHub Classroom URLs to user documents for ${courseId}...`);
+                
+                for (const [unitId, tutorsMap] of Object.entries(configs.githubClassroomUrls)) {
+                    for (const [tEmail, url] of Object.entries(tutorsMap)) {
+                        try {
+                            const userRecord = await admin.auth().getUserByEmail(tEmail);
+                            const tutorUid = userRecord.uid;
+                            
+                            // 使用 FieldPath 或嵌套物件更新以避開點號問題，但在 set({merge: true}) 中直接傳遞對象是合規的
+                            await db.collection('users').doc(tutorUid).set({
+                                tutorConfigs: {
+                                    [unitId]: {
+                                        githubClassroomUrl: url,
+                                        authorized: true,
+                                        email: tEmail,
+                                        updatedAt: new Date().toISOString()
+                                    }
                                 }
-                            }
-                        }, { merge: true });
-                        
-                        // [V15.9] ARCHITECTURE SYNC: Update the global referral index for fast lookup
-                        await syncReferralLink(db, url, tEmail, (uData.name || tEmail), unitId);
+                            }, { merge: true });
+                            
+                            // [V15.9] ARCHITECTURE SYNC: Update the global referral index for fast lookup
+                            const tDoc = await db.collection('users').doc(tutorUid).get();
+                            const tData = tDoc.exists ? tDoc.data() : {};
+                            const tName = tData.name || tData.displayName || tEmail;
+                            await syncReferralLink(db, url, tEmail, tName, unitId);
 
-                        console.log(`[saveTutorConfigs] ✅ Synced ${unitId} for ${tEmail}`);
-                    } catch (err) {
-                        console.warn(`[saveTutorConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
+                            console.log(`[saveTutorConfigs] ✅ Synced ${unitId} for ${tEmail}`);
+                        } catch (err) {
+                            console.warn(`[saveTutorConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
+                        }
                     }
                 }
             }
-        }
+
+            // --- PHASE 1.5: Support saving custom tutor configs (githubOrg, templateRepo, githubToken) ---
+            if (configs.tutorConfigs) {
+                console.log(`[saveTutorConfigs] Syncing custom tutorConfigs to user documents...`);
+                for (const [unitId, configObj] of Object.entries(configs.tutorConfigs)) {
+                    const tEmail = configObj.email || email;
+                    try {
+                        const userRecord = await admin.auth().getUserByEmail(tEmail.toLowerCase());
+                        const tutorUid = userRecord.uid;
+
+                        const payload = {
+                            tutorConfigs: {
+                                [unitId]: {
+                                    authorized: true,
+                                    email: tEmail.toLowerCase(),
+                                    updatedAt: new Date().toISOString()
+                                }
+                            }
+                        };
+
+                        if (configObj.githubClassroomUrl !== undefined) {
+                            payload.tutorConfigs[unitId].githubClassroomUrl = configObj.githubClassroomUrl;
+                        }
+                        if (configObj.githubOrg !== undefined) {
+                            payload.tutorConfigs[unitId].githubOrg = configObj.githubOrg;
+                        }
+                        if (configObj.templateRepo !== undefined) {
+                            payload.tutorConfigs[unitId].templateRepo = configObj.templateRepo;
+                        }
+                        if (configObj.githubToken !== undefined) {
+                            payload.tutorConfigs[unitId].githubToken = configObj.githubToken;
+                        }
+
+                        await db.collection('users').doc(tutorUid).set(payload, { merge: true });
+
+                        if (configObj.githubClassroomUrl) {
+                            const tDoc = await db.collection('users').doc(tutorUid).get();
+                            const tData = tDoc.exists ? tDoc.data() : {};
+                            const tName = tData.name || tData.displayName || tEmail;
+                            await syncReferralLink(db, configObj.githubClassroomUrl, tEmail.toLowerCase(), tName, unitId);
+                        }
+                        
+                        console.log(`[saveTutorConfigs] ✅ Saved custom config for ${unitId} and tutor ${tEmail}`);
+                    } catch (err) {
+                        console.warn(`[saveTutorConfigs] Failed to save custom config for ${tEmail} on ${unitId}: ${err.message}`);
+                    }
+                }
+            }
 
         return { success: true, message: 'Configs saved and synced to user documents.' };
     } catch (e) {
@@ -2343,6 +2395,10 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
 
     // [V12.0.4] Fetch Tutor-specific classroom URL from the Tutor's User document
     let classroomUrl = null;
+    let createdVia = 'classroom';
+    let repositoryUrl = null;
+    let feedbackPullRequestUrl = null;
+
     if (assignedTutorEmail) {
         try {
             const tutorRecord = await admin.auth().getUserByEmail(assignedTutorEmail);
@@ -2350,11 +2406,17 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
             const tutorData = tutorDoc.exists ? tutorDoc.data() : {};
             const unitConfig = (tutorData.tutorConfigs || {})[canonicalUnitId] || {};
             classroomUrl = unitConfig.githubClassroomUrl || null;
+            if (unitConfig.githubOrg) {
+                createdVia = 'native-api';
+            }
             
             // Fallback to course-level if not unit-level (optional, depending on structure)
             if (!classroomUrl && effectiveCourseId) {
                 const courseConfig = (tutorData.tutorConfigs || {})[effectiveCourseId] || {};
                 classroomUrl = courseConfig.githubClassroomUrl || null;
+                if (courseConfig.githubOrg) {
+                    createdVia = 'native-api';
+                }
             }
         } catch (tutorErr) {
             console.warn(`[resolveAssignmentAccess] Failed to fetch tutor ${assignedTutorEmail} config:`, tutorErr.message);
@@ -2377,11 +2439,18 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
             const assignmentDoc = await db.collection('assignments').doc(`${auth.uid}_${assignmentId}`).get();
             if (assignmentDoc.exists) {
                 const aData = assignmentDoc.data();
-                const existingUrl = aData.assignmentUrl || aData.url;
-                // Only prioritize if it's a real GitHub repo (not a classroom invitation link with /a/)
-                if (existingUrl && existingUrl.includes('github.com/') && !existingUrl.includes('classroom.github.com/a/')) {
-                    personalRepoUrl = existingUrl;
-                    console.log(`[resolveAssignmentAccess] Found personal repo for student: ${personalRepoUrl}`);
+                if (aData.createdVia === 'native-api') {
+                    createdVia = 'native-api';
+                    repositoryUrl = aData.repositoryUrl || null;
+                    feedbackPullRequestUrl = aData.feedbackPullRequestUrl || null;
+                    personalRepoUrl = aData.repositoryUrl || null;
+                } else {
+                    const existingUrl = aData.assignmentUrl || aData.url;
+                    // Only prioritize if it's a real GitHub repo (not a classroom invitation link with /a/)
+                    if (existingUrl && existingUrl.includes('github.com/') && !existingUrl.includes('classroom.github.com/a/')) {
+                        personalRepoUrl = existingUrl;
+                        console.log(`[resolveAssignmentAccess] Found personal repo for student: ${personalRepoUrl}`);
+                    }
                 }
                 assignmentDetails = {
                     learningState: aData.learningState || 'in_progress',
@@ -2398,6 +2467,17 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
         }
     }
 
+    // Fetch student's own githubUsername
+    let githubUsername = null;
+    try {
+        const studentDoc = await db.collection('users').doc(auth.uid).get();
+        if (studentDoc.exists) {
+            githubUsername = studentDoc.data().githubUsername || null;
+        }
+    } catch (studentErr) {
+        console.warn(`[resolveAssignmentAccess] Failed to fetch student ${auth.uid} githubUsername:`, studentErr.message);
+    }
+
     return {
         authorized: true,
         accessMode,
@@ -2407,7 +2487,11 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
         canonicalUnitId,
         courseId: effectiveCourseId,
         requiresTutorAssignment,
-        assignmentDetails
+        assignmentDetails,
+        githubUsername,
+        createdVia,
+        repositoryUrl: repositoryUrl || personalRepoUrl || null,
+        feedbackPullRequestUrl
     };
 });
 
@@ -3011,7 +3095,11 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                 synthesizedConfigs[cid].tutorDetails[email] = {
                     email,
                     name: resolveNameFromUserData(uData, email, ""),
-                    qualifiedAt: config.updatedAt || config.qualifiedAt
+                    qualifiedAt: config.updatedAt || config.qualifiedAt,
+                    githubClassroomUrl: config.githubClassroomUrl || "",
+                    githubOrg: config.githubOrg || "",
+                    templateRepo: config.templateRepo || "",
+                    githubToken: config.githubToken || ""
                 };
 
                 if (config.githubClassroomUrl) {
@@ -3034,7 +3122,11 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                     unitTutorConfigs[unitId].tutorDetails[email] = {
                         email,
                         name: resolveNameFromUserData(uData, email, ""),
-                        qualifiedAt: config.updatedAt || config.qualifiedAt
+                        qualifiedAt: config.updatedAt || config.qualifiedAt,
+                        githubClassroomUrl: config.githubClassroomUrl || "",
+                        githubOrg: config.githubOrg || "",
+                        templateRepo: config.templateRepo || "",
+                        githubToken: config.githubToken || ""
                     };
                     if (config.githubClassroomUrl) {
                         unitTutorConfigs[unitId].githubClassroomUrls[email] = config.githubClassroomUrl;
@@ -5784,6 +5876,11 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
     const uid = auth.uid;
 
     try {
+        // Save student's githubUsername to their user profile
+        await db.collection('users').doc(uid).set({
+            githubUsername: githubUsername
+        }, { merge: true });
+
         const lessons = await getLessons();
         const canonicalUnitId = resolveCanonicalUnitId(unitIdRaw, lessons);
         const effectiveCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons) || courseIdRaw;
@@ -5807,9 +5904,10 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
             };
         }
 
-        // 3. 取得導師配置的 Org 名稱（若無，預設使用 vibe-coding-classroom）
+        // 3. 取得導師配置的 Org 名稱與自訂 Token（若無，預設使用 vibe-coding-classroom 與系統 Token）
         let targetOrg = 'vibe-coding-classroom';
         let templateRepo = normalizedUnitId; // 預設樣板倉庫名稱與單元 ID 相同
+        let customToken = null;
 
         const tutorEmail = access.assignedTutorEmail;
         if (tutorEmail) {
@@ -5827,12 +5925,15 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
                     if (config.templateRepo) {
                         templateRepo = config.templateRepo;
                     }
+                    if (config.githubToken) {
+                        customToken = config.githubToken;
+                    }
                 }
             }
         }
 
         // 4. 取得 GitHub PAT Token
-        const token = GITHUB_API_TOKEN.value();
+        const token = customToken || GITHUB_API_TOKEN.value();
         if (!token) {
             throw new HttpsError('failed-precondition', '系統未配置 GITHUB_API_TOKEN');
         }

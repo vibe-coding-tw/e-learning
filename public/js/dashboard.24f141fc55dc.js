@@ -3463,7 +3463,7 @@ async function renderSettingsTab(filterUnitId = null) {
         const assignmentRows = allUniqueUnits.map(fileName => {
             const uData = unitToDataMap.get(fileName);
             const isAuthorized = isUserAuthorizedForUnit(fileName, uData.courseId, userEmail);
-            return renderAssignmentConfigRow(uData.courseId, fileName, getUnitTutorConfig(fileName).githubClassroomUrls, uData.courseTitle, isAuthorized);
+            return renderAssignmentConfigRow(uData.courseId, fileName, getUnitTutorConfig(fileName).tutorDetails, uData.courseTitle, isAuthorized);
         }).filter(h => !!h).join('');
 
         const guideRows = allUniqueUnits.map(fileName => {
@@ -3513,17 +3513,20 @@ async function renderSettingsTab(filterUnitId = null) {
     }
 }
 
-window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(courseId, fileName, tutorMap = {}, courseTitle = "", isAuthorized) {
+window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(courseId, fileName, tutorDetails = {}, courseTitle = "", isAuthorized) {
     const userEmail = auth.currentUser?.email;
     const isAdmin = myRole === 'admin' && adminTutorMode;
     
     // [V14.8.5] Even if admin, only show self in unit-settings view to maintain isolation/clutter-free UI
-    let entries = Object.entries(tutorMap || {}).filter(([tutor]) => tutor === userEmail);
+    let details = tutorDetails[userEmail] || {};
     
     // Fallback: If current user doesn't have a specific link yet, show an empty row for them
-    if (entries.length === 0 && userEmail) entries.push([userEmail, '']);
+    if (!details.email && userEmail) {
+        details = { email: userEmail };
+    }
 
     const unitName = formatUnitName(fileName);
+    const isNative = !!(details.githubOrg || details.templateRepo);
 
     return `
         <div class="p-6 unit-config-card" data-course-id="${courseId}" data-file-name="${fileName}">
@@ -3535,20 +3538,56 @@ window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(
                     </div>
                     <div class="text-xl font-black text-gray-800 tracking-tight leading-loose">${escapeHtml(unitName)}</div>
                 </div>
-                <div class="flex-grow max-w-2xl">
+                <div class="flex-grow max-w-2xl w-full">
                     ${isAuthorized ? `
-                        <div class="text-[10px] text-blue-400 font-black uppercase mb-2 tracking-widest">作業連結 / Link</div>
-                        ${entries.map(([tutor, url]) => `
-                            <div class="flex gap-2 assignment-link-row">
-                                <input type="hidden" class="assignment-id-input" value="${escapeHtml(tutor)}">
-                                <input type="url" placeholder="GitHub Classroom 連結" value="${escapeHtml(url)}" 
+                        <div class="flex flex-col gap-3 assignment-link-row">
+                            <input type="hidden" class="assignment-id-input" value="${escapeHtml(details.email)}">
+                            
+                            <div class="flex items-center gap-3 mb-1">
+                                <div class="text-[10px] text-blue-400 font-black uppercase tracking-widest">作業派發方式</div>
+                                <select onchange="toggleAssignmentMethod(this)" class="assignment-method-select px-3 py-1 text-xs border border-gray-200 rounded-xl outline-none bg-gray-50/50 transition-all font-sans font-bold text-gray-700">
+                                    <option value="classroom" ${!isNative ? 'selected' : ''}>GitHub Classroom 連結</option>
+                                    <option value="native" ${isNative ? 'selected' : ''}>自建原生 API</option>
+                                </select>
+                            </div>
+
+                            <!-- Classroom URL Container -->
+                            <div class="method-classroom-container flex gap-2 ${isNative ? 'hidden' : ''}">
+                                <input type="url" placeholder="GitHub Classroom 邀請連結 (e.g. https://classroom.github.com/a/...)" value="${escapeHtml(details.githubClassroomUrl || '')}" 
                                     class="assignment-url-input flex-grow px-4 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
                                 <button onclick="saveAllSettings(this)"
                                     class="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 btn-save-individual">
                                     儲存 🔗
                                 </button>
                             </div>
-                        `).join('')}
+
+                            <!-- Native API Container -->
+                            <div class="method-native-container flex flex-col gap-2.5 ${!isNative ? 'hidden' : ''}">
+                                <div class="flex gap-2">
+                                    <div class="flex-grow flex flex-col gap-1 w-1/2">
+                                        <span class="text-[9px] text-gray-400 font-bold">GitHub 組織名稱 (GitHub Org)</span>
+                                        <input type="text" placeholder="組織名稱 (e.g. vibe-coding-classroom)" value="${escapeHtml(details.githubOrg || '')}" 
+                                            class="assignment-org-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
+                                    </div>
+                                    <div class="flex-grow flex flex-col gap-1 w-1/2">
+                                        <span class="text-[9px] text-gray-400 font-bold">樣板倉庫名稱 (Template Repo)</span>
+                                        <input type="text" placeholder="樣板名稱 (e.g. tw-common-vscode-setup)" value="${escapeHtml(details.templateRepo || '')}" 
+                                            class="assignment-template-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 items-end">
+                                    <div class="flex-grow flex flex-col gap-1">
+                                        <span class="text-[9px] text-gray-400 font-bold">GitHub Token / PAT (選填，留空使用系統 Token)</span>
+                                        <input type="password" placeholder="請輸入 Token (安全儲存且已遮蔽)" value="${details.githubToken ? '••••••••••••••••' : ''}" data-raw-token="${escapeHtml(details.githubToken || '')}"
+                                            class="assignment-token-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
+                                    </div>
+                                    <button onclick="saveAllSettings(this)"
+                                        class="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 btn-save-individual h-[34px]">
+                                        儲存 🔗
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     ` : '<div class="text-xs text-gray-300 italic">🔒 無權限管理此單元連結</div>'}
                 </div>
             </div>
@@ -3573,6 +3612,145 @@ window.renderGuideRow = window.renderGuideRow || function(courseId, fileName, tu
         </div>
     `;
 }
+
+window.toggleAssignmentMethod = function(select) {
+    const card = select.closest('.unit-config-card');
+    if (!card) return;
+    const method = select.value;
+    const classroomContainer = card.querySelector('.method-classroom-container');
+    const nativeContainer = card.querySelector('.method-native-container');
+    if (method === 'native') {
+        classroomContainer.classList.add('hidden');
+        nativeContainer.classList.remove('hidden');
+    } else {
+        classroomContainer.classList.remove('hidden');
+        nativeContainer.classList.add('hidden');
+    }
+};
+
+window.saveAllSettings = async function (clickedBtn = null) {
+    const btns = clickedBtn ? [clickedBtn] : document.querySelectorAll('.btn-save-individual');
+
+    const originalTexts = new Map();
+    btns.forEach(btn => {
+        originalTexts.set(btn, btn.textContent);
+        btn.disabled = true;
+        btn.textContent = "儲存中...";
+    });
+
+    const configsByCourse = {};
+    const tutorConfigsByCourse = {};
+
+    let invalidEntry = null;
+
+    // Collect data from DOM
+    document.querySelectorAll('.unit-config-card').forEach(card => {
+        const cid = card.dataset.courseId;
+        const fname = card.dataset.fileName;
+
+        if (!configsByCourse[cid]) configsByCourse[cid] = {};
+        if (!tutorConfigsByCourse[cid]) tutorConfigsByCourse[cid] = {};
+
+        const selectMethod = card.querySelector('.assignment-method-select');
+        const method = selectMethod ? selectMethod.value : 'classroom';
+
+        card.querySelectorAll('.assignment-link-row').forEach(row => {
+            const tid = row.querySelector('.assignment-id-input').value.trim();
+            if (!tid) return;
+
+            if (method === 'classroom') {
+                const rawUrl = row.querySelector('.assignment-url-input')?.value?.trim() || '';
+                const url = normalizeGitHubClassroomInviteUrl(rawUrl);
+                if (url) {
+                    if (!isValidGitHubClassroomInviteUrl(url)) {
+                        invalidEntry = { unit: fname, tutor: tid, url };
+                        return;
+                    }
+                    configsByCourse[cid][fname] = { [tid]: url };
+                    tutorConfigsByCourse[cid][fname] = {
+                        email: tid,
+                        githubClassroomUrl: url,
+                        githubOrg: '',
+                        templateRepo: '',
+                        githubToken: ''
+                    };
+                } else {
+                    configsByCourse[cid][fname] = { [tid]: '' };
+                    tutorConfigsByCourse[cid][fname] = {
+                        email: tid,
+                        githubClassroomUrl: '',
+                        githubOrg: '',
+                        templateRepo: '',
+                        githubToken: ''
+                    };
+                }
+            } else {
+                // native
+                const org = row.querySelector('.assignment-org-input')?.value?.trim() || '';
+                const template = row.querySelector('.assignment-template-input')?.value?.trim() || '';
+                let tokenVal = row.querySelector('.assignment-token-input')?.value?.trim() || '';
+                const rawToken = row.querySelector('.assignment-token-input')?.dataset.rawToken || '';
+                
+                if (tokenVal === '••••••••••••••••') {
+                    tokenVal = rawToken;
+                }
+
+                tutorConfigsByCourse[cid][fname] = {
+                    email: tid,
+                    githubClassroomUrl: '',
+                    githubOrg: org,
+                    templateRepo: template,
+                    githubToken: tokenVal
+                };
+                
+                configsByCourse[cid][fname] = { [tid]: '' };
+            }
+        });
+    });
+
+    if (invalidEntry) {
+        alert(`連結格式錯誤\n單元：${invalidEntry.unit}\nTutor：${invalidEntry.tutor}\n請使用：https://classroom.github.com/a/xxxxx`);
+        btns.forEach(btn => {
+            btn.disabled = false;
+            btn.textContent = originalTexts.get(btn) || "儲存變更";
+        });
+        return;
+    }
+
+    try {
+        const saveTutorConfigs = httpsCallable(functions, 'saveTutorConfigs');
+        
+        // Merge configs and tutorConfigs into promises
+        const allCourseIds = new Set([...Object.keys(configsByCourse), ...Object.keys(tutorConfigsByCourse)]);
+        const promises = [];
+        
+        for (const cid of allCourseIds) {
+            promises.push(saveTutorConfigs({
+                courseId: cid,
+                configs: {
+                    githubClassroomUrls: configsByCourse[cid] || {},
+                    tutorConfigs: tutorConfigsByCourse[cid] || {}
+                }
+            }));
+        }
+
+        await Promise.all(promises);
+        alert("設定儲存成功！");
+        
+        // Reload dashboard to reflect fresh changes
+        if (typeof window.loadDashboard === 'function') {
+            await window.loadDashboard();
+        }
+    } catch (e) {
+        console.error("Save failed:", e);
+        alert("儲存失敗: " + e.message);
+    } finally {
+        btns.forEach(btn => {
+            btn.disabled = false;
+            btn.textContent = originalTexts.get(btn) || "儲存變更";
+        });
+    }
+};
 
 // Helper to split instructor guide into parts
 window.robustExtractGuideSegments = window.robustExtractGuideSegments || function(tutorInput, assignmentInput = null) {
@@ -3623,80 +3801,7 @@ window.robustExtractGuideSegments = window.robustExtractGuideSegments || functio
 }
 
 
-/**
- * [V12.3.5] NEW: Renders a list of qualified tutors for a unit and their assignment count
- */
 
-
-window.saveAllSettings = async function (clickedBtn = null) {
-    const btns = clickedBtn ? [clickedBtn] : document.querySelectorAll('.btn-save-individual');
-
-    const originalTexts = new Map();
-    btns.forEach(btn => {
-        originalTexts.set(btn, btn.textContent);
-        btn.disabled = true;
-        btn.textContent = "儲存中...";
-    });
-
-    const configsByCourse = {};
-
-    // Collect data from DOM
-    let invalidEntry = null;
-    document.querySelectorAll('.unit-config-card').forEach(card => {
-        const cid = card.dataset.courseId;
-        const fname = card.dataset.fileName;
-
-        if (!configsByCourse[cid]) configsByCourse[cid] = {};
-
-        const tutorMap = {};
-        card.querySelectorAll('.assignment-link-row').forEach(row => {
-            const tid = row.querySelector('.assignment-id-input').value.trim();
-            const rawUrl = row.querySelector('.assignment-url-input').value.trim();
-            const url = normalizeGitHubClassroomInviteUrl(rawUrl);
-            if (tid && url) {
-                if (!isValidGitHubClassroomInviteUrl(url)) {
-                    invalidEntry = { unit: fname, tutor: tid, url };
-                    return;
-                }
-                tutorMap[tid] = url;
-            }
-        });
-
-        if (Object.keys(tutorMap).length > 0) {
-            configsByCourse[cid][fname] = tutorMap;
-        }
-    });
-
-    if (invalidEntry) {
-        alert(`連結格式錯誤\\n單元：${invalidEntry.unit}\\nTutor：${invalidEntry.tutor}\\n請使用：https://classroom.github.com/a/xxxxx`);
-        btns.forEach(btn => {
-            btn.disabled = false;
-            btn.textContent = originalTexts.get(btn) || "儲存變更";
-        });
-        return;
-    }
-
-    try {
-        const saveTutorConfigs = httpsCallable(functions, 'saveTutorConfigs');
-        const promises = Object.entries(configsByCourse).map(([cid, unitMap]) => {
-            return saveTutorConfigs({
-                courseId: cid,
-                configs: { githubClassroomUrls: unitMap }
-            });
-        });
-
-        await Promise.all(promises);
-        alert("設定儲存成功！");
-    } catch (e) {
-        console.error("Save failed:", e);
-        alert("儲存失敗: " + e.message);
-    } finally {
-        btns.forEach(btn => {
-            btn.disabled = false;
-            btn.textContent = originalTexts.get(btn) || "儲存變更";
-        });
-    }
-}
 
 // --- Global Function Exports : Esc Key handling ---
 document.addEventListener('keydown', (e) => {

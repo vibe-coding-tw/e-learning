@@ -166,7 +166,7 @@
                     <div class="text-cyan-500 text-3xl mb-6"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                     <h5 class="font-bold text-xl mb-4">7. 智慧導航 (Smart Redirect)？</h5>
                     <p class="text-sm text-slate-500 leading-relaxed">
-                        點擊「前往教室寫作業」後，系統會先確認導師 Promotion code 與授權狀態；通過後會直接導向 GitHub Classroom。按住 <kbd class="px-1 border rounded text-[10px]">Shift</kbd> 點擊才會手動開啟舊版提交視窗。
+                        點擊「前往教室寫作業」後，系統會先確認導師 Promotion code 與授權狀態。通過後，系統會依單元設定，直接導向 GitHub Classroom 邀請頁面，或是跳出 GitHub 帳號確認框並在 3-8 秒內背景自動為您建立 Repository (原生 API 模式)。按住 <kbd class="px-1 border rounded text-[10px]">Shift</kbd> 點擊才會手動開啟舊版提交視窗。
                     </p>
                 </div>
 
@@ -183,13 +183,13 @@
                     <div class="text-emerald-500 text-3xl mb-6"><i class="fa-solid fa-envelope-circle-check"></i></div>
                     <h5 class="font-bold text-xl mb-4">9. 作業繳交與通知流程？</h5>
                     <p class="text-sm text-slate-500 leading-relaxed">
-                        點「前往教室寫作業」會先建立「開始作業」紀錄；導師綁定與授權檢查通過後，系統會直接開啟 GitHub Classroom。分數由 GitHub 自動評分回寫，系統會通知您查看最新結果。Assignments 分頁以 Repo 的 <code class="bg-slate-100 px-1 rounded text-xs">README.md</code> 為主說明來源。
+                        點「前往教室寫作業」會先建立「開始作業」紀錄。如果採用<strong>標準 Classroom 模式</strong>，系統會直接開啟 GitHub Classroom，若遇到 'Repository Access Issue' 代表您尚未接受 GitHub 組織邀請，請點選連結接受；
                     </p>
-                    <p class="text-sm text-slate-500 leading-relaxed mt-3">
-                        若遇到 GitHub「Repository Access Issue」或授權錯誤，請先到 <a class="text-indigo-600 underline" href="https://github.com/settings/organizations" target="_blank" rel="noopener noreferrer">GitHub Settings / Organizations</a> 接受待處理邀請，再回平台重試提交。
+                    <p class="text-sm text-slate-500 leading-relaxed mt-2">
+                        如果採用<strong>自建原生 API 模式</strong>，平台會詢問並記錄您的 GitHub 帳號，隨後在背景自動建立專屬專案 Repo 並直接邀請您為專屬協作者（您僅需到信箱或 GitHub 鈴鐺接受 Collaborator 邀請即可，成功率極高）。
                     </p>
-                    <p class="text-sm text-slate-500 leading-relaxed mt-3">
-                        系統現在會在送出前自動檢查組織授權，必要時自動補發一次邀請，降低卡關機率。
+                    <p class="text-sm text-slate-500 leading-relaxed mt-2">
+                        不論哪種模式，分數皆由 GitHub 自動評分回寫，系統在回寫成功後會即時通知您查看最新結果。
                     </p>
                 </div>
 
@@ -224,70 +224,62 @@
                 </div>
             </div>
 
-            <!-- Detailed Section: GitHub Classroom -->
+            <!-- Detailed Section: GitHub Classroom & Native API Dual Integration -->
             <div class="mt-32 max-w-4xl mx-auto">
                 <div class="p-10 rounded-[3rem] bg-slate-900 text-white relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
                     <h3 class="text-3xl font-bold mb-8 flex items-center gap-4">
-                        <i class="fa-brands fa-github text-4xl"></i> GitHub Classroom 深度整合
+                        <i class="fa-brands fa-github text-4xl"></i> GitHub 課程指派與深度整合
                     </h3>
                     <div class="grid md:grid-cols-2 gap-10 items-start">
                         <div class="space-y-6">
                             <div class="flex gap-4">
                                 <div class="w-10 h-10 rounded-full bg-indigo-800 flex items-center justify-center shrink-0 text-sm font-bold">1</div>
                                 <div>
-                                    <h6 class="font-bold text-indigo-300 mb-1">自動建立程式庫</h6>
-                                    <p class="text-xs text-slate-400">系統會為您建立專屬 Repo；實際可見範圍依 GitHub Classroom 與組織權限設定為準。</p>
+                                    <h6 class="font-bold text-indigo-300 mb-1">自動建立程式庫 (Repository)</h6>
+                                    <p class="text-xs text-slate-400">
+                                        <strong>Classroom 模式：</strong>點擊邀請連結後需手動按下 Accept assignment 建立。<br>
+                                        <strong>原生 API 模式：</strong>在平台輸入 GitHub 帳號，系統在 3-8 秒內背景自動為您建立私有 Repo。
+                                    </p>
                                 </div>
                             </div>
                             <div class="flex gap-4">
                                 <div class="w-10 h-10 rounded-full bg-indigo-800 flex items-center justify-center shrink-0 text-sm font-bold">2</div>
                                 <div>
-                                    <h6 class="font-bold text-indigo-300 mb-1">模板內容同步</h6>
-                                    <p class="text-xs text-slate-400">Starter Code、測試檔、README 與導師指引（tutor-guide）會依單元模板同步準備。</p>
+                                    <h6 class="font-bold text-indigo-300 mb-1">模板內容與教材同步</h6>
+                                    <p class="text-xs text-slate-400">Starter Code、單元測試、README 與導師指導手冊 (tutor-guide) 會自動複製到您的專屬 Repository。</p>
                                 </div>
                             </div>
                             <div class="flex gap-4">
                                 <div class="w-10 h-10 rounded-full bg-indigo-800 flex items-center justify-center shrink-0 text-sm font-bold">3</div>
                                 <div>
-                                    <h6 class="font-bold text-indigo-300 mb-1">自動化評分</h6>
-                                    <p class="text-xs text-slate-400">若該作業模板有設定 GitHub Actions / Autograding，會依課程設定以手動或條件式觸發評分，結果同步回寫到 Vibe Coding Dashboard。</p>
+                                    <h6 class="font-bold text-indigo-300 mb-1">自動化評分與成績回寫</h6>
+                                    <p class="text-xs text-slate-400">當您 commit 並 push 程式碼時，GitHub Actions 會自動執行單元測試，並透過 Webhook 將分數即時回寫至平台的 Dashboard。</p>
                                 </div>
                             </div>
                             <div class="flex gap-4">
                                 <div class="w-10 h-10 rounded-full bg-indigo-800 flex items-center justify-center shrink-0 text-sm font-bold">4</div>
                                 <div>
-                                    <h6 class="font-bold text-indigo-300 mb-1">參與單元內容改進</h6>
-                                    <p class="text-xs text-slate-400">若 README、測試條件或作業說明有不清楚之處，您可提出「Unit Repo 改進提案」，和 Tutor / Admin 一起持續改善每個單元。</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 rounded-full bg-indigo-800 flex items-center justify-center shrink-0 text-sm font-bold">5</div>
-                                <div>
-                                    <h6 class="font-bold text-indigo-300 mb-1">內容分工一眼看懂</h6>
-                                    <p class="text-xs text-slate-400"><span class="font-semibold">Assignments</span> 看 README；<span class="font-semibold">導師 Settings</span> 看 tutor-guide。兩者會透過協作流程保持一致。</p>
+                                    <h6 class="font-bold text-indigo-300 mb-1">Feedback PR 師生代碼審查</h6>
+                                    <p class="text-xs text-slate-400">系統會為您建立一個永遠不合併的 Feedback Pull Request。您可以在此與導師針對每一行程式碼進行提問、討論與評閱。</p>
                                 </div>
                             </div>
                         </div>
                         <div class="bg-indigo-800/30 p-6 rounded-2xl border border-indigo-700/50">
-                            <p class="text-sm font-bold text-indigo-200 mb-4">🛠️ 深度排錯指南：接受邀請後沒看到程式庫？</p>
+                            <p class="text-sm font-bold text-indigo-200 mb-4">🛠️ 深度排錯指南：無法存取您的作業程式庫？</p>
                             <div class="space-y-4 text-xs text-indigo-100">
-                                <p>這是最常見的卡關點：作業存在於「組織」內，若未加入組織則無法存取私有 Repo。</p>
+                                <p class="opacity-80">請先確認該單元的作業模式，並執行對應的權限開通步驟：</p>
                                 
                                 <div class="bg-indigo-900/40 p-3 rounded-lg border border-indigo-500/30">
-                                    <p class="font-bold text-indigo-300 mb-1">方法一：直接前往組織頁面（最快）</p>
-                                    <p>登入 GitHub 後直接輸入組織網址：<br><code class="text-cyan-300">https://github.com/您的組織名稱</code></p>
-                                    <p class="mt-1 opacity-80">若看到「You have been invited...」橫幅，請點擊 <strong>Join</strong>。</p>
+                                    <p class="font-bold text-indigo-300 mb-1">如果是 Classroom 模式（需加入組織）</p>
+                                    <p class="mb-1">請接受組織 (Organization) 邀請：</p>
+                                    <p>造訪網址：<br><code class="text-cyan-300">https://github.com/settings/organizations</code><br>或檢查您的 GitHub 註冊信箱，點擊 <strong>Join/Accept Invitation</strong>。</p>
                                 </div>
 
-                                <div class="bg-indigo-900/40 p-3 rounded-lg border border-indigo-500/30">
-                                    <p class="font-bold text-indigo-300 mb-1">方法二：檢查 GitHub 通知</p>
-                                    <p>點擊 GitHub 右上角鈴鐺圖示，尋找邀請通知並按下 <strong>Accept</strong>。</p>
-                                </div>
-
-                                <div class="bg-indigo-900/40 p-3 rounded-lg border border-indigo-500/30">
-                                    <p class="font-bold text-indigo-300 mb-1">方法三：檢查 Email</p>
-                                    <p>搜尋標題包含「Invitation to join...」的信件，點擊 <strong>Join</strong> 按鈕。</p>
+                                <div class="bg-indigo-900/40 p-3 rounded-lg border border-emerald-500/30">
+                                    <p class="font-bold text-emerald-300 mb-1">如果是原生 API 模式（需接受協作者邀請）</p>
+                                    <p class="mb-1">請接受單一儲存庫 (Repository) 協作者邀請：</p>
+                                    <p>點擊 GitHub 右上角鈴鐺通知，或檢查電子信箱收到的 <strong>"Invitation to collaborate"</strong> 信件並點擊接受。您也可以直接造訪您的作業庫網址（例如：<code class="text-emerald-300">https://github.com/組織名稱/專案名稱/invitation</code>）來手動接受協作者邀請。</p>
                                 </div>
                             </div>
                         </div>

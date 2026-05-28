@@ -2394,6 +2394,22 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
                 return;
             }
 
+            // [NEW] Native API Repository Flow
+            if (assignmentAccess?.createdVia === 'native-api') {
+                if (!isAuthorized) {
+                    alert("尚未取得此單元之付款或導師指派授權。");
+                    return;
+                }
+                if (assignmentAccess.repositoryUrl) {
+                    console.log(`[CourseShared] Direct navigation to native repo: ${assignmentAccess.repositoryUrl}`);
+                    window.open(assignmentAccess.repositoryUrl, '_blank');
+                    return;
+                }
+                // Trigger creation
+                await triggerNativeAssignmentCreation(courseId, fileName, assignmentId, title, assignmentAccess.githubUsername);
+                return;
+            }
+
         }
     } catch (e) {
         alert("暫時無法確認您的作業入口，請稍後再試。");
@@ -2986,4 +3002,225 @@ function cleanUpCourseTitles() {
         console.warn('[CourseShared] cleanUpCourseTitles failed:', e);
     }
 }
+
+// ==========================================
+// [NEW] Native API Assignment Creation Flow Helpers
+// ==========================================
+let currentCreationContext = null;
+
+function injectGithubUsernameModal() {
+    if (document.getElementById('github-username-modal')) return;
+    const modalHTML = `
+    <div id="github-username-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[70] backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all scale-100 border border-blue-50">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i class="fab fa-github"></i>
+                </div>
+                <h3 class="text-2xl font-black text-gray-800">連結 GitHub 帳號</h3>
+                <p class="text-sm text-gray-500 mt-2 leading-relaxed">
+                    系統將自動為您建立該單元的私有作業 Repository 並加您為協作者，請輸入您的 GitHub 帳號（Username）以進行綁定。
+                </p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">您的 GitHub 帳號名稱</label>
+                <input type="text" id="github-username-input" placeholder="例如：octocat"
+                    class="w-full border-2 border-slate-100 bg-slate-50/50 p-4 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition font-mono text-sm text-center font-bold">
+                <p class="text-[10px] text-red-500 mt-2 text-center font-bold hidden" id="github-username-error">※ 帳號名稱格式不正確，請輸入正確的 GitHub 帳號名稱。</p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button id="btn-submit-github-username"
+                    class="group w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl transition font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none">
+                    <span>建立專屬作業庫</span>
+                    <i class="fas fa-magic text-sm transition-transform duration-300 group-hover:rotate-12"></i>
+                </button>
+                <button onclick="closeGithubUsernameModal()"
+                    class="w-full py-2 text-gray-400 hover:text-gray-600 transition font-medium text-sm">取消</button>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Bind click handler
+    document.getElementById('btn-submit-github-username').addEventListener('click', async () => {
+        const usernameInput = document.getElementById('github-username-input');
+        const username = String(usernameInput.value || '').trim();
+        const errEl = document.getElementById('github-username-error');
+        
+        // Simple github username validation: alphanumeric or single hyphens, no consecutive hyphens, 1-39 chars
+        const isValid = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i.test(username);
+        
+        if (!username || !isValid) {
+            errEl.classList.remove('hidden');
+            return;
+        }
+        
+        errEl.classList.add('hidden');
+        closeGithubUsernameModal();
+        await executeNativeCreation(username);
+    });
+}
+
+function injectNativeCreationStatusModal() {
+    if (document.getElementById('native-creation-status-modal')) return;
+    const modalHTML = `
+    <div id="native-creation-status-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[80] backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all scale-100 border border-blue-50 text-center">
+            
+            <!-- Loading State -->
+            <div id="native-creation-loading-state" class="py-6">
+                <div class="relative w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                    <!-- Spinners -->
+                    <div class="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <i class="fab fa-github text-3xl text-indigo-600 animate-pulse"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">正在建立專屬作業</h3>
+                <p class="text-sm text-gray-500 mt-2 px-4 leading-relaxed">
+                    正在調用 GitHub API 為您複製樣板、設定協作者與初始化 PR 機制，此過程大約需要 3-8 秒，請勿關閉視窗...
+                </p>
+            </div>
+
+            <!-- Success State -->
+            <div id="native-creation-success-state" class="py-6 hidden">
+                <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                    <i class="fas fa-check-circle text-emerald-500"></i>
+                </div>
+                <h3 class="text-2xl font-black text-gray-805">🎉 作業庫建立成功！</h3>
+                <p class="text-sm text-slate-500 mt-2 px-4 leading-relaxed">
+                    您的個人私有作業 Repository 已成功開通！我們已為您預先開啟了 Feedback Pull Request，可用於未來的代碼審查與討論。
+                </p>
+                <div class="mt-8 flex flex-col gap-3">
+                    <a id="native-repo-link-btn" href="#" target="_blank"
+                        class="group w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl transition font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                        <i class="fab fa-github text-lg"></i>
+                        <span>前往 GitHub 寫作業</span>
+                    </a>
+                    <a id="native-pr-link-btn" href="#" target="_blank"
+                        class="w-full py-3.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-2xl transition font-bold flex items-center justify-center gap-2">
+                        <i class="fas fa-comments text-slate-500"></i>
+                        <span>打開 Feedback PR 討論區</span>
+                    </a>
+                    <button onclick="closeNativeCreationStatusModal()"
+                        class="w-full py-2 text-slate-400 hover:text-slate-600 transition font-medium text-sm mt-2">關閉</button>
+                </div>
+            </div>
+
+            <!-- Failure State -->
+            <div id="native-creation-failure-state" class="py-6 hidden">
+                <div class="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-red-600">作業開通失敗</h3>
+                <p id="native-creation-error-msg" class="text-sm text-gray-500 mt-2 px-4 leading-relaxed break-all">
+                    建立時發生錯誤，請確認您的 GitHub 帳號是否存在，或聯繫老師/管理員協助。
+                </p>
+                <div class="mt-8">
+                    <button onclick="retryNativeAssignmentCreation()"
+                        class="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl transition font-bold shadow-lg shadow-red-500/20 active:translate-y-0 flex items-center justify-center gap-2">
+                        <span>重新嘗試建立</span>
+                    </button>
+                    <button onclick="closeNativeCreationStatusModal()"
+                        class="w-full py-2 text-gray-400 hover:text-gray-655 transition font-medium text-sm mt-4">取消</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+window.triggerNativeAssignmentCreation = async function (courseId, fileName, assignmentId, title, existingUsername) {
+    injectGithubUsernameModal();
+    injectNativeCreationStatusModal();
+
+    currentCreationContext = { courseId, fileName, assignmentId, title };
+
+    if (existingUsername) {
+        await executeNativeCreation(existingUsername);
+    } else {
+        document.getElementById('github-username-input').value = '';
+        document.getElementById('github-username-error').classList.add('hidden');
+        document.getElementById('github-username-modal').classList.remove('hidden');
+    }
+};
+
+window.closeGithubUsernameModal = function () {
+    document.getElementById('github-username-modal').classList.add('hidden');
+};
+
+window.closeNativeCreationStatusModal = function () {
+    document.getElementById('native-creation-status-modal').classList.add('hidden');
+};
+
+window.executeNativeCreation = async function(githubUsername) {
+    const loadingState = document.getElementById('native-creation-loading-state');
+    const successState = document.getElementById('native-creation-success-state');
+    const failureState = document.getElementById('native-creation-failure-state');
+    const statusModal = document.getElementById('native-creation-status-modal');
+
+    // Reset status modal views
+    loadingState.classList.remove('hidden');
+    successState.classList.add('hidden');
+    failureState.classList.add('hidden');
+    statusModal.classList.remove('hidden');
+
+    const { courseId, fileName, assignmentId, title } = currentCreationContext || {};
+
+    try {
+        const createStudentRepository = httpsCallable(getFunctions(undefined, 'asia-east1'), 'createStudentRepository');
+        const result = await createStudentRepository({
+            unitId: fileName,
+            courseId,
+            githubUsername,
+            assignmentTitle: title
+        });
+
+        if (result.data && result.data.repositoryUrl) {
+            loadingState.classList.add('hidden');
+            successState.classList.remove('hidden');
+
+            document.getElementById('native-repo-link-btn').href = result.data.repositoryUrl;
+            document.getElementById('native-pr-link-btn').href = result.data.feedbackPullRequestUrl || '#';
+            
+            if (!result.data.feedbackPullRequestUrl) {
+                document.getElementById('native-pr-link-btn').classList.add('hidden');
+            } else {
+                document.getElementById('native-pr-link-btn').classList.remove('hidden');
+            }
+
+            if (typeof window.firebaseSubmitAssignment === 'function' && !isAdminTutorModeActive()) {
+                window.firebaseSubmitAssignment({
+                    courseId,
+                    unitId: fileName,
+                    assignmentId,
+                    title,
+                    url: result.data.repositoryUrl,
+                    status: 'started',
+                    assignmentType: 'native-api'
+                }).catch(e => console.error("[CourseShared] Auto-tracking failed:", e));
+            }
+
+            setTimeout(() => {
+                window.open(result.data.repositoryUrl, '_blank');
+            }, 1500);
+        } else {
+            throw new Error("無法取得作業 Repository 連結。");
+        }
+    } catch (err) {
+        console.error("Repository creation failed:", err);
+        loadingState.classList.add('hidden');
+        failureState.classList.remove('hidden');
+        document.getElementById('native-creation-error-msg').innerText = err.message || "建立作業時發生未知錯誤。";
+    }
+};
+
+window.retryNativeAssignmentCreation = async function() {
+    document.getElementById('native-creation-status-modal').classList.add('hidden');
+    document.getElementById('github-username-modal').classList.remove('hidden');
+};
 } // end window.__courseSharedLoaded guard
