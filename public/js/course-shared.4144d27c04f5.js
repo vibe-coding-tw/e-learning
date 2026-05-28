@@ -249,7 +249,7 @@ async function ensureDynamicUnitTabsFromFirestore() {
             } else {
                 titleText = formatUnitTabTitle(unitFile, idx).replace(/^\d+\s*/, '');
             }
-            titleText = titleText.replace(/\b\d+\.\s+/, '');
+            titleText = sanitizeTitle(titleText);
 
             btn.innerHTML = `
                 <span class="step-badge" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 8px; flex-shrink: 0; background-color: ${badgeBg}; color: ${badgeColor}; transition: all 0.16s ease-in-out;">${badgeText}</span>
@@ -2939,20 +2939,37 @@ function ensureMobileResponsiveLayout() {
     }
 }
 
+function sanitizeTitle(str) {
+    if (typeof str !== 'string') return str;
+    try {
+        return str.replace(/\p{Extended_Pictographic}/gu, '')
+                  .replace(/[\uFE00-\uFE0F]/g, '')
+                  .trim()
+                  .replace(/^\s*\b\d+\.\s+/, '')
+                  .trim();
+    } catch (e) {
+        return str.replace(/^\s*\b\d+\.\s+/, '').trim();
+    }
+}
+
 function cleanUpCourseTitles() {
     try {
         if (typeof UNITS !== 'undefined' && Array.isArray(UNITS)) {
             UNITS.forEach(u => {
-                if (u.label) u.label = u.label.replace(/\b\d+\.\s+/, '');
+                if (u.label) u.label = sanitizeTitle(u.label);
             });
         }
         
-        const selectors = '.unit-name, .unit-card-name, .ms-sidebar-header .module-title, #bc-current';
+        if (typeof document !== 'undefined' && document.title) {
+            document.title = sanitizeTitle(document.title);
+        }
+        
+        const selectors = '.unit-name, .unit-card-name, .ms-sidebar-header .module-title, #bc-current, #bc-module-link, .ms-unit-page h1, .unit-content strong';
         document.querySelectorAll(selectors).forEach(el => {
             if (el && el.childNodes.length > 0) {
                 for (const node of el.childNodes) {
                     if (node.nodeType === Node.TEXT_NODE) {
-                        node.textContent = node.textContent.replace(/\b\d+\.\s+/, '');
+                        node.textContent = sanitizeTitle(node.textContent);
                     }
                 }
             }
