@@ -1,6 +1,6 @@
 # System Improvement Backlog
 
-Last updated: 2026-05-27
+Last updated: 2026-05-28
 
 This backlog captures the highest-value system improvements identified from reviewing the live implementation, Firestore data, and current documentation.
 
@@ -21,10 +21,13 @@ Status:
 - Dashboard course summaries now resolve canonical course identity through lesson metadata lookup instead of a hardcoded legacy mapping table.
 - Backend legacy master mapping is now opt-in via explicit compatibility paths.
 - Historical `orders.items` have been normalized; order/referral runtime paths no longer rely on legacy master item keys.
-- Remaining work is to remove the final URL/token-scope compatibility map after historical links and referral docs are retired.
+- Historical `referral_links.unitId` has been normalized down to 104 canonical entries; only 1 unresolved legacy record (`bee4arc4`) remains for manual review.
+- Remaining work is to remove the final URL/token-scope compatibility map after the last unresolved referral record and historical links are retired.
 - Added support scripts:
 - `functions/scripts/audit_canonical_runtime_state.js`
 - `functions/scripts/normalize_runtime_canonical_fields.js`
+- `functions/scripts/audit_referral_links_canonical_state.js`
+- `functions/scripts/normalize_referral_links_unit_ids.js`
 
 Problem:
 - The docs say runtime decisions must be Firestore-first, but the system still contains hardcoded compatibility lists and display rules.
@@ -41,6 +44,7 @@ Target:
 Acceptance:
 - Learning-path category labels, hidden cards, preview behavior, entry unit, tab ordering, and course grouping no longer depend on hardcoded frontend arrays.
 - Order activation, purchased-unit collection, and referral extraction no longer depend on legacy master order item keys.
+- `referral_links.unitId` no longer depends on legacy unit ids except explicitly documented unresolved historical outliers.
 
 ### 2. Canonical course identity normalization
 
@@ -49,7 +53,9 @@ Status:
 - `entryUnitId` is now treated as the primary frontend course entry target in `learning-path.html`.
 - Dashboard / backend canonical course resolution now uses lesson metadata lookup, with runtime identity preferring `courseKey` for courses and `productId` for physical products.
 - Firestore audit report now shows `metadata_lessons` canonical fields clean and `orders.items` unknown keys reduced to zero.
-- Remaining work: apply the prepared 8-order legacy cleanup, then continue shrinking compatibility paths that still accept legacy master item keys.
+- Historical `orders.items` legacy cleanup has been applied.
+- Historical `referral_links.unitId` cleanup has been applied for 8 safely mapped records.
+- Remaining work: resolve the final unknown referral unit (`bee4arc4`) and then continue shrinking compatibility paths that still accept legacy master page scopes.
 
 Problem:
 - `courseId`, `courseKey`, and `unitId` are still mixed across payment, routing, tabs, and dashboard logic.

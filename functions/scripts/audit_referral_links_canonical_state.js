@@ -73,6 +73,14 @@ function normalizeLoose(value = "") {
   return normalizeFile(value).replace(/\.html$/i, "").toLowerCase();
 }
 
+function summarizeLink(data = {}) {
+  return {
+    tutorEmail: data.tutorEmail || "",
+    url: String(data.url || "").trim(),
+    normalizedUrl: String(data.normalizedUrl || "").trim()
+  };
+}
+
 function isLegacyMaster(value = "") {
   return Object.prototype.hasOwnProperty.call(LEGACY_MASTER_TO_CANONICAL, normalizeFile(value));
 }
@@ -108,24 +116,24 @@ async function main() {
     const unitId = normalizeFile(data.unitId || "");
     const normalized = normalizeLoose(unitId);
     if (!unitId) {
-      report.unknownUnitIds.push({ docId: doc.id, unitId: "", tutorEmail: data.tutorEmail || "" });
+      report.unknownUnitIds.push({ docId: doc.id, unitId: "", ...summarizeLink(data) });
       return;
     }
     if (isLegacyMaster(unitId)) {
-      report.legacyMasterUnitIds.push({ docId: doc.id, unitId, tutorEmail: data.tutorEmail || "" });
+      report.legacyMasterUnitIds.push({ docId: doc.id, unitId, ...summarizeLink(data) });
       return;
     }
     if (isLegacyUnit(unitId)) {
       report.unknownUnitIds.push({
         docId: doc.id,
         unitId,
-        tutorEmail: data.tutorEmail || "",
+        ...summarizeLink(data),
         reason: "legacy-unit-can-normalize"
       });
       return;
     }
     if (!canonicalUnitKeys.has(normalized)) {
-      report.unknownUnitIds.push({ docId: doc.id, unitId, tutorEmail: data.tutorEmail || "" });
+      report.unknownUnitIds.push({ docId: doc.id, unitId, ...summarizeLink(data) });
       return;
     }
     report.validCanonicalUnitIds += 1;

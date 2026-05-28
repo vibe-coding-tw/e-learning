@@ -80,6 +80,9 @@ function ensureUnitTabsTheme() {
                 color: #fff !important;
                 box-shadow: 0 4px 12px rgba(37, 99, 235, .25) !important;
             }
+            .ms-achievement h3 {
+                color: #ffffff !important;
+            }
         `;
         document.head.appendChild(style);
     } catch (e) {
