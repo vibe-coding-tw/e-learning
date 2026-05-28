@@ -154,27 +154,31 @@ async function ensureDynamicUnitTabsFromFirestore() {
         wrapper.style.display = 'block';
         wrapper.style.backgroundColor = '#f8fafc';
         wrapper.style.borderBottom = '1px solid #e2e8f0';
-        wrapper.style.padding = '12px 20px';
+        wrapper.style.padding = '16px 20px';
         wrapper.style.overflowX = 'auto';
         wrapper.style.whiteSpace = 'nowrap';
 
         wrapper.innerHTML = `
-            <div id="course-tabs-container" class="unit-tabs-container" style="display: block; min-width: max-content;">
-                <div class="unit-tabs-flex" style="display: inline-flex; gap: 10px; align-items: center;"></div>
+            <div id="course-tabs-container" class="unit-tabs-container" style="display: block; min-width: max-content; position: relative;">
+                <div class="unit-tabs-line" style="position: absolute; top: 50%; left: 40px; right: 40px; height: 3px; background-color: #cbd5e1; transform: translateY(-50%); z-index: 0;"></div>
+                <div class="unit-tabs-flex" style="display: inline-flex; gap: 24px; align-items: center; position: relative; z-index: 1;"></div>
             </div>
         `;
         const flex = wrapper.querySelector('.unit-tabs-flex');
+        const activeIndex = units.findIndex(unitFile => normalizeLooseKey(unitFile) === targetKey);
+
         units.forEach((unitFile, idx) => {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'unit-tab-btn';
-            const isActive = normalizeLooseKey(unitFile) === targetKey;
+            const isActive = idx === activeIndex;
+            const isCompleted = idx < activeIndex;
 
             // Apply high-quality styles inline to completely bypass any external stylesheet resets
             btn.style.display = 'inline-flex';
             btn.style.alignItems = 'center';
             btn.style.justifyContent = 'center';
-            btn.style.padding = '8px 18px';
+            btn.style.padding = '8px 18px 8px 10px';
             btn.style.fontSize = '14px';
             btn.style.fontWeight = '600';
             btn.style.borderRadius = '999px';
@@ -185,15 +189,42 @@ async function ensureDynamicUnitTabsFromFirestore() {
             btn.style.margin = '0';
             btn.style.outline = 'none';
 
+            let badgeBg = '#f1f5f9';
+            let badgeColor = '#64748b';
+            let badgeText = `${idx + 1}`;
+
             if (isActive) {
                 btn.style.background = 'linear-gradient(135deg, #0078d4, #005a9e)';
                 btn.style.color = '#ffffff';
                 btn.style.borderColor = '#005a9e';
-                btn.style.boxShadow = '0 3px 8px rgba(0, 120, 212, 0.3)';
+                btn.style.boxShadow = '0 4px 10px rgba(0, 120, 212, 0.3)';
+                badgeBg = '#ffffff';
+                badgeColor = '#005a9e';
+            } else if (isCompleted) {
+                btn.style.backgroundColor = '#f0fdf4';
+                btn.style.color = '#166534';
+                btn.style.borderColor = '#86efac';
+                badgeBg = '#22c55e';
+                badgeColor = '#ffffff';
+                badgeText = '✓';
+
+                // Setup hover dynamic updates
+                btn.addEventListener('mouseenter', () => {
+                    btn.style.borderColor = '#22c55e';
+                    btn.style.color = '#15803d';
+                    btn.style.backgroundColor = '#d1fae5';
+                });
+                btn.addEventListener('mouseleave', () => {
+                    btn.style.backgroundColor = '#f0fdf4';
+                    btn.style.color = '#166534';
+                    btn.style.borderColor = '#86efac';
+                });
             } else {
                 btn.style.backgroundColor = '#ffffff';
-                btn.style.color = '#475569';
+                btn.style.color = '#64748b';
                 btn.style.borderColor = '#cbd5e1';
+                badgeBg = '#f1f5f9';
+                badgeColor = '#64748b';
 
                 // Setup hover dynamic updates
                 btn.addEventListener('mouseenter', () => {
@@ -202,19 +233,24 @@ async function ensureDynamicUnitTabsFromFirestore() {
                     btn.style.backgroundColor = '#eff6ff';
                 });
                 btn.addEventListener('mouseleave', () => {
-                    btn.style.borderColor = '#cbd5e1';
-                    btn.style.color = '#475569';
                     btn.style.backgroundColor = '#ffffff';
+                    btn.style.color = '#64748b';
+                    btn.style.borderColor = '#cbd5e1';
                 });
             }
 
             let titleText = '';
             if (matchedCourse && Array.isArray(matchedCourse.courseUnitTitles) && matchedCourse.courseUnitTitles[idx]) {
-                titleText = `${idx + 1} ${matchedCourse.courseUnitTitles[idx]}`;
+                titleText = matchedCourse.courseUnitTitles[idx];
             } else {
-                titleText = formatUnitTabTitle(unitFile, idx);
+                titleText = formatUnitTabTitle(unitFile, idx).replace(/^\d+\s*/, '');
             }
-            btn.innerHTML = `<span>${titleText}</span>`;
+
+            btn.innerHTML = `
+                <span class="step-badge" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 8px; flex-shrink: 0; background-color: ${badgeBg}; color: ${badgeColor}; transition: all 0.16s ease-in-out;">${badgeText}</span>
+                <span>${titleText}</span>
+            `;
+
             btn.addEventListener('click', () => {
                 window.location.href = buildUnitAuthUrl(unitFile);
             });
@@ -241,8 +277,15 @@ function normalizeCourseTopNav() {
         if (!topNav) return;
 
         // Normalize course bucket label to keep all units visually consistent.
-        const navLabel = topNav.querySelector('.nav-label');
+        let navLabel = topNav.querySelector('.nav-label');
         if (navLabel) {
+            if (navLabel.tagName !== 'A') {
+                const link = document.createElement('a');
+                link.className = navLabel.className;
+                link.textContent = navLabel.textContent;
+                navLabel.parentNode.replaceChild(link, navLabel);
+                navLabel = link;
+            }
             if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) {
                 navLabel.textContent = '入門課程';
                 navLabel.setAttribute('href', '/learning-path.html?path=tw-car-starter');
