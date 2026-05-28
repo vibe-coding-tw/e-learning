@@ -982,7 +982,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
 
     // [V15.11] Student README Trigger
     if (filterUnitId) {
-        vibeRefreshReadmeContent(filterUnitId);
+        vibeRefreshReadmeContent(filterUnitId, ['student']);
     }
 }
 
@@ -1684,14 +1684,37 @@ async function vibeRefreshReadmeContent(filterUnitId, targetKinds = ['settings',
         const GITHUB_ORG = 'vibe-coding-template';
         const embeddedAssignmentGuide = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
         const embeddedTutorGuide = getEmbeddedGuideByUnit(filterUnitId, 'tutor');
+        const extractSection = (html, sectionId) => {
+            const m = html.match(new RegExp(`<section\\b[^>]*id=["']${sectionId}["'][^>]*>([\\s\\S]*?)<\\/section>`, 'i'));
+            return m && m[1] ? m[1].trim() : '';
+        };
+        let fetchedUnitHtml = null;
+        let fetchedUnitHtmlLoaded = false;
+        const ensureUnitHtml = async () => {
+            if (fetchedUnitHtmlLoaded) return fetchedUnitHtml;
+            fetchedUnitHtmlLoaded = true;
+            try {
+                const unitUrl = `${window.location.origin}/${filterUnitId}`;
+                const resp = await fetch(unitUrl, { cache: 'no-store' });
+                if (resp.ok) fetchedUnitHtml = await resp.text();
+            } catch (e) {
+                console.warn('[GuideRefresh] direct unit html fetch failed:', e);
+            }
+            return fetchedUnitHtml;
+        };
 
         for (const { kind, el: placeholder } of selected) {
             const isSettingsTab = kind === 'settings';
             let markdownHtml = null;
 
             if (isSettingsTab) {
-                // [V17.3] SETTINGS TAB: prefer backend-extracted tutor-guide, fallback to template repo tutor-guide.md
-                if (embeddedTutorGuide) {
+                // [V17.3] SETTINGS TAB: prefer direct unit page tutor-guide, then backend embedded tutor-guide, fallback to template repo tutor-guide.md
+                const unitHtml = await ensureUnitHtml();
+                const directTutorGuide = unitHtml ? extractSection(unitHtml, 'tutor-guide') : '';
+                if (directTutorGuide) {
+                    markdownHtml = directTutorGuide;
+                    console.log(`[V17.3] SettingsTab using direct tutor-guide section for unit: ${filterUnitId}`);
+                } else if (embeddedTutorGuide) {
                     markdownHtml = embeddedTutorGuide;
                     console.log(`[V17.3] SettingsTab using embedded tutor-guide for unit: ${filterUnitId}`);
                 } else {

@@ -31,6 +31,7 @@ function init() {
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
     ensureDashboardFabFallback();
+    ensureMobileResponsiveLayout();
 }
 
 function ensureUnitTabsTheme() {
@@ -564,6 +565,7 @@ function upgradeLegacyStartUnitToMsLayout() {
         }
 
         window.goToUnit(0);
+        ensureMobileResponsiveLayout();
     } catch (e) {
         console.warn('[CourseShared] upgradeLegacyStartUnitToMsLayout failed:', e);
     }
@@ -2169,69 +2171,6 @@ async function initFirebaseFeatures() {
 }
 
 /**
- * Injects the Submission Modal HTML
- */
-function injectSubmissionModal() {
-    const modalHTML = `
-    <div id="submission-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[60]">
-        <div class="bg-white rounded-xl p-8 w-full max-w-lg shadow-2xl transform transition-all scale-100">
-            <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-4">📝 正式提交作業 (Submit for Review)</h3>
-            
-            <input type="hidden" id="sub-assignment-id">
-            <input type="hidden" id="sub-assignment-title">
-            
-            <div id="github-classroom-section" class="mb-6 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 hidden">
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="text-xl">🐙</span>
-                    <h4 class="font-bold text-gray-800">GitHub Classroom</h4>
-                </div>
-                <p class="text-xs text-gray-600 mb-4">本單元已整合 GitHub Classroom。請先點作業卡下方「前往教室寫作業」按鈕建立「開始作業」紀錄；完成後請回到這裡正式提交 Repo 連結。</p>
-                <div class="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs leading-relaxed">
-                    若看到 GitHub「Repository Access Issue」或提交時出現授權錯誤，請先到
-                    <a href="https://github.com/settings/organizations" target="_blank" rel="noopener noreferrer" class="font-bold underline">
-                        GitHub Settings / Organizations
-                    </a>
-                    接受待處理邀請後再重試。
-                </div>
-                <a id="sub-github-link" href="#" target="_blank"
-                    class="block w-full text-center py-2 bg-slate-800 text-white rounded-lg font-bold hover:bg-slate-700 transition shadow-md flex items-center justify-center gap-2">
-                    <span>🚀</span> 領取 GitHub Classroom 作業
-                </a>
-                <p class="text-[10px] text-gray-400 mt-2 italic text-center">※ 點擊後將連往 GitHub 頁面並自動建立您的私有 Repo</p>
-            </div>
-
-            <div class="mb-5">
-                <label class="block text-sm font-bold text-gray-700 mb-2">作業名稱</label>
-                <div id="sub-display-title" class="text-gray-900 font-medium bg-gray-100 p-3 rounded"></div>
-            </div>
-
-            <div class="mb-5">
-                <label class="block text-sm font-bold text-gray-700 mb-2">作業連結 (GitHub / Demo URL) <span class="text-red-500">*</span></label>
-                <input type="url" id="sub-url" placeholder="https://github.com/username/project"
-                    class="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-700 mb-2">備註 / 留言 (Optional)</label>
-                <textarea id="sub-note" placeholder="遇到的困難、心得..."
-                    class="w-full border-2 border-gray-300 p-3 rounded-lg h-24 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"></textarea>
-            </div>
-
-            <div class="flex justify-end gap-3">
-                <button onclick="closeSubmissionModal()"
-                    class="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-bold transition">取消</button>
-                <button id="btn-confirm-submit" onclick="submitAssignmentAction()"
-                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold shadow-lg flex items-center gap-2">
-                    <span>🚀</span> 正式提交（通知老師）
-                </button>
-            </div>
-        </div>
-    </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
-
-/**
  * Replace legacy "click whole assignment card" behavior with explicit CTA button.
  * Source pages still contain inline onclick handlers, so we transform them at runtime.
  */
@@ -2776,5 +2715,199 @@ async function findCourseIdByUnit(fileName) {
 
     console.warn(`[CourseShared] Fallback resolution failed for ${fileName}; returning original key.`);
     return fileName;
+}
+
+function ensureMobileResponsiveLayout() {
+    try {
+        const layout = document.querySelector('.ms-layout');
+        if (!layout) return;
+
+        if (!document.getElementById('ms-mobile-responsive-theme')) {
+            const style = document.createElement('style');
+            style.id = 'ms-mobile-responsive-theme';
+            style.textContent = `
+                @media (max-width: 768px) {
+                    /* Layout container setup */
+                    .ms-layout {
+                        position: relative !important;
+                        overflow-x: hidden !important;
+                    }
+                    
+                    /* Sidebar as fixed overlay drawer */
+                    body .ms-sidebar {
+                        position: fixed !important;
+                        top: 48px !important;
+                        left: 0 !important;
+                        height: calc(100vh - 48px) !important;
+                        width: 280px !important;
+                        z-index: 1000 !important;
+                        transform: translateX(-100%) !important;
+                        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                        box-shadow: 4px 0 12px rgba(0,0,0,0.15) !important;
+                        background: #faf9f8 !important;
+                        display: flex !important;
+                    }
+                    
+                    body .ms-sidebar.open {
+                        transform: translateX(0) !important;
+                    }
+                    
+                    /* Content adjustments */
+                    .ms-content {
+                        width: 100% !important;
+                        max-width: 100vw !important;
+                        flex: 1 !important;
+                    }
+                    
+                    .unit-content {
+                        padding: 20px 16px 40px !important;
+                    }
+                    
+                    .ms-breadcrumb {
+                        padding: 10px 16px !important;
+                    }
+                    
+                    .unit-nav {
+                        padding: 20px 16px !important;
+                    }
+                    
+                    /* Topnav adjustments */
+                    .ms-topnav {
+                        padding: 0 12px !important;
+                        gap: 12px !important;
+                    }
+                    
+                    /* Hamburger menu toggle button */
+                    .ms-sidebar-toggle {
+                        display: inline-flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        width: 32px !important;
+                        height: 32px !important;
+                        color: #ffffff !important;
+                        background: transparent !important;
+                        border: none !important;
+                        font-size: 18px !important;
+                        cursor: pointer !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        outline: none !important;
+                        order: -1 !important;
+                    }
+                    
+                    .ms-sidebar-toggle:hover {
+                        background: rgba(255, 255, 255, 0.1) !important;
+                        border-radius: 4px !important;
+                    }
+                    
+                    /* Hide nav label on tiny mobile screens if it overflows */
+                    .ms-topnav .nav-label {
+                        font-size: 13px !important;
+                        white-space: nowrap !important;
+                        overflow: hidden !important;
+                        text-overflow: ellipsis !important;
+                        max-width: 140px !important;
+                    }
+                    
+                    .ms-topnav .divider {
+                        margin: 0 2px !important;
+                    }
+                    
+                    /* Backdrop styling */
+                    .ms-sidebar-backdrop {
+                        position: fixed !important;
+                        top: 48px !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        bottom: 0 !important;
+                        background: rgba(0, 0, 0, 0.4) !important;
+                        z-index: 998 !important;
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                        transition: opacity 0.3s ease, visibility 0.3s ease !important;
+                    }
+                    
+                    .ms-sidebar-backdrop.active {
+                        opacity: 1 !important;
+                        visibility: visible !important;
+                    }
+                    
+                    /* Prevent scrolling on body when sidebar is open */
+                    body.sidebar-open {
+                        overflow: hidden !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 2. Insert Hamburger Button in Topnav
+        const topNav = document.querySelector('.ms-topnav');
+        const sidebar = document.querySelector('.ms-sidebar');
+        
+        if (topNav && sidebar) {
+            let toggleBtn = topNav.querySelector('.ms-sidebar-toggle');
+            if (!toggleBtn) {
+                toggleBtn = document.createElement('button');
+                toggleBtn.type = 'button';
+                toggleBtn.className = 'ms-sidebar-toggle';
+                toggleBtn.setAttribute('aria-label', 'Toggle Sidebar');
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                
+                topNav.insertBefore(toggleBtn, topNav.firstChild);
+            }
+
+            // 3. Create Backdrop Overlay
+            let backdrop = document.querySelector('.ms-sidebar-backdrop');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'ms-sidebar-backdrop';
+                layout.appendChild(backdrop);
+            }
+
+            const openSidebar = () => {
+                sidebar.classList.add('open');
+                backdrop.classList.add('active');
+                document.body.classList.add('sidebar-open');
+            };
+
+            const closeSidebar = () => {
+                sidebar.classList.remove('open');
+                backdrop.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            };
+
+            // Re-bind listeners by cloning elements
+            const newToggleBtn = toggleBtn.cloneNode(true);
+            toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+            
+            newToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (sidebar.classList.contains('open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+
+            const newBackdrop = backdrop.cloneNode(true);
+            backdrop.parentNode.replaceChild(newBackdrop, backdrop);
+            
+            newBackdrop.addEventListener('click', () => {
+                closeSidebar();
+            });
+
+            // Close sidebar when clicking menu items on mobile
+            sidebar.querySelectorAll('.ms-unit-item, .unit-card').forEach(item => {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+        }
+    } catch (e) {
+        console.warn('[CourseShared] ensureMobileResponsiveLayout failed:', e);
+    }
 }
 } // end window.__courseSharedLoaded guard
