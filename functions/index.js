@@ -4132,6 +4132,32 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
         const assignmentIdVal = assignmentData.assignmentId || effectiveUnitId;
         const ownerTutorEmail = assignmentData.assignedTutorEmail || "";
 
+        // Verification: Ensure the webhook request comes from an authorized repository organization
+        if (repositoryFullName) {
+            const parts = repositoryFullName.split('/');
+            const repoOwner = parts[0] || "";
+            let isAllowedOrg = ['vibe-coding-classroom', 'vibe-coding-template'].includes(repoOwner);
+
+            if (!isAllowedOrg && ownerTutorEmail) {
+                const tutorSnap = await db.collection('users')
+                    .where('email', '==', ownerTutorEmail.toLowerCase())
+                    .limit(1)
+                    .get();
+                if (!tutorSnap.empty) {
+                    const tutorData = tutorSnap.docs[0].data();
+                    const config = tutorData.tutorConfigs?.[assignmentIdVal];
+                    if (config && config.githubOrg && config.githubOrg === repoOwner) {
+                        isAllowedOrg = true;
+                    }
+                }
+            }
+
+            if (!isAllowedOrg) {
+                console.warn(`[ingestGithubAutograde] Rejecting webhook from unauthorized organization: ${repoOwner}`);
+                return res.status(403).json({ success: false, error: "Unauthorized repository organization" });
+            }
+        }
+
         let learningStateUpdate = null;
 
         if (score < 70) {

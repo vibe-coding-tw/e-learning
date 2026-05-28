@@ -295,7 +295,7 @@ feedback_pr = student_repo.create_pull(
 
 ---
 
-### Phase 3：自動評分整合（第 5-6 周）
+### Phase 3：自動評分整合（第 5-6 周）[已完成]
 
 #### 3.1 GitHub Actions Workflow 範本優化
 ```yaml
@@ -588,7 +588,7 @@ describe('GitHubAPIHelper', () => {
 | --- | --- | --- | --- |
 | Week 1-2 | 基礎 API 層 + Token 管理 | Backend | `github-api-helper.js` [已完成] |
 | Week 3-4 | 學生邀請派發 + 後端實作 | Backend | `createStudentRepository()` [後端已完成] |
-| Week 5-6 | 自動評分整合 | DevOps | Workflow 範本 + 回寫驗證 |
+| Week 5-6 | 自動評分整合 | DevOps | Workflow 範本 + 回寫驗證 [已完成] |
 | Week 7-8 | 導師配置 + 推薦連結 | Backend + Frontend | Settings UI + API |
 | Week 9-10 | 教材同步與 PR 管理 | Backend | `syncTemplateToStudentRepo()` |
 | Week 11-12 | 整合測試 + 平行運行 | QA | 測試報告 + 遷移檢查清單 |
