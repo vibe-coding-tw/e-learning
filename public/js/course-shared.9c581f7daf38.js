@@ -2264,12 +2264,13 @@ function enhanceAssignmentEntryButtons() {
     });
 }
 
-function openTutorBindingModal(courseId, unitId, assignmentId, title) {
+function openTutorBindingModal(courseId, unitId, assignmentId, title, promotionCode) {
     document.getElementById('link-course-id').value = courseId || '';
     document.getElementById('link-unit-id').value = unitId || '';
     document.getElementById('link-assignment-id').value = assignmentId || '';
     document.getElementById('link-assignment-title').value = title || assignmentId || '';
-    document.getElementById('link-promotion-code').value = '';
+    // 預填目前已設定的 promotion code（若有）
+    document.getElementById('link-promotion-code').value = promotionCode || '';
     document.getElementById('assignment-link-modal').classList.remove('hidden');
 }
 
@@ -2283,10 +2284,10 @@ function injectAssignmentLinkModal() {
         <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl transform transition-all scale-100 border border-blue-100">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                    🔗
+                    🎓
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800">連結您的授課老師</h3>
-                <p class="text-sm text-gray-500 mt-2">此單元需要指派老師才能開始作業。<br>請輸入老師提供的 <b>Promotion code</b>。</p>
+                <h3 class="text-2xl font-bold text-gray-800">確認 / 更換授課老師</h3>
+                <p class="text-sm text-gray-500 mt-2">請確認您目前的授課老師，或輸入新的 Promotion code 更換。<br><span class="text-blue-500 font-medium">留空將使用預設導師邀請連結。</span></p>
             </div>
             
             <input type="hidden" id="link-course-id">
@@ -2296,18 +2297,18 @@ function injectAssignmentLinkModal() {
 
             <div class="mb-6">
                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">老師 Promotion code</label>
-                <input type="text" id="link-promotion-code" placeholder="輸入 Promotion code 或 Tutor email（留空使用預設）"
+                <input type="text" id="link-promotion-code" placeholder="輸入 Promotion code 或 Tutor email（留空使用預設導師）"
                     class="w-full border-2 border-gray-100 bg-gray-50 p-4 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition font-mono text-sm">
-                <p class="text-[10px] text-gray-400 mt-2">※ 可填 Promotion code 或 Tutor email；留空將使用預設導師。</p>
+                <p class="text-[10px] text-gray-400 mt-2">※ 可填 Promotion code 或 Tutor email；留空將使用預設導師（rover.k.chen@gmail.com）。</p>
             </div>
 
             <div class="flex flex-col gap-3">
                 <button id="btn-bind-tutor" onclick="submitBindTutorAction()"
                     class="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-bold shadow-lg flex items-center justify-center gap-2">
-                    <span>✅</span> 驗證並綁定老師
+                    確認並前往作業
                 </button>
                 <button onclick="closeAssignmentLinkModal()"
-                    class="w-full py-3 text-gray-400 hover:text-gray-600 transition font-medium text-sm">稍後再說</button>
+                    class="w-full py-3 text-gray-400 hover:text-gray-600 transition font-medium text-sm">取消</button>
             </div>
         </div>
     </div>
@@ -2347,7 +2348,7 @@ window.submitBindTutorAction = async function () {
         alert("❌ 錯誤：" + e.message);
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span>✅</span> 驗證並綁定老師';
+        btn.innerHTML = '確認並前往作業';
     }
 };
 
@@ -2368,20 +2369,19 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
             classroomUrl = assignmentAccess?.classroomUrl || null;
 
             const accessMode = String(assignmentAccess?.accessMode || '');
-            const shouldAlwaysPromptTutorBinding =
-                ['paid_student', 'free_course', 'trial_course'].includes(accessMode);
-            const hasAssignedTutor = !!assignmentAccess?.assignedTutorEmail;
+            const isAuthorized = assignmentAccess?.authorized === true ||
+                ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(accessMode);
             const skipTutorPrompt = !!options?.skipTutorPrompt;
-            const shouldShowTutorPrompt =
-                (shouldAlwaysPromptTutorBinding || (assignmentAccess?.requiresTutorAssignment && !hasAssignedTutor)) &&
-                !(skipTutorPrompt && hasAssignedTutor);
 
-            if (shouldShowTutorPrompt) {
+            // [V19] 已授權的使用者，點擊「寫作業」時一律顯示導師確認對話框
+            // 除非 skipTutorPrompt === true（綁定成功後自動觸發的重試流程）
+            if (isAuthorized && !skipTutorPrompt) {
                 document.getElementById('link-course-id').value = courseId;
                 document.getElementById('link-unit-id').value = fileName;
                 document.getElementById('link-assignment-id').value = assignmentId;
                 document.getElementById('link-assignment-title').value = title;
-                document.getElementById('link-promotion-code').value = '';
+                // 預填目前已設定的 promotion code，讓使用者確認或修改
+                document.getElementById('link-promotion-code').value = assignmentAccess?.assignedPromotionCode || '';
                 document.getElementById('assignment-link-modal').classList.remove('hidden');
                 return;
             }
