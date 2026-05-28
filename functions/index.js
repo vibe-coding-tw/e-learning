@@ -3101,11 +3101,19 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         // [NEW] Extract Instructor Guides for all authorized courses dynamically
         // Refactored to aggregate from all related unit files by prefix
         const privateCoursesDir = path.join(__dirname, 'private_courses');
-        console.log(`[getDashboardData] privateCoursesDir: ${privateCoursesDir}`);
-        const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
-        console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
+        const requestedGuideCourseIds = [];
+        const requestedUnitId = data.unitId ? resolveCanonicalUnitId(data.unitId, lessons) : null;
+        const requestedCourseId = data.courseId || (requestedUnitId ? findParentCourseIdByUnit(requestedUnitId, lessons) : null);
+        if (requestedCourseId) requestedGuideCourseIds.push(requestedCourseId);
 
-        const runtimeConfig = await getContentRuntimeConfig();
+        const allFiles = requestedGuideCourseIds.length && fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
+        if (requestedGuideCourseIds.length) {
+            console.log(`[getDashboardData] privateCoursesDir: ${privateCoursesDir}`);
+            console.log(`[getDashboardData] Target guide courses: ${JSON.stringify(requestedGuideCourseIds)}`);
+            console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
+        }
+
+        const runtimeConfig = requestedGuideCourseIds.length ? await getContentRuntimeConfig() : { enabled: false };
         const preferredLocales = [];
         if (data.locale) preferredLocales.push(data.locale);
         if (userData.locale && !preferredLocales.includes(userData.locale)) preferredLocales.push(userData.locale);
@@ -3122,7 +3130,9 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         }
 
 
-        for (const cid of authorizedCourseIds) {
+        const guideCourseIds = requestedGuideCourseIds.length ? requestedGuideCourseIds : [];
+
+        for (const cid of guideCourseIds) {
             const course = findLessonByCourseRef(cid, lessons);
             if (course) {
                 try {
@@ -3305,7 +3315,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             
             // [V13.0.15] Maintenance Sync: For admins, ensure EVERY Auth user has a Firestore document.
             // Rule Enforcement: Overview & Data Sync should NOT be affected by Tutor Mode for Admins.
-            if (requesterRole === 'admin') {
+            if (requesterRole === 'admin' && !data.unitId && !data.courseId) {
                 try {
                     const listUsersResult = await admin.auth().listUsers(1000);
                     const authUsers = listUsersResult.users;

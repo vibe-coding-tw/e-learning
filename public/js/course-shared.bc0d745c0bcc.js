@@ -2164,7 +2164,6 @@ async function initFirebaseFeatures() {
         });
 
         console.log("[Firebase] Initialized.");
-    injectSubmissionModal();
     injectAssignmentLinkModal();
     enhanceAssignmentEntryButtons();
 }
@@ -2502,8 +2501,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
     shouldUseDirectClassroomLink = (assignmentAccess?.authorized === true || ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(assignmentAccess?.accessMode)) && !!classroomUrl;
 
     // If we have a link and Shift is NOT held, navigate directly (User Request)
-    const isShiftPressed = window.event && window.event.shiftKey;
-    if (shouldUseDirectClassroomLink && classroomUrl && !isShiftPressed) {
+    if (shouldUseDirectClassroomLink && classroomUrl) {
         if (isLikelyGitHubClassroomLink(classroomUrl) && !isValidGitHubClassroomInviteUrl(normalizeGitHubClassroomInviteUrl(classroomUrl))) {
             alert("此單元設定的 Classroom 連結格式不正確，請通知管理員/老師修正。");
             return;
@@ -2527,42 +2525,24 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
         return;
     }
 
-    if (preferDirectClassroom) {
-        const accessMode = String(assignmentAccess?.accessMode || '');
-        if (!(assignmentAccess?.authorized === true || ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(accessMode))) {
-            alert("尚未取得此單元之付款或導師指派授權。");
-            return;
-        }
-        if (!classroomUrl) {
-            alert("此單元尚未設定 GitHub Classroom 作業連結，請通知管理員或導師修正。");
-            return;
-        }
-        if (isLikelyGitHubClassroomLink(classroomUrl) && !isValidGitHubClassroomInviteUrl(normalizeGitHubClassroomInviteUrl(classroomUrl))) {
-            alert("此單元設定的 Classroom 連結格式不正確，請通知管理員或導師修正。");
-            return;
-        }
-        alert("暫時無法直接開啟教室寫作業，請稍後再試。");
+    const accessMode = String(assignmentAccess?.accessMode || '');
+    if (!(assignmentAccess?.authorized === true || ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(accessMode))) {
+        alert("尚未取得此單元之付款或導師指派授權。");
         return;
     }
-
-    // --- 3. Modal UI Updates (if still here) ---
-    document.getElementById('sub-assignment-id').value = assignmentId;
-    document.getElementById('sub-assignment-title').value = title;
-    document.getElementById('sub-display-title').textContent = title;
-    document.getElementById('sub-url').value = '';
-    document.getElementById('sub-note').value = '';
-
-    const githubSection = document.getElementById('github-classroom-section');
-    const githubLink = document.getElementById('sub-github-link');
-
-    if (shouldUseDirectClassroomLink && classroomUrl) {
-        githubSection.classList.remove('hidden');
-        githubLink.href = classroomUrl;
-    } else {
-        githubSection.classList.add('hidden');
+    if (!classroomUrl) {
+        alert("此單元尚未設定 GitHub Classroom 作業連結，請通知管理員或導師修正。");
+        return;
     }
+    if (isLikelyGitHubClassroomLink(classroomUrl) && !isValidGitHubClassroomInviteUrl(normalizeGitHubClassroomInviteUrl(classroomUrl))) {
+        alert("此單元設定的 Classroom 連結格式不正確，請通知管理員或導師修正。");
+        return;
+    }
+    alert("暫時無法直接開啟教室寫作業，請稍後再試。");
+    return;
 
-    document.getElementById('submission-modal').classList.remove('hidden');
+
+
 };
 
 /**
@@ -2615,9 +2595,7 @@ function buildSubmitFailureMessage(rawMessage = '', submitUrl = '') {
     return `繳交失敗: ${message || 'Unknown error'}`;
 }
 
-window.closeSubmissionModal = function () {
-    document.getElementById('submission-modal').classList.add('hidden');
-};
+window.closeSubmissionModal = function () { return; };
 
 window.submitAssignmentAction = async function () {
     const btn = document.getElementById('btn-confirm-submit');

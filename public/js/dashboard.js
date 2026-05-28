@@ -1345,7 +1345,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     // [V8.1] GitHub README loading moved to renderAssignments for better container management
 
     // [V15.11] Ensure README is refreshed for Admin Overview as well
-    vibeRefreshReadmeContent(filterUnitId);
+    vibeRefreshReadmeContent(filterUnitId, ['admin-overview']);
 
     // [V8.1] GitHub README loading moved to renderAssignments for better container management
     renderAssignments(displayAssignments, "", { showGuide: false });
@@ -1503,7 +1503,6 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
     });
 
     // [V14.4] GitHub README Placeholder Management
-    vibeRefreshReadmeContent(filterUnitId);
 
     if (showGuide && guideContent) {
         const guideDiv = document.createElement('div');
@@ -1652,27 +1651,30 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
  * [V15.11] Shared README Refresher
  * Fetches README from GitHub and injects into all available placeholders.
  */
-async function vibeRefreshReadmeContent(filterUnitId) {
+async function vibeRefreshReadmeContent(filterUnitId, targetKinds = ['settings', 'student', 'admin-overview']) {
     refreshDashboardExternalGuideLinks();
-    const readmePlaceholders = [
-        document.getElementById('github-readme-placeholder-settings'),
-        document.getElementById('github-readme-placeholder-student'),
-        document.getElementById('github-readme-placeholder-admin-overview')
-    ].filter(Boolean);
+    const placeholderMap = {
+        'settings': document.getElementById('github-readme-placeholder-settings'),
+        'student': document.getElementById('github-readme-placeholder-student'),
+        'admin-overview': document.getElementById('github-readme-placeholder-admin-overview')
+    };
+    const selected = targetKinds.map(kind => ({ kind, el: placeholderMap[kind] })).filter(item => item.el);
 
-    if (readmePlaceholders.length === 0) return;
+    if (selected.length === 0) return;
 
     if (!filterUnitId) {
-        readmePlaceholders.forEach(p => p.classList.add('hidden'));
+        selected.forEach(item => item.el.classList.add('hidden'));
         return;
     }
 
-    // Show loading state
-    readmePlaceholders.forEach(p => {
-        p.classList.remove('hidden');
-        p.innerHTML = `
+    selected.forEach(({ kind, el }) => {
+        el.classList.remove('hidden');
+        const loadingText = kind === 'settings'
+            ? '正在抓取導師指南 (tutor-guide.md)...'
+            : '正在抓取任務說明 (README.md)...';
+        el.innerHTML = `
             <div class="flex items-center gap-3 text-slate-400 italic">
-                <span class="animate-pulse">⏳</span> 正在抓取 GitHub 教學指引 (tutor-guide.md)...
+                <span class="animate-pulse">⏳</span> ${loadingText}
             </div>
         `;
     });
@@ -1683,8 +1685,8 @@ async function vibeRefreshReadmeContent(filterUnitId) {
         const embeddedAssignmentGuide = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
         const embeddedTutorGuide = getEmbeddedGuideByUnit(filterUnitId, 'tutor');
 
-        for (const placeholder of readmePlaceholders) {
-            const isSettingsTab = placeholder.id === 'github-readme-placeholder-settings';
+        for (const { kind, el: placeholder } of selected) {
+            const isSettingsTab = kind === 'settings';
             let markdownHtml = null;
 
             if (isSettingsTab) {
@@ -1977,11 +1979,7 @@ window.switchTab = function (tabName) {
             }
             console.log("[DebugTab] tab assignments: Final count to render:", displayAssignments.length);
 
-            let assignmentGuideContent = "";
-            if (filterUnitId) {
-                assignmentGuideContent = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
-            }
-            renderAssignments(displayAssignments, assignmentGuideContent, { showGuide: !!assignmentGuideContent });
+            renderAssignments(displayAssignments, "", { showGuide: false });
             renderAssignmentsGuideMain(filterUnitId);
         } else {
             // [MODIFIED] For students, render their own assignments and refresh the README instruction placeholder
@@ -1991,7 +1989,7 @@ window.switchTab = function (tabName) {
             }
             renderAssignments(displayAssignments, "", { showGuide: false });
             if (filterUnitId) {
-                vibeRefreshReadmeContent(filterUnitId);
+                renderAssignmentsGuideMain(filterUnitId);
             }
         }
     }
@@ -3492,6 +3490,7 @@ async function renderSettingsTab(filterUnitId = null) {
         assignmentContainer.innerHTML = totalAssignmentHTML || "";
         guideContainer.innerHTML = totalGuideHTML || "";
         if (guideContainer) guideContainer.classList.remove('hidden');
+        await vibeRefreshReadmeContent(filterUnitId, ['settings']);
 
     } catch (e) {
         console.error("[Settings] Critical Render Failure:", e);
