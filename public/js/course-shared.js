@@ -2244,26 +2244,42 @@ function enhanceAssignmentEntryButtons() {
         if (insertTarget.nextElementSibling && insertTarget.nextElementSibling.classList.contains('assignment-group-entry-wrap')) return;
 
         const wrap = document.createElement('div');
-        wrap.className = 'assignment-group-entry-wrap mt-6';
+        wrap.className = 'assignment-group-entry-wrap mt-6 flex flex-col sm:flex-row gap-4 w-full';
 
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'group assignment-group-entry-btn w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
-        btn.innerHTML = `
+        const btnClassroom = document.createElement('button');
+        btnClassroom.type = 'button';
+        btnClassroom.className = 'flex-1 group assignment-group-entry-btn py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
+        btnClassroom.innerHTML = `
             <i class="fab fa-github text-lg transition-transform group-hover:scale-110"></i>
-            <span>前往教室寫作業</span>
+            <span>前往 Classroom 寫作業</span>
             <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
         `;
-        btn.addEventListener('click', async (e) => {
+        btnClassroom.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
             const primary = items[0];
             if (!primary) return;
-            // 直接進入 Classroom flow：必要時先要求輸入 Promotion code，成功後開啟 GitHub Classroom。
-            openSubmissionModal(primary.assignmentId, primary.assignmentTitle, { preferDirectClassroom: true });
+            openSubmissionModal(primary.assignmentId, primary.assignmentTitle, { preferDirectClassroom: true, forceClassroom: true });
         });
 
-        wrap.appendChild(btn);
+        const btnNative = document.createElement('button');
+        btnNative.type = 'button';
+        btnNative.className = 'flex-1 group assignment-group-native-btn py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-base shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/35 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2';
+        btnNative.innerHTML = `
+            <i class="fas fa-bolt text-lg transition-transform group-hover:scale-110"></i>
+            <span>啟動全新作業流程 (原生 API 試用)</span>
+            <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
+        `;
+        btnNative.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const primary = items[0];
+            if (!primary) return;
+            openSubmissionModal(primary.assignmentId, primary.assignmentTitle, { preferDirectClassroom: true, forceNativeApi: true });
+        });
+
+        wrap.appendChild(btnClassroom);
+        wrap.appendChild(btnNative);
         insertTarget.insertAdjacentElement('afterend', wrap);
     });
 }
@@ -2298,6 +2314,7 @@ function injectAssignmentLinkModal() {
             <input type="hidden" id="link-unit-id">
             <input type="hidden" id="link-assignment-id">
             <input type="hidden" id="link-assignment-title">
+            <input type="hidden" id="link-force-mode">
 
             <div class="mb-6">
                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">老師 Promotion code</label>
@@ -2343,8 +2360,13 @@ window.submitBindTutorAction = async function () {
 
         if (result.data && result.data.success) {
             closeAssignmentLinkModal();
-            // 綁定成功後直接重走 Classroom 開啟流程，不再落回舊提交表單。
-            openSubmissionModal(assignmentId, title, { skipTutorPrompt: true, preferDirectClassroom: true });
+            const forceMode = document.getElementById('link-force-mode')?.value || '';
+            openSubmissionModal(assignmentId, title, { 
+                skipTutorPrompt: true, 
+                preferDirectClassroom: true,
+                forceClassroom: forceMode === 'classroom',
+                forceNativeApi: forceMode === 'native-api'
+            });
         } else {
             alert("❌ 綁定失敗：" + (result.data.message || "未知錯誤"));
         }
@@ -2390,23 +2412,31 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
                 document.getElementById('link-assignment-title').value = title;
                 // 預填目前已設定的 promotion code，讓使用者確認或修改
                 document.getElementById('link-promotion-code').value = assignmentAccess?.assignedPromotionCode || '';
+                
+                // Save force mode context
+                const forceModeInput = document.getElementById('link-force-mode');
+                if (forceModeInput) {
+                    forceModeInput.value = options.forceNativeApi ? 'native-api' : (options.forceClassroom ? 'classroom' : '');
+                }
+                
                 document.getElementById('assignment-link-modal').classList.remove('hidden');
                 return;
             }
 
             // [NEW] Native API Repository Flow
-            if (assignmentAccess?.createdVia === 'native-api') {
+            const isNativeMode = (assignmentAccess?.createdVia === 'native-api' || options.forceNativeApi) && !options.forceClassroom;
+            if (isNativeMode) {
                 if (!isAuthorized) {
                     alert("尚未取得此單元之付款或導師指派授權。");
                     return;
                 }
-                if (assignmentAccess.repositoryUrl) {
+                if (assignmentAccess?.repositoryUrl) {
                     console.log(`[CourseShared] Direct navigation to native repo: ${assignmentAccess.repositoryUrl}`);
                     window.open(assignmentAccess.repositoryUrl, '_blank');
                     return;
                 }
                 // Trigger creation
-                await triggerNativeAssignmentCreation(courseId, fileName, assignmentId, title, assignmentAccess.githubUsername);
+                await triggerNativeAssignmentCreation(courseId, fileName, assignmentId, title, assignmentAccess?.githubUsername);
                 return;
             }
 
