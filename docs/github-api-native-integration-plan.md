@@ -143,6 +143,18 @@ class GitHubAPIHelper {
     async removeCollaborator(orgName, repoName, username) {
         // DELETE /repos/{owner}/{repo}/collaborators/{username}
     }
+
+    async getRef(orgName, repoName, ref) {
+        // GET /repos/{owner}/{repo}/git/ref/{ref}
+    }
+
+    async createRef(orgName, repoName, ref, sha) {
+        // POST /repos/{owner}/{repo}/git/refs
+    }
+
+    async createPullRequest(orgName, repoName, title, body, head, base) {
+        // POST /repos/{owner}/{repo}/pulls
+    }
 }
 
 module.exports = GitHubAPIHelper;
@@ -209,6 +221,21 @@ exports.createStudentRepository = onCall(async (request) => {
         'push'
     );
 
+    // 5.5 建立 Feedback PR 機制（永遠不合併的 PR，用於非同步 Code Review）
+    // 5.5.1 取得 main 分支最新 commit sha
+    const mainRef = await ghHelper.getRef('vibe-coding-classroom', newRepoName, 'heads/main');
+    // 5.5.2 建立 feedback 分支
+    await ghHelper.createRef('vibe-coding-classroom', newRepoName, 'refs/heads/feedback', mainRef.object.sha);
+    // 5.5.3 建立從 main 合併至 feedback 的 PR
+    const feedbackPR = await ghHelper.createPullRequest(
+        'vibe-coding-classroom',
+        newRepoName,
+        'classroom-feedback',
+        '這是您的作業回饋專區。您每次 push 程式碼後，自動評分結果與老師的評語都會顯示在這裡！\n\n⚠️ **請勿點擊 Merge 按鈕**，保持此 PR 開啟直到學期結束。',
+        'main',
+        'feedback'
+    );
+
     // 6. 回寫到 Firestore
     const assignmentRef = db.collection('assignments').doc();
     await assignmentRef.set({
@@ -216,17 +243,55 @@ exports.createStudentRepository = onCall(async (request) => {
         unitId,
         repositoryUrl: studentRepo.html_url,
         repositoryName: newRepoName,
+        feedbackPullRequestUrl: feedbackPR.html_url,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         status: 'active'
     });
 
-    return { repositoryUrl: studentRepo.html_url };
+    return { repositoryUrl: studentRepo.html_url, feedbackPullRequestUrl: feedbackPR.html_url };
 });
 ```
 
 #### 2.3 錯誤處理與重試機制
 - 如果 GitHub API 暫時不可用，將失敗請求放入 Firestore 隊列
 - 定時任務每 5 分鐘檢查並重試失敗的請求
+
+#### 2.4 Feedback PR 核心機制與設計
+
+在原生的自建系統中，整合 **Feedback PR（回饋拉取請求）** 機制是提升師生 Code Review 與互動品質的核心關鍵。
+
+##### 2.4.1 運作原理（永遠不合併的 PR）
+- **建立基底**：在初始化學生作業倉庫時，系統會自動在 Repo 中建立一個以 `main` 最新 Commit 為基底的 `feedback` 分支。
+- **發起拉取**：立即建立一個 **從 `main` 合併到 `feedback`** 的 Pull Request。
+- **動態追蹤**：學生此後所有的程式碼開發與 `push` 都直接提交至 `main` 分支。由於此 PR 已經開啟，GitHub 將會**自動且動態地更新** `main` 與 `feedback` 的差異（Diff）。
+
+##### 2.4.2 機制核心優勢
+- **精準的程式碼級討論**：老師或助教無需將學生代碼 Clone 至本地。只需直接打開 PR 頁面，即可滑鼠點擊任意一行程式碼直接留言（例如：「*這行 ESP32 BLE 廣播設定缺少了欄位，請參考單元三*」），學生亦可直接回覆，形成精準的非同步討論。
+- **自動評分與 Actions 日誌看板**：GitHub Actions 自動評分的執行結果、分數及錯誤 Log，可透過 Webhook 自動推送到此 Feedback PR 的留言板。學生在一個頁面就能掌握得分與出錯細節。
+
+##### 2.4.3 實作範例（以 Python API 模擬）
+```python
+# 1. 幫學生建立 feedback 分支（以目前的 main 分支為基底）
+main_branch = student_repo.get_branch("main")
+student_repo.create_git_ref(
+    ref="refs/heads/feedback", 
+    sha=main_branch.commit.sha
+)
+
+# 2. 建立 Pull Request (從 main 合併到 feedback)
+feedback_pr = student_repo.create_pull(
+    title="classroom-feedback",
+    body="這是您的作業回饋專區。您每次 push 程式碼後，自動評分結果與老師的評語都會顯示在這裡！\n\n⚠️ **請勿點擊 Merge 按鈕**，保持此 PR 開啟直到學期結束。",
+    base="feedback",  # 接收變更的基底分支
+    head="main"       # 學生提交變更的來源分支
+)
+```
+
+##### 2.4.4 防呆與分支保護限制
+- **預防手動 Merge**：若學生點擊「Merge」會導致 PR 關閉，動態更新失效。
+- **防範對策**：系統可在建庫後，自動透過 GitHub API 設定 **Branch Protection Rules（分支保護規則）**：
+  - 限制學生的 GitHub 帳號對 `feedback` 分支進行 Merge / Close 操作。
+  - 確保該回饋通道在整個學期中保持暢通。
 
 ---
 
