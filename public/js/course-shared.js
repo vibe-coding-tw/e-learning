@@ -32,6 +32,7 @@ function init() {
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
     ensureDashboardFabFallback();
     ensureMobileResponsiveLayout();
+    cleanUpCourseTitles();
 }
 
 function ensureUnitTabsTheme() {
@@ -248,6 +249,7 @@ async function ensureDynamicUnitTabsFromFirestore() {
             } else {
                 titleText = formatUnitTabTitle(unitFile, idx).replace(/^\d+\s*/, '');
             }
+            titleText = titleText.replace(/\b\d+\.\s+/, '');
 
             btn.innerHTML = `
                 <span class="step-badge" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 8px; flex-shrink: 0; background-color: ${badgeBg}; color: ${badgeColor}; transition: all 0.16s ease-in-out;">${badgeText}</span>
@@ -2934,6 +2936,29 @@ function ensureMobileResponsiveLayout() {
         }
     } catch (e) {
         console.warn('[CourseShared] ensureMobileResponsiveLayout failed:', e);
+    }
+}
+
+function cleanUpCourseTitles() {
+    try {
+        if (typeof UNITS !== 'undefined' && Array.isArray(UNITS)) {
+            UNITS.forEach(u => {
+                if (u.label) u.label = u.label.replace(/\b\d+\.\s+/, '');
+            });
+        }
+        
+        const selectors = '.unit-name, .unit-card-name, .ms-sidebar-header .module-title, #bc-current';
+        document.querySelectorAll(selectors).forEach(el => {
+            if (el && el.childNodes.length > 0) {
+                for (const node of el.childNodes) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        node.textContent = node.textContent.replace(/\b\d+\.\s+/, '');
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        console.warn('[CourseShared] cleanUpCourseTitles failed:', e);
     }
 }
 } // end window.__courseSharedLoaded guard
