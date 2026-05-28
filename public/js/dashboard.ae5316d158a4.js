@@ -3566,13 +3566,13 @@ window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(
                                 <div class="flex gap-2">
                                     <div class="flex-grow flex flex-col gap-1 w-1/2">
                                         <span class="text-[9px] text-gray-400 font-bold">GitHub 組織名稱 (GitHub Org)</span>
-                                        <input type="text" placeholder="組織名稱 (e.g. vibe-coding-classroom)" value="${escapeHtml(details.githubOrg || '')}" 
-                                            class="assignment-org-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
+                                        <input type="text" placeholder="組織名稱 (e.g. vibe-coding-classroom)" value="${escapeHtml(details.githubOrg || 'vibe-coding-classroom')}" 
+                                            class="assignment-org-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono font-bold text-gray-700">
                                     </div>
                                     <div class="flex-grow flex flex-col gap-1 w-1/2">
                                         <span class="text-[9px] text-gray-400 font-bold">樣板倉庫名稱 (Template Repo)</span>
-                                        <input type="text" placeholder="樣板名稱 (e.g. tw-common-vscode-setup)" value="${escapeHtml(details.templateRepo || '')}" 
-                                            class="assignment-template-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
+                                        <input type="text" placeholder="樣板名稱 (e.g. tw-common-vscode-setup)" value="${escapeHtml(details.templateRepo || fileName.replace('.html', ''))}" 
+                                            class="assignment-template-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono font-bold text-gray-700">
                                     </div>
                                 </div>
                                 <div class="flex gap-2 items-end">
@@ -3586,6 +3586,11 @@ window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(
                                         儲存 🔗
                                     </button>
                                 </div>
+                                ${details.githubClassroomUrl ? `
+                                <div class="text-[10px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 mt-1">
+                                    <span>🔗 <b>原有 Classroom 連結：</b><a href="${escapeHtml(details.githubClassroomUrl)}" target="_blank" class="text-blue-600 hover:underline font-mono">${escapeHtml(details.githubClassroomUrl)}</a></span>
+                                </div>
+                                ` : ''}
                             </div>
                         </div>
                     ` : '<div class="text-xs text-gray-300 italic">🔒 無權限管理此單元連結</div>'}
