@@ -286,6 +286,10 @@
 | `normalizedUrl` | string | 正規化後的 GitHub URL。 |
 | `createdAt` | timestamp | 建立時間。 |
 
+補充說明：
+- `unitId` 現行規格應為 canonical unit page URL，例如 `tw-common-github-classroom.html`。
+- 2026-05-28 已完成大多數歷史 `referral_links.unitId` 清理；目前只剩 1 筆無法自動判定的舊資料（`bee4arc4`）待人工確認。
+
 ---
 
 ## 9. `metadata_settings` 集合
@@ -319,8 +323,8 @@
 1. **退役計畫狀態**：`*-master-*.html` 頁面在架構上已退役，新生產網頁不再使用此命名。然而，**代碼與資料庫中的相容層仍處於啟用（ACTIVE）狀態**，不可直接移除。
 2. **舊網址重導向**：已在 Cloud Functions 的 `serveCourse` 實作 301 轉址，將歷史書籤重導向至 canonical courseId。
 3. **歷史訂單授權相容性**：因遷移前成立之歷史訂單中 `items` 仍使用 legacy master 鍵值（例如 `start-01-master-web-app.html`），後端目前只在歷史訂單 / 歷史網址相容路徑中透過 `mapLegacyMasterToCanonical()` 進行轉換，確保舊學員權益，同時避免該相容表滲入一般 runtime 判斷。
-4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 legacy master item key。`mapLegacyMasterToCanonical()` 目前只保留在舊網址 redirect、舊 token scope 驗證與極少數舊 referral 文件相容用途。
-4. **完全移除相容層之門檻**：相容代碼（如 `functions/index.js` 中的 `LEGACY_MASTER_TO_CANONICAL`）只有在以下條件皆滿足後，方可刪除：
+4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 legacy master item key。歷史 `referral_links.unitId` 也已完成 8 筆 canonical 清理，目前只剩 1 筆未知舊值待人工判定。`mapLegacyMasterToCanonical()` 目前只保留在舊網址 redirect、舊 token scope 驗證與極少數舊 referral 文件相容用途。
+5. **完全移除相容層之門檻**：相容代碼（如 `functions/index.js` 中的 `LEGACY_MASTER_TO_CANONICAL`）只有在以下條件皆滿足後，方可刪除：
    - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `courseKey`，商品項目維持 `productId`。
    - 經過至少一次完整生產環境 pilot validation，確認無任何歷史用戶存取異常。
 
