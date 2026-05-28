@@ -5435,9 +5435,19 @@ exports.bindTutorByPromotionCode = onCall(async (request) => {
             throw new HttpsError('permission-denied', '此導師尚未取得該單元授權。');
         }
 
-        const assignmentUrl = (cfg.assignmentUrl || cfg.githubClassroomUrl || '').trim();
+        // 嘗試從導師自身的 tutorConfigs 取得 GitHub Classroom 連結
+        let assignmentUrl = (cfg.assignmentUrl || cfg.githubClassroomUrl || '').trim();
+
+        // 若導師自身設定無 URL，退回查詢 metadata_lessons 課程層級設定
         if (!assignmentUrl) {
-            throw new HttpsError('failed-precondition', '此導師尚未設定該單元 GitHub Classroom 連結。');
+            const course = findLessonByCourseRef(effectiveCourseId, lessons);
+            if (course?.githubClassroomUrls?.[canonicalUnitId]) {
+                assignmentUrl = resolveClassroomUrlForTutor(course.githubClassroomUrls[canonicalUnitId], tutorEmail) || '';
+            }
+        }
+
+        if (!assignmentUrl) {
+            throw new HttpsError('failed-precondition', '此導師尚未設定該單元 GitHub Classroom 連結，請通知管理員設定。');
         }
 
         const tutorRef = db.collection('users').doc(tutorDoc.id);
