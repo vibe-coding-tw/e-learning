@@ -112,7 +112,7 @@
 > - 所有「資料比對 / 權限判斷 / 邏輯驗證 / 寫入儲存」一律以 Firestore 為準。
 > - 禁止在前端或後端維護硬編碼白名單、相容名單、舊 ID 對照表作為執行期判斷依據。
 > - 若資料不一致，先修 Firestore 資料與遷移腳本，不新增 fallback 白名單邏輯。
-> - `metadata_lessons.courseId` 已統一使用 canonical page URL（以 `entryUnitId` 首單元頁為主鍵），傳統 `*-master-*.html` 頁面與主鍵已完全廢棄。舊版 master 頁面網址已在 `serveCourse` 設有 301 轉址與 Token 舊版相容性映射。
+> - `metadata_lessons.courseId` 以 canonical page URL 為主，`entryUnitId` 為主要課程入口；舊版 `*-master-*.html` 目前僅保留最小相容層，供歷史網址與歷史訂單使用，尚未完全刪除。
 
 ### 學習路徑頁（新）
 - `public/learning-path.html` 為唯一課程列表頁，依 `path` 參數與 Firestore `metadata_lessons` 動態渲染。

@@ -478,7 +478,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
 
             if (!ordersSnapshot.empty) {
                 for (const itemKey of Object.keys(normalizedItems)) {
-                    const lesson = lessons.find(l => l.courseId === itemKey) || findCourseByPageOrUnit(itemKey, itemKey, lessons);
+                    const lesson = resolveLessonForOrderItem(itemKey, lessons);
                     if (lesson && lesson.isPhysical !== true) {
                         const hasPaid = hasActiveOrderForCourse(ordersSnapshot, lesson.courseId, lessons);
                         if (hasPaid) {
@@ -668,30 +668,50 @@ exports.paymentNotify = onRequest(async (req, res) => {
                 const oData = oDoc.data();
                 const oItems = oData.items || {};
 
-                // [NEW] Post-payment activation validation check
+                // Post-payment activation validation: detect paid items that will not unlock cleanly.
                 const validationAlerts = [];
+                const activationCheckedItems = [];
                 try {
                     const lessons = await getLessons();
                     for (const itemKey of Object.keys(oItems)) {
                         // 1. Verify item maps to a canonical course
-                        const mappedItemKey = LEGACY_MASTER_TO_CANONICAL[itemKey] || itemKey;
-                        const lesson = lessons.find(l => l.courseId === mappedItemKey) || findCourseByPageOrUnit(mappedItemKey, mappedItemKey, lessons);
+                        const lesson = resolveLessonForOrderItem(itemKey, lessons);
                         if (!lesson) {
                             validationAlerts.push(`Item '${itemKey}' does not map to any canonical course.`);
+                            activationCheckedItems.push({ itemKey, status: "missing-course" });
+                            continue;
+                        }
+
+                        activationCheckedItems.push({
+                            itemKey,
+                            courseId: getCanonicalLessonIdentity(lesson) || null,
+                            courseKey: lesson.courseKey || null,
+                            isPhysical: lesson.isPhysical === true,
+                            status: "mapped"
+                        });
+
+                        if (lesson.isPhysical === true) {
+                            activationCheckedItems[activationCheckedItems.length - 1].status = "physical-skipped";
                             continue;
                         }
 
                         // 2. Verify canonical course resolves to valid units
                         if (!Array.isArray(lesson.courseUnits) || lesson.courseUnits.length === 0) {
-                            validationAlerts.push(`Course '${lesson.courseId}' has no units defined.`);
+                            validationAlerts.push(`Course '${getCanonicalLessonIdentity(lesson) || lesson.courseId}' has no units defined.`);
+                            activationCheckedItems[activationCheckedItems.length - 1].status = "missing-units";
                             continue;
                         }
 
                         // 3. Verify student can pass checkPaymentAuthorization (resolveStudentAssignmentAccess)
                         const firstUnitId = lesson.courseUnits[0];
-                        const access = await resolveStudentAssignmentAccess(db, oData.uid, lesson.courseId, firstUnitId, lessons, false);
+                        const access = await resolveStudentAssignmentAccess(db, oData.uid, getCanonicalLessonIdentity(lesson), firstUnitId, lessons, false);
                         if (!access.authorized) {
-                            validationAlerts.push(`Student authorization check failed for course '${lesson.courseId}' / unit '${firstUnitId}': ${access.reason || 'unknown'}`);
+                            validationAlerts.push(`Student authorization check failed for course '${getCanonicalLessonIdentity(lesson) || lesson.courseId}' / unit '${firstUnitId}': ${access.reason || 'unknown'}`);
+                            activationCheckedItems[activationCheckedItems.length - 1].status = "authorization-failed";
+                            activationCheckedItems[activationCheckedItems.length - 1].reason = access.reason || "unknown";
+                        } else {
+                            activationCheckedItems[activationCheckedItems.length - 1].status = "authorized";
+                            activationCheckedItems[activationCheckedItems.length - 1].accessMode = access.accessMode || null;
                         }
                     }
 
@@ -700,7 +720,10 @@ exports.paymentNotify = onRequest(async (req, res) => {
                         await db.collection("orders").doc(orderId).update({
                             activationAlerts: validationAlerts,
                             activationValidated: true,
-                            activationValidationFailed: true
+                            activationValidationFailed: true,
+                            activationValidationStatus: "failed",
+                            activationCheckedItems,
+                            activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
                         });
                         const adminEmail = process.env.ADMIN_EMAIL || process.env.MAIL_USER;
                         if (adminEmail) {
@@ -713,11 +736,21 @@ exports.paymentNotify = onRequest(async (req, res) => {
                     } else {
                         await db.collection("orders").doc(orderId).update({
                             activationValidated: true,
-                            activationValidationFailed: false
+                            activationValidationFailed: false,
+                            activationValidationStatus: "passed",
+                            activationCheckedItems,
+                            activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
                         });
                     }
                 } catch (valErr) {
                     console.error("[paymentNotify] Order activation validation errored:", valErr);
+                    await db.collection("orders").doc(orderId).update({
+                        activationValidated: false,
+                        activationValidationFailed: true,
+                        activationValidationStatus: "error",
+                        activationValidationError: valErr.message || String(valErr),
+                        activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
                 }
                 
                 let updatedItems = false;
@@ -796,7 +829,7 @@ exports.paymentNotify = onRequest(async (req, res) => {
                             if (!referralDoc.exists) continue;
 
                             const referralData = referralDoc.data();
-                            const targetUnitId = resolveCanonicalUnitId(referralData.unitId, lessons);
+                            const targetUnitId = resolveCanonicalUnitId(referralData.unitId, lessons, { allowLegacyMaster: true });
 
                             if (targetUnitId && assignment.purchasedUnits.includes(targetUnitId) && referralData.tutorEmail) {
                                 // [V16.0] Cascade Assignment: Assign ALL purchased units to this tutor if the link matches any of them
@@ -894,11 +927,16 @@ function cleanUnitId(unitId) {
         .replace(/^(?:tw-(?:common|car-(?:starter|basic|advanced))-|start-|basic-|adv-|advanced-|prepare-)?(?:\d{2}-)?(?:unit-|lesson-|master-)?/i, '');
 }
 
-function resolveCanonicalUnitId(unitId, lessons = []) {
-    if (!unitId) return unitId;
+function mapLegacyMasterToCanonical(value = '') {
+    return LEGACY_MASTER_TO_CANONICAL[value] || value;
+}
 
-    // Map legacy master to canonical unit id
-    const mappedUnitId = LEGACY_MASTER_TO_CANONICAL[unitId] || unitId;
+function resolveCanonicalUnitId(unitId, lessons = [], options = {}) {
+    if (!unitId) return unitId;
+    const { allowLegacyMaster = false } = options;
+
+    // Only explicit compatibility paths should translate retired master ids.
+    const mappedUnitId = allowLegacyMaster ? mapLegacyMasterToCanonical(unitId) : unitId;
     const cleanId = cleanUnitId(mappedUnitId);
 
     for (const lesson of lessons) {
@@ -945,12 +983,31 @@ function getEffectiveTutorConfig(unitId, tutorConfigs = {}) {
     return config || null;
 }
 
+function getCanonicalLessonIdentity(lesson = {}) {
+    const metadataType = String(lesson.metadataType || '').toLowerCase();
+    if (lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product') {
+        return String(
+            lesson.productId ||
+            lesson.courseKey ||
+            lesson.courseId ||
+            lesson.id ||
+            ''
+        ).trim();
+    }
+    return String(
+        lesson.courseKey ||
+        lesson.courseId ||
+        lesson.productId ||
+        lesson.id ||
+        ''
+    ).trim();
+}
+
 function findParentCourseIdByUnit(unitId, lessons = []) {
     if (!unitId) return null;
 
-    const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
-    const lesson = lessons.find(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(canonicalUnitId));
-    return lesson?.courseId || null;
+    const lesson = findCourseByUnitId(unitId, lessons);
+    return getCanonicalLessonIdentity(lesson) || null;
 }
 
 function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
@@ -991,11 +1048,90 @@ function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
     }) || null;
 }
 
+function findCourseByUnitId(unitId, lessons = []) {
+    if (!unitId) return null;
+    const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
+    return lessons.find((lesson) => {
+        const units = Array.isArray(lesson.courseUnits) ? lesson.courseUnits : [];
+        return units.some((candidateUnitId) =>
+            unitIdsMatch(candidateUnitId, canonicalUnitId) ||
+            normalizeLookupValue(candidateUnitId) === normalizeLookupValue(canonicalUnitId)
+        );
+    }) || null;
+}
+
+function normalizeLookupValue(value = '') {
+    return String(value || '').split('/').pop().split('?')[0].replace(/\.html$/i, '').toLowerCase();
+}
+
+function getLessonLookupKeys(lesson = {}) {
+    const keys = new Set();
+    const add = (value) => {
+        if (!value) return;
+        const raw = String(value).trim();
+        if (!raw) return;
+        keys.add(raw);
+        keys.add(raw.replace(/\.html$/i, ''));
+        keys.add(normalizeLookupValue(raw));
+    };
+
+    add(lesson.id);
+    add(lesson.courseId);
+    add(lesson.courseKey);
+    add(lesson.entryUnitId);
+    add(lesson.classroomUrl);
+    add(lesson.productId);
+    add(lesson.sku);
+
+    if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);
+    if (Array.isArray(lesson.legacyProductIds)) lesson.legacyProductIds.forEach(add);
+    if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
+    if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
+
+    return keys;
+}
+
+function findLessonByCourseRef(courseRef = '', lessons = []) {
+    if (!courseRef) return null;
+    const candidates = new Set([
+        String(courseRef || '').trim(),
+        String(courseRef || '').replace(/\.html$/i, ''),
+        normalizeLookupValue(courseRef),
+        cleanUnitId(courseRef)
+    ].filter(Boolean));
+
+    return lessons.find((lesson) => {
+        const keys = getLessonLookupKeys(lesson);
+        for (const candidate of candidates) {
+            if (keys.has(candidate)) return true;
+        }
+        return false;
+    }) || null;
+}
+
+function resolveLessonForOrderItem(itemKey = '', lessons = []) {
+    if (!itemKey) return null;
+    const candidates = new Set([
+        itemKey,
+        String(itemKey).replace(/\.html$/i, ''),
+        normalizeLookupValue(itemKey),
+        cleanUnitId(itemKey)
+    ]);
+
+    return lessons.find((lesson) => {
+        const keys = getLessonLookupKeys(lesson);
+        for (const candidate of candidates) {
+            if (keys.has(candidate)) return true;
+        }
+        return false;
+    }) || findCourseByPageOrUnit(itemKey, itemKey, lessons);
+}
+
 function collectPurchasedUnitIds(items = {}, lessons = []) {
     const purchasedUnits = new Set();
 
     Object.keys(items || {}).forEach(itemKey => {
-        const lesson = lessons.find(l => l.courseId === itemKey);
+        const lesson = resolveLessonForOrderItem(itemKey, lessons);
         if (lesson) {
             (lesson.courseUnits || []).forEach(unitId => purchasedUnits.add(resolveCanonicalUnitId(unitId, lessons)));
             return;
@@ -1021,7 +1157,7 @@ function findMatchingOrderItemIdForReferral(items = {}, referralTargetId = '', l
 
     return Object.keys(items || {}).find(itemKey => {
         if (itemKey === referralTargetId || itemKey === canonicalReferralUnitId) return true;
-        const lesson = lessons.find(l => l.courseId === itemKey);
+        const lesson = findLessonByCourseRef(itemKey, lessons);
         return !!(lesson && Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(canonicalReferralUnitId));
     }) || null;
 }
@@ -1065,7 +1201,7 @@ function extractReferralAssignmentsFromOrder(orderItems = {}, lessons = []) {
         const itemTutor = itemValue?.referredTutorEmail || itemValue?.referralTutor || null;
         if (!itemReferralLink) return;
 
-        const lesson = lessons.find(l => l.courseId === itemKey);
+        const lesson = findLessonByCourseRef(itemKey, lessons);
         const purchasedUnits = lesson
             ? (lesson.courseUnits || []).map(unitId => resolveCanonicalUnitId(unitId, lessons))
             : [resolveCanonicalUnitId(itemKey, lessons)];
@@ -1083,16 +1219,14 @@ function extractReferralAssignmentsFromOrder(orderItems = {}, lessons = []) {
 
 function itemContainsUnit(itemKey = '', lessons = [], targetUnitId = '') {
     if (!itemKey || !targetUnitId) return false;
-    // Map legacy master to canonical unit id
-    const mappedItemKey = LEGACY_MASTER_TO_CANONICAL[itemKey] || itemKey;
     const canonicalTargetUnitId = resolveCanonicalUnitId(targetUnitId, lessons);
-    const lesson = lessons.find(l => l.courseId === mappedItemKey) || findCourseByPageOrUnit(mappedItemKey, mappedItemKey, lessons);
+    const lesson = resolveLessonForOrderItem(itemKey, lessons);
     if (lesson && Array.isArray(lesson.courseUnits)) {
         return lesson.courseUnits
             .map(unitId => resolveCanonicalUnitId(unitId, lessons))
             .includes(canonicalTargetUnitId);
     }
-    const canonicalItemKey = resolveCanonicalUnitId(mappedItemKey, lessons);
+    const canonicalItemKey = resolveCanonicalUnitId(itemKey, lessons);
     return canonicalItemKey === canonicalTargetUnitId;
 }
 
@@ -1226,7 +1360,7 @@ function hasQualifiedTutorStatus(userData = {}, unitId = '') {
  */
 function isTutorFullyQualifiedForCourse(userData = {}, courseId = '', lessons = []) {
     const tutorConfigs = userData.tutorConfigs || {};
-    const lesson = lessons.find(l => l.courseId === courseId);
+    const lesson = findLessonByCourseRef(courseId, lessons);
     if (!lesson || !Array.isArray(lesson.courseUnits)) return false;
 
     // A tutor is fully qualified for a course ONLY if EVERY unit in that course is authorized in their config
@@ -1433,7 +1567,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         }
 
         // FREE COURSE (NT$ 0) (Digital Only)
-        const lessonPrice = course ? course.price : (lessons.find(l => l.courseId === effectiveCourseId)?.price || 9999);
+        const lessonPrice = course ? course.price : (findLessonByCourseRef(effectiveCourseId, lessons)?.price || 9999);
         const isFreeCourse = !!(course && parseInt(lessonPrice) === 0);
         if (isFreeCourse) {
             return { authorized: true, accessMode: 'free_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
@@ -1666,10 +1800,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         const normalizedPage = normalizeLooseKey(pageValue);
         return lessons.find((lesson) => {
             const lessonKeys = new Set([
-                normalizeLooseKey(lesson.courseId || ""),
-                normalizeLooseKey(lesson.courseKey || ""),
-                normalizeLooseKey(lesson.entryUnitId || ""),
-                normalizeLooseKey(lesson.classroomUrl || ""),
+                ...Array.from(getLessonLookupKeys(lesson)).map((value) => normalizeLooseKey(value)),
                 normalizeLooseKey(lesson.contentRef || "")
             ].filter(Boolean));
 
@@ -1693,8 +1824,8 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
     const fileName = urlPath.split('/').filter(Boolean).pop();
 
     // [NEW] Redirection for Retired Master Pages to corresponding entryUnitId
-    const canonicalRedirectTarget = LEGACY_MASTER_TO_CANONICAL[fileName];
-    if (canonicalRedirectTarget) {
+    const canonicalRedirectTarget = mapLegacyMasterToCanonical(fileName);
+    if (canonicalRedirectTarget && canonicalRedirectTarget !== fileName) {
         const queryStr = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
         console.log(`[serveCourse] Redirecting legacy master ${fileName} to canonical unit ${canonicalRedirectTarget}`);
         return res.redirect(301, `/courses/${canonicalRedirectTarget}${queryStr}`);
@@ -1761,8 +1892,8 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
                 // [MODIFIED] Map legacy scopePart/pageId values to canonical unit counterparts
                 // so they find and validate scoped candidates correctly against migrated canonical records.
                 const normalizedPageId = normalizeCourseFile(pageId || '');
-                const mappedScopePart = LEGACY_MASTER_TO_CANONICAL[normalizedScopePart] || normalizedScopePart;
-                const mappedPageId = LEGACY_MASTER_TO_CANONICAL[normalizedPageId] || normalizedPageId;
+                const mappedScopePart = mapLegacyMasterToCanonical(normalizedScopePart);
+                const mappedPageId = mapLegacyMasterToCanonical(normalizedPageId);
 
                 // Find the course by pageId/courseId/courseKey/entryUnitId or scopePart
                 const course = findCourseForScope(lessons, mappedScopePart, mappedPageId);
@@ -2216,7 +2347,7 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
 
     // Secondary Fallback: Check metadata_lessons (lessons) for default URLs
     if (!classroomUrl) {
-        const course = lessons.find(l => l.courseId === effectiveCourseId);
+        const course = findLessonByCourseRef(effectiveCourseId, lessons);
         if (course?.githubClassroomUrls?.[canonicalUnitId]) {
             classroomUrl = resolveClassroomUrlForTutor(course.githubClassroomUrls[canonicalUnitId], assignedTutorEmail);
         }
@@ -2369,7 +2500,7 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
             // [V15.2] Unit-Specific Assignment Link & Email Notification
             try {
                 const lessons = await getLessons();
-                const unitMetadata = lessons.find(l => l.courseId === courseId || (l.courseUnits && l.courseUnits.includes(courseId)));
+                const unitMetadata = findLessonByCourseRef(courseId, lessons) || lessons.find(l => l.courseUnits && l.courseUnits.includes(courseId));
                 const unitName = unitMetadata ? (unitMetadata.title || unitMetadata.courseName || courseId) : courseId;
 
                 // Fetch the recently updated assignmentUrl from tutor's config
@@ -2847,10 +2978,7 @@ exports.getDashboardData = onCall(async (request) => {
                 if (!config.authorized) continue;
 
                 // 尋找此單元所屬的課程 ID
-                const courseRecord = lessons.find(l => 
-                    (Array.isArray(l.courseUnits) && l.courseUnits.some(u => unitIdsMatch(u, unitId))) ||
-                    (l.classroomUrl && l.classroomUrl.includes(unitId))
-                );
+                const courseRecord = findCourseByUnitId(unitId, lessons) || findCourseByPageOrUnit(unitId, unitId, lessons);
                 const cid = courseRecord ? courseRecord.courseId : unitId;
 
                 if (!synthesizedConfigs[cid]) {
@@ -2908,39 +3036,36 @@ exports.getDashboardData = onCall(async (request) => {
 
                 if (cfg.githubClassroomUrls) {
                     Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
-                        const existingDocId = unitToDocId[unitId];
-                        if (!existingDocId || !existingDocId.includes('.html')) {
-                            unitToDocId[unitId] = docId;
-                        }
-                        // [FIX] Handle start- prefix mismatch between Firestore and Metadata
-                        if (unitId.match(/^0[1-5]-unit-/)) {
-                            const startKey = 'start-' + unitId;
-                            const existingStartDocId = unitToDocId[startKey];
-                            if (!existingStartDocId || !existingStartDocId.includes('.html')) {
-                                unitToDocId[startKey] = docId;
+                        const equivalentUnits = new Set([unitId, resolveCanonicalUnitId(unitId, lessons)]);
+                        const parentCourse = findCourseByUnitId(unitId, lessons);
+                        (Array.isArray(parentCourse?.courseUnits) ? parentCourse.courseUnits : []).forEach((candidateUnit) => {
+                            if (unitIdsMatch(candidateUnit, unitId)) equivalentUnits.add(candidateUnit);
+                        });
+
+                        equivalentUnits.forEach((candidateUnit) => {
+                            if (!candidateUnit) return;
+                            const existingDocId = unitToDocId[candidateUnit];
+                            if (!existingDocId || !existingDocId.includes('.html')) {
+                                unitToDocId[candidateUnit] = docId;
                             }
-                        }
+                        });
                     });
                 }
 
                 if (docId.includes('.html')) {
                     unitToDocId[docId] = docId;
-                    if (docId.match(/^0[1-5]-unit-/)) {
-                        unitToDocId['start-' + docId] = docId;
-                    }
-                    if (docId.match(/^start-0[1-5]-unit-/)) {
-                        unitToDocId[docId.replace(/^start-/, '')] = docId;
-                    }
+                    const parentCourse = findCourseByUnitId(docId, lessons);
+                    (Array.isArray(parentCourse?.courseUnits) ? parentCourse.courseUnits : []).forEach((candidateUnit) => {
+                        if (unitIdsMatch(candidateUnit, docId)) {
+                            unitToDocId[candidateUnit] = docId;
+                        }
+                    });
                 }
 
                 if (isAuthorized) {
                     if (docId.includes('.html')) {
                         // [FIX] Normalize ID to handle start- prefix mismatch
-                        const normalizedId = mappedId.replace('start-', '');
-                        // Find parent course for this unit
-                        const parentCourse = lessons.find(l => 
-                            l.courseUnits && (l.courseUnits.includes(mappedId) || l.courseUnits.some(cu => cu.replace('start-', '') === normalizedId))
-                        );
+                        const parentCourse = findCourseByUnitId(mappedId, lessons);
                         if (parentCourse && !authorizedCourseIds.includes(parentCourse.courseId)) {
                             authorizedCourseIds.push(parentCourse.courseId);
                         }
@@ -2977,7 +3102,7 @@ exports.getDashboardData = onCall(async (request) => {
 
 
         for (const cid of authorizedCourseIds) {
-            const course = lessons.find(l => l.courseId === cid);
+            const course = findLessonByCourseRef(cid, lessons);
             if (course) {
                 try {
                     const entryUnitId = normalizeCourseFile(course.entryUnitId || '');
@@ -4591,7 +4716,7 @@ async function lookupClassroomInviteBinding(inputRaw) {
             if (!candidates.includes(normalizedInvite)) continue;
             matches.push({
                 lessonDocId: lesson.id || null,
-                courseId: lesson.courseId || lesson.id || null,
+                courseId: getCanonicalLessonIdentity(lesson) || null,
                 title: lesson.title || null,
                 unitKey,
                 courseUnits: Array.isArray(lesson.courseUnits) ? lesson.courseUnits : []
@@ -5140,7 +5265,7 @@ exports.bindTutorToUnit = onCall(async (request) => {
         await upsertStudentUnitAssignment(db, uid, canonicalUnitId, tutorEmail, 'selfBinding', true);
 
         // 5. Cascade Assignment (If it's a course bundle)
-        const course = lessons.find(l => l.courseId === effectiveCourseId);
+        const course = findLessonByCourseRef(effectiveCourseId, lessons);
         if (course && Array.isArray(course.courseUnits) && course.courseUnits.includes(canonicalUnitId)) {
              // If teacher is fully qualified for the course, cascade to all units
              if (isTutorFullyQualifiedForCourse(tutorData, effectiveCourseId, lessons)) {

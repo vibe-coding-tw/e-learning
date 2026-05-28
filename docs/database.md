@@ -48,6 +48,12 @@
 | `paidAt` | timestamp | 付款完成時間。 |
 | `paymentDate` | string | 金流回傳付款時間字串。 |
 | `expiryDate` | timestamp | 課程權限到期時間。 |
+| `activationValidated` | boolean | 付款成功後是否已完成課程開通驗證。 |
+| `activationValidationStatus` | string | 開通驗證狀態：`passed`, `failed`, `error`。 |
+| `activationValidationFailed` | boolean | 開通驗證是否失敗。 |
+| `activationAlerts` | array | 開通驗證失敗時的可讀警示訊息。 |
+| `activationCheckedItems` | array | 每個訂單項目的 mapping / 授權檢查結果。實體商品會標記但不要求 `courseUnits`。 |
+| `activationValidatedAt` | timestamp | 最近一次開通驗證時間。 |
 | `fulfillmentStatus` | string | 出貨狀態（如 `PENDING`, `SHIPPED`）。 |
 | `logistics` | map | 物流資料（門市/收件資訊）。 |
 | `logisticsMissing` | boolean | 實體商品訂單付款後物流資料不完整時的警示旗標。 |
@@ -58,6 +64,7 @@
 > 導師綁定在作業頁進行，並寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`。
 > 實體商品下單會在 `initiatePayment` 驗證物流必要欄位（收件人、電話、門市/地址）；若歷史資料或例外流程造成缺漏，`paymentNotify` 會標記 `logisticsMissing=true` 供後台追蹤。
 > **重複購買限制**：`initiatePayment` 在建立新訂單前，會自動檢查學員已成功付款且未到期的線上課程訂單（`expiryDate > now`）。若偵測到購物車中有學員已擁有的未到期課程，後端會直接拒絕交易並回傳錯誤訊息，阻止重複付款。
+> **付款後開通驗證**：`paymentNotify` 寫入 `SUCCESS` 後會立即檢查每個數位課程項目是否能解析到 canonical course、是否具備 `courseUnits`，並用共用授權邏輯確認學生可通過課程授權。失敗時會寫入 `activationAlerts` 並寄送 Admin 告警。實體商品不要求 `courseUnits`。
 
 ---
 
@@ -99,6 +106,12 @@
 | `entryUnitId` | string | 課程入口單元 ID，用於取代 `*-master-*` 頁面的進入責任。 |
 | `contentRef` | string | 對應外部內容倉的內容路徑，例如 `courses/zh-TW/tw-car-starter-html5-basics.html`。 |
 | `i18n` | map | 可選的多語內容設定，例如各語系內容路徑或語系可用性資訊。 |
+| `learningPathLabel*` / `categoryLabel*` / `navLabel*` | string | 學習路徑分類顯示名稱。前端會優先讀取 Firestore / lesson metadata，而不是在程式碼中寫死。 |
+
+執行期 canonical identity 規則：
+- 課程型 metadata：優先使用 `courseKey`
+- 商品型 metadata（`metadataType=product|legacy_product` 或 `isPhysical=true`）：優先使用 `productId`
+- `courseId` 保留作為頁面入口 / 歷史相容欄位，不再作為所有執行期判斷的唯一主鍵
 
 參考模板：
 - `docs/examples/metadata-lessons-migration-template.csv`
@@ -305,16 +318,17 @@
 
 1. **退役計畫狀態**：`*-master-*.html` 頁面在架構上已退役，新生產網頁不再使用此命名。然而，**代碼與資料庫中的相容層仍處於啟用（ACTIVE）狀態**，不可直接移除。
 2. **舊網址重導向**：已在 Cloud Functions 的 `serveCourse` 實作 301 轉址，將歷史書籤重導向至 canonical courseId。
-3. **歷史訂單授權相容性**：因遷移前成立之歷史訂單中 `items` 仍使用 legacy master 鍵值（例如 `start-01-master-web-app.html`），後端 `resolveCanonicalUnitId` 與 `itemContainsUnit` 仍會讀取 `LEGACY_MASTER_TO_CANONICAL` 進行對照轉換，確保歷史學員權益。
+3. **歷史訂單授權相容性**：因遷移前成立之歷史訂單中 `items` 仍使用 legacy master 鍵值（例如 `start-01-master-web-app.html`），後端目前只在歷史訂單 / 歷史網址相容路徑中透過 `mapLegacyMasterToCanonical()` 進行轉換，確保舊學員權益，同時避免該相容表滲入一般 runtime 判斷。
+4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 legacy master item key。`mapLegacyMasterToCanonical()` 目前只保留在舊網址 redirect、舊 token scope 驗證與極少數舊 referral 文件相容用途。
 4. **完全移除相容層之門檻**：相容代碼（如 `functions/index.js` 中的 `LEGACY_MASTER_TO_CANONICAL`）只有在以下條件皆滿足後，方可刪除：
-   - 歷史訂單全部完成資料遷移（將 items/courseId 統一更新為 canonical page URL）。
+   - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `courseKey`，商品項目維持 `productId`。
    - 經過至少一次完整生產環境 pilot validation，確認無任何歷史用戶存取異常。
 
 ### 10.3 Historical Migration Notes (歷史遷移備註)
 
 - **2026-05-27 系統升級**：
   - 角色統一：歷史 `student` 角色已全部遷移為 `user`。
-  - 單元對照：將舊版 `03-unit-github-classroom.html` 等重複課程卡片移除，改由 Cloud Functions `LEGACY_MASTER_TO_CANONICAL` 及 `public/js/dashboard.js` 的 `LEGACY_TO_CANONICAL` 進行動態對照轉址。
+  - 單元對照：將舊版 `03-unit-github-classroom.html` 等重複課程卡片移除，並確認後端只在歷史網址 / 歷史訂單相容路徑保留最小對照。
   - 一次性遷移腳本為 `functions/scripts/migrate_lessons_classroom_urls.js`。
 
 ---
