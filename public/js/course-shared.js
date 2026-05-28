@@ -164,8 +164,7 @@ async function ensureDynamicUnitTabsFromFirestore() {
 
         wrapper.innerHTML = `
             <div id="course-tabs-container" class="unit-tabs-container" style="display: block; min-width: max-content; position: relative;">
-                <div class="unit-tabs-line" style="position: absolute; top: 50%; left: 40px; right: 40px; height: 3px; background-color: #cbd5e1; transform: translateY(-50%); z-index: 0;"></div>
-                <div class="unit-tabs-flex" style="display: inline-flex; gap: 24px; align-items: center; position: relative; z-index: 1;"></div>
+                <div class="unit-tabs-flex" style="display: inline-flex; gap: 12px; align-items: center; position: relative; z-index: 1;"></div>
             </div>
         `;
         const flex = wrapper.querySelector('.unit-tabs-flex');
@@ -258,6 +257,21 @@ async function ensureDynamicUnitTabsFromFirestore() {
             btn.addEventListener('click', () => {
                 window.location.href = buildUnitAuthUrl(unitFile);
             });
+            
+            if (idx > 0) {
+                const separator = document.createElement('div');
+                separator.className = 'unit-tab-separator';
+                separator.style.display = 'inline-flex';
+                separator.style.alignItems = 'center';
+                separator.style.justifyContent = 'center';
+                const isPassed = idx <= activeIndex;
+                separator.style.color = isPassed ? '#2563eb' : '#cbd5e1';
+                separator.style.fontSize = '12px';
+                separator.style.fontWeight = '700';
+                separator.style.margin = '0 2px';
+                separator.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                flex.appendChild(separator);
+            }
             flex.appendChild(btn);
         });
 
@@ -2841,7 +2855,19 @@ function ensureMobileResponsiveLayout() {
             document.head.appendChild(style);
         }
 
-        // 2. Insert Hamburger Button in Topnav
+        // 2. Insert Hamburger Button in Topnav (Only if sidebar is actually used)
+        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        const hasSidebar = file.startsWith('start-') || file.startsWith('tw-car-starter-');
+        
+        if (!hasSidebar) {
+            const currentTopNav = document.querySelector('.ms-topnav');
+            if (currentTopNav) {
+                const toggleBtn = currentTopNav.querySelector('.ms-sidebar-toggle');
+                if (toggleBtn) toggleBtn.remove();
+            }
+            return;
+        }
+
         const topNav = document.querySelector('.ms-topnav');
         const sidebar = document.querySelector('.ms-sidebar');
         
