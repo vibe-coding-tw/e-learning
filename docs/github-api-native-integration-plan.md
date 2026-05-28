@@ -109,7 +109,7 @@ graph TB
 
 ## 2. 實作階段（Phase 計劃）
 
-### Phase 1：基礎 API 層（第 1-2 周）
+### Phase 1：基礎 API 層（第 1-2 周）[已完成]
 
 #### 1.1 GitHub Token 管理
 - 建立 GitHub Personal Access Token（Fine-grained）
@@ -162,7 +162,7 @@ module.exports = GitHubAPIHelper;
 
 ---
 
-### Phase 2：學生邀請派發流程（第 3-4 周）
+### Phase 2：學生邀請派發流程（第 3-4 周）[已完成]
 
 #### 2.1 前端交互改進
 - 在 Dashboard 「領取作業」按鈕旁加入「正在建立倉庫...」的進度提示
@@ -586,8 +586,8 @@ describe('GitHubAPIHelper', () => {
 
 | 周期 | 任務 | 負責 | 交付物 |
 | --- | --- | --- | --- |
-| Week 1-2 | 基礎 API 層 + Token 管理 | Backend | `github-api-helper.js` |
-| Week 3-4 | 學生邀請派發 + 前端改進 | Backend + Frontend | `createStudentRepository()` + UI |
+| Week 1-2 | 基礎 API 層 + Token 管理 | Backend | `github-api-helper.js` [已完成] |
+| Week 3-4 | 學生邀請派發 + 後端實作 | Backend | `createStudentRepository()` [後端已完成] |
 | Week 5-6 | 自動評分整合 | DevOps | Workflow 範本 + 回寫驗證 |
 | Week 7-8 | 導師配置 + 推薦連結 | Backend + Frontend | Settings UI + API |
 | Week 9-10 | 教材同步與 PR 管理 | Backend | `syncTemplateToStudentRepo()` |
