@@ -130,6 +130,10 @@
 | `assignmentTitle` | string | 作業標題。 |
 | `assignmentId` | string | 作業識別碼（常與 `userId` 組合成文件 id）。 |
 | `assignmentUrl` | string | 學生提交連結（GitHub / Demo）。 |
+| `repositoryUrl` | string | 自建作業 GitHub 倉庫連結（API 創庫）。 |
+| `repositoryName` | string | 自建作業 GitHub 倉庫名稱。 |
+| `feedbackPullRequestUrl` | string | 學生作業 Feedback Pull Request 連結。 |
+| `createdVia` | string | 建立來源種類：`native-api` 或 `classroom`。 |
 | `studentNote` | string | 學生備註。 |
 | `assignedTutorEmail` | string | 該作業對應導師。 |
 | `currentStatus` | string | `started` / `submitted` / `graded`。 |
