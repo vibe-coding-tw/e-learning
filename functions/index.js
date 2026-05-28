@@ -2434,37 +2434,46 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
     // [V17.0.1] Personalized Repository Check: If student already started, prioritize their personal repo
     let personalRepoUrl = null;
     let assignmentDetails = null;
-    if (assignmentId) {
-        try {
-            const assignmentDoc = await db.collection('assignments').doc(`${auth.uid}_${assignmentId}`).get();
-            if (assignmentDoc.exists) {
-                const aData = assignmentDoc.data();
-                if (aData.createdVia === 'native-api') {
-                    createdVia = 'native-api';
-                    repositoryUrl = aData.repositoryUrl || null;
-                    feedbackPullRequestUrl = aData.feedbackPullRequestUrl || null;
-                    personalRepoUrl = aData.repositoryUrl || null;
-                } else {
-                    const existingUrl = aData.assignmentUrl || aData.url;
-                    // Only prioritize if it's a real GitHub repo (not a classroom invitation link with /a/)
-                    if (existingUrl && existingUrl.includes('github.com/') && !existingUrl.includes('classroom.github.com/a/')) {
-                        personalRepoUrl = existingUrl;
-                        console.log(`[resolveAssignmentAccess] Found personal repo for student: ${personalRepoUrl}`);
-                    }
-                }
-                assignmentDetails = {
-                    learningState: aData.learningState || 'in_progress',
-                    latestBlocker: aData.latestBlocker || null,
-                    hintLevelUsed: aData.hintLevelUsed !== undefined ? aData.hintLevelUsed : null,
-                    nextAction: aData.nextAction || null,
-                    attemptSummary: aData.attemptSummary || null,
-                    grade: aData.grade !== undefined ? aData.grade : null,
-                    tutorFeedback: aData.tutorFeedback || null
-                };
-            }
-        } catch (e) {
-            console.warn("[resolveAssignmentAccess] Failed to lookup personal repo:", e.message);
+    try {
+        let assignmentDoc = null;
+        if (assignmentId) {
+            assignmentDoc = await db.collection('assignments').doc(`${auth.uid}_${assignmentId}`).get();
         }
+
+        if (!assignmentDoc || !assignmentDoc.exists) {
+            const fallbackUnitId = String(canonicalUnitId || unitId || '').replace(/\.html$/i, '');
+            if (fallbackUnitId) {
+                assignmentDoc = await db.collection('assignments').doc(`${auth.uid}_${fallbackUnitId}`).get();
+            }
+        }
+
+        if (assignmentDoc && assignmentDoc.exists) {
+            const aData = assignmentDoc.data();
+            if (aData.createdVia === 'native-api') {
+                createdVia = 'native-api';
+                repositoryUrl = aData.repositoryUrl || null;
+                feedbackPullRequestUrl = aData.feedbackPullRequestUrl || null;
+                personalRepoUrl = aData.repositoryUrl || null;
+            } else {
+                const existingUrl = aData.assignmentUrl || aData.url;
+                // Only prioritize if it's a real GitHub repo (not a classroom invitation link with /a/)
+                if (existingUrl && existingUrl.includes('github.com/') && !existingUrl.includes('classroom.github.com/a/')) {
+                    personalRepoUrl = existingUrl;
+                    console.log(`[resolveAssignmentAccess] Found personal repo for student: ${personalRepoUrl}`);
+                }
+            }
+            assignmentDetails = {
+                learningState: aData.learningState || 'in_progress',
+                latestBlocker: aData.latestBlocker || null,
+                hintLevelUsed: aData.hintLevelUsed !== undefined ? aData.hintLevelUsed : null,
+                nextAction: aData.nextAction || null,
+                attemptSummary: aData.attemptSummary || null,
+                grade: aData.grade !== undefined ? aData.grade : null,
+                tutorFeedback: aData.tutorFeedback || null
+            };
+        }
+    } catch (e) {
+        console.warn("[resolveAssignmentAccess] Failed to lookup personal repo:", e.message);
     }
 
     // Fetch student's own githubUsername
