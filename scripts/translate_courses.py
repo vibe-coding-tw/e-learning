@@ -31,6 +31,7 @@ def get_access_token():
         return None
 
 def call_gemini(system_instruction, user_content, token, project, location, model):
+    import time
     url = f"https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:generateContent"
     
     headers = {
@@ -60,33 +61,50 @@ def call_gemini(system_instruction, user_content, token, project, location, mode
         }
     }
     
-    try:
-        response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()
-        res_data = response.json()
-        
-        candidates = res_data.get("candidates", [])
-        if not candidates:
+    # Try up to 5 times with exponential backoff for 429 errors
+    for attempt in range(5):
+        response = None
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=45)
+            if response.status_code == 429:
+                sleep_time = (2 ** attempt) + 2
+                print(f"    -> Rate limited (429) on attempt {attempt+1}. Sleeping for {sleep_time}s and retrying...")
+                time.sleep(sleep_time)
+                continue
+                
+            response.raise_for_status()
+            res_data = response.json()
+            
+            candidates = res_data.get("candidates", [])
+            if not candidates:
+                return None
+                
+            part_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            
+            # Strip markdown wrapper
+            cleaned_text = part_text.strip()
+            if cleaned_text.startswith("```"):
+                lines = cleaned_text.splitlines()
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                cleaned_text = "\n".join(lines).strip()
+                
+            return cleaned_text
+        except Exception as e:
+            if response is not None and response.status_code == 429:
+                sleep_time = (2 ** attempt) + 2
+                print(f"    -> Rate limited (429) exception on attempt {attempt+1}. Sleeping for {sleep_time}s and retrying...")
+                time.sleep(sleep_time)
+                continue
+            print(f"    -> API Call Error: {e}")
+            if response is not None:
+                print(f"    -> Response Body: {response.text}")
             return None
             
-        part_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-        
-        # Strip markdown wrapper
-        cleaned_text = part_text.strip()
-        if cleaned_text.startswith("```"):
-            lines = cleaned_text.splitlines()
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].startswith("```"):
-                lines = lines[:-1]
-            cleaned_text = "\n".join(lines).strip()
-            
-        return cleaned_text
-    except Exception as e:
-        print(f"    -> API Call Error: {e}")
-        if 'response' in locals() and response is not None:
-            print(f"    -> Response Body: {response.text}")
-        return None
+    print("    -> API Call Error: Maximum retries exceeded for 429.")
+    return None
 
 def translate_batch(strings, token, project, location, model):
     if not strings:
@@ -216,6 +234,13 @@ def translate_file(filename, token, project, location, model, force):
             translated_js = translate_script_block(script.string, token, project, location, model)
             script.string.replace_with(translated_js)
             
+    # 3.5. Translate onclick attributes containing Chinese
+    for el in soup.find_all(True):
+        if el.has_attr("onclick") and isinstance(el["onclick"], str) and contains_chinese(el["onclick"]):
+            print(f"  -> Translating onclick attribute: {el['onclick'][:60]}...")
+            translated_onclick = translate_script_block(el["onclick"], token, project, location, model)
+            el["onclick"] = translated_onclick
+
     # 4. Replace links / references from tw- to en- in attributes
     for el in soup.find_all(True):
         for attr in ["href", "src", "onclick", "data-classroom-url"]:
@@ -241,6 +266,7 @@ def main():
     parser.add_argument("--project", default="e-learning-942f7", help="Google Cloud project ID.")
     parser.add_argument("--location", default="us-central1", help="Vertex AI region.")
     parser.add_argument("--model", default="gemini-2.5-flash", help="Vertex AI Gemini model identifier.")
+    parser.add_argument("--workers", type=int, default=5, help="Number of concurrent file translation workers.")
     
     args = parser.parse_args()
     
@@ -260,14 +286,35 @@ def main():
     files = sorted([f for f in os.listdir(ZH_DIR) if f.endswith(".html") and f.startswith("tw-")])
     print(f"Found {len(files)} course HTML files in {ZH_DIR}")
     
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    
+    print(f"Starting parallel translation with {args.workers} workers...")
+    
+    def process_one(f):
+        # Refresh/retrieve access token for each file to be safe
+        t = get_access_token()
+        if not t:
+            print(f"[{f}] Error: Could not retrieve access token.")
+            return f, False
+        success = translate_file(f, t, args.project, args.location, args.model, args.force)
+        return f, success
+        
     success_count = 0
     failure_count = 0
     
-    for f in files:
-        if translate_file(f, token, args.project, args.location, args.model, args.force):
-            success_count += 1
-        else:
-            failure_count += 1
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = {executor.submit(process_one, f): f for f in files}
+        for future in as_completed(futures):
+            f = futures[future]
+            try:
+                name, success = future.result()
+                if success:
+                    success_count += 1
+                else:
+                    failure_count += 1
+            except Exception as e:
+                print(f"[{f}] Exception in worker thread: {e}")
+                failure_count += 1
             
     print(f"\nTranslation run complete. Success: {success_count}, Failures: {failure_count}")
 

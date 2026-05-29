@@ -414,9 +414,17 @@ window.renderNav = function (rootPath = '.', options = {}) {
     const brandSuffix = options.brandSuffix || '';
     const isFluid = options.isFluid !== undefined ? options.isFluid : true;
 
+    const uiLocale = detectUiLocale();
+    const isZh = isZhLocale(uiLocale);
+    const defaultPaths = getDefaultLearningPaths(uiLocale);
+
     const resolve = (path) => {
         if (path.startsWith('http')) return path;
-        return `${rootPath}/${path}`.replace('./http', 'http').replace('//', '/');
+        let targetPath = path;
+        if (!isZh && (path === 'students.html' || path === 'tutors.html')) {
+            targetPath = 'en/' + path;
+        }
+        return `${rootPath}/${targetPath}`.replace('./http', 'http').replace('//', '/');
     };
 
     let style = document.getElementById('nav-comp-styles');
@@ -445,10 +453,6 @@ window.renderNav = function (rootPath = '.', options = {}) {
         fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
         document.head.appendChild(fa);
     }
-
-    const uiLocale = detectUiLocale();
-    const isZh = isZhLocale(uiLocale);
-    const defaultPaths = getDefaultLearningPaths(uiLocale);
 
     const navHTML = `
     <nav class="bg-white/90 backdrop-blur-md shadow-md w-full sticky top-0 z-[99999]" id="main-nav">

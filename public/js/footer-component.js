@@ -9,12 +9,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const root = footerPlaceholder.getAttribute('data-root') || '.';
     
+    // Detect locale (matches nav-component.js behavior)
+    let isZh = true;
+    try {
+        const stored = localStorage.getItem('vibe_user_locale');
+        if (stored) {
+            isZh = stored.trim().toLowerCase().startsWith('zh');
+        } else {
+            const navLang = String(navigator.language || "").toLowerCase();
+            isZh = navLang.startsWith('zh');
+        }
+    } catch (_) {}
+
     // Helper to resolve paths relative to data-root
     const resolve = (path) => {
         if (path.startsWith('http') || path.startsWith('mailto:')) return path;
-        // If the current page is in a subdirectory and path doesn't start with /
-        // we use the data-root to resolve it.
-        return `${root}/${path}`;
+        let targetPath = path;
+        if (!isZh && (path === 'students.html' || path === 'tutors.html')) {
+            targetPath = 'en/' + path;
+        }
+        return `${root}/${targetPath}`.replace('//', '/');
     };
 
     footerPlaceholder.innerHTML = `
@@ -23,10 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
                 <div class="text-2xl font-black tracking-tighter text-white">🚀 Vibe Coding</div>
                 <div class="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-400 font-bold text-sm uppercase tracking-wide">
-                    <a href="${resolve('index.html')}" class="hover:text-white transition-colors">首頁</a>
-                    <a href="${resolve('learning-path.html?path=tw-common')}" class="hover:text-white transition-colors">學習路徑</a>
-                    <a href="${resolve('students.html')}" class="hover:text-white transition-colors">課程指南</a>
-                    <a href="${resolve('tutors.html')}" class="hover:text-white transition-colors">導師合作</a>
+                    <a href="${resolve('index.html')}" class="hover:text-white transition-colors">${isZh ? '首頁' : 'Home'}</a>
+                    <a href="${resolve(isZh ? 'learning-path.html?path=tw-common' : 'learning-path.html?path=en-common')}" class="hover:text-white transition-colors">${isZh ? '學習路徑' : 'Learning Path'}</a>
+                    <a href="${resolve('students.html')}" class="hover:text-white transition-colors">${isZh ? '課程指南' : 'Student Guide'}</a>
+                    <a href="${resolve('tutors.html')}" class="hover:text-white transition-colors">${isZh ? '導師合作' : 'Tutor Guide'}</a>
                 </div>
             </div>
             
@@ -36,17 +50,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     <div class="grid grid-cols-1 md:flex md:flex-row justify-center items-center gap-y-2 md:gap-x-6 text-xs text-slate-500 font-medium">
                         <div class="flex items-center gap-2">
-                            <span class="opacity-50">營業人</span>
-                            <span class="text-slate-400">腳丫健康科技有限公司</span>
+                            <span class="opacity-50">${isZh ? '營業人' : 'Business Entity'}</span>
+                            <span class="text-slate-400">${isZh ? '腳丫健康科技有限公司' : 'Joy Foot Health Technology Co., Ltd.'}</span>
                         </div>
                         <span class="hidden md:inline opacity-20">|</span>
                         <div class="flex items-center gap-2">
-                            <span class="opacity-50">統編</span>
+                            <span class="opacity-50">${isZh ? '統編' : 'Tax ID'}</span>
                             <span class="text-slate-400">80187668</span>
                         </div>
                         <span class="hidden md:inline opacity-20">|</span>
                         <div class="flex items-center gap-2">
-                            <span class="opacity-50">合作洽談</span>
+                            <span class="opacity-50">${isZh ? '合作洽談' : 'Contact Us'}</span>
                             <a href="mailto:info@vibe-coding.tw" class="text-indigo-400 hover:text-indigo-300 transition-colors font-bold">info@vibe-coding.tw</a>
                         </div>
                     </div>
