@@ -427,9 +427,9 @@ function upgradeLegacyStartUnitToMsLayout() {
         const topNav = document.createElement('nav');
         topNav.className = 'ms-topnav';
         topNav.innerHTML = `
-            <a href="/start.html" target="_top" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
+            <a href="/learning-path.html?path=tw-car-starter" target="_top" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
             <div class="divider"></div>
-            <a href="/start.html" target="_top" class="nav-label nav-label-link">入門課程</a>
+            <a href="/learning-path.html?path=tw-car-starter" target="_top" class="nav-label nav-label-link">入門課程</a>
         `;
 
         const layout = document.createElement('div');
