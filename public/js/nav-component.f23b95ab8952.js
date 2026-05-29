@@ -250,9 +250,40 @@ function isCatalogCourseLesson(lesson = {}) {
     return looksCourseLike && validPrice;
 }
 
-function getLearningPathsFromCache() {
+const CATEGORY_TRANSLATIONS = {
+    "zh-TW": {
+        "tw-common": "課前準備",
+        "tw-car-starter": "入門課程",
+        "tw-car-basic": "基礎課程",
+        "tw-car-advanced": "進階課程",
+        "en-common": "課前準備",
+        "en-car-starter": "入門課程",
+        "en-car-basic": "基礎課程",
+        "en-car-advanced": "進階課程"
+    },
+    "en": {
+        "tw-common": "Preparation",
+        "tw-car-starter": "Starter Course",
+        "tw-car-basic": "Basic Course",
+        "tw-car-advanced": "Advanced Course",
+        "en-common": "Preparation",
+        "en-car-starter": "Starter Course",
+        "en-car-basic": "Basic Course",
+        "en-car-advanced": "Advanced Course"
+    }
+};
+
+function getCategoryLabel(key, uiLocale) {
+    const locale = isZhLocale(uiLocale) ? "zh-TW" : "en";
+    const dict = CATEGORY_TRANSLATIONS[locale];
+    if (dict && dict[key]) return dict[key];
+    return categoryLabelFromParts(key, uiLocale);
+}
+
+function getLearningPathsFromCache(uiLocale) {
     try {
-        const raw = localStorage.getItem(LEARNING_PATH_CACHE_KEY);
+        const key = `${LEARNING_PATH_CACHE_KEY}_${uiLocale}`;
+        const raw = localStorage.getItem(key);
         if (!raw) return null;
         const data = JSON.parse(raw);
         if (!data || !Array.isArray(data.paths)) return null;
@@ -263,9 +294,10 @@ function getLearningPathsFromCache() {
     }
 }
 
-function setLearningPathsCache(paths = []) {
+function setLearningPathsCache(paths = [], uiLocale) {
     try {
-        localStorage.setItem(LEARNING_PATH_CACHE_KEY, JSON.stringify({
+        const key = `${LEARNING_PATH_CACHE_KEY}_${uiLocale}`;
+        localStorage.setItem(key, JSON.stringify({
             updatedAt: Date.now(),
             paths
         }));
@@ -283,19 +315,19 @@ function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS,
 
     desktop.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${item.label || categoryLabelFromParts(item.key, locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${item.label || getCategoryLabel(item.key, locale)}
         </a>
     `).join("");
 
     mobile.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${item.label || categoryLabelFromParts(item.key, locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${item.label || getCategoryLabel(item.key, locale)}
         </a>
     `).join("");
 }
 
 async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
-    const cached = getLearningPathsFromCache();
+    const cached = getLearningPathsFromCache(uiLocale);
     if (cached?.length) return cached;
     try {
         const getLessons = httpsCallable(functions, "getLessonsMetadata");
@@ -317,6 +349,10 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
                 key = resolveCategoryFromFilename(filename);
             }
             if (key) {
+                // If English mode, consistently map tw- prefixed keys to en- prefix
+                if (uiLocale === "en" && key.startsWith("tw-")) {
+                    key = key.replace(/^tw-/, "en-");
+                }
                 keys.add(key);
                 if (!labels.has(key)) {
                     const label = pickLessonCategoryLabel(lesson, uiLocale);
@@ -342,7 +378,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
             source: dynamic.length ? "firestore-metadata_lessons" : "fallback-default"
         };
         console.info("[NavComp] learning paths generated:", window.__vibeLearningPathDebug);
-        setLearningPathsCache(finalPaths);
+        setLearningPathsCache(finalPaths, uiLocale);
         return finalPaths;
     } catch (e) {
         console.warn("[NavComp] loadLearningPathsDynamic failed:", e);
