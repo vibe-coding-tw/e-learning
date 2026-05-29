@@ -38,6 +38,18 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
+            if (error.status === 422 && error.message.includes("Name already exists on this account")) {
+                console.log(`[GitHubAPIHelper] Repository ${orgName}/${newRepoName} already exists on GitHub. Retrieving details...`);
+                try {
+                    const existingRepo = await this.octokit.repos.get({
+                        owner: orgName,
+                        repo: newRepoName
+                    });
+                    return existingRepo.data;
+                } catch (getErr) {
+                    console.error("Failed to retrieve existing repository details:", getErr);
+                }
+            }
             console.error(`Error generating repo ${newRepoName} from template ${templateRepo}:`, error);
             throw new Error(`Failed to generate repository: ${error.message}`);
         }
@@ -125,6 +137,19 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
+            if (error.status === 422 && error.message.includes("Reference already exists")) {
+                console.log(`[GitHubAPIHelper] Reference ${ref} already exists on ${orgName}/${repoName}. Retrieving existing ref...`);
+                try {
+                    const existingRef = await this.octokit.git.getRef({
+                        owner: orgName,
+                        repo: repoName,
+                        ref: ref.replace('refs/', '')
+                    });
+                    return existingRef.data;
+                } catch (getErr) {
+                    console.error("Failed to retrieve existing ref details:", getErr);
+                }
+            }
             console.error(`Error creating ref ${ref} on ${orgName}/${repoName}:`, error);
             throw new Error(`Failed to create git reference: ${error.message}`);
         }
@@ -152,6 +177,23 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
+            if (error.status === 422 && error.message.includes("A pull request already exists")) {
+                console.log(`[GitHubAPIHelper] Pull request for ${head}->${base} already exists on ${orgName}/${repoName}. Retrieving existing PRs...`);
+                try {
+                    const prs = await this.octokit.pulls.list({
+                        owner: orgName,
+                        repo: repoName,
+                        head: `${orgName}:${head}`,
+                        base: base,
+                        state: 'open'
+                    });
+                    if (prs.data.length > 0) {
+                        return prs.data[0];
+                    }
+                } catch (getErr) {
+                    console.error("Failed to retrieve existing PR details:", getErr);
+                }
+            }
             console.error(`Error creating PR ${title} on ${orgName}/${repoName}:`, error);
             throw new Error(`Failed to create pull request: ${error.message}`);
         }
