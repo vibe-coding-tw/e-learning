@@ -198,6 +198,58 @@ class GitHubAPIHelper {
             throw new Error(`Failed to create pull request: ${error.message}`);
         }
     }
+
+    /**
+     * Get a commit details
+     * @param {string} orgName - The organization owner
+     * @param {string} repoName - The repository name
+     * @param {string} sha - The commit SHA
+     * @returns {Promise<object>} - Commit details
+     */
+    async getCommit(orgName, repoName, sha) {
+        try {
+            const response = await this.octokit.repos.getCommit({
+                owner: orgName,
+                repo: repoName,
+                ref: sha
+            });
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching commit ${sha} for ${orgName}/${repoName}:`, error);
+            throw new Error(`Failed to get commit details: ${error.message}`);
+        }
+    }
+
+    /**
+     * Create or update a file in the repository
+     * @param {string} orgName - The organization owner
+     * @param {string} repoName - The repository name
+     * @param {string} path - The file path
+     * @param {string} content - The file content
+     * @param {string} message - Commit message
+     * @param {string} branch - The branch name
+     * @returns {Promise<object>} - Commit details
+     */
+    async createFile(orgName, repoName, path, content, message, branch) {
+        try {
+            const response = await this.octokit.repos.createOrUpdateFileContents({
+                owner: orgName,
+                repo: repoName,
+                path: path,
+                message: message,
+                content: Buffer.from(content).toString('base64'),
+                branch: branch
+            });
+            return response.data;
+        } catch (error) {
+            if (error.status === 409 || error.status === 422) {
+                console.log(`[GitHubAPIHelper] File ${path} already exists or conflict on ${orgName}/${repoName}. Skipping...`);
+                return null;
+            }
+            console.error(`Error creating file ${path} on ${orgName}/${repoName}:`, error);
+            throw new Error(`Failed to create file: ${error.message}`);
+        }
+    }
 }
 
 module.exports = GitHubAPIHelper;
