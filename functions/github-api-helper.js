@@ -21,7 +21,7 @@ class GitHubAPIHelper {
      */
     async createRepoFromTemplate(orgName, templateRepo, newRepoName, isPrivate = true) {
         try {
-            let templateOwner = 'vibe-coding-template';
+            let templateOwner = 'vibe-coding-classroom';
             let templateName = templateRepo;
             if (templateRepo.includes('/')) {
                 const parts = templateRepo.split('/');
