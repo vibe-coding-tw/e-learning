@@ -55,9 +55,10 @@
 | `activationCheckedItems` | array | 每個訂單項目的 mapping / 授權檢查結果。實體商品會標記但不要求 `courseUnits`。 |
 | `activationValidatedAt` | timestamp | 最近一次開通驗證時間。 |
 | `fulfillmentStatus` | string | 出貨狀態（如 `PENDING`, `SHIPPED`）。 |
-| `logistics` | map | 物流資料（門市/收件資訊）。 |
+| `logistics` | map | 物流資料（門市/收件資訊，支援 ECPay CVS 及國際直郵結構）。 |
 | `logisticsMissing` | boolean | 實體商品訂單付款後物流資料不完整時的警示旗標。 |
-| `ecpayTradeNo` | string | 綠界交易編號。 |
+| `ecpayTradeNo` | string | 綠界交易編號 (僅於 gateway 為 ECPAY 時存在)。 |
+| `stripePaymentIntentId` | string | Stripe 交易之 Payment Intent ID (僅於 gateway 為 STRIPE 時存在)。 |
 | `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
 
 > 購物車不再輸入 Promotion code / 推薦連結。  
