@@ -2689,6 +2689,7 @@ window.vibeInjectAdminTutorModeToggle = function() {
 };
 
 function resolveUnitGuideExternalUrl(guideType = 'assignment') {
+    const { filterUnitId } = getCurrentDashboardContext();
     const unitId = (filterUnitId || "").trim();
     if (!unitId) return "";
     const hash = guideType === 'tutor' ? 'tutor-guide' : 'assignment-guide';
