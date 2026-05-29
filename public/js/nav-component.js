@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 import { firebaseConfig, connectFirebaseEmulators, isLocalDev } from "./firebase-local.js";
 
@@ -48,13 +48,57 @@ const DEFAULT_LEARNING_PATHS = [
     { key: "tw-car-advanced", href: "learning-path.html?path=tw-car-advanced", icon: "fa-microchip", label: "進階課程" }
 ];
 
+function getDefaultLearningPaths(uiLocale = "zh-TW") {
+    const isZh = isZhLocale(uiLocale);
+    return [
+        { key: `${isZh ? 'tw' : 'en'}-common`, href: `learning-path.html?path=${isZh ? 'tw' : 'en'}-common`, icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
+        { key: `${isZh ? 'tw' : 'en'}-car-starter`, href: `learning-path.html?path=${isZh ? 'tw' : 'en'}-car-starter`, icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Course" },
+        { key: `${isZh ? 'tw' : 'en'}-car-basic`, href: `learning-path.html?path=${isZh ? 'tw' : 'en'}-car-basic`, icon: "fa-code", label: isZh ? "基礎課程" : "Basic Course" },
+        { key: `${isZh ? 'tw' : 'en'}-car-advanced`, href: `learning-path.html?path=${isZh ? 'tw' : 'en'}-car-advanced`, icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Course" }
+    ];
+}
+
 function detectUiLocale() {
+    try {
+        const stored = localStorage.getItem('vibe_user_locale');
+        if (stored) {
+            const clean = String(stored).trim().toLowerCase();
+            if (clean.startsWith('zh')) return 'zh-TW';
+            if (clean.startsWith('en')) return 'en';
+        }
+    } catch (_) {}
+
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const queryLang = params.get('lang') || params.get('locale');
+        if (queryLang) {
+            const clean = String(queryLang).trim().toLowerCase();
+            if (clean.startsWith('zh')) return 'zh-TW';
+            if (clean.startsWith('en')) return 'en';
+        }
+    } catch (_) {}
+
     const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
     const navLang = String(navigator.language || "").toLowerCase();
     const raw = htmlLang || navLang;
     if (raw.startsWith("zh")) return "zh-TW";
     return "en";
 }
+
+window.__vibeSwitchLocale = async function (locale) {
+    try {
+        localStorage.setItem('vibe_user_locale', locale);
+        if (auth.currentUser) {
+            try {
+                await setDoc(doc(db, 'users', auth.currentUser.uid), { locale: locale }, { merge: true });
+                console.info('[NavComp] Local user profile synchronized to Firestore');
+            } catch (e) {
+                console.warn('[NavComp] Failed to sync locale to Firestore:', e);
+            }
+        }
+    } catch (_) {}
+    window.location.reload();
+};
 
 function isZhLocale(locale) {
     return String(locale || "").toLowerCase().startsWith("zh");
@@ -288,7 +332,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"
         }));
-        const finalPaths = dynamic.length ? dynamic : DEFAULT_LEARNING_PATHS;
+        const finalPaths = dynamic.length ? dynamic : getDefaultLearningPaths(uiLocale);
         window.__vibeLearningPathDebug = {
             locale: uiLocale,
             lessonsCount: lessons.length,
@@ -302,15 +346,16 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         return finalPaths;
     } catch (e) {
         console.warn("[NavComp] loadLearningPathsDynamic failed:", e);
+        const fallbackPaths = getDefaultLearningPaths(uiLocale);
         window.__vibeLearningPathDebug = {
             locale: uiLocale,
             lessonsCount: 0,
-            categories: DEFAULT_LEARNING_PATHS.map((x) => x.key),
+            categories: fallbackPaths.map((x) => x.key),
             generatedAt: new Date().toISOString(),
             source: "fallback-default-error"
         };
         console.info("[NavComp] learning paths generated (fallback):", window.__vibeLearningPathDebug);
-        return DEFAULT_LEARNING_PATHS;
+        return fallbackPaths;
     }
 }
 
@@ -401,6 +446,10 @@ window.renderNav = function (rootPath = '.', options = {}) {
         document.head.appendChild(fa);
     }
 
+    const uiLocale = detectUiLocale();
+    const isZh = isZhLocale(uiLocale);
+    const defaultPaths = getDefaultLearningPaths(uiLocale);
+
     const navHTML = `
     <nav class="bg-white/90 backdrop-blur-md shadow-md w-full sticky top-0 z-[99999]" id="main-nav">
         <div class="${isFluid ? 'w-full px-6' : 'container mx-auto px-4'}">
@@ -412,40 +461,59 @@ window.renderNav = function (rootPath = '.', options = {}) {
                     <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
                         <div class="relative dropdown group">
                             <button aria-expanded="false" aria-haspopup="true" class="flex items-center hover:text-cyan-600 transition-all cursor-pointer py-2 gap-1">
-                                學習路徑 <svg class="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                ${isZh ? '學習路徑' : 'Learning Path'} <svg class="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             <div id="learning-path-desktop-menu" class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-3 w-56 mt-0 border border-slate-100 left-0 animate-in fade-in slide-in-from-top-2 duration-200">
                             </div>
                         </div>
                         <div class="relative dropdown group">
                             <button aria-expanded="false" aria-haspopup="true" class="flex items-center text-cyan-600 font-bold transition-all cursor-pointer py-2 gap-1">
-                                支援與合作 <svg class="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                ${isZh ? '支援與合作' : 'Support & Collab'} <svg class="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             <div class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-3 w-64 mt-0 border border-slate-100 left-0 animate-in fade-in slide-in-from-top-2 duration-200">
                                 <a href="${resolve('students.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
-                                    <i class="fa-solid fa-graduation-cap text-xs opacity-40"></i> 課程購買與使用指南
+                                    <i class="fa-solid fa-graduation-cap text-xs opacity-40"></i> ${isZh ? '課程購買與使用指南' : 'Student Guide'}
                                 </a>
                                 <a href="${resolve('tutors.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
-                                    <i class="fa-solid fa-handshake text-xs opacity-40"></i> 專業導師與合作洽談
+                                    <i class="fa-solid fa-handshake text-xs opacity-40"></i> ${isZh ? '專業導師與合作洽談' : 'Tutor Guide'}
                                 </a>
                                 <div class="my-2 border-t border-slate-50"></div>
                                 <a href="${resolve('examples/index.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 hover:text-slate-700 transition-colors">
-                                    <i class="fa-solid fa-display text-xs opacity-40"></i> 範例展示參考
+                                    <i class="fa-solid fa-display text-xs opacity-40"></i> ${isZh ? '範例展示參考' : 'Examples'}
                                 </a>
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
+                        <!-- Language Selector Dropdown -->
+                        <div class="relative dropdown group flex items-center">
+                            <button id="lang-btn" aria-expanded="false" aria-haspopup="true" class="flex items-center hover:text-cyan-600 transition-all cursor-pointer py-2 gap-1.5 text-gray-600 font-medium select-none">
+                                <i class="fa-solid fa-globe opacity-70 text-sm"></i>
+                                <span class="text-sm">${isZh ? '繁中' : 'EN'}</span>
+                                <svg class="w-3 h-3 opacity-50 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-2 w-28 mt-0 border border-slate-100 right-0 top-full animate-in fade-in slide-in-from-top-2 duration-200" style="z-index: 1000000;">
+                                <button onclick="window.__vibeSwitchLocale('zh-TW')" class="w-full text-left flex items-center px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors text-sm font-medium ${isZh ? 'text-cyan-600 bg-cyan-50/40 font-bold' : 'text-gray-700'}">
+                                    繁體中文
+                                </button>
+                                <button onclick="window.__vibeSwitchLocale('en')" class="w-full text-left flex items-center px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors text-sm font-medium ${!isZh ? 'text-cyan-600 bg-cyan-50/40 font-bold' : 'text-gray-700'}">
+                                    English
+                                </button>
+                            </div>
+                        </div>
+
                         ${showAuth ? `
                         <div class="flex items-center space-x-4">
-                            <a href="${resolve('cart.html')}" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
+                            <a href="${resolve('cart.html')}" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="${isZh ? '前往購物車' : 'Go to Cart'}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
                                 </svg>
                             </a>
                             <div id="auth-status" class="text-sm flex items-center">
-                                <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
-                                <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
+                                <span id="user-display" class="text-gray-600 hidden md:inline mr-2">${isZh ? '訪客' : 'Guest'}</span>
+                                <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">${isZh ? '登入' : 'Login'}</button>
                             </div>
                         </div>` : ''}
                         <div class="md:hidden">
@@ -466,36 +534,54 @@ window.renderNav = function (rootPath = '.', options = {}) {
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <div>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">目前狀態</p>
-                            <span id="mobile-user-display" class="text-sm font-bold text-slate-700">訪客</span>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">${isZh ? '目前狀態' : 'Status'}</p>
+                            <span id="mobile-user-display" class="text-sm font-bold text-slate-700">${isZh ? '訪客' : 'Guest'}</span>
                         </div>
                     </div>
-                    <button id="mobile-login-btn" class="px-5 py-2 bg-indigo-600 text-white text-sm rounded-xl font-bold shadow-sm active:scale-95 transition-transform">登入</button>
+                    <button id="mobile-login-btn" class="px-5 py-2 bg-indigo-600 text-white text-sm rounded-xl font-bold shadow-sm active:scale-95 transition-transform">${isZh ? '登入' : 'Login'}</button>
                 </div>` : ''}
+
+                <!-- Mobile Language Selector -->
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Language / 語言</p>
+                            <span class="text-sm font-bold text-slate-700">${isZh ? '繁體中文' : 'English'}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="window.__vibeSwitchLocale('zh-TW')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isZh ? 'bg-cyan-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600'}">繁中</button>
+                        <button onclick="window.__vibeSwitchLocale('en')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${!isZh ? 'bg-cyan-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600'}">EN</button>
+                    </div>
+                </div>
+
                 <div class="space-y-3">
-                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1">學習路徑</span>
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1">${isZh ? '學習路徑' : 'Learning Path'}</span>
                     <div id="learning-path-mobile-menu" class="grid grid-cols-2 gap-3">
                     </div>
                 </div>
                 <div class="space-y-3 pb-4">
-                    <span class="text-[11px] font-bold text-cyan-500 uppercase tracking-[0.2em] px-1">支援與合作</span>
+                    <span class="text-[11px] font-bold text-cyan-500 uppercase tracking-[0.2em] px-1">${isZh ? '支援與合作' : 'Support & Collab'}</span>
                     <div class="flex flex-col gap-2">
                         <a href="${resolve('students.html')}" class="flex items-center justify-between py-3.5 px-5 bg-cyan-50/50 border border-cyan-100 rounded-2xl hover:bg-cyan-100 hover:text-cyan-700 transition-all">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-graduation-cap text-cyan-600"></i>
-                                <span class="text-sm font-bold text-cyan-900">課程購買與使用指南</span>
+                                <span class="text-sm font-bold text-cyan-900">${isZh ? '課程購買與使用指南' : 'Student Guide'}</span>
                             </div>
                         </a>
                         <a href="${resolve('tutors.html')}" class="flex items-center justify-between py-3.5 px-5 bg-indigo-50/30 border border-indigo-100/50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-handshake text-indigo-600"></i>
-                                <span class="text-sm font-bold text-indigo-900">專業導師與合作洽談</span>
+                                <span class="text-sm font-bold text-indigo-900">${isZh ? '專業導師與合作洽談' : 'Tutor Guide'}</span>
                             </div>
                         </a>
                         <a href="${resolve('examples/index.html')}" class="flex items-center justify-between py-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 hover:text-slate-700 transition-all">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-display text-slate-600"></i>
-                                <span class="text-sm font-bold text-slate-900">範例程式展示</span>
+                                <span class="text-sm font-bold text-slate-900">${isZh ? '範例程式展示' : 'Examples'}</span>
                             </div>
                         </a>
                     </div>
@@ -532,8 +618,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
         });
     }, 0);
 
-    const uiLocale = detectUiLocale();
-    renderLearningPathMenus(rootPath, DEFAULT_LEARNING_PATHS, uiLocale);
+    renderLearningPathMenus(rootPath, defaultPaths, uiLocale);
     loadLearningPathsDynamic(uiLocale).then((paths) => {
         renderLearningPathMenus(rootPath, paths, uiLocale);
     });
@@ -730,23 +815,24 @@ function initNavComponent() {
         const desktopLogin = document.getElementById('login-btn');
         const mobileUser = document.getElementById('mobile-user-display');
         const mobileLogin = document.getElementById('mobile-login-btn');
-        let resolvedDisplayName = '使用者';
+        const isZh = isZhLocale(detectUiLocale());
+        let resolvedDisplayName = isZh ? '使用者' : 'User';
 
         const updateUI = (userDisplay, loginBtn) => {
             if (!userDisplay || !loginBtn) return;
             if (user) {
                 userDisplay.innerText = resolvedDisplayName;
                 userDisplay.classList.remove('hidden');
-                loginBtn.innerText = '登出';
+                loginBtn.innerText = isZh ? '登出' : 'Logout';
                 loginBtn.onclick = () => auth.signOut();
             } else {
-                userDisplay.innerText = '訪客';
+                userDisplay.innerText = isZh ? '訪客' : 'Guest';
                 if (userDisplay.id === 'user-display') {
                     userDisplay.classList.add('hidden');
                 } else {
                     userDisplay.classList.remove('hidden');
                 }
-                loginBtn.innerText = '登入';
+                loginBtn.innerText = isZh ? '登入' : 'Login';
                 loginBtn.onclick = () => startGoogleLogin();
             }
         };
@@ -758,10 +844,10 @@ function initNavComponent() {
                 resolvedDisplayName = userData.name ||
                     userData.displayName ||
                     user.displayName ||
-                    (user.email ? user.email.split('@')[0] : '使用者');
+                    (user.email ? user.email.split('@')[0] : (isZh ? '使用者' : 'User'));
             } catch (e) {
                 console.warn('[NavComp] Failed to resolve user display name from Firestore:', e);
-                resolvedDisplayName = user.displayName || (user.email ? user.email.split('@')[0] : '使用者');
+                resolvedDisplayName = user.displayName || (user.email ? user.email.split('@')[0] : (isZh ? '使用者' : 'User'));
             }
         }
 

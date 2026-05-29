@@ -229,51 +229,8 @@ All unit files now follow a consistent structure:
 
 ## 4. I18N Content Repo (Runtime Fetching)
 
-> **2026-05-27 決策**：`private_courses_i18n` local mirror 設計已廢除。
-> 課程內容將直接由 functions 在 runtime 從 GitHub content-repo 拉取並進行記憶體快取。
-> 原本的 `scripts/sync_i18n_private_courses.sh` 同步腳本已移除。
-
-### 4.1 Objectives
-
-- Move course content into an external private content repo.
-- Support `zh-TW` and `en` first.
-- Keep current auth/token behavior unchanged.
-- Perform runtime resolution with high performance using memory cache.
-
-### 4.2 External content repo structure
-
-```text
-content-repo/
-  courses/
-    zh-TW/
-      tw-common-*.html
-      tw-car-starter-*.html
-      tw-car-basic-*.html
-      tw-car-advanced-*.html
-    en/
-      en-common-*.html
-      en-car-starter-*.html
-      en-car-basic-*.html
-      en-car-advanced-*.html
-```
-
-Current decision:
-
-- `assignment-guide` and `tutor-guide` are not split into a separate repo area yet.
-- For now they stay hidden inside course content.
-
-### 4.3 Runtime lookup
-
-`serveCourse` resolves content using the following priority (defined in `docs/content-runtime-v2.md`):
-
-1. External repo (`content-repo`) at pinned `contentVersion` (Primary)
-2. Legacy local: `functions/private_courses/<fileName>` (Legacy fallback)
-
-### 4.4 Release / Update flow
-
-1. Update localized HTML in the external `content-repo` (PR -> merge).
-2. Get the commit SHA.
-3. Update `metadata_settings/content_runtime.contentVersion` in Firestore to that SHA.
+> [!NOTE]
+> 本章節多語系（I18N）教材倉庫結構、執行期讀取與發佈更新工作流之說明已抽離，統一集中至 [i18n_progress_audit.md](file:///Users/roverchen/.gemini/antigravity/brain/baad103e-f43a-454f-ade1-5e28f917cf42/i18n_progress_audit.md) 管理與進度追蹤。
 
 ---
 

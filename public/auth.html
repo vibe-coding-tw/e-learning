@@ -71,8 +71,9 @@
             const targetUrl = urlParams.get('url'); // 真實課程網址 (Google Classroom / YouTube)
             const courseId = urlParams.get('id');   // 課程 ID
             const price = urlParams.get('price');   // 價格 (判斷是否為免費課)
+            const lang = urlParams.get('lang') || urlParams.get('locale') || '';
 
-            console.log("[Auth] Verifying params:", { targetUrl, courseId, price });
+            console.log("[Auth] Verifying params:", { targetUrl, courseId, price, lang });
             
             // [MODIFIED] Legacy/Cache Fallback: If URLSearchParams fails (e.g. because of multiple ?)
             if (!targetUrl || !courseId) {
@@ -81,16 +82,18 @@
                 const matchUrl = fullSearch.match(/[?&]url=([^&]*)/);
                 const matchId = fullSearch.match(/[?&]id=([^&]*)/);
                 const matchPrice = fullSearch.match(/[?&]price=([^&]*)/);
+                const matchLang = fullSearch.match(/[?&](?:lang|locale)=([^&]*)/);
                 
                 const fallbackUrl = matchUrl ? decodeURIComponent(matchUrl[1]) : null;
                 const fallbackId = matchId ? matchId[1] : null;
                 const fallbackPrice = matchPrice ? matchPrice[1] : null;
+                const fallbackLang = matchLang ? matchLang[1] : '';
                 
-                console.log("[Auth] Fallback results:", { fallbackUrl, fallbackId, fallbackPrice });
+                console.log("[Auth] Fallback results:", { fallbackUrl, fallbackId, fallbackPrice, fallbackLang });
                 
                 if (fallbackUrl && fallbackId) {
                     // Use fallbacks
-                    proceedWithVerification(fallbackUrl, fallbackId, fallbackPrice, user);
+                    proceedWithVerification(fallbackUrl, fallbackId, fallbackPrice, user, fallbackLang);
                     return;
                 }
             }
@@ -101,11 +104,11 @@
                 return;
             }
             // If we have them, proceed with the main flow
-            proceedWithVerification(targetUrl, courseId, price, user);
+            proceedWithVerification(targetUrl, courseId, price, user, lang);
         }
 
         // Refactored flow to allow fallbacks
-        async function proceedWithVerification(targetUrl, courseId, price, user) {
+        async function proceedWithVerification(targetUrl, courseId, price, user, lang = "") {
             // 2. 付費與免費課程皆需透過後端取得 Token，以通過 serveCourse 的安全檢查
             try {
                 let fileName = "";
@@ -139,6 +142,11 @@
                         finalUrl += `&token=${token}`;
                     } else {
                         finalUrl += `?token=${token}`;
+                    }
+
+                    // Append lang/locale if present
+                    if (lang) {
+                        finalUrl += `&lang=${encodeURIComponent(lang)}`;
                     }
 
                     window.location.replace(finalUrl);
