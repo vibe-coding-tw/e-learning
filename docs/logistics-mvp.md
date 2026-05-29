@@ -111,3 +111,33 @@ Write-back fields:
 - `orders.logisticsMissing`
 - `orders.logisticsRecoveredAt`
 - `orders.logisticsRecoveredSource = "ecpay_batch_tool"`
+
+---
+
+## 8. 多國物流與出貨擴展設計 (International Logistics Expansion Design)
+
+為了讓平台能將教具（如 Vibe Racer 車子平台）銷售至海外，物流架構需由台灣 CVS 超商取貨擴展為支持國際直郵（如 DHL, FedEx, UPS, EMS）的架構。
+
+### 8.1 前端介面調整 (Address Input & Toggle)
+1. **語系/國家偵測**：當用戶將 UI 語系設為非中文（如 `en`）或在結帳頁面選擇非台灣地區收件時，系統自動隱藏「超商電子地圖選擇」按鈕。
+2. **標準英文地址欄位**：切換為顯示標準國際收件地址表單，包含：
+   - 國家/地區 (Country/Region)
+   - 郵遞區號 (Postal/Zip Code)
+   - 州/省/地區 (State/Province/Region)
+   - 城市 (City)
+   - 詳細地址 (Street Address Line 1 & Line 2)
+   - 收件人英文姓名與聯絡國碼電話 (+1, +81...)
+
+### 8.2 國際物流 API 整合 (Logistics Aggregators)
+建議整合 **EasyPost** 或 **Shippo** 物流聚合 API：
+* **即時運費計算**：結帳時前端送出包裹重量與寄送地址，Cloud Functions 透過 EasyPost/Shippo API 取得各家快遞商（如 DHL, EMS）的即時報價，並將運費（Shipping Fee）累加至結帳總額。
+* **自動運單與報關生成**：付款完成後，系統會自動在 Shippo/EasyPost 購買對應運單，並生成報關所需之 Commercial Invoice (商業發票) 與郵貼 PDF 供後台出貨列印。
+
+### 8.3 資料庫擴充
+在 `orders.logistics` 欄位中，擴充以下海外出貨專屬規格：
+- `logistics.isInternational` (boolean): 是否為海外直郵。
+- `logistics.carrier` (string): 承運商（如 `DHL`, `FedEx`, `EMS`）。
+- `logistics.trackingNumber` (string): 國際包裹追蹤號碼。
+- `logistics.shippingFee` (number): 實收海外運費。
+- `logistics.address` (map): 結構化國際地址（含 `country`, `state`, `city`, `postalCode`, `line1`, `line2`）。
+
