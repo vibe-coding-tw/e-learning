@@ -5864,6 +5864,23 @@ exports.submitTutorCoachingLog = onCall(async (request) => {
 });
 
 /**
+ * Normalizes a unit ID to the new template repository naming convention.
+ * e.g., start-01-unit-flexbox-layout -> tw-car-starter-flexbox-layout
+ *       basic-01-unit-drivers-ports -> tw-car-basic-drivers-ports
+ *       adv-01-unit-jpeg-quality -> tw-car-advanced-jpeg-quality
+ *       01-unit-vscode-setup -> tw-common-vscode-setup
+ */
+function normalizeTemplateRepoName(id) {
+    const v = String(id || '').trim();
+    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v;
+    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'tw-car-starter-');
+    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'tw-car-basic-');
+    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'tw-car-advanced-');
+    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'tw-common-');
+    return v;
+}
+
+/**
  * Create a native GitHub repository for a student assignment with a Feedback PR.
  */
 exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async (request) => {
@@ -5916,7 +5933,7 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
 
         // 3. 取得導師配置的 Org 名稱與自訂 Token（若無，預設使用 vibe-coding-classroom 與系統 Token）
         let targetOrg = 'vibe-coding-classroom';
-        let templateRepo = normalizedUnitId; // 預設樣板倉庫名稱與單元 ID 相同
+        let templateRepo = normalizeTemplateRepoName(normalizedUnitId); // 預設樣板倉庫名稱與單元 ID 相同
         let customToken = null;
 
         const tutorEmail = access.assignedTutorEmail;
@@ -5950,7 +5967,8 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
 
         // 5. 調用 API Helper 進行創庫、加人、開 PR 流程
         const ghHelper = new GitHubAPIHelper(token);
-        const newRepoName = `${normalizedUnitId}-${uid.substring(0, 8)}`; // 例：tw-common-vscode-setup-abc12345
+        const effectiveUnitName = normalizeTemplateRepoName(normalizedUnitId);
+        const newRepoName = `${effectiveUnitName}-${uid.substring(0, 8)}`; // 例：tw-common-vscode-setup-abc12345
 
         console.log(`[createStudentRepository] Creating repo ${newRepoName} from template ${templateRepo} in org ${targetOrg}...`);
         const studentRepo = await ghHelper.createRepoFromTemplate(targetOrg, templateRepo, newRepoName, true);
