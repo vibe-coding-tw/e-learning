@@ -16,9 +16,10 @@
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #4f46e5; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
+    <script src="./js/i18n-helper.bf37f53ad609.js"></script>
 </head>
 
-<body class="gradient-bg min-h-screen flex items-center justify-center p-6">
+<body class="gradient-bg min-h-screen flex items-center justify-center p-6" data-i18n-doc-title="doc_title_login">
 
     <div class="w-full max-w-md">
         <!-- Logo Branding -->
@@ -30,12 +31,12 @@
 
         <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
             <div class="space-y-6">
-                <h2 class="text-2xl font-bold text-slate-800 text-center">使用 Google 帳號登入</h2>
-                <p class="text-sm text-slate-500 text-center">系統授權與課程存取統一使用 Google 帳號。</p>
+                <h2 class="text-2xl font-bold text-slate-800 text-center" data-i18n="login_card_title">使用 Google 帳號登入</h2>
+                <p class="text-sm text-slate-500 text-center" data-i18n="login_card_desc">系統授權與課程存取統一使用 Google 帳號。</p>
                 <div id="error-msg" class="text-red-500 text-sm italic px-1 hidden text-center"></div>
 
                 <button type="button" id="google-login-btn" class="w-full bg-white border border-slate-300 text-slate-800 font-bold py-4 rounded-2xl shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
-                    <span id="btn-text">使用 Google 登入</span>
+                    <span id="btn-text" data-i18n="login_google_btn">使用 Google 登入</span>
                     <div id="btn-loader" class="loader"></div>
                 </button>
             </div>
@@ -43,7 +44,7 @@
 
         <!-- Back Link -->
         <div class="text-center mt-8">
-            <a href="index.html" class="text-slate-400 hover:text-indigo-600 text-sm font-medium transition-colors">
+            <a href="index.html" class="text-slate-400 hover:text-indigo-600 text-sm font-medium transition-colors" data-i18n="login_back_home">
                 ← 返回首頁 (Back to Home)
             </a>
         </div>
@@ -92,7 +93,7 @@
             } catch (error) {
                 console.error(error);
                 errorMsg.classList.remove('hidden');
-                errorMsg.innerText = `Google 登入失敗：${error.code || error.message}`;
+                errorMsg.innerText = `${window.t('login_failed_text', 'Google 登入失敗：')}${error.code || error.message}`;
             } finally {
                 btnText.style.opacity = '1';
                 btnLoader.style.display = 'none';
@@ -107,15 +108,15 @@
             const submitBtn = document.getElementById('google-login-btn');
             try {
                 sessionStorage.setItem(AUTO_LOGIN_KEY, String(Date.now()));
-                btnText.textContent = '正在前往 Google...';
+                btnText.textContent = window.t('login_redirect_text', '正在前往 Google...');
                 btnLoader.style.display = 'block';
                 submitBtn.disabled = true;
                 await signInWithRedirect(auth, new GoogleAuthProvider());
             } catch (error) {
                 console.error(error);
                 errorMsg.classList.remove('hidden');
-                errorMsg.innerText = "無法自動跳轉 Google，請點擊下方按鈕登入。";
-                btnText.textContent = '使用 Google 登入';
+                errorMsg.innerText = window.t('login_redirect_error', "無法自動跳轉 Google，請點擊下方按鈕登入。");
+                btnText.textContent = window.t('login_google_btn', '使用 Google 登入');
                 btnLoader.style.display = 'none';
                 submitBtn.disabled = false;
             }
@@ -128,7 +129,7 @@
             } catch (error) {
                 console.error(error);
                 errorMsg.classList.remove('hidden');
-                errorMsg.innerText = "Google 登入流程中斷，請再試一次。";
+                errorMsg.innerText = window.t('login_interrupt_text', "Google 登入流程中斷，請再試一次。");
             }
 
             onAuthStateChanged(auth, async (user) => {
@@ -142,7 +143,7 @@
                 if (isLocalDev()) {
                     const hint = document.querySelector('p.text-sm.text-slate-500');
                     if (hint) {
-                        hint.textContent = '本地模擬器模式：請點擊下方按鈕，在彈出視窗完成 Google 登入。';
+                        hint.textContent = window.t('login_card_desc_emulator', '本地模擬器模式：請點擊下方按鈕，在彈出視窗完成 Google 登入。');
                     }
                     return;
                 }
@@ -155,7 +156,7 @@
                     const btnText = document.getElementById('btn-text');
                     const btnLoader = document.getElementById('btn-loader');
                     const submitBtn = document.getElementById('google-login-btn');
-                    btnText.textContent = '使用 Google 登入';
+                    btnText.textContent = window.t('login_google_btn', '使用 Google 登入');
                     btnLoader.style.display = 'none';
                     submitBtn.disabled = false;
                 }

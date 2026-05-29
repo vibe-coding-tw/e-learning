@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
+    <script src="./js/i18n-helper.bf37f53ad609.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -19,7 +20,7 @@
     </style>
 </head>
 
-<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
     <script type="module" src="./js/nav-component.1e95b5b36088.js"></script>
     
@@ -28,49 +29,51 @@
         <div class="container mx-auto px-6 max-w-4xl">
             <div class="glass-card p-8 rounded-[3rem] shadow-2xl shadow-indigo-100/50">
                 <h2 class="text-4xl font-extrabold text-slate-900 mb-8 flex items-center gap-4">
-                    <i class="fa-solid fa-cart-shopping text-indigo-600"></i> 待結帳項目
+                    <i class="fa-solid fa-cart-shopping text-indigo-600"></i> <span data-i18n="cart_header_title">待結帳項目</span>
                 </h2>
 
             <div id="auth-error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
                 role="alert">
-                <p class="font-bold">登入失敗通知</p>
-                <p id="error-details">您的登入嘗試失敗，原因可能為瀏覽器阻擋。我們已切換到「頁面重新導向」方式，請重新點擊登入。</p>
+                <p class="font-bold" data-i18n="login_fail_title">登入失敗通知</p>
+                <p id="error-details" data-i18n="login_fail_desc">您的登入嘗試失敗，原因可能為瀏覽器阻擋。我們已切換到「頁面重新導向」方式，請重新點擊登入。</p>
             </div>
 
             <div id="cart-prefill-status" class="hidden rounded-lg border px-4 py-3 mb-4 text-sm"></div>
 
             <div id="unpaid-items" class="space-y-4">
             </div>
-            <p id="empty-cart-msg" class="text-gray-500 italic text-center pt-4">購物車是空的！請回到課程頁面選購。</p>
+            <p id="empty-cart-msg" class="text-gray-500 italic text-center pt-4" data-i18n="empty_cart_msg">購物車是空的！請回到課程頁面選購。</p>
 
             <div id="cart-summary" class="mt-8 pt-4 border-t-2 border-dashed border-gray-200">
                 <div class="flex justify-between items-center text-2xl font-bold text-gray-800">
-                    <span>總金額 (TWD):</span>
+                    <span data-i18n="cart_total_label">總金額 (TWD):</span>
                     <span id="cart-total">0</span>
                 </div>
                 <div id="payment-form-container" class="hidden"></div>
 
                 <!-- [NEW] Shipping Information Section -->
                 <div id="shipping-info-section" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">📦 收件與物流資訊 (實體商品必填)</h3>
+                    <h3 class="text-lg font-bold text-gray-800 mb-3" data-i18n="shipping_info_title">📦 收件與物流資訊 (實體商品必填)</h3>
 
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">收件人姓名</label>
+                            <label class="block text-sm font-medium text-gray-700" data-i18n="receiver_name_label">收件人姓名</label>
                             <input type="text" id="receiver-name"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2"
+                                data-i18n-placeholder="receiver_name_placeholder"
                                 placeholder="請輸入真實姓名 (需核對證件)">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">收件人手機</label>
+                            <label class="block text-sm font-medium text-gray-700" data-i18n="receiver_phone_label">收件人手機</label>
                             <input type="tel" id="receiver-phone"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2"
+                                data-i18n-placeholder="receiver_phone_placeholder"
                                 placeholder="09xxxxxxxx">
                         </div>
 
                         <div class="pt-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">取貨門市</label>
-                            <div id="store-display" class="bg-white p-3 border rounded-md mb-2 text-sm text-gray-600">
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="pickup_store_label">取貨門市</label>
+                            <div id="store-display" class="bg-white p-3 border rounded-md mb-2 text-sm text-gray-600" data-i18n="store_display_placeholder">
                                 尚未選擇門市
                             </div>
                             <input type="hidden" id="store-id">
@@ -79,16 +82,16 @@
 
                             <div class="flex gap-2">
                                 <button onclick="openMap('UNIMARTC2C')"
-                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">選擇
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_711">選擇
                                     7-11</button>
                                 <button onclick="openMap('FAMIC2C')"
-                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">選擇
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_fami">選擇
                                     全家</button>
                                 <button onclick="openMap('HILIFEC2C')"
-                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">選擇
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_hilife">選擇
                                     萊爾富</button>
                                 <button onclick="openMap('OKMARTC2C')"
-                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">選擇
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_ok">選擇
                                     OK</button>
                             </div>
                         </div>
@@ -97,7 +100,7 @@
 
                 <button id="checkout-btn"
                     class="w-full mt-10 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold py-5 rounded-2xl shadow-xl shadow-indigo-100 transition-all hover:-translate-y-1 disabled:opacity-50 disabled:transform-none"
-                    disabled>
+                    disabled data-i18n="checkout_btn_pay">
                     💳 前往付款
                 </button>
             </div>
@@ -332,15 +335,18 @@
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bg-white/50 p-6 rounded-[2rem] border border-slate-200 shadow-sm mb-4';
+                const codeLabel = window.t('cart_item_code', '產品代號: {id}').replace('{id}', id);
+                const removeLabel = window.t('cart_item_remove', '移除');
+                const currencyUnit = window.t('currency_unit', '元');
                 itemDiv.innerHTML = `
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0 flex-1">
                             <p class="font-semibold text-gray-800">${item.name}</p>
-                            <p class="text-xs text-gray-500">產品代號: ${id}</p>
+                            <p class="text-xs text-gray-500">${codeLabel}</p>
                         </div>
                         <div class="text-right shrink-0">
-                             <p class="font-bold text-indigo-600">${itemTotal.toLocaleString()} 元</p>
-                             <button class="remove-cart-item-btn text-sm text-rose-500 hover:text-rose-600 mt-2" data-product-id="${id}">移除</button>
+                             <p class="font-bold text-indigo-600">${itemTotal.toLocaleString()} ${currencyUnit}</p>
+                             <button class="remove-cart-item-btn text-sm text-rose-500 hover:text-rose-600 mt-2" data-product-id="${id}">${removeLabel}</button>
                         </div>
                     </div>
                 `;
@@ -451,7 +457,7 @@
                 mapForm.submit();
             } catch (error) {
                 console.error("開啟地圖失敗:", error);
-                alert("開啟電子地圖失敗，請稍後再試。");
+                alert(window.t('alert_map_failed', "開啟電子地圖失敗，請稍後再試。"));
             }
         };
 
@@ -496,7 +502,7 @@
                     inputElement.value = cart[targetItemId]?.referralLink || '';
                 }
                 if (statusElement) {
-                    statusElement.textContent = '未變更綁定：可先留白，或輸入有效 GitHub 專屬作業連結再套用。';
+                    statusElement.textContent = window.t('referral_unchanged', '未變更綁定：可先留白，或輸入有效 GitHub 專屬作業連結再套用。');
                     statusElement.className = 'item-promo-status mt-2 text-sm text-slate-500';
                     statusElement.classList.remove('hidden');
                 }
@@ -505,7 +511,7 @@
             if (isUrl) {
                 const normalizedInvite = normalizeClassroomInviteUrl(normalizedCode);
                 if (!isClassroomInviteUrl(normalizedInvite)) {
-                    const msg = '連結格式錯誤，請使用 GitHub 專屬作業連結：https://classroom.github.com/a/xxxxx';
+                    const msg = window.t('referral_url_invalid', '連結格式錯誤，請使用 GitHub 專屬作業連結：https://classroom.github.com/a/xxxxx');
                     if (statusElement) {
                         statusElement.textContent = `❌ ${msg}`;
                         statusElement.className = 'item-promo-status mt-2 text-sm text-red-600';
@@ -521,7 +527,7 @@
             if (inputElement) inputElement.value = normalizedCode;
             if (buttonElement) {
                 buttonElement.disabled = true;
-                buttonElement.textContent = '驗證中...';
+                buttonElement.textContent = window.t('referral_verification_loading', '驗證中...');
             }
             if (statusElement) statusElement.classList.add('hidden');
 
@@ -538,10 +544,10 @@
                     const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
                     const resolvedItemId = await resolveReferralTargetItemId(cart, result.data.courseId);
                     if (!resolvedItemId) {
-                        throw new Error('此老師作業連結對應的課程/單元不在目前購物車中');
+                        throw new Error(window.t('referral_item_not_in_cart', '此老師作業連結對應的課程/單元不在目前購物車中'));
                     }
                     if (targetItemId && resolvedItemId !== targetItemId) {
-                        throw new Error('此老師作業連結不屬於目前這個課程項目');
+                        throw new Error(window.t('referral_item_mismatch', '此老師作業連結不屬於目前這個課程項目'));
                     }
 
                     const finalItemId = targetItemId || resolvedItemId;
@@ -558,7 +564,7 @@
                     renderCartItems();
 
                     if (statusElement) {
-                        const successMsg = `✅ 已套用老師作業連結：${result.data.referredTutorName || result.data.referredTutorEmail}`;
+                        const successMsg = window.t('referral_applied_success', '✅ 已套用老師作業連結：{name}').replace('{name}', result.data.referredTutorName || result.data.referredTutorEmail);
                         statusElement.textContent = successMsg;
                         statusElement.className = 'item-promo-status mt-2 text-sm text-green-600 font-bold';
                     }
@@ -584,7 +590,7 @@
                 }
                 if (buttonElement) {
                     buttonElement.disabled = false;
-                    buttonElement.textContent = '套用連結';
+                    buttonElement.textContent = window.t('referral_btn_apply', '套用連結');
                 }
             }
         }
@@ -604,7 +610,7 @@
             const fallbackPhysical = params.get('isPhysical') === 'true';
 
             if (!courseId) {
-                setPrefillStatus('推薦連結缺少課程資訊，無法自動加入購物車。', 'error');
+                setPrefillStatus(window.t('prefill_invite_missing', '推薦連結缺少課程資訊，無法自動加入購物車。'), 'error');
                 return;
             }
 
@@ -631,10 +637,10 @@
             checkPhysicalItems();
 
             let statusMessage = itemAdded
-                ? `已將「${productName}」加入購物車，您可以直接前往結帳。`
-                : `「${productName}」原本已在購物車中，已保留現有品項。`;
+                ? window.t('prefill_invite_added', '已將「{name}」加入購物車，您可以直接前往結帳。').replace('{name}', productName)
+                : window.t('prefill_invite_exists', '「{name}」原本已在購物車中，已保留現有品項。').replace('{name}', productName);
 
-            if (referralLink) statusMessage += '（已忽略推薦碼/連結參數，綁定導師請在作業頁輸入 Promotion code）';
+            if (referralLink) statusMessage += window.t('prefill_invite_referral_ignored', '（已忽略推薦碼/連結參數，綁定導師請在作業頁輸入 Promotion code）');
 
             setPrefillStatus(statusMessage, 'success');
 
@@ -668,12 +674,12 @@
             const loginBtn = document.getElementById('login-btn');
 
             if (user) {
-                userDisplay.textContent = `您好, ${user.displayName || user.email}`;
-                loginBtn.textContent = '登出';
+                userDisplay.textContent = window.t('user_hello', '您好, {user}').replace('{user}', user.displayName || user.email);
+                loginBtn.textContent = window.t('nav_logout', '登出');
                 loginBtn.onclick = handleLogout;
             } else {
-                userDisplay.textContent = '訪客模式';
-                loginBtn.textContent = '登入 / 註冊';
+                userDisplay.textContent = window.t('user_guest', '訪客模式');
+                loginBtn.textContent = window.t('nav_login', '登入 / 註冊');
                 loginBtn.onclick = handleLogin;
             }
         });
@@ -689,12 +695,12 @@
             const total = parseInt(totalText);
 
             if (total <= 0) {
-                alert("購物車為空，無法結帳。");
+                alert(window.t('alert_cart_empty', "購物車為空，無法結帳。"));
                 return;
             }
 
             if (!auth.currentUser) {
-                alert("請先登入才能進行付款！請點擊右上角按鈕登入。");
+                alert(window.t('alert_login_required', "請先登入才能進行付款！請點擊右上角按鈕登入。"));
                 return;
             }
 
@@ -722,7 +728,7 @@
                 const sId = storeIdInput.value;
 
                 if (!rName || !rPhone || !sId) {
-                    alert('請完整填寫收件人姓名、手機並選擇取貨門市！');
+                    alert(window.t('alert_shipping_required', '請完整填寫收件人姓名、手機並選擇取貨門市！'));
                     return;
                 }
                 logisticsInfo = {
@@ -735,7 +741,7 @@
             }
 
             checkoutBtn.disabled = true;
-            checkoutBtn.textContent = '🔒 正在連接綠界金流...';
+            checkoutBtn.textContent = window.t('checkout_btn_ecpay', '🔒 正在連接綠界金流...');
 
             try {
                 const response = await initiatePayment({
@@ -753,19 +759,19 @@
 
                 if (data && data.paymentParams) {
                     console.log("取得綠界參數成功，正在跳轉...");
-                    checkoutBtn.textContent = '🚀 前往付款頁面...';
+                    checkoutBtn.textContent = window.t('checkout_btn_redirect', '🚀 前往付款頁面...');
 
                     // 執行綠界表單提交
                     submitECPayForm(data.paymentParams, data.apiUrl);
                 } else {
-                    throw new Error('無法取得交易參數。');
+                    throw new Error(window.t('alert_checkout_failed', '結帳失敗：') + '無法取得交易參數。');
                 }
 
             } catch (error) {
                 console.error("結帳失敗:", error);
-                alert(`結帳失敗：${error.message}`);
+                alert(window.t('alert_checkout_failed', '結帳失敗：') + error.message);
                 checkoutBtn.disabled = false;
-                checkoutBtn.textContent = '💳 前往付款';
+                checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
             }
         }
 

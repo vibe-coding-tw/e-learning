@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>付款結果 - Vibe Coding</title>
+    <script src="./js/i18n-helper.bf37f53ad609.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
@@ -23,20 +24,9 @@
     </style>
 </head>
 
-<body class="bg-gray-50 min-h-screen flex flex-col">
-    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
-                    <span>🚀</span> Vibe Coding
-                </a>
-                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <a href="learning-path.html?path=tw-car-starter" class="hover:text-cyan-600">開始上課</a>
-                    <a href="students.html" class="hover:text-cyan-600">常見問題</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+<body class="bg-gray-50 min-h-screen flex flex-col" data-i18n-doc-title="doc_title_payment_return">
+    <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
+    <script type="module" src="./js/nav-component.1e95b5b36088.js"></script>
 
     <main class="flex-grow flex items-center justify-center p-6">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full text-center border-t-8 border-green-500">
@@ -49,29 +39,28 @@
                 </div>
             </div>
 
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">付款成功！</h1>
-            <p class="text-gray-500 mb-6">感謝您的購買，您的課程權限已開通。</p>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2" data-i18n="pay_success_header">付款成功！</h1>
+            <p class="text-gray-500 mb-6" data-i18n="pay_success_desc">感謝您的購買，您的課程權限已開通。</p>
 
             <div class="bg-gray-50 rounded-lg p-4 mb-8 text-left text-sm text-gray-600 border border-gray-100">
-                <p class="mb-2"><strong>訂單狀態：</strong> <span class="text-green-600 font-bold">已付款</span></p>
-                <p class="mb-2"><strong>下一步：</strong> 您現在可以前往課程頁面開始學習。</p>
-                <p><strong>注意：</strong> 若您剛完成付款，權限開通可能需要 1-2 分鐘的系統處理時間。</p>
+                <p class="mb-2"><strong data-i18n="pay_order_status_label">訂單狀態：</strong> <span class="text-green-600 font-bold" data-i18n="pay_order_status_paid">已付款</span></p>
+                <p class="mb-2"><strong data-i18n="pay_next_step_label">下一步：</strong> <span data-i18n="pay_next_step_desc">您現在可以前往課程頁面開始學習。</span></p>
+                <p><strong data-i18n="pay_note_label">注意：</strong> <span data-i18n="pay_note_desc">若您剛完成付款，權限開通可能需要 1-2 分鐘的系統處理時間。</span></p>
             </div>
 
             <div class="space-y-3">
-                <a href="learning-path.html?path=tw-car-starter" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg hover:shadow-xl">
+                <a id="btn-start-learning" href="learning-path.html?path=tw-car-starter" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg hover:shadow-xl" data-i18n="pay_btn_start">
                     🎓 立即開始上課
                 </a>
-                <a href="index.html" class="block w-full bg-white hover:bg-gray-50 text-gray-600 font-bold py-3 rounded-lg border border-gray-200 transition">
+                <a href="index.html" class="block w-full bg-white hover:bg-gray-50 text-gray-600 font-bold py-3 rounded-lg border border-gray-200 transition" data-i18n="pay_btn_home">
                     回首頁
                 </a>
             </div>
         </div>
     </main>
 
-    <footer class="bg-gray-800 py-6 text-center text-gray-400 text-sm">
-        &copy; 2025 Vibe Coding. All rights reserved.
-    </footer>
+    <div id="footer-placeholder" data-root="."></div>
+    <script src="./js/footer-component.592aaceeda6b.js"></script>
 
     <script type="module">
         // 1. 匯入 Firebase (僅用於監聽登入狀態以更新 UI，非必要可省略，但為了體驗一致性建議保留)
@@ -87,11 +76,14 @@
         // ==========================================
         // 核心邏輯：清空購物車
         // ==========================================
+        // ==========================================
+        // 核心邏輯：清空購物車
+        // ==========================================
         function clearCart() {
             // 檢查是否還有購物車資料
             const cart = localStorage.getItem('vibeCodingCart');
             if (cart) {
-                console.log("付款完成，正在清空本地購物車...");
+                console.log(window.t('pay_clearing_cart_log', "付款完成，正在清空本地購物車..."));
                 localStorage.removeItem('vibeCodingCart');
             }
         }
@@ -100,20 +92,28 @@
         window.addEventListener('DOMContentLoaded', () => {
             clearCart();
             
+            // 根據目前語系動態設定開始上課按鈕的路徑
+            const startBtn = document.getElementById('btn-start-learning');
+            if (startBtn) {
+                const storedLocale = localStorage.getItem('vibe_user_locale') || '';
+                const isEn = storedLocale.startsWith('en');
+                startBtn.href = `learning-path.html?path=${isEn ? 'en' : 'tw'}-car-starter`;
+            }
+
             // 檢查網址參數 (綠界可能會帶參數回來，例如 RtnCode)
             const urlParams = new URLSearchParams(window.location.search);
             const rtnCode = urlParams.get('RtnCode');
             const rtnMsg = urlParams.get('RtnMsg');
             
-            // 簡單的錯誤處理 (如果綠界顯示交易失敗但還是導回來這裡)
+            // 簡單的錯誤處理 (如果逆向顯示交易失敗但還是導回來這裡)
             // 注意：RtnCode 1 代表成功
             if (rtnCode && rtnCode !== '1') {
-                document.querySelector('h1').textContent = '付款處理異常';
+                document.querySelector('h1').textContent = window.t('pay_failed_header', '付款處理異常');
                 document.querySelector('h1').classList.replace('text-gray-800', 'text-red-600');
                 document.querySelector('.check-icon').classList.replace('bg-green-100', 'bg-red-100');
                 document.querySelector('.check-icon svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>';
                 document.querySelector('.check-icon svg').classList.replace('text-green-600', 'text-red-600');
-                document.querySelector('p.text-gray-500').textContent = `錯誤代碼: ${rtnMsg || '未知錯誤'}，請聯絡客服。`;
+                document.querySelector('p.text-gray-500').textContent = window.t('pay_failed_desc', '錯誤代碼: {msg}，請聯絡客服。').replace('{msg}', rtnMsg || 'Unknown error');
             }
         });
     </script>
