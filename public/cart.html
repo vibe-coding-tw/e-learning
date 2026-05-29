@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.bf37f53ad609.js"></script>
+    <script src="./js/i18n-helper.7a8a2ac301d4.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -71,7 +71,8 @@
                                 placeholder="09xxxxxxxx">
                         </div>
 
-                        <div class="pt-2">
+                        <!-- CVS Shipping Fields -->
+                        <div id="cvs-shipping-container" class="pt-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="pickup_store_label">取貨門市</label>
                             <div id="store-display" class="bg-white p-3 border rounded-md mb-2 text-sm text-gray-600" data-i18n="store_display_placeholder">
                                 尚未選擇門市
@@ -93,6 +94,46 @@
                                 <button onclick="openMap('OKMARTC2C')"
                                     class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_ok">選擇
                                     OK</button>
+                            </div>
+                        </div>
+
+                        <!-- International Shipping Fields -->
+                        <div id="intl-shipping-container" class="hidden space-y-3 pt-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">國家 / 地區 (Country / Region)</label>
+                                <select id="shipping-country" class="mt-1 block w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700">
+                                    <option value="">-- 選擇國家 Select Country --</option>
+                                    <option value="US">美國 (United States)</option>
+                                    <option value="CA">加拿大 (Canada)</option>
+                                    <option value="JP">日本 (Japan)</option>
+                                    <option value="SG">新加坡 (Singapore)</option>
+                                    <option value="HK">香港 (Hong Kong)</option>
+                                    <option value="MY">馬來西亞 (Malaysia)</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">州 / 省 (State / Province)</label>
+                                    <input type="text" id="shipping-state" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. CA">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">城市 (City)</label>
+                                    <input type="text" id="shipping-city" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. San Jose">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700">詳細地址 1 (Address Line 1)</label>
+                                    <input type="text" id="shipping-line1" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="Street address, P.O. box">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">郵遞區號 (ZIP / Postal Code)</label>
+                                    <input type="text" id="shipping-zip" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. 95125">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">詳細地址 2 (Address Line 2 - 選填 Optional)</label>
+                                <input type="text" id="shipping-line2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="Apartment, suite, unit, building, floor, etc.">
                             </div>
                         </div>
                     </div>
@@ -315,6 +356,7 @@
         function renderCartItems() {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             let total = 0;
+            let hasPhysical = false;
 
             unpaidItemsContainer.innerHTML = '';
 
@@ -327,17 +369,25 @@
                 emptyMsg.style.display = 'none';
             }
 
+            const storedLocale = localStorage.getItem('vibe_user_locale') || '';
+            const isEn = storedLocale.startsWith('en');
+
             for (const [id, item] of Object.entries(cart)) {
-                const price = parseFloat(item.price) || 0;
+                const price = isEn 
+                    ? (item.price_usd || Math.ceil((item.price || 0) / 30))
+                    : (parseFloat(item.price) || 0);
                 const quantity = parseInt(item.quantity) || 1;
                 const itemTotal = price * quantity;
                 total += itemTotal;
+                if (item.isPhysical) {
+                    hasPhysical = true;
+                }
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bg-white/50 p-6 rounded-[2rem] border border-slate-200 shadow-sm mb-4';
                 const codeLabel = window.t('cart_item_code', '產品代號: {id}').replace('{id}', id);
                 const removeLabel = window.t('cart_item_remove', '移除');
-                const currencyUnit = window.t('currency_unit', '元');
+                const currencyUnit = window.t('currency_unit', isEn ? 'USD' : '元');
                 itemDiv.innerHTML = `
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0 flex-1">
@@ -353,7 +403,16 @@
                 unpaidItemsContainer.appendChild(itemDiv);
             }
 
-            cartTotalElement.textContent = total.toLocaleString();
+            let shippingFeeText = '';
+            if (hasPhysical) {
+                const shippingFee = isEn ? 15 : 450;
+                total += shippingFee;
+                const feeUnit = isEn ? 'USD' : '元';
+                shippingFeeText = ` (含運費 ${shippingFee.toLocaleString()} ${feeUnit})`;
+            }
+
+            const mainCurrencyUnit = isEn ? 'USD' : '';
+            cartTotalElement.textContent = `${total.toLocaleString()} ${mainCurrencyUnit}${shippingFeeText}`;
             checkoutBtn.disabled = (total === 0);
 
             document.querySelectorAll('.remove-cart-item-btn').forEach(button => {
@@ -390,6 +449,19 @@
 
             if (hasPhysical) {
                 shippingSection.classList.remove('hidden');
+                
+                const storedLocale = localStorage.getItem('vibe_user_locale') || '';
+                const isEn = storedLocale.startsWith('en');
+                const cvsContainer = document.getElementById('cvs-shipping-container');
+                const intlContainer = document.getElementById('intl-shipping-container');
+                
+                if (isEn) {
+                    if (cvsContainer) cvsContainer.classList.add('hidden');
+                    if (intlContainer) intlContainer.classList.remove('hidden');
+                } else {
+                    if (cvsContainer) cvsContainer.classList.remove('hidden');
+                    if (intlContainer) intlContainer.classList.add('hidden');
+                }
             } else {
                 shippingSection.classList.add('hidden');
             }
@@ -691,10 +763,8 @@
         // ===============================================
 
         checkoutBtn.addEventListener('click', () => {
-            const totalText = cartTotalElement.textContent.replace(/,/g, '').trim();
-            const total = parseInt(totalText);
-
-            if (total <= 0) {
+            const cartItems = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+            if (Object.keys(cartItems).length === 0) {
                 alert(window.t('alert_cart_empty', "購物車為空，無法結帳。"));
                 return;
             }
@@ -704,19 +774,18 @@
                 return;
             }
 
-            const cartItems = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             const user = auth.currentUser;
-
-            // 呼叫處理新金流 (藍新) 的函式
-            handlePaymentCheckout(user, total, cartItems);
+            handlePaymentCheckout(user, cartItems);
         });
 
         // ... (前面的程式碼不變)
 
         /**
-         * 處理付款結帳流程 (綠界版)
+         * 處理付款結帳流程 (雙通道版：綠界與 Stripe 路由)
          */
-        async function handlePaymentCheckout(user, total, cartItems) {
+        async function handlePaymentCheckout(user, cartItems) {
+            const storedLocale = localStorage.getItem('vibe_user_locale') || '';
+            const isEn = storedLocale.startsWith('en');
 
             // [NEW] 驗證實體商品欄位
             const hasPhysical = checkPhysicalItems();
@@ -725,46 +794,103 @@
             if (hasPhysical) {
                 const rName = receiverNameInput.value.trim();
                 const rPhone = receiverPhoneInput.value.trim();
-                const sId = storeIdInput.value;
 
-                if (!rName || !rPhone || !sId) {
-                    alert(window.t('alert_shipping_required', '請完整填寫收件人姓名、手機並選擇取貨門市！'));
+                if (!rName || !rPhone) {
+                    alert(window.t('alert_shipping_required', '請完整填寫收件人姓名與手機號碼！'));
                     return;
                 }
-                logisticsInfo = {
-                    receiverName: rName,
-                    receiverPhone: rPhone,
-                    storeId: sId,
-                    storeName: storeNameInput.value,
-                    storeAddress: storeAddressInput.value
-                };
+
+                if (isEn) {
+                    const country = document.getElementById('shipping-country').value;
+                    const state = document.getElementById('shipping-state').value.trim();
+                    const city = document.getElementById('shipping-city').value.trim();
+                    const line1 = document.getElementById('shipping-line1').value.trim();
+                    const zip = document.getElementById('shipping-zip').value.trim();
+                    const line2 = document.getElementById('shipping-line2').value.trim();
+
+                    if (!country || !city || !line1 || !zip) {
+                        alert(window.t('alert_intl_address_required', 'Please fill in Country, City, Address Line 1, and ZIP code!'));
+                        return;
+                    }
+
+                    logisticsInfo = {
+                        receiverName: rName,
+                        receiverPhone: rPhone,
+                        isInternational: true,
+                        address: {
+                            country: country,
+                            state: state,
+                            city: city,
+                            line1: line1,
+                            line2: line2,
+                            postalCode: zip
+                        }
+                    };
+                } else {
+                    const sId = storeIdInput.value;
+                    if (!sId) {
+                        alert(window.t('alert_shipping_required', '請選擇取貨門市！'));
+                        return;
+                    }
+                    logisticsInfo = {
+                        receiverName: rName,
+                        receiverPhone: rPhone,
+                        storeId: sId,
+                        storeName: storeNameInput.value,
+                        storeAddress: storeAddressInput.value
+                    };
+                }
+            }
+
+            // 計算結帳金額
+            let calculatedTotal = 0;
+            for (const item of Object.values(cartItems)) {
+                const price = isEn 
+                    ? (item.price_usd || Math.ceil((item.price || 0) / 30))
+                    : (parseFloat(item.price) || 0);
+                const quantity = parseInt(item.quantity) || 1;
+                calculatedTotal += price * quantity;
+            }
+            if (hasPhysical) {
+                calculatedTotal += isEn ? 15 : 450;
             }
 
             checkoutBtn.disabled = true;
-            checkoutBtn.textContent = window.t('checkout_btn_ecpay', '🔒 正在連接綠界金流...');
+            checkoutBtn.textContent = isEn 
+                ? '🔒 Connecting to payment gateway...' 
+                : window.t('checkout_btn_ecpay', '🔒 正在連接綠界金流...');
 
             try {
                 const response = await initiatePayment({
-                    amount: total,
+                    amount: calculatedTotal,
                     userId: user.uid,
                     cartDetails: cartItems,
                     logistics: logisticsInfo,
                     referralLink: null,
                     referredTutorEmail: null,
+                    gateway: isEn ? "STRIPE" : "ECPAY",
+                    locale: isEn ? "en" : "zh-TW",
                     // 設定交易完成後的返回網址
                     returnUrl: window.location.origin + '/payment-return.html'
                 });
 
                 const data = response.data;
 
-                if (data && data.paymentParams) {
-                    console.log("取得綠界參數成功，正在跳轉...");
-                    checkoutBtn.textContent = window.t('checkout_btn_redirect', '🚀 前往付款頁面...');
-
-                    // 執行綠界表單提交
-                    submitECPayForm(data.paymentParams, data.apiUrl);
+                if (data && data.result) {
+                    const resData = data.result;
+                    if (resData.gateway === "STRIPE") {
+                        console.log("Stripe Checkout URL received, redirecting...");
+                        checkoutBtn.textContent = '🚀 Redirecting to Stripe...';
+                        window.location.href = resData.sessionUrl;
+                    } else if (resData.paymentParams) {
+                        console.log("取得綠界參數成功，正在跳轉...");
+                        checkoutBtn.textContent = window.t('checkout_btn_redirect', '🚀 前往付款頁面...');
+                        submitECPayForm(resData.paymentParams, resData.apiUrl);
+                    } else {
+                        throw new Error('無法取得交易參數。');
+                    }
                 } else {
-                    throw new Error(window.t('alert_checkout_failed', '結帳失敗：') + '無法取得交易參數。');
+                    throw new Error('金流伺服器回傳格式不正確。');
                 }
 
             } catch (error) {

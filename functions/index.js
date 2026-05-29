@@ -442,7 +442,9 @@ exports.initiatePayment = onRequest(async (req, res) => {
             referralLink = '',
             referredTutorEmail = '',
             promoCode = '',
-            referralTutor = ''
+            referralTutor = '',
+            gateway,
+            locale
         } = requestData;
 
         // 簡易 Token 驗證
@@ -504,22 +506,153 @@ exports.initiatePayment = onRequest(async (req, res) => {
             return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
         });
 
+        let logisticsPayload = (logistics && typeof logistics === 'object') ? logistics : {};
         if (hasPhysicalItem) {
-            const logisticsPayload = (logistics && typeof logistics === 'object') ? logistics : {};
             const receiverName = String(logisticsPayload.receiverName || logisticsPayload.ReceiverName || '').trim();
             const receiverPhone = String(logisticsPayload.receiverPhone || logisticsPayload.ReceiverCellPhone || logisticsPayload.ReceiverPhone || '').trim();
             const shippingAddress = String(logisticsPayload.storeAddress || logisticsPayload.CVSAddress || logisticsPayload.ReceiverAddress || '').trim();
             const storeId = String(logisticsPayload.storeId || logisticsPayload.CVSStoreID || '').trim();
 
-            if (!receiverName || !receiverPhone || (!shippingAddress && !storeId)) {
+            const hasIntlAddress = logisticsPayload.isInternational === true && (
+                logisticsPayload.address &&
+                logisticsPayload.address.country &&
+                logisticsPayload.address.city &&
+                logisticsPayload.address.line1
+            );
+
+            if (!receiverName || !receiverPhone || (!shippingAddress && !storeId && !hasIntlAddress)) {
                 return res.status(400).json({
                     error: {
-                        message: "實體商品訂單缺少完整物流資訊（收件人、電話、門市/地址）。"
+                        message: "實體商品訂單缺少完整物流資訊（收件人、電話、門市/地址/國家）。"
                     }
                 });
             }
         }
 
+        const isStripe = (gateway === 'STRIPE' || locale === 'en');
+
+        if (isStripe) {
+            const stripeKey = process.env.STRIPE_SECRET_KEY;
+            if (!stripeKey) {
+                return res.status(500).json({
+                    error: {
+                        message: "Stripe configuration is missing (STRIPE_SECRET_KEY)."
+                    }
+                });
+            }
+            const stripe = require('stripe')(stripeKey);
+
+            let usdAmount = 0;
+            let hasPhysical = false;
+
+            for (const itemKey of Object.keys(normalizedItems)) {
+                const lesson = resolveLessonForOrderItem(itemKey, lessons);
+                const qty = normalizedItems[itemKey].quantity || 1;
+                let priceUsd = 0;
+
+                if (lesson) {
+                    if (lesson.isPhysical) {
+                        hasPhysical = true;
+                    }
+                    priceUsd = Number(lesson.price_usd) || Math.ceil((Number(lesson.price) || 0) / 30);
+                } else {
+                    const itemPrice = Number(normalizedItems[itemKey].price) || 0;
+                    priceUsd = Math.ceil(itemPrice / 30);
+                }
+
+                normalizedItems[itemKey].price_usd = priceUsd;
+                usdAmount += priceUsd * qty;
+            }
+
+            let shippingFeeUsd = 0;
+            if (hasPhysical) {
+                shippingFeeUsd = 15; // 固定海外運費 15 美元
+                if (!logisticsPayload) {
+                    logisticsPayload = {};
+                }
+                logisticsPayload.shippingFee = shippingFeeUsd;
+                logisticsPayload.isInternational = true;
+            }
+
+            const finalAmountUsd = usdAmount + shippingFeeUsd;
+
+            // 建立訂單內容記錄 (Firestore)
+            await admin.firestore().collection("orders").doc(orderNumber).set({
+                uid: uid,
+                amount: finalAmountUsd, // USD amount
+                status: "PENDING",
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                items: normalizedItems,
+                logistics: logisticsPayload || null,
+                orderNumber: orderNumber,
+                gateway: "STRIPE",
+                currency: "USD",
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            const lineItems = [];
+            for (const itemKey of Object.keys(normalizedItems)) {
+                const item = normalizedItems[itemKey];
+                lineItems.push({
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: item.name || 'Vibe Coding Course',
+                        },
+                        unit_amount: Math.round(item.price_usd * 100), // cents
+                    },
+                    quantity: item.quantity || 1,
+                });
+            }
+
+            if (shippingFeeUsd > 0) {
+                lineItems.push({
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: 'International Shipping Fee',
+                        },
+                        unit_amount: Math.round(shippingFeeUsd * 100), // cents
+                    },
+                    quantity: 1,
+                });
+            }
+
+            const clientUrl = returnUrl || "https://vibe-coding.tw";
+
+            // Create Stripe Checkout Session
+            const stripeSession = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: lineItems,
+                mode: 'payment',
+                success_url: `${clientUrl}?RtnCode=1&RtnMsg=Succeeded&orderNumber=${orderNumber}`,
+                cancel_url: `${clientUrl}?RtnCode=10000078&RtnMsg=Cancelled&orderNumber=${orderNumber}`,
+                metadata: {
+                    orderNumber: orderNumber,
+                    uid: uid
+                },
+                ...(hasPhysical ? {
+                    shipping_address_collection: {
+                        allowed_countries: ['US', 'CA', 'JP', 'SG', 'HK', 'MY']
+                    }
+                } : {})
+            });
+
+            await admin.firestore().collection("orders").doc(orderNumber).update({
+                stripeSessionId: stripeSession.id,
+                stripePaymentIntentId: stripeSession.payment_intent || null
+            });
+
+            console.log(`建立 Stripe 訂單: ${orderNumber}, Session ID: ${stripeSession.id}`);
+            return res.status(200).json({
+                result: {
+                    gateway: "STRIPE",
+                    sessionUrl: stripeSession.url
+                }
+            });
+        }
+
+        // ECPay 邏輯
         // 建立訂單內容記錄 (Firestore)
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: uid,
@@ -527,7 +660,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
             status: "PENDING",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             items: normalizedItems,
-            logistics: logistics || null,
+            logistics: logisticsPayload || null,
             orderNumber: orderNumber
         });
 
@@ -561,8 +694,6 @@ exports.initiatePayment = onRequest(async (req, res) => {
             ReturnURL: serverUrl,
             OrderResultURL: clientUrl,
             ClientBackURL: clientUrl,
-            ChoosePayment: 'ALL',
-            EncryptType: '1',
             ChoosePayment: 'ALL',
             EncryptType: '1',
         };
@@ -626,8 +757,212 @@ exports.getLogisticsMapParams = onRequest(async (req, res) => {
 });
 
 // ==========================================
-// 2. 接收通知 (paymentNotify)
+// 2. 接收通知與權限開通核心 (Order Activation & Webhook Services)
 // ==========================================
+
+/**
+ * 核心權限開通與 Email 通知流程 (由 ECPay 及 Stripe 成功付款後共用)
+ * @param {string} orderId 訂單編號
+ */
+async function activateOrderPermissionsAndNotify(orderId) {
+    console.log(`[activateOrderPermissionsAndNotify] 開始開通與通知流程, Order: ${orderId}`);
+    const db = admin.firestore();
+    const orderDoc = await db.collection("orders").doc(orderId).get();
+    if (!orderDoc.exists) {
+        console.error(`[activateOrderPermissionsAndNotify] 訂單 ${orderId} 不存在`);
+        return;
+    }
+    const oData = orderDoc.data();
+    const oItems = oData.items || {};
+
+    try {
+        // 1. 課程開通與授權驗證
+        const validationAlerts = [];
+        const activationCheckedItems = [];
+        try {
+            const lessons = await getLessons();
+            for (const itemKey of Object.keys(oItems)) {
+                const lesson = resolveLessonForOrderItem(itemKey, lessons);
+                if (!lesson) {
+                    validationAlerts.push(`Item '${itemKey}' does not map to any canonical course.`);
+                    activationCheckedItems.push({ itemKey, status: "missing-course" });
+                    continue;
+                }
+
+                activationCheckedItems.push({
+                    itemKey,
+                    courseId: getCanonicalLessonIdentity(lesson) || null,
+                    courseKey: lesson.courseKey || null,
+                    isPhysical: lesson.isPhysical === true,
+                    status: "mapped"
+                });
+
+                if (lesson.isPhysical === true) {
+                    activationCheckedItems[activationCheckedItems.length - 1].status = "physical-skipped";
+                    continue;
+                }
+
+                if (!Array.isArray(lesson.courseUnits) || lesson.courseUnits.length === 0) {
+                    validationAlerts.push(`Course '${getCanonicalLessonIdentity(lesson) || lesson.courseId}' has no units defined.`);
+                    activationCheckedItems[activationCheckedItems.length - 1].status = "missing-units";
+                    continue;
+                }
+
+                const firstUnitId = lesson.courseUnits[0];
+                const access = await resolveStudentAssignmentAccess(db, oData.uid, getCanonicalLessonIdentity(lesson), firstUnitId, lessons, false);
+                if (!access.authorized) {
+                    validationAlerts.push(`Student authorization check failed for course '${getCanonicalLessonIdentity(lesson) || lesson.courseId}' / unit '${firstUnitId}': ${access.reason || 'unknown'}`);
+                    activationCheckedItems[activationCheckedItems.length - 1].status = "authorization-failed";
+                    activationCheckedItems[activationCheckedItems.length - 1].reason = access.reason || "unknown";
+                } else {
+                    activationCheckedItems[activationCheckedItems.length - 1].status = "authorized";
+                    activationCheckedItems[activationCheckedItems.length - 1].accessMode = access.accessMode || null;
+                }
+            }
+
+            if (validationAlerts.length > 0) {
+                console.error(`[activateOrderPermissionsAndNotify] Order activation validation failed for order ${orderId}: ${validationAlerts.join('; ')}`);
+                await db.collection("orders").doc(orderId).update({
+                    activationAlerts: validationAlerts,
+                    activationValidated: true,
+                    activationValidationFailed: true,
+                    activationValidationStatus: "failed",
+                    activationCheckedItems,
+                    activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+                const adminEmail = process.env.ADMIN_EMAIL || process.env.MAIL_USER;
+                if (adminEmail) {
+                    await sendAutogradeFailureAlertEmail(
+                        adminEmail,
+                        `Order Activation Failure: ${orderId}`,
+                        { orderId, uid: oData.uid, alerts: validationAlerts }
+                    );
+                }
+            } else {
+                await db.collection("orders").doc(orderId).update({
+                    activationValidated: true,
+                    activationValidationFailed: false,
+                    activationValidationStatus: "passed",
+                    activationCheckedItems,
+                    activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        } catch (valErr) {
+            console.error("[activateOrderPermissionsAndNotify] Order activation validation errored:", valErr);
+            await db.collection("orders").doc(orderId).update({
+                activationValidated: false,
+                activationValidationFailed: true,
+                activationValidationStatus: "error",
+                activationValidationError: valErr.message || String(valErr),
+                activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        
+        // 2. 老師作業推薦碼/連結反向綁定資訊補回
+        let updatedItems = false;
+        for (const [key, val] of Object.entries(oItems)) {
+            const itemReferralLink = val.referralLink || val.promoCode || null;
+            if (itemReferralLink && !val.referredTutorEmail) {
+                const linkId = Buffer.from(normalizeGitHubUrl(itemReferralLink)).toString('base64');
+                const lDoc = await db.collection('referral_links').doc(linkId).get();
+                if (lDoc.exists) {
+                    oItems[key].referredTutorEmail = lDoc.data().tutorEmail;
+                    oItems[key].referredTutorName = lDoc.data().tutorName || lDoc.data().tutorEmail;
+                    updatedItems = true;
+                }
+            }
+        }
+        if (updatedItems) {
+            await db.collection("orders").doc(orderId).update({ items: oItems });
+            console.log(`[activateOrderPermissionsAndNotify] ✅ Backfilled referred tutor for order ${orderId}`);
+        }
+    } catch (backfillErr) {
+        console.error("[activateOrderPermissionsAndNotify] Backfill failed:", backfillErr);
+    }
+
+    // 3. 物流欄位缺漏檢查與寄送 Email 通知
+    try {
+        const lessons = await getLessons();
+        const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
+        const orderDocFresh = await db.collection("orders").doc(orderId).get();
+        const orderData = orderDocFresh.data();
+        const orderItems = orderData.items || {};
+        const hasPhysicalItem = Object.keys(orderItems).some(id => {
+            const canonicalId = normalizeLegacyId(id);
+            const itemData = orderItems[id] || {};
+            if (itemData.isPhysical === true) return true;
+            return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
+        });
+        const logisticsData = orderData.logistics || {};
+        const hasReceiverName = !!String(logisticsData.receiverName || logisticsData.ReceiverName || '').trim();
+        const hasReceiverPhone = !!String(logisticsData.receiverPhone || logisticsData.ReceiverCellPhone || logisticsData.ReceiverPhone || '').trim();
+        const hasShippingAddress = !!String(logisticsData.storeAddress || logisticsData.CVSAddress || logisticsData.ReceiverAddress || '').trim();
+        const hasStoreId = !!String(logisticsData.storeId || logisticsData.CVSStoreID || '').trim();
+        const hasIntlAddress = logisticsData.isInternational === true && (
+            logisticsData.address &&
+            logisticsData.address.country &&
+            logisticsData.address.city &&
+            logisticsData.address.line1
+        );
+        const logisticsMissing = hasPhysicalItem && (!hasReceiverName || !hasReceiverPhone || (!hasShippingAddress && !hasStoreId && !hasIntlAddress));
+
+        if (hasPhysicalItem) {
+            await db.collection("orders").doc(orderId).update({ logisticsMissing });
+        }
+
+        let userEmail = "";
+        if (orderData.uid === "GUEST") {
+            // 訪客訂單處理
+        } else {
+            const userRecord = await admin.auth().getUser(orderData.uid);
+            userEmail = userRecord.email;
+        }
+
+        if (userEmail) {
+            const items = orderItems;
+            const itemDesc = Object.values(items).map(i => `${i.name} x${i.quantity || 1}`).join(', ');
+            const hasPhysical = hasPhysicalItem;
+            
+            await sendPaymentSuccessEmail(userEmail, orderId, orderData.amount, itemDesc, hasPhysical);
+        }
+
+        // 4. 自動指派導師與分潤綁定
+        if (orderData.uid && orderData.uid !== 'GUEST') {
+            const referralAssignments = extractReferralAssignmentsFromOrder(orderData.items || {}, lessons);
+
+            for (const assignment of referralAssignments) {
+                const linkId = Buffer.from(normalizeGitHubUrl(assignment.referralLink)).toString('base64');
+                const referralDoc = await db.collection('referral_links').doc(linkId).get();
+                if (!referralDoc.exists) continue;
+
+                const referralData = referralDoc.data();
+                const targetUnitId = resolveCanonicalUnitId(referralData.unitId, lessons);
+
+                if (targetUnitId && assignment.purchasedUnits.includes(targetUnitId) && referralData.tutorEmail) {
+                    for (const unitId of assignment.purchasedUnits) {
+                        await upsertStudentUnitAssignment(
+                            db,
+                            orderData.uid,
+                            unitId,
+                            referralData.tutorEmail,
+                            'paymentWebhook',
+                            true
+                        );
+                    }
+                    console.log(`[activateOrderPermissionsAndNotify] Cascade-assigned ${orderData.uid} -> ${referralData.tutorEmail} for ${assignment.purchasedUnits.length} units (triggered by ${targetUnitId})`);
+                } else {
+                    console.warn(`[activateOrderPermissionsAndNotify] Referral link ${assignment.referralLink} did not match purchased units for order ${orderId}`);
+                }
+            }
+        }
+    } catch (emailErr) {
+        console.error("[activateOrderPermissionsAndNotify] Failed to process payment follow-up:", emailErr);
+    }
+}
+
+/**
+ * 綠界金流付款通知端點 (ECPay Webhook)
+ */
 exports.paymentNotify = onRequest(async (req, res) => {
     res.set('Content-Type', 'text/plain');
     res.set('Access-Control-Allow-Origin', '*');
@@ -639,222 +974,29 @@ exports.paymentNotify = onRequest(async (req, res) => {
     try {
         const data = req.body;
 
-        // 額外檢查：驗證綠界傳回來的 CheckMacValue 確保安全 (建議加上，但不加也通)
-        // 若要加強安全性，可在此處呼叫 generateCheckMacValue(data, HASH_KEY, HASH_IV) 並比對
-
         if (!data) return res.status(200).send('1|OK');
 
         if (data.RtnCode === '1') {
             const orderId = data.MerchantTradeNo;
             const isSimulated = data.SimulatePaid === '1';
 
-            // Calculate Expiry Date (1 Year from now)
             const expiryDate = new Date();
             expiryDate.setFullYear(expiryDate.getFullYear() + 1);
 
             await admin.firestore().collection("orders").doc(orderId).update({
                 status: "SUCCESS",
                 paidAt: admin.firestore.FieldValue.serverTimestamp(),
-                expiryDate: admin.firestore.Timestamp.fromDate(expiryDate), // [NEW] Store expiry date
+                expiryDate: admin.firestore.Timestamp.fromDate(expiryDate),
                 ecpayTradeNo: data.TradeNo || "",
                 paymentDate: data.PaymentDate || "",
                 isSimulated: isSimulated,
-                rtnMsg: data.RtnMsg || ""
+                rtnMsg: data.RtnMsg || "",
+                gateway: "ECPAY"
             });
-            console.log(`訂單 ${orderId} 更新成功`);
+            console.log(`訂單 ${orderId} 更新成功 (ECPay)`);
 
-            // Ensure referred tutor is backfilled from the referral link index.
-            try {
-                const db = admin.firestore();
-                const oDoc = await db.collection("orders").doc(orderId).get();
-                const oData = oDoc.data();
-                const oItems = oData.items || {};
-
-                // Post-payment activation validation: detect paid items that will not unlock cleanly.
-                const validationAlerts = [];
-                const activationCheckedItems = [];
-                try {
-                    const lessons = await getLessons();
-                    for (const itemKey of Object.keys(oItems)) {
-                        // 1. Verify item maps to a canonical course
-                        const lesson = resolveLessonForOrderItem(itemKey, lessons);
-                        if (!lesson) {
-                            validationAlerts.push(`Item '${itemKey}' does not map to any canonical course.`);
-                            activationCheckedItems.push({ itemKey, status: "missing-course" });
-                            continue;
-                        }
-
-                        activationCheckedItems.push({
-                            itemKey,
-                            courseId: getCanonicalLessonIdentity(lesson) || null,
-                            courseKey: lesson.courseKey || null,
-                            isPhysical: lesson.isPhysical === true,
-                            status: "mapped"
-                        });
-
-                        if (lesson.isPhysical === true) {
-                            activationCheckedItems[activationCheckedItems.length - 1].status = "physical-skipped";
-                            continue;
-                        }
-
-                        // 2. Verify canonical course resolves to valid units
-                        if (!Array.isArray(lesson.courseUnits) || lesson.courseUnits.length === 0) {
-                            validationAlerts.push(`Course '${getCanonicalLessonIdentity(lesson) || lesson.courseId}' has no units defined.`);
-                            activationCheckedItems[activationCheckedItems.length - 1].status = "missing-units";
-                            continue;
-                        }
-
-                        // 3. Verify student can pass checkPaymentAuthorization (resolveStudentAssignmentAccess)
-                        const firstUnitId = lesson.courseUnits[0];
-                        const access = await resolveStudentAssignmentAccess(db, oData.uid, getCanonicalLessonIdentity(lesson), firstUnitId, lessons, false);
-                        if (!access.authorized) {
-                            validationAlerts.push(`Student authorization check failed for course '${getCanonicalLessonIdentity(lesson) || lesson.courseId}' / unit '${firstUnitId}': ${access.reason || 'unknown'}`);
-                            activationCheckedItems[activationCheckedItems.length - 1].status = "authorization-failed";
-                            activationCheckedItems[activationCheckedItems.length - 1].reason = access.reason || "unknown";
-                        } else {
-                            activationCheckedItems[activationCheckedItems.length - 1].status = "authorized";
-                            activationCheckedItems[activationCheckedItems.length - 1].accessMode = access.accessMode || null;
-                        }
-                    }
-
-                    if (validationAlerts.length > 0) {
-                        console.error(`[paymentNotify] Order activation validation failed for order ${orderId}: ${validationAlerts.join('; ')}`);
-                        await db.collection("orders").doc(orderId).update({
-                            activationAlerts: validationAlerts,
-                            activationValidated: true,
-                            activationValidationFailed: true,
-                            activationValidationStatus: "failed",
-                            activationCheckedItems,
-                            activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        });
-                        const adminEmail = process.env.ADMIN_EMAIL || process.env.MAIL_USER;
-                        if (adminEmail) {
-                            await sendAutogradeFailureAlertEmail(
-                                adminEmail,
-                                `Order Activation Failure: ${orderId}`,
-                                { orderId, uid: oData.uid, alerts: validationAlerts }
-                            );
-                        }
-                    } else {
-                        await db.collection("orders").doc(orderId).update({
-                            activationValidated: true,
-                            activationValidationFailed: false,
-                            activationValidationStatus: "passed",
-                            activationCheckedItems,
-                            activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                } catch (valErr) {
-                    console.error("[paymentNotify] Order activation validation errored:", valErr);
-                    await db.collection("orders").doc(orderId).update({
-                        activationValidated: false,
-                        activationValidationFailed: true,
-                        activationValidationStatus: "error",
-                        activationValidationError: valErr.message || String(valErr),
-                        activationValidatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-                
-                let updatedItems = false;
-                for (const [key, val] of Object.entries(oItems)) {
-                    const itemReferralLink = val.referralLink || val.promoCode || null;
-                    if (itemReferralLink && !val.referredTutorEmail) {
-                        const linkId = Buffer.from(normalizeGitHubUrl(itemReferralLink)).toString('base64');
-                        const lDoc = await db.collection('referral_links').doc(linkId).get();
-                        if (lDoc.exists) {
-                            oItems[key].referredTutorEmail = lDoc.data().tutorEmail;
-                            oItems[key].referredTutorName = lDoc.data().tutorName || lDoc.data().tutorEmail;
-                            updatedItems = true;
-                        }
-                    }
-                }
-                if (updatedItems) {
-                    await db.collection("orders").doc(orderId).update({ items: oItems });
-                    console.log(`[paymentNotify] ✅ Backfilled referred tutor for order ${orderId}`);
-                }
-            } catch (backfillErr) {
-                console.error("[paymentNotify] Backfill failed:", backfillErr);
-            }
-
-            // [NEW] Send Payment Success Email + auto tutor assignment from promo code
-            try {
-                // Fetch order details to get email and items
-                const db = admin.firestore();
-                const orderDoc = await db.collection("orders").doc(orderId).get();
-                if (orderDoc.exists) {
-                    const orderData = orderDoc.data();
-                    const lessons = await getLessons();
-                    const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
-                    const orderItems = orderData.items || {};
-                    const hasPhysicalItem = Object.keys(orderItems).some(id => {
-                        const canonicalId = normalizeLegacyId(id);
-                        const itemData = orderItems[id] || {};
-                        if (itemData.isPhysical === true) return true;
-                        return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
-                    });
-                    const logisticsData = orderData.logistics || {};
-                    const hasReceiverName = !!String(logisticsData.receiverName || logisticsData.ReceiverName || '').trim();
-                    const hasReceiverPhone = !!String(logisticsData.receiverPhone || logisticsData.ReceiverCellPhone || logisticsData.ReceiverPhone || '').trim();
-                    const hasShippingAddress = !!String(logisticsData.storeAddress || logisticsData.CVSAddress || logisticsData.ReceiverAddress || '').trim();
-                    const hasStoreId = !!String(logisticsData.storeId || logisticsData.CVSStoreID || '').trim();
-                    const logisticsMissing = hasPhysicalItem && (!hasReceiverName || !hasReceiverPhone || (!hasShippingAddress && !hasStoreId));
-
-                    if (hasPhysicalItem) {
-                        await db.collection("orders").doc(orderId).update({ logisticsMissing });
-                    }
-
-                    let userEmail = "";
-                    if (orderData.uid === "GUEST") {
-                        // Handling guest checkout if applicable, though typically we have UID
-                        // If we stored email in orderData, use it. Otherwise, tough luck?
-                        // Assuming we can get email from Auth if UID exists
-                    } else {
-                        const userRecord = await admin.auth().getUser(orderData.uid);
-                        userEmail = userRecord.email;
-                    }
-
-                    // If we have an email, send it
-                    if (userEmail) {
-                        const items = orderItems;
-                        const itemDesc = Object.values(items).map(i => `${i.name} x${i.quantity || 1}`).join(', ');
-                        const hasPhysical = hasPhysicalItem;
-                        
-                        await sendPaymentSuccessEmail(userEmail, orderId, orderData.amount, itemDesc, hasPhysical);
-                    }
-
-                    if (orderData.uid && orderData.uid !== 'GUEST') {
-                        const referralAssignments = extractReferralAssignmentsFromOrder(orderData.items || {}, lessons);
-
-                        for (const assignment of referralAssignments) {
-                            const linkId = Buffer.from(normalizeGitHubUrl(assignment.referralLink)).toString('base64');
-                            const referralDoc = await db.collection('referral_links').doc(linkId).get();
-                            if (!referralDoc.exists) continue;
-
-                            const referralData = referralDoc.data();
-                            const targetUnitId = resolveCanonicalUnitId(referralData.unitId, lessons);
-
-                            if (targetUnitId && assignment.purchasedUnits.includes(targetUnitId) && referralData.tutorEmail) {
-                                // [V16.0] Cascade Assignment: Assign ALL purchased units to this tutor if the link matches any of them
-                                for (const unitId of assignment.purchasedUnits) {
-                                    await upsertStudentUnitAssignment(
-                                        db,
-                                        orderData.uid,
-                                        unitId,
-                                        referralData.tutorEmail,
-                                        'paymentNotify',
-                                        true
-                                    );
-                                }
-                                console.log(`[paymentNotify] Cascade-assigned ${orderData.uid} -> ${referralData.tutorEmail} for ${assignment.purchasedUnits.length} units (triggered by ${targetUnitId})`);
-                            } else {
-                                console.warn(`[paymentNotify] Referral link ${assignment.referralLink} did not match purchased units for order ${orderId}`);
-                            }
-                        }
-                    }
-                }
-            } catch (emailErr) {
-                console.error("Failed to process payment follow-up:", emailErr);
-            }
+            // 呼叫開通授權與通知
+            await activateOrderPermissionsAndNotify(orderId);
         }
 
         return res.status(200).send('1|OK');
@@ -863,6 +1005,102 @@ exports.paymentNotify = onRequest(async (req, res) => {
         console.error("通知處理失敗:", error);
         return res.status(200).send('1|OK');
     }
+});
+
+/**
+ * Stripe 金流付款通知端點 (Stripe Webhook)
+ */
+exports.stripeWebhook = onRequest(async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+
+    if (!sig || !stripeWebhookSecret || !stripeKey) {
+        console.error("Stripe Webhook error: Missing signature, webhook secret, or stripe key.");
+        return res.status(400).send("Webhook configuration error");
+    }
+
+    const stripe = require('stripe')(stripeKey);
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(req.rawBody, sig, stripeWebhookSecret);
+    } catch (err) {
+        console.error(`Stripe Webhook Signature verification failed:`, err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        const orderNumber = session.metadata?.orderNumber;
+
+        if (!orderNumber) {
+            console.error("Stripe Webhook: No orderNumber found in session metadata.");
+            return res.status(200).send("No orderNumber metadata");
+        }
+
+        console.log(`Stripe Webhook: Processing completed checkout session for order ${orderNumber}`);
+        const db = admin.firestore();
+
+        try {
+            const orderDoc = await db.collection("orders").doc(orderNumber).get();
+            if (!orderDoc.exists) {
+                console.error(`Stripe Webhook: Order ${orderNumber} not found in Firestore.`);
+                return res.status(200).send("Order not found");
+            }
+
+            const orderData = orderDoc.data();
+            if (orderData.status === "SUCCESS") {
+                console.log(`Stripe Webhook: Order ${orderNumber} is already SUCCESS.`);
+                return res.status(200).send("Order already processed");
+            }
+
+            const expiryDate = new Date();
+            expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+
+            const updateData = {
+                status: "SUCCESS",
+                paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                expiryDate: admin.firestore.Timestamp.fromDate(expiryDate),
+                stripePaymentIntentId: session.payment_intent || null,
+                stripeSessionId: session.id,
+                paymentDate: getCurrentTime(),
+                gateway: "STRIPE"
+            };
+
+            if (session.shipping_details) {
+                const sd = session.shipping_details;
+                const existingLogistics = orderData.logistics || {};
+
+                updateData.logistics = {
+                    ...existingLogistics,
+                    receiverName: sd.name || existingLogistics.receiverName || "",
+                    receiverPhone: sd.phone || existingLogistics.receiverPhone || "",
+                    isInternational: true,
+                    address: {
+                        country: sd.address?.country || "",
+                        state: sd.address?.state || "",
+                        city: sd.address?.city || "",
+                        postalCode: sd.address?.postal_code || "",
+                        line1: sd.address?.line1 || "",
+                        line2: sd.address?.line2 || ""
+                    }
+                };
+            }
+
+            await db.collection("orders").doc(orderNumber).update(updateData);
+            console.log(`Stripe Webhook: Order ${orderNumber} status updated to SUCCESS.`);
+
+            // 呼叫開通授權與通知
+            await activateOrderPermissionsAndNotify(orderNumber);
+
+        } catch (err) {
+            console.error(`Stripe Webhook error processing order ${orderNumber}:`, err);
+            return res.status(500).send(`Internal Error: ${err.message}`);
+        }
+    }
+
+    res.status(200).json({ received: true });
 });
 
 // ==========================================
