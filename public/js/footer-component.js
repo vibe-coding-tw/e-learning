@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="text-2xl font-black tracking-tighter text-white">🚀 Vibe Coding</div>
                 <div class="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-400 font-bold text-sm uppercase tracking-wide">
                     <a href="${resolve('index.html')}" class="hover:text-white transition-colors">首頁</a>
-                    <a href="${resolve('prepare.html')}" class="hover:text-white transition-colors">學習路徑</a>
+                    <a href="${resolve('learning-path.html?path=tw-common')}" class="hover:text-white transition-colors">學習路徑</a>
                     <a href="${resolve('students.html')}" class="hover:text-white transition-colors">課程指南</a>
                     <a href="${resolve('tutors.html')}" class="hover:text-white transition-colors">導師合作</a>
                 </div>

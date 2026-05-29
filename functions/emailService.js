@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const admin = require('firebase-admin');
 
 // Configure Nodemailer Transport
 // We rely on environment variables for credentials
@@ -12,6 +13,26 @@ const transporter = nodemailer.createTransport({
 
 const APP_BASE_URL = (process.env.APP_BASE_URL || 'https://vibe-coding.tw').replace(/\/+$/, '');
 const appUrl = (path = '') => `${APP_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+
+/**
+ * Helper to resolve user locale by email from Firestore, falling back to 'zh-TW'.
+ * @param {string} email
+ * @returns {Promise<string>}
+ */
+async function resolveUserLocale(email) {
+    if (!email) return 'zh-TW';
+    try {
+        const db = admin.firestore();
+        const userSnap = await db.collection("users").where("email", "==", email).limit(1).get();
+        if (!userSnap.empty) {
+            const userData = userSnap.docs[0].data();
+            return userData.locale || 'zh-TW';
+        }
+    } catch (e) {
+        console.warn("[EmailService] Failed to resolve user locale by email:", e);
+    }
+    return 'zh-TW';
+}
 
 /**
  * Standard Premium Email Wrapper to ensure responsiveness and brand consistency.
@@ -59,25 +80,62 @@ function renderNextSteps(title, steps = []) {
  * Send a welcome email to a newly registered user.
  * @param {string} email - User's email address
  * @param {string} displayName - User's display name
+ * @param {string} expiryDateStr - Fallback expiry string
  */
 async function sendWelcomeEmail(email, displayName, expiryDateStr) {
+    const locale = await resolveUserLocale(email);
     const dashboardUrl = appUrl('/dashboard.html');
-    const introUrl = appUrl('/prepare.html');
-    const courseListUrl = appUrl('/start.html');
+    
+    // Format expiration date dynamically based on locale
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+    const resolvedExpiryStr = locale === 'en'
+        ? expiryDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        : expiryDate.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const introUrl = appUrl(`/learning-path.html?path=${locale === 'en' ? 'en-common' : 'tw-common'}`);
+    const courseListUrl = appUrl(`/learning-path.html?path=${locale === 'en' ? 'en-car-starter' : 'tw-car-starter'}`);
+    
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
-        subject: '歡迎加入 Vibe Coding！',
+        subject: locale === 'en' ? 'Welcome to Vibe Coding!' : '歡迎加入 Vibe Coding！',
         html: getEmailHtmlWrapper(
-            '歡迎加入 Vibe Coding！',
-            `
+            locale === 'en' ? 'Welcome to Vibe Coding!' : '歡迎加入 Vibe Coding！',
+            locale === 'en' ? `
+                <p>Hi ${displayName || 'Developer'},</p>
+                <p>Thank you for signing up with Vibe Coding. We are thrilled to embark on this coding journey with you!</p>
+                
+                <div style="background-color: #f0f7ff; border-left: 4px solid #4f46e5; padding: 20px; margin: 25px 0; border-radius: 8px;">
+                    <p style="margin: 0; font-weight: bold; color: #4f46e5; font-size: 14px; text-transform: uppercase;">🎁 Welcome Gift: 1-Month Free Access to Starter Courses</p>
+                    <p style="margin: 10px 0 0 0;">To celebrate your arrival, you have free access to all <strong>"Starter"</strong> courses until:</p>
+                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #ef4444;">${resolvedExpiryStr}</p>
+                </div>
+
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">Recommended Next Steps:</p>
+                    <ol style="margin: 0; padding-left: 20px; color: #334155; font-size: 14px;">
+                        <li style="margin-bottom: 6px;">Set up your development environment and account (approx. 10-15 mins).</li>
+                        <li style="margin-bottom: 6px;">Select a Starter lesson and complete your first run.</li>
+                        <li>Check your Learning Dashboard to review progress and unlock content.</li>
+                    </ol>
+                </div>
+
+                <p style="margin-top: 25px;">
+                    <a href="${introUrl}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">Set Up Environment First</a>
+                </p>
+                <p style="margin-top: 14px; font-size: 14px;">
+                    Or go directly to: <a href="${courseListUrl}" style="color: #4f46e5; text-decoration: none;">Starter Course Catalog</a> / <a href="${dashboardUrl}" style="color: #4f46e5; text-decoration: none;">Learning Dashboard</a>
+                </p>
+                <p style="margin-top: 25px; font-size: 14px; color: #64748b;">If you get stuck, simply reply to this email with "I am stuck at step X", and we will help you resolve it.</p>
+            ` : `
                 <p>Hi ${displayName || '開發者'},</p>
                 <p>感謝您註冊 Vibe Coding。我們很高興能與您一起探索程式開發的樂趣！</p>
                 
                 <div style="background-color: #f0f7ff; border-left: 4px solid #4f46e5; padding: 20px; margin: 25px 0; border-radius: 8px;">
                     <p style="margin: 0; font-weight: bold; color: #4f46e5; font-size: 14px; text-transform: uppercase;">🎁 限時歡迎禮：入門課程免費使用一個月</p>
                     <p style="margin: 10px 0 0 0;">為了慶祝您加入，目前所有標記為<strong>「入門」</strong>的課程，您皆可免費存取使用至：</p>
-                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #ef4444;">${expiryDateStr}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #ef4444;">${resolvedExpiryStr}</p>
                 </div>
 
                 <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #e2e8f0;">
@@ -97,13 +155,13 @@ async function sendWelcomeEmail(email, displayName, expiryDateStr) {
                 </p>
                 <p style="margin-top: 25px; font-size: 14px; color: #64748b;">如果您卡住，直接回覆這封信說「我卡在第幾步」，我們會協助你快速排除。</p>
             `,
-            '祝學習愉快！<br>Vibe Coding 團隊'
+            locale === 'en' ? 'Happy Coding!<br>Vibe Coding Team' : '祝學習愉快！<br>Vibe Coding 團隊'
         )
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Welcome email sent to ${email}`);
+        console.log(`Welcome email sent to ${email} (locale: ${locale})`);
     } catch (error) {
         console.error('Error sending welcome email:', error);
     }
@@ -118,40 +176,71 @@ async function sendWelcomeEmail(email, displayName, expiryDateStr) {
  * @param {boolean} hasPhysical - Whether the order contains physical items
  */
 async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc, hasPhysical = false) {
-    const fulfillmentMessage = hasPhysical 
-        ? '若購買的是實體教材，我們將於 1-3 個工作天內為您寄出。您可以在儀表板追蹤出貨狀態。'
-        : '您現在可以隨時登入平台存取您的課程內容。';
+    const locale = await resolveUserLocale(email);
+    
+    let subject, title, textHtml, footer;
+    if (locale === 'en') {
+        const fulfillmentMessage = hasPhysical 
+            ? 'If you purchased physical course materials, we will ship them in 1-3 business days. You can track shipment status in your dashboard.'
+            : 'You can now log in to the platform at any time to access your course content.';
+            
+        subject = 'Vibe Coding Order Confirmation';
+        title = 'Payment Successful: Confirmation & Next Steps';
+        textHtml = `
+            <p>Thank you for your purchase. Your order has been successfully confirmed. Welcome and happy learning!</p>
+            <div style="background-color: #f8fafc; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">Order ID</strong><br><span style="font-family: monospace; font-size: 15px;">${orderId}</span></p>
+                <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">Purchased Items</strong><br><strong>${itemsDesc}</strong></p>
+                <p style="margin: 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">Amount Paid</strong><br><span style="font-size: 18px; color: #10b981; font-weight: bold;">TWD $${amount}</span></p>
+            </div>
+            <p>${fulfillmentMessage}</p>
+            ${renderNextSteps('Recommended Next Steps:', [
+                'Log in to your dashboard to confirm your unlocked courses/materials.',
+                hasPhysical ? 'Check shipment and logistics details in your dashboard.' : 'Complete a course unit and create your first runnable project.',
+                'To submit assignments, navigate to the specific unit from your dashboard.'
+            ])}
+            <p style="margin-top: 30px;">
+                <a href="${appUrl('/dashboard.html?tab=overview')}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">Go to Learning Dashboard</a>
+            </p>
+        `;
+        footer = 'Thank you for your support!<br>Vibe Coding Team';
+    } else {
+        const fulfillmentMessage = hasPhysical 
+            ? '若購買的是實體教材，我們將於 1-3 個工作天內為您寄出。您可以在儀表板追蹤出貨狀態。'
+            : '您現在可以隨時登入平台存取您的課程內容。';
+            
+        subject = 'Vibe Coding 訂單確認';
+        title = '付款成功：報名通知書';
+        textHtml = `
+            <p>感謝您的購買。您的訂單已成功確認，歡迎開始學習！</p>
+            <div style="background-color: #f8fafc; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">訂單編號</strong><br><span style="font-family: monospace; font-size: 15px;">${orderId}</span></p>
+                <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">購買項目</strong><br><strong>${itemsDesc}</strong></p>
+                <p style="margin: 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">實付金額</strong><br><span style="font-size: 18px; color: #10b981; font-weight: bold;">TWD $${amount}</span></p>
+            </div>
+            <p>${fulfillmentMessage}</p>
+            ${renderNextSteps('接下來請這樣做：', [
+                '先到儀表板確認本次訂單已啟用的課程或教材。',
+                hasPhysical ? '若含實體教材，請在儀表板查看出貨狀態與物流資訊。' : '先完成一個單元，建立第一個可驗收成果。',
+                '若要提交作業，請從儀表板進入對應單元。'
+            ])}
+            <p style="margin-top: 30px;">
+                <a href="${appUrl('/dashboard.html?tab=overview')}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">前往學習儀表板</a>
+            </p>
+        `;
+        footer = '謝謝您的支持！<br>Vibe Coding 團隊';
+    }
 
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
-        subject: 'Vibe Coding 訂單確認',
-        html: getEmailHtmlWrapper(
-            '付款成功：報名通知書',
-            `
-                <p>感謝您的購買。您的訂單已成功確認，歡迎開始學習！</p>
-                <div style="background-color: #f8fafc; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
-                    <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">訂單編號</strong><br><span style="font-family: monospace; font-size: 15px;">${orderId}</span></p>
-                    <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">購買項目</strong><br><strong>${itemsDesc}</strong></p>
-                    <p style="margin: 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">實付金額</strong><br><span style="font-size: 18px; color: #10b981; font-weight: bold;">TWD $${amount}</span></p>
-                </div>
-                <p>${fulfillmentMessage}</p>
-                ${renderNextSteps('接下來請這樣做：', [
-                    '先到儀表板確認本次訂單已啟用的課程或教材。',
-                    hasPhysical ? '若含實體教材，請在儀表板查看出貨狀態與物流資訊。' : '先完成一個單元，建立第一個可驗收成果。',
-                    '若要提交作業，請從儀表板進入對應單元。'
-                ])}
-                <p style="margin-top: 30px;">
-                    <a href="${appUrl('/dashboard.html?tab=overview')}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">前往學習儀表板</a>
-                </p>
-            `,
-            '謝謝您的支持！<br>Vibe Coding 團隊'
-        )
+        subject: subject,
+        html: getEmailHtmlWrapper(title, textHtml, footer)
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Payment success email sent to ${email} for order ${orderId}`);
+        console.log(`Payment success email sent to ${email} for order ${orderId} (locale: ${locale})`);
     } catch (error) {
         console.error('Error sending payment email:', error);
     }
@@ -365,42 +454,75 @@ async function sendAssignmentNotification(tutorEmail, studentName, assignmentTit
  * @param {string} feedback - Tutor's feedback
  */
 async function sendGradingNotification(email, studentName, assignmentTitle, grade, feedback, dashboardUrl = appUrl('/dashboard.html?tab=assignments')) {
+    const locale = await resolveUserLocale(email);
+    
+    let subject, title, textHtml, footer;
+    if (locale === 'en') {
+        subject = `[Assignment Graded] Feedback on your assignment "${assignmentTitle}"`;
+        title = 'Assignment Graded';
+        textHtml = `
+            <p>Hi ${studentName},</p>
+            <p>Your tutor has graded and reviewed your assignment <strong>${assignmentTitle}</strong>. Come check out your feedback and learning milestones!</p>
+            
+            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
+                <p style="margin: 0 0 15px 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">Grade Received</strong><br><span style="font-size: 32px; color: #10b981; font-weight: 800;">${grade}</span></p>
+                <p style="margin: 0; background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #dcfce7;"><strong style="color: #166534; font-size: 12px; text-transform: uppercase;">Tutor Comments:</strong><br><span style="color: #1e293b;">${feedback || 'Well done! Keep up the good work.'}</span></p>
+            </div>
+
+            <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 25px 0; border-radius: 4px;">
+                <p style="margin: 0; font-weight: bold; color: #1d4ed8; font-size: 14px;">🤝 Build Good Tutor-Student Interactions</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e40af;">Have questions about the feedback or course? Feel free to ask your tutor via the platform dashboard or Email. Active communication makes your learning much more effective!</p>
+            </div>
+            ${renderNextSteps('Recommended next steps:', [
+                'Read the tutor comments and summarize 1-2 key items to revise.',
+                'Return to your code and apply the revisions, submitting again if necessary.',
+                'If there is anything you do not understand, ask your tutor on the platform directly.'
+            ])}
+
+            <p style="margin-top: 30px;">
+                <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">View Tutor Feedback</a>
+            </p>
+        `;
+        footer = 'Keep moving forward!<br>Vibe Coding Team';
+    } else {
+        subject = `[作業評改] 老師已評回您的作業 "${assignmentTitle}"`;
+        title = '作業已完成評閱！';
+        textHtml = `
+            <p>Hi ${studentName},</p>
+            <p>老師已經看過您繳交的 <strong>${assignmentTitle}</strong> 並給予了回饋，快來看看您的學習成果吧！</p>
+            
+            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
+                <p style="margin: 0 0 15px 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">獲得評分</strong><br><span style="font-size: 32px; color: #10b981; font-weight: 800;">${grade}</span></p>
+                <p style="margin: 0; background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #dcfce7;"><strong style="color: #166534; font-size: 12px; text-transform: uppercase;">老師的話：</strong><br><span style="color: #1e293b;">${feedback || '做得好！繼續加油。'}</span></p>
+            </div>
+
+            <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 25px 0; border-radius: 4px;">
+                <p style="margin: 0; font-weight: bold; color: #1d4ed8; font-size: 14px;">🤝 建立良好的師生互動</p>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e40af;">對評語或課程有疑問嗎？歡迎透過平台的功能或 Email 向老師提問。保持積極的溝通能讓您的學習更有效率！</p>
+            </div>
+            ${renderNextSteps('接下來建議：', [
+                '先閱讀老師評語，整理 1-2 個重點修正項目。',
+                '回到程式碼實作修正，必要時二次提交。',
+                '若有不理解的地方，直接在平台向老師提問。'
+            ])}
+
+            <p style="margin-top: 30px;">
+                <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">查看作業詳情</a>
+            </p>
+        `;
+        footer = '持續前進！<br>Vibe Coding 團隊';
+    }
+
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
-        subject: `[作業評改] 老師已評回您的作業 "${assignmentTitle}"`,
-        html: getEmailHtmlWrapper(
-            '作業已完成評閱！',
-            `
-                <p>Hi ${studentName},</p>
-                <p>老師已經看過您繳交的 <strong>${assignmentTitle}</strong> 並給予了回饋，快來看看您的學習成果吧！</p>
-                
-                <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
-                    <p style="margin: 0 0 15px 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">獲得評分</strong><br><span style="font-size: 32px; color: #10b981; font-weight: 800;">${grade}</span></p>
-                    <p style="margin: 0; background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #dcfce7;"><strong style="color: #166534; font-size: 12px; text-transform: uppercase;">老師的話：</strong><br><span style="color: #1e293b;">${feedback || '做得好！繼續加油。'}</span></p>
-                </div>
-
-                <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 25px 0; border-radius: 4px;">
-                    <p style="margin: 0; font-weight: bold; color: #1d4ed8; font-size: 14px;">🤝 建立良好的師生互動</p>
-                    <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e40af;">對評語或課程有疑問嗎？歡迎透過平台的功能或 Email 向老師提問。保持積極的溝通能讓您的學習更有效率！</p>
-                </div>
-                ${renderNextSteps('接下來建議：', [
-                    '先閱讀老師評語，整理 1-2 個重點修正項目。',
-                    '回到程式碼實作修正，必要時二次提交。',
-                    '若有不理解的地方，直接在平台向老師提問。'
-                ])}
-
-                <p style="margin-top: 30px;">
-                    <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">查看作業詳情</a>
-                </p>
-            `,
-            '持續前進！<br>Vibe Coding 團隊'
-        )
+        subject: subject,
+        html: getEmailHtmlWrapper(title, textHtml, footer)
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Grading notification sent to ${email}`);
+        console.log(`Grading notification sent to ${email} (locale: ${locale})`);
     } catch (error) {
         console.error('Error sending grading notification:', error);
     }
@@ -708,34 +830,60 @@ async function sendAdminShipmentReminder(adminEmail, pendingList) {
  */
 async function sendAutogradeResultToStudent(email, studentName, assignmentTitle, score, maxScore, dashboardUrl, runUrl = "") {
     if (!email) return;
+    const locale = await resolveUserLocale(email);
     const scoreText = Number.isFinite(maxScore) ? `${score}/${maxScore}` : `${score}`;
     const targetUrl = dashboardUrl || appUrl('/dashboard.html?tab=assignments');
-    const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub 執行紀錄：<a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">查看自動評分流程</a></p>` : '';
+    
+    let subject, title, textHtml, footer;
+    if (locale === 'en') {
+        subject = `[Autograde Synced] Score updated for "${assignmentTitle}"`;
+        title = 'Autograde Result Synced';
+        const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub Execution Logs: <a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">View Autograding Flow</a></p>` : '';
+        textHtml = `
+            <p>Hi ${studentName || 'Developer'},</p>
+            <p>Your assignment <strong>${assignmentTitle}</strong> has finished automatic evaluation. The latest results have been synced:</p>
+            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
+                <p style="margin: 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">Latest Score</strong><br><span style="font-size: 34px; color: #10b981; font-weight: 800;">${scoreText}</span></p>
+            </div>
+            ${renderNextSteps('Recommended next steps:', [
+                'Check your dashboard to verify the updated score and assignment status.',
+                'If you have not reached your target score, fix any issues and push again.',
+                'If you get stuck, proactively ask your tutor for help, focusing on the specific code segment.'
+            ])}
+            <p style="margin-top: 30px;">
+                <a href="${targetUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold;">View Assignment</a>
+            </p>
+            ${runLinkHtml}
+        `;
+        footer = 'Vibe Coding Autograding System';
+    } else {
+        subject = `[自動評分更新] "${assignmentTitle}" 成績已同步`;
+        title = '作業自動評分已更新';
+        const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub 執行紀錄：<a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">查看自動評分流程</a></p>` : '';
+        textHtml = `
+            <p>Hi ${studentName || '同學'},</p>
+            <p>您的作業 <strong>${assignmentTitle}</strong> 已完成自動評分，最新分數如下：</p>
+            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
+                <p style="margin: 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">最新分數</strong><br><span style="font-size: 34px; color: #10b981; font-weight: 800;">${scoreText}</span></p>
+            </div>
+            ${renderNextSteps('接下來建議：', [
+                '先到儀表板確認本次分數與作業狀態。',
+                '若未達目標分數，依錯誤訊息修正後再次 push。',
+                '有卡點時，主動向導師提問，聚焦在「哪一段不確定」。'
+            ])}
+            <p style="margin-top: 30px;">
+                <a href="${targetUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold;">前往查看作業</a>
+            </p>
+            ${runLinkHtml}
+        `;
+        footer = 'Vibe Coding 自動評分系統';
+    }
 
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
-        subject: `[自動評分更新] "${assignmentTitle}" 成績已同步`,
-        html: getEmailHtmlWrapper(
-            '作業自動評分已更新',
-            `
-                <p>Hi ${studentName || '同學'},</p>
-                <p>您的作業 <strong>${assignmentTitle}</strong> 已完成自動評分，最新分數如下：</p>
-                <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
-                    <p style="margin: 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">最新分數</strong><br><span style="font-size: 34px; color: #10b981; font-weight: 800;">${scoreText}</span></p>
-                </div>
-                ${renderNextSteps('接下來建議：', [
-                    '先到儀表板確認本次分數與作業狀態。',
-                    '若未達目標分數，依錯誤訊息修正後再次 push。',
-                    '有卡點時，主動向導師提問，聚焦在「哪一段不確定」。'
-                ])}
-                <p style="margin-top: 30px;">
-                    <a href="${targetUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold;">前往查看作業</a>
-                </p>
-                ${runLinkHtml}
-            `,
-            'Vibe Coding 自動評分系統'
-        )
+        subject: subject,
+        html: getEmailHtmlWrapper(title, textHtml, footer)
     };
 
     try {
