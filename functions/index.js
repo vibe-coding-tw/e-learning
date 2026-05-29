@@ -6010,3 +6010,94 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
         throw new HttpsError('internal', error.message || '作業倉庫建立失敗');
     }
 });
+
+/**
+ * Diagnostic helper to validate GITHUB_API_TOKEN or custom tutor tokens
+ */
+exports.testGithubToken = onCall({ secrets: [GITHUB_API_TOKEN] }, async (request) => {
+    const { data, auth } = request;
+    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    
+    // Verify user is admin
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    if (!userDoc.exists || userDoc.data().role !== 'admin') {
+        throw new HttpsError('permission-denied', '限管理員呼叫此功能');
+    }
+
+    const { tutorEmail, unitId } = data || {};
+    let customToken = null;
+    let customOrg = null;
+    let customTemplate = null;
+
+    if (tutorEmail && unitId) {
+        const tutorSnap = await db.collection('users')
+            .where('email', '==', String(tutorEmail).toLowerCase())
+            .limit(1)
+            .get();
+        if (!tutorSnap.empty) {
+            const tutorData = tutorSnap.docs[0].data();
+            const config = tutorData.tutorConfigs?.[unitId];
+            if (config) {
+                customToken = config.githubToken || null;
+                customOrg = config.githubOrg || null;
+                customTemplate = config.templateRepo || null;
+            }
+        }
+    }
+
+    const globalToken = GITHUB_API_TOKEN.value();
+    const activeToken = customToken || globalToken;
+
+    const tokenPreview = (token) => {
+        if (!token) return 'None';
+        const len = token.length;
+        if (len < 8) return `Short (length ${len})`;
+        return `${token.substring(0, 4)}...${token.substring(len - 4)} (length ${len})`;
+    };
+
+    const results = {
+        hasTutorEmail: !!tutorEmail,
+        hasUnitId: !!unitId,
+        customOrg,
+        customTemplate,
+        customTokenPreview: tokenPreview(customToken),
+        globalTokenPreview: tokenPreview(globalToken),
+        usingCustomToken: !!customToken,
+        githubValidation: null
+    };
+
+    if (!activeToken) {
+        results.githubValidation = {
+            success: false,
+            message: "No token resolved (both custom and global are empty)."
+        };
+        return results;
+    }
+
+    try {
+        const { Octokit } = require("@octokit/rest");
+        const octokit = new Octokit({ auth: activeToken });
+        
+        // Test call /user endpoint
+        const userResponse = await octokit.users.getAuthenticated();
+        
+        // Also capture the scopes if returned in header
+        const scopes = userResponse.headers['x-oauth-scopes'] || 'unknown';
+        
+        results.githubValidation = {
+            success: true,
+            login: userResponse.data.login,
+            scopes: scopes,
+            message: "Token is VALID! GitHub authenticated successfully."
+        };
+    } catch (err) {
+        results.githubValidation = {
+            success: false,
+            statusCode: err.status || null,
+            message: err.message || "Unknown GitHub API error."
+        };
+    }
+
+    return results;
+});
