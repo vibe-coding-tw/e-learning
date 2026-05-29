@@ -121,7 +121,10 @@ function formatUnitTabTitle(unitFile = '', fallbackIndex = 0) {
 
 function buildUnitAuthUrl(unitFile = '') {
     const target = `/courses/${unitFile}`;
-    return `/auth.html?url=${encodeURIComponent(target)}&id=${encodeURIComponent(unitFile)}&price=0`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const lang = urlParams.get('lang') || urlParams.get('locale') || '';
+    const appendLang = lang ? `&lang=${encodeURIComponent(lang)}` : '';
+    return `/auth.html?url=${encodeURIComponent(target)}&id=${encodeURIComponent(unitFile)}&price=0${appendLang}`;
 }
 
 async function ensureDynamicUnitTabsFromFirestore() {

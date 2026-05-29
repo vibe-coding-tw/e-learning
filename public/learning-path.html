@@ -11,8 +11,8 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.a5fd6cf06f8a.js"></script>
-  <script src="./js/course-shared.085fa15a9561.js"></script>
+  <script type="module" src="./js/nav-component.e8079cd7e1d8.js"></script>
+  <script src="./js/course-shared.81a80ab23b2a.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -47,6 +47,70 @@
     const AUTH_URL = "/auth.html?v=" + Date.now();
     const CART_URL = "cart.html";
 
+    function detectUiLocale() {
+      try {
+        const stored = localStorage.getItem('vibe_user_locale');
+        if (stored) {
+          const clean = String(stored).trim().toLowerCase();
+          if (clean.startsWith('zh')) return 'zh-TW';
+          if (clean.startsWith('en')) return 'en';
+        }
+      } catch (_) {}
+
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const queryLang = params.get('lang') || params.get('locale');
+        if (queryLang) {
+          const clean = String(queryLang).trim().toLowerCase();
+          if (clean.startsWith('zh')) return 'zh-TW';
+          if (clean.startsWith('en')) return 'en';
+        }
+      } catch (_) {}
+
+      const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
+      const navLang = String(navigator.language || "").toLowerCase();
+      const raw = htmlLang || navLang;
+      if (raw.startsWith("zh")) return "zh-TW";
+      return "en";
+    }
+
+    const TRANSLATIONS = {
+      "zh-TW": {
+        title: "學習路徑",
+        hardwareHeader: "硬體設備",
+        specsHeader: "電腦規格推薦",
+        coreContentLabel: "核心內容：",
+        previewBtn: "▶ 課程預覽",
+        loadingText: "載入中...",
+        loginFreeBtn: "👤 請先登入 (免費)",
+        loginBtn: "👤 請先登入",
+        addToCartBtn: "🛒 加入購物車",
+        enterCourseBtn: "✅ 進入課程內容",
+        freeLabel: "免費",
+        emptyCategory: "目前此分類尚無課程。",
+        addToCartPhysical: "🛒 加入購物車",
+        alreadyInCart: "⚠️ 「{name}」已在購物車中！",
+        coursesConfigMissing: "⚠️ 課程連結尚未備妥，請聯繫客服。"
+      },
+      "en": {
+        title: "Learning Path",
+        hardwareHeader: "Hardware Kits",
+        specsHeader: "Computer Spec Recommendations",
+        coreContentLabel: "Core Content:",
+        previewBtn: "▶ Course Preview",
+        loadingText: "Loading...",
+        loginFreeBtn: "👤 Login (Free)",
+        loginBtn: "👤 Login",
+        addToCartBtn: "🛒 Add to Cart",
+        enterCourseBtn: "✅ Enter Course",
+        freeLabel: "Free",
+        emptyCategory: "No courses available in this category yet.",
+        addToCartPhysical: "🛒 Add to Cart",
+        alreadyInCart: "⚠️ \"{name}\" is already in your cart!",
+        coursesConfigMissing: "⚠️ Course link not ready, please contact customer support."
+      }
+    };
+
     function normalizeLocaleCode(raw = "") {
       const v = String(raw || "").trim().toLowerCase();
       if (!v) return "tw";
@@ -80,23 +144,39 @@
         .map((part) => part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1))
         .join(" ");
     }
-    function pickCategoryLabelFromLesson(lesson = {}) {
-      return String(
-        lesson.learningPathLabelZhTw ||
-        lesson.learningPathLabel ||
-        lesson.categoryLabelZhTw ||
-        lesson.categoryLabel ||
-        lesson.navLabelZhTw ||
-        lesson.navLabel ||
-        ""
-      ).trim();
+    function pickCategoryLabelFromLesson(lesson = {}, uiLocale = "zh-TW") {
+      const isZh = uiLocale.startsWith("zh");
+      const candidates = [];
+      if (isZh) {
+        candidates.push(
+          lesson.learningPathLabelZhTw,
+          lesson.learningPathLabelZh,
+          lesson.categoryLabelZhTw,
+          lesson.categoryLabelZh,
+          lesson.navLabelZhTw,
+          lesson.navLabelZh
+        );
+      } else {
+        candidates.push(
+          lesson.learningPathLabelEn,
+          lesson.categoryLabelEn,
+          lesson.navLabelEn
+        );
+      }
+      candidates.push(
+        lesson.learningPathLabel,
+        lesson.categoryLabel,
+        lesson.navLabel
+      );
+      const hit = candidates.find((v) => typeof v === "string" && v.trim());
+      return hit ? hit.trim() : "";
     }
-    function deriveCategoryLabels(lessons = [], existingMap = {}) {
+    function deriveCategoryLabels(lessons = [], existingMap = {}, uiLocale = "zh-TW") {
       const derived = { ...(existingMap || {}) };
       (Array.isArray(lessons) ? lessons : []).forEach((lesson) => {
         const key = categoryFromLesson(lesson);
         if (!key || derived[key]) return;
-        const label = pickCategoryLabelFromLesson(lesson);
+        const label = pickCategoryLabelFromLesson(lesson, uiLocale);
         if (label) derived[key] = label;
       });
       return derived;
@@ -168,40 +248,44 @@
       btn.onclick = null;
       btn.disabled = false;
 
+      const uiLocale = detectUiLocale();
+      const t = TRANSLATIONS[uiLocale];
+
       if (isPhysical && coursePrice > 0) {
-        btn.textContent = "🛒 加入購物車";
+        btn.textContent = t.addToCartPhysical;
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (addToCart(courseId, courseName, coursePrice, isPhysical)) window.location.href = CART_URL;
-          else alert(`⚠️ 「${courseName}」已在購物車中！`);
+          else alert(t.alreadyInCart.replace("{name}", courseName));
         };
         return;
       }
       if (status === "AUTHORIZED") {
-        btn.textContent = "✅ 進入課程內容";
+        btn.textContent = t.enterCourseBtn;
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition`;
         btn.onclick = () => {
-          if (!classroomUrl) return alert("⚠️ 課程連結尚未備妥，請聯繫客服。");
-          window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${encodeURIComponent(authPageId)}&price=${coursePrice}`;
+          if (!classroomUrl) return alert(t.coursesConfigMissing);
+          const langParam = uiLocale === "en" ? "&lang=en" : "";
+          window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${encodeURIComponent(authPageId)}&price=${coursePrice}${langParam}`;
         };
         return;
       }
       if (status === "NOT_LOGGED_IN") {
-        btn.textContent = coursePrice === 0 ? "👤 請先登入 (免費)" : "👤 請先登入";
+        btn.textContent = coursePrice === 0 ? t.loginFreeBtn : t.loginBtn;
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
         return;
       }
       if (status === "UNAUTHORIZED" || status === "ERROR") {
-        btn.textContent = "🛒 加入購物車";
+        btn.textContent = t.addToCartBtn;
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (addToCart(courseId, courseName, coursePrice, isPhysical)) window.location.href = CART_URL;
-          else alert(`⚠️ 「${courseName}」已在購物車中！`);
+          else alert(t.alreadyInCart.replace("{name}", courseName));
         };
         return;
       }
-      btn.textContent = "載入中...";
+      btn.textContent = t.loadingText;
       btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
       btn.disabled = true;
     }
@@ -272,6 +356,9 @@
     }
 
     function renderLessons(lessons, pathKey) {
+      const uiLocale = detectUiLocale();
+      const t = TRANSLATIONS[uiLocale];
+
       const shouldHideCourse = (lesson = {}) => {
         return lesson.hiddenFromCatalog === true;
       };
@@ -290,7 +377,7 @@
                x.learningPaths.includes(pathKey)
       );
       if (!rows.length && !hardwareRows.length && pathKey !== "tw-common") {
-        container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">目前此分類尚無課程。</p>`;
+        container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">${t.emptyCategory}</p>`;
         return;
       }
       const courseHtml = rows.map((lesson) => {
@@ -298,16 +385,16 @@
         const unitFile = resolveUnitFile(lesson);
         const price = Number(lesson.price || 0);
         const contentList = toList(lesson.coreContent).slice(0, 4);
-        const summary = String(lesson.summary || lesson.description || "課程內容由系統資料動態載入。");
+        const summary = String(lesson.summary || lesson.description || (uiLocale === "zh-TW" ? "課程內容由系統資料動態載入。" : "Course content loaded dynamically."));
         const duration = String(lesson.duration || lesson.estimatedDuration || "");
         const lessonLabel = String(lesson.lessonLabel || lesson.tagText || "").trim();
-        const displayLessonLabel = lessonLabel || "課程單元";
+        const displayLessonLabel = lessonLabel || (uiLocale === "zh-TW" ? "課程單元" : "Course Unit");
         const icon = String(lesson.cardIcon || lesson.icon || "📘");
         const imageUrl = pickImage(lesson);
         const videoUrl = pickVideo(lesson);
         const disablePreview = lesson.previewDisabled === true;
         const videoButton = (videoUrl && !disablePreview)
-          ? `<button class="video-btn flex-1 w-full py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors">▶ 課程預覽</button>`
+          ? `<button class="video-btn flex-1 w-full py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors">${t.previewBtn}</button>`
           : "";
         const actionButtonClass = videoUrl ? "flex-1 w-full" : "w-full";
         const listHtml = contentList.length
@@ -328,20 +415,20 @@
               <div class="min-w-0 text-xs text-slate-500 truncate">${lesson.courseKey || lesson.courseId || ""}</div>
               ${duration ? `<span class="flex-shrink-0 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${duration}</span>` : ""}
             </div>
-            <h2 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || lesson.courseId || "未命名課程"}</h2>
+            <h2 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || lesson.courseId || "Untitled Course"}</h2>
             <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${displayLessonLabel}</div>
             ${imageHtml}
             <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary}</div>
             <div class="text-sm text-slate-700 mb-4">
-              <strong class="text-slate-900 block mb-1">核心內容：</strong>
+              <strong class="text-slate-900 block mb-1">${t.coreContentLabel}</strong>
               ${listHtml}
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-              <span class="text-2xl font-bold text-blue-600">${price === 0 ? "免費" : `NT$ ${price.toLocaleString()}`}</span>
+              <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : `NT$ ${price.toLocaleString()}`}</span>
             </div>
             <div class="mt-3 flex flex-col sm:flex-row gap-2">
               ${videoButton}
-              <button class="action-btn ${actionButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>載入中...</button>
+              <button class="action-btn ${actionButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>${t.loadingText}</button>
             </div>
           </div>
         `;
@@ -353,7 +440,7 @@
         const price = Number(lesson.price || 0);
         const hardwareId = String(lesson.courseId || "").toLowerCase();
         const imageUrl = pickImage(lesson);
-        const summary = String(lesson.summary || lesson.description || "硬體設備推薦");
+        const summary = String(lesson.summary || lesson.description || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations"));
         const contentList = toList(lesson.coreContent).slice(0, 4);
         const listHtml = contentList.length
           ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
@@ -372,14 +459,14 @@
                data-is-physical="true"
                data-classroom-url="${entryUrl}">
             <div class="min-w-0 text-xs text-slate-500 mb-2 truncate">${lesson.courseKey || lesson.courseId || ""}</div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || "硬體設備"}</h3>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit")}</h3>
             ${imageHtml}
             <div class="text-sm text-slate-700 mb-4">${listHtml}</div>
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-              <span class="text-2xl font-bold text-blue-600">${price === 0 ? "免費" : `NT$ ${price.toLocaleString()}`}</span>
+              <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : `NT$ ${price.toLocaleString()}`}</span>
             </div>
             <div class="mt-3">
-              <button class="action-btn w-full py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>載入中...</button>
+              <button class="action-btn w-full py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>${t.loadingText}</button>
             </div>
           </div>
         `;
@@ -406,8 +493,8 @@
 
       let pageHtml = "";
       if (courseHtml) pageHtml += renderSection("", courseHtml);
-      if (hardwareHtml) pageHtml += renderSection("硬體設備", hardwareHtml);
-      if (specsHtml) pageHtml += renderSection("電腦規格推薦", specsHtml);
+      if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
+      if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
       container.innerHTML = pageHtml;
 
       container.querySelectorAll(".video-btn").forEach((btn, i) => {
@@ -417,10 +504,14 @@
     }
 
     async function init() {
-      const pathKey = (new URLSearchParams(location.search).get("path") || "tw-common").toLowerCase();
+      const uiLocale = detectUiLocale();
+      const t = TRANSLATIONS[uiLocale];
+      document.title = t.title;
+
+      const pathKey = (new URLSearchParams(location.search).get("path") || (uiLocale === "en" ? "en-common" : "tw-common")).toLowerCase();
       const result = await getLessonsFunc({});
       const lessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
-      categoryLabelsMap = deriveCategoryLabels(lessons, result?.data?.categoryLabels || {});
+      categoryLabelsMap = deriveCategoryLabels(lessons, result?.data?.categoryLabels || {}, uiLocale);
       renderLessons(lessons, pathKey);
       window.updateAuthUI = function () {
         const cards = document.querySelectorAll(".lesson-card");
