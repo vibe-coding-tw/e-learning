@@ -5958,8 +5958,20 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
         console.log(`[createStudentRepository] Adding collaborator ${githubUsername} with push permission...`);
         await ghHelper.addCollaborator(targetOrg, newRepoName, githubUsername, 'push');
 
-        console.log(`[createStudentRepository] Fetching main branch SHA...`);
-        const mainRef = await ghHelper.getRef(targetOrg, newRepoName, 'heads/main');
+        console.log(`[createStudentRepository] Fetching main branch SHA (with retry)...`);
+        let mainRef = null;
+        let retries = 5;
+        while (retries > 0) {
+            try {
+                mainRef = await ghHelper.getRef(targetOrg, newRepoName, 'heads/main');
+                break;
+            } catch (err) {
+                retries--;
+                if (retries === 0) throw err;
+                console.log(`[createStudentRepository] Main branch not ready yet, retrying in 2 seconds... (${retries} retries left)`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
         const mainSha = mainRef.object.sha;
 
         console.log(`[createStudentRepository] Creating feedback branch...`);
