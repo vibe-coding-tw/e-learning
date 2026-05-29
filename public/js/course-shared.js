@@ -2252,7 +2252,7 @@ function enhanceAssignmentEntryButtons() {
         btnNative.className = 'flex-1 group assignment-group-native-btn py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-base shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/35 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2';
         btnNative.innerHTML = `
             <i class="fab fa-github text-lg transition-transform group-hover:scale-110"></i>
-            <span>前往 Classroom 寫作業</span>
+            <span>前往 GitHub 寫作業</span>
             <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
         `;
         btnNative.addEventListener('click', async (e) => {
@@ -2466,7 +2466,7 @@ function buildSubmitFailureMessage(rawMessage = '', submitUrl = '') {
     const maybeOrgInviteIssue =
         /付款授權|payment|repository access issue|no longer have access|no access|invitation|組織邀請|organization/i.test(message);
     if (isClassroomSubmission && maybeOrgInviteIssue) {
-        return `繳交失敗：${message || '尚未完成授權'}\n\n請先完成以下步驟後再提交：\n1. 前往 https://github.com/settings/organizations\n2. 接受待處理的組織或 Repository 邀請\n3. 回到本頁重新提交`;
+        return `繳交失敗：${message || '尚未完成授權'}\n\n請先完成以下步驟後再提交：\n1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n2. 接受待處理的作業 Repository 邀請 (Collaborator Invitation)\n3. 回到本頁重新提交`;
     }
     return `繳交失敗: ${message || 'Unknown error'}`;
 }
@@ -2511,9 +2511,9 @@ window.submitAssignmentAction = async function () {
                         ? '\n（目前帳號尚未綁定 GitHub 登入）'
                         : '';
                 alert(
-                    `請先完成 GitHub 組織邀請授權再提交。\n` +
-                    `1. 前往 ${precheck.settingsUrl || 'https://github.com/settings/organizations'}\n` +
-                    `2. 接受待處理邀請\n` +
+                    `請先接受作業 Repository 的協作者邀請再提交。\n` +
+                    `1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n` +
+                    `2. 接受待處理的作業邀請\n` +
                     `3. 回到本頁重新提交` +
                     suffix
                 );
