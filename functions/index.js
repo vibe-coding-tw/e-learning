@@ -5973,9 +5973,39 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
             }
         }
         const mainSha = mainRef.object.sha;
+        let feedbackSha = mainSha;
+        let needPlaceholder = false;
 
-        console.log(`[createStudentRepository] Creating feedback branch...`);
-        await ghHelper.createRef(targetOrg, newRepoName, 'refs/heads/feedback', mainSha);
+        try {
+            console.log(`[createStudentRepository] Fetching commit details for ${mainSha} to determine branch base...`);
+            const commitDetails = await ghHelper.getCommit(targetOrg, newRepoName, mainSha);
+            if (commitDetails.parents && commitDetails.parents.length > 0) {
+                feedbackSha = commitDetails.parents[0].sha;
+                console.log(`[createStudentRepository] Found parent commit ${feedbackSha}. Using it as feedback branch base.`);
+            } else {
+                needPlaceholder = true;
+                console.log(`[createStudentRepository] No parent commit found. Will write a placeholder file to force diff.`);
+            }
+        } catch (commitErr) {
+            console.warn(`[createStudentRepository] Failed to get commit details, falling back to placeholder file:`, commitErr);
+            needPlaceholder = true;
+        }
+
+        console.log(`[createStudentRepository] Creating feedback branch at ${feedbackSha}...`);
+        await ghHelper.createRef(targetOrg, newRepoName, 'refs/heads/feedback', feedbackSha);
+
+        if (needPlaceholder) {
+            console.log(`[createStudentRepository] Creating placeholder file .github/classroom/feedback.md on main branch...`);
+            const fileContent = `# Feedback\n\n這是您的作業回饋專區。請在此 PR 中進行討論與發問。`;
+            await ghHelper.createFile(
+                targetOrg,
+                newRepoName,
+                '.github/classroom/feedback.md',
+                fileContent,
+                'chore: initialize feedback PR [skip ci]',
+                'main'
+            );
+        }
 
         console.log(`[createStudentRepository] Opening Feedback PR...`);
         const feedbackPR = await ghHelper.createPullRequest(
