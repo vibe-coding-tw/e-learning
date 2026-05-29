@@ -2252,7 +2252,7 @@ function enhanceAssignmentEntryButtons() {
         btnNative.className = 'flex-1 group assignment-group-native-btn py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-base shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/35 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2';
         btnNative.innerHTML = `
             <i class="fab fa-github text-lg transition-transform group-hover:scale-110"></i>
-            <span>前往作業倉庫</span>
+            <span>前往 GitHub 寫作業</span>
             <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
         `;
         btnNative.addEventListener('click', async (e) => {
@@ -2377,7 +2377,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
                 ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(accessMode);
             const skipTutorPrompt = !!options?.skipTutorPrompt;
 
-            // [V20] 已授權的使用者，點擊「前往作業倉庫」時先顯示導師確認對話框
+            // [V20] 已授權的使用者，點擊「前往 Classroom 寫作業」時先顯示導師確認對話框
             // 除非 skipTutorPrompt === true（綁定成功後自動觸發的重試流程）
             if (isAuthorized && !skipTutorPrompt) {
                 document.getElementById('link-course-id').value = courseId;
@@ -2466,7 +2466,7 @@ function buildSubmitFailureMessage(rawMessage = '', submitUrl = '') {
     const maybeOrgInviteIssue =
         /付款授權|payment|repository access issue|no longer have access|no access|invitation|組織邀請|organization/i.test(message);
     if (isClassroomSubmission && maybeOrgInviteIssue) {
-        return `繳交失敗：${message || '尚未完成授權'}\n\n請先完成以下步驟後再提交：\n1. 前往 https://github.com/settings/organizations\n2. 接受待處理的組織或 Repository 邀請\n3. 回到本頁重新提交`;
+        return `繳交失敗：${message || '尚未完成授權'}\n\n請先完成以下步驟後再提交：\n1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n2. 接受待處理的作業 Repository 邀請 (Collaborator Invitation)\n3. 回到本頁重新提交`;
     }
     return `繳交失敗: ${message || 'Unknown error'}`;
 }
@@ -2511,9 +2511,9 @@ window.submitAssignmentAction = async function () {
                         ? '\n（目前帳號尚未綁定 GitHub 登入）'
                         : '';
                 alert(
-                    `請先完成 GitHub 組織邀請授權再提交。\n` +
-                    `1. 前往 ${precheck.settingsUrl || 'https://github.com/settings/organizations'}\n` +
-                    `2. 接受待處理邀請\n` +
+                    `請先接受作業 Repository 的協作者邀請再提交。\n` +
+                    `1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n` +
+                    `2. 接受待處理的作業邀請\n` +
                     `3. 回到本頁重新提交` +
                     suffix
                 );
@@ -2663,6 +2663,11 @@ function ensureMobileResponsiveLayout() {
             const style = document.createElement('style');
             style.id = 'ms-mobile-responsive-theme';
             style.textContent = `
+                /* Hide sidebar toggle on desktop by default */
+                .ms-sidebar-toggle {
+                    display: none !important;
+                }
+                
                 @media (max-width: 768px) {
                     /* Layout container setup */
                     .ms-layout {
@@ -2778,12 +2783,80 @@ function ensureMobileResponsiveLayout() {
             document.head.appendChild(style);
         }
 
-        // 2. Hamburger Button 已移除（不再插入三條線按鈕）
-        // 若有殘留的 toggle 按鈕，一律移除
-        const currentTopNav = document.querySelector('.ms-topnav');
-        if (currentTopNav) {
-            const toggleBtn = currentTopNav.querySelector('.ms-sidebar-toggle');
-            if (toggleBtn) toggleBtn.remove();
+        // 2. Insert Hamburger Button in Topnav (Only if sidebar is actually present in layout)
+        const sidebar = document.querySelector('.ms-sidebar');
+        const hasSidebar = !!sidebar;
+        
+        if (!hasSidebar) {
+            const currentTopNav = document.querySelector('.ms-topnav');
+            if (currentTopNav) {
+                const toggleBtn = currentTopNav.querySelector('.ms-sidebar-toggle');
+                if (toggleBtn) toggleBtn.remove();
+            }
+            return;
+        }
+
+        const topNav = document.querySelector('.ms-topnav');
+        if (topNav && sidebar) {
+            let toggleBtn = topNav.querySelector('.ms-sidebar-toggle');
+            if (!toggleBtn) {
+                toggleBtn = document.createElement('button');
+                toggleBtn.type = 'button';
+                toggleBtn.className = 'ms-sidebar-toggle';
+                toggleBtn.setAttribute('aria-label', 'Toggle Sidebar');
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                
+                topNav.insertBefore(toggleBtn, topNav.firstChild);
+            }
+
+            // 3. Create Backdrop Overlay
+            let backdrop = document.querySelector('.ms-sidebar-backdrop');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'ms-sidebar-backdrop';
+                layout.appendChild(backdrop);
+            }
+
+            const openSidebar = () => {
+                sidebar.classList.add('open');
+                backdrop.classList.add('active');
+                document.body.classList.add('sidebar-open');
+            };
+
+            const closeSidebar = () => {
+                sidebar.classList.remove('open');
+                backdrop.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            };
+
+            // Re-bind listeners by cloning elements
+            const newToggleBtn = toggleBtn.cloneNode(true);
+            toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+            
+            newToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (sidebar.classList.contains('open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+
+            const newBackdrop = backdrop.cloneNode(true);
+            backdrop.parentNode.replaceChild(newBackdrop, backdrop);
+            
+            newBackdrop.addEventListener('click', () => {
+                closeSidebar();
+            });
+
+            // Close sidebar when clicking menu items on mobile
+            sidebar.querySelectorAll('.ms-unit-item, .unit-card').forEach(item => {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
         }
     } catch (e) {
         console.warn('[CourseShared] ensureMobileResponsiveLayout failed:', e);
