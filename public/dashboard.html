@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Course Unit Dashboard - Vibe Coding</title>
+    <script src="./js/i18n-helper.bf37f53ad609.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -45,7 +46,7 @@
     </script>
 </head>
 
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen" data-i18n-doc-title="doc_title_dashboard">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
     <script type="module" src="./js/nav-component.1e95b5b36088.js"></script>
     
@@ -57,19 +58,19 @@
             <div
                 class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4">
             </div>
-            <p class="text-gray-500">正在讀取數據...</p>
+            <p class="text-gray-500" data-i18n="dash_loading">正在讀取數據...</p>
         </div>
 
         <!-- Access Denied / Guest View -->
         <div id="access-denied" class="hidden text-center py-20">
-            <h2 id="denied-title" class="text-2xl font-bold text-red-600 mb-4">⛔ 權限不足</h2>
-            <p id="denied-msg" class="text-gray-600">只有老師或管理員可以訪問此頁面。</p>
+            <h2 id="denied-title" class="text-2xl font-bold text-red-600 mb-4" data-i18n="dash_denied_title">⛔ 權限不足</h2>
+            <p id="denied-msg" class="text-gray-600" data-i18n="dash_denied_msg">只有老師或管理員可以訪問此頁面。</p>
 
             <!-- Guest View (Login Prompt) -->
             <div id="guest-view" class="hidden mt-8">
-                <p class="text-gray-500 mb-6">您尚未登入。請登入以查看您的學習數據或管理課程。</p>
+                <p class="text-gray-500 mb-6" data-i18n="dash_guest_msg">您尚未登入。請登入以查看您的學習數據或管理課程。</p>
                 <button onclick="window.location.href='index.html'"
-                    class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 shadow-lg transition transform hover:scale-105">
+                    class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 shadow-lg transition transform hover:scale-105" data-i18n="dash_login_btn">
                     🚀 立即登入 (Login)
                 </button>
             </div>
@@ -84,7 +85,7 @@
                 <p class="text-xs text-gray-400 mt-2">設定欄位: role: "admin", email: "..."</p>
             </div>
             <br>
-            <a href="index.html" class="mt-6 inline-block text-gray-500 hover:text-gray-700 underline text-sm">回首頁</a>
+            <a href="index.html" class="mt-6 inline-block text-gray-500 hover:text-gray-700 underline text-sm" data-i18n="dash_back_home">回首頁</a>
         </div>
 
         <!-- Dashboard Content -->
@@ -96,23 +97,23 @@
             <!-- Tab Navigation -->
             <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
                 <button onclick="switchTab('overview')" id="tab-btn-overview"
-                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-blue-600 border-b-2 border-blue-600 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-blue-600 border-b-2 border-blue-600 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_overview">
                     概覽 (Overview)
                 </button>
                 <button onclick="switchTab('tutors')" id="tab-btn-tutors"
-                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_tutors">
                     導師管理 (Tutor Management)
                 </button>
                 <button onclick="switchTab('shipments')" id="tab-btn-shipments"
-                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_shipments">
                     出貨管理 (Shipment Management)
                 </button>
                 <button onclick="switchTab('assignments')" id="tab-btn-assignments"
-                    class="tab-btn px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_assignments">
                     作業 (Assignments)
                 </button>
                 <button onclick="switchTab('settings')" id="tab-btn-settings"
-                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_settings">
                     課程設定 (Settings)
                 </button>
             </div>
@@ -122,15 +123,15 @@
                 <!-- Header Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
                     <div class="card border-l-4 border-blue-500 p-4 sm:p-6">
-                        <p class="text-gray-500 text-xs sm:text-sm font-medium">總註冊人數</p>
+                        <p class="text-gray-500 text-xs sm:text-sm font-medium" data-i18n="dash_stat_students">總註冊人數</p>
                         <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1" id="stat-students">0</h3>
                     </div>
                     <div class="card border-l-4 border-emerald-500 p-4 sm:p-6">
-                        <p class="text-gray-500 text-xs sm:text-sm font-medium">💳 付費學生數</p>
+                        <p class="text-gray-500 text-xs sm:text-sm font-medium" data-i18n="dash_stat_paid">💳 付費學生數</p>
                         <h3 class="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1" id="stat-paid">0</h3>
                     </div>
                     <div class="card border-l-4 border-purple-500 p-4 sm:p-6">
-                        <p class="text-gray-500 text-xs sm:text-sm font-medium">總學習時數 (小時)</p>
+                        <p class="text-gray-500 text-xs sm:text-sm font-medium" data-i18n="dash_stat_hours">總學習時數 (小時)</p>
                         <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1" id="stat-hours">0.0</h3>
                     </div>
                 </div>
@@ -140,14 +141,14 @@
 
                     <!-- Student Table -->
                     <div class="lg:col-span-2 card">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">學習概況</h3>
+                        <h3 class="text-lg font-bold text-gray-800 mb-4" data-i18n="dash_learning_status">學習概況</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="text-xs sm:text-sm text-gray-500 border-b">
-                                        <th class="py-2 px-1 sm:py-3 sm:px-2 w-1/4">學生 / 註冊時間</th>
-                                        <th class="py-2 px-1 sm:py-3 sm:px-2 text-left w-1/3">權限、狀態與到期日</th>
-                                        <th class="py-2 px-1 sm:py-3 sm:px-2 text-right w-1/6">總使用時數</th>
+                                        <th class="py-2 px-1 sm:py-3 sm:px-2 w-1/4" data-i18n="dash_th_student">學生 / 註冊時間</th>
+                                        <th class="py-2 px-1 sm:py-3 sm:px-2 text-left w-1/3" data-i18n="dash_th_status">權限、狀態與到期日</th>
+                                        <th class="py-2 px-1 sm:py-3 sm:px-2 text-right w-1/6" data-i18n="dash_th_hours">總使用時數</th>
                                     </tr>
                                 </thead>
                                 <tbody id="student-table-body" class="text-sm text-gray-700 divide-y">
@@ -186,18 +187,18 @@
             <div id="view-assignments" class="tab-content hidden space-y-6 animate-fade-in">
                 <div class="card p-0">
                     <div id="assignments-header" class="px-6 py-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
-                        <h3 class="text-xl font-bold text-gray-800">作業批改 (Assignments)</h3>
+                        <h3 class="text-xl font-bold text-gray-800" data-i18n="dash_assignments_title">作業批改 (Assignments)</h3>
                     </div>
                     <div class="p-6 overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="text-xs sm:text-sm text-gray-500 border-b">
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">學生</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">作業/單元</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center">時間</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center">狀態</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center">分</th>
-                                    <th id="th-assignment-action-main" class="py-2 px-1 sm:py-3 sm:px-2 text-right">操作</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2" data-i18n="dash_th_student_name">學生</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2" data-i18n="dash_th_assignment_unit">作業/單元</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center" data-i18n="dash_th_time">時間</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center" data-i18n="dash_status">狀態</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center" data-i18n="dash_score">分</th>
+                                    <th id="th-assignment-action-main" class="py-2 px-1 sm:py-3 sm:px-2 text-right" data-i18n="dash_th_action">操作</th>
                                 </tr>
                             </thead>
                             <tbody class="assignment-table-body text-sm text-gray-700 divide-y">
@@ -209,7 +210,7 @@
 
                 <!-- [V14.7] GitHub README: Moved below the table -->
                 <div id="github-readme-placeholder-main" class="markdown-embed p-6 mb-8 rounded-3xl border border-slate-200 bg-gray-50 shadow-sm overflow-hidden hidden">
-                    <div class="flex items-center gap-3 text-slate-400 italic font-medium">
+                    <div class="flex items-center gap-3 text-slate-400 italic font-medium" data-i18n="dash_loading_readme">
                         <span class="animate-pulse">⏳</span> 正在抓取 GitHub 任務說明 (README.md)...
                     </div>
                 </div>
@@ -227,19 +228,19 @@
             <div id="view-shipments" class="tab-content hidden space-y-6 animate-fade-in">
                 <div class="card p-0">
                     <div id="shipments-header" class="px-6 py-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
-                        <h3 class="text-xl font-bold text-gray-800">出貨管理 (Shipment Management)</h3>
+                        <h3 class="text-xl font-bold text-gray-800" data-i18n="dash_shipments_title">出貨管理 (Shipment Management)</h3>
                     </div>
                     <div class="p-6 overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="text-xs sm:text-sm text-gray-500 border-b">
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">訂單編號</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">買家資訊</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">硬體項目</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">收件資訊</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">物流地址 / 金額</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center">狀態</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-right">操作</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2" data-i18n="dash_th_order_id">訂單編號</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2" data-i18n="dash_th_buyer_info">買家資訊</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2" data-i18n="dash_th_hardware_items">硬體項目</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2" data-i18n="dash_th_shipping_info">收件資訊</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2" data-i18n="dash_th_address_amount">物流地址 / 金額</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center" data-i18n="dash_status">狀態</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-right" data-i18n="dash_th_action">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="shipments-table-body" class="text-sm text-gray-700 divide-y">
@@ -256,7 +257,7 @@
             <!-- TAB CONTENT: COURSE SETTINGS (Restored Wrapper) -->
             <div id="view-settings" class="tab-content hidden space-y-12 animate-fade-in">
                 <div id="settings-header" class="px-6 py-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
-                    <h3 class="text-xl font-bold text-gray-800">課程設定 (Settings)</h3>
+                    <h3 class="text-xl font-bold text-gray-800" data-i18n="dash_settings_title">課程設定 (Settings)</h3>
                 </div>
 
                 <!-- 原生 API (Native API) 設定說明指引 -->
@@ -307,7 +308,7 @@
                 <!-- 3. Tutor Guides / Attachments (README & Context) -->
                 <div class="pt-12 border-t border-gray-100 space-y-8">
                     <div id="github-readme-placeholder-settings" class="markdown-embed p-6 mb-8 rounded-3xl border border-slate-200 bg-gray-50 shadow-sm overflow-hidden hidden">
-                        <div class="flex items-center gap-3 text-slate-400 italic font-medium">
+                        <div class="flex items-center gap-3 text-slate-400 italic font-medium" data-i18n="dash_loading_readme">
                             <span class="animate-pulse">⏳</span> 正在抓取 GitHub 任務說明 (README.md)...
                         </div>
                     </div>
@@ -474,8 +475,8 @@
     <div id="footer-placeholder" data-root="."></div>
     <script src="./js/footer-component.592aaceeda6b.js"></script>
     </main>
-
-    <script type="module" src="/js/dashboard.c7c3ca04205d.js"></script>
+ 
+    <script type="module" src="./js/dashboard.0c62d29570ad.js"></script>
 </body>
 
 </html>

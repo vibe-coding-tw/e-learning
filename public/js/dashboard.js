@@ -380,19 +380,19 @@ function showAccessDenied(errorType = "") {
 
     if (errorType === "GUEST") {
         // Show Login Prompt
-        if (deniedTitle) deniedTitle.innerText = "👋 您好！閣下尚未登入";
-        if (deniedMsg) deniedMsg.innerText = "本頁面為個人學習儀表板，請登入以查看您的數據。";
+        if (deniedTitle) deniedTitle.innerText = window.t('dash_hello_guest', "👋 您好！閣下尚未登入");
+        if (deniedMsg) deniedMsg.innerText = window.t('dash_guest_msg', "本頁面為個人學習儀表板，請登入以查看您的數據。");
         if (guestView) guestView.classList.remove('hidden');
         if (adminSetupNote) adminSetupNote.classList.add('hidden');
     } else if (errorType === "ADMIN_ONLY_NO_UNIT") {
-        if (deniedTitle) deniedTitle.innerText = "⛔ 僅限管理員";
-        if (deniedMsg) deniedMsg.innerText = "未指定課程單元時，只有管理員可以存取 Dashboard。";
+        if (deniedTitle) deniedTitle.innerText = window.t('dash_denied_title_admin_only', "⛔ 僅限管理員");
+        if (deniedMsg) deniedMsg.innerText = window.t('dash_denied_msg_admin_only', "未指定課程單元時，只有管理員可以存取 Dashboard。");
         if (guestView) guestView.classList.add('hidden');
         if (adminSetupNote) adminSetupNote.classList.add('hidden');
     } else {
         // Show Access Denied (Logged in but no permission)
-        if (deniedTitle) deniedTitle.innerText = "⛔ 權限不足";
-        if (deniedMsg) deniedMsg.innerText = "只有管理員、該單元合格導師，或該單元已付款學生可以存取此頁面。";
+        if (deniedTitle) deniedTitle.innerText = window.t('dash_denied_title', "⛔ 權限不足");
+        if (deniedMsg) deniedMsg.innerText = window.t('dash_denied_msg', "只有管理員、該單元合格導師，或該單元已付款學生可以存取此頁面。");
         if (guestView) guestView.classList.add('hidden');
         if (adminSetupNote) adminSetupNote.classList.remove('hidden');
 
@@ -786,7 +786,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
 
     const container = document.getElementById('view-overview');
 
-    let courseTitle = filterCourseId ? (lessonsMap[filterCourseId] || filterCourseId) : "我的學習概況";
+    let courseTitle = filterCourseId ? (lessonsMap[filterCourseId] || filterCourseId) : window.t('dash_my_learning_profile', "我的學習概況");
     if (filterUnitId) courseTitle += ` - ${formatUnitName(filterUnitId)}`;
 
     // Check for physical products and fulfillment status
@@ -807,48 +807,49 @@ function renderStudentDashboard(data, filterUnitId = null) {
     container.innerHTML = `
         <div class="mb-6">
             <h2 class="text-2xl font-bold text-gray-800">${escapeHtml(courseTitle)}</h2>
-            ${filterCourseId && mode !== 'iframe' ? '<a href="dashboard.html" class="text-sm text-blue-600 hover:underline">← 查看所有課程</a>' : ''}
+            ${filterCourseId && mode !== 'iframe' ? `<a href="dashboard.html" class="text-sm text-blue-600 hover:underline">${window.t('dash_view_all_courses', '← 查看所有課程')}</a>` : ''}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="card border-l-4 border-blue-500">
-                <p class="text-gray-500 text-sm font-medium">${filterUnitId ? '本單元學習時數' : '學習時數'}</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-1">${((myData.totalTime || 0) / 3600).toFixed(1)} <span class="text-sm font-normal text-gray-400">hours</span></h3>
+                <p class="text-gray-500 text-sm font-medium">${filterUnitId ? window.t('dash_unit_learning_hours', '本單元學習時數') : window.t('dash_learning_hours', '學習時數')}</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-1">${((myData.totalTime || 0) / 3600).toFixed(1)} <span class="text-sm font-normal text-gray-400">${window.t('dash_hours_unit', 'hours')}</span></h3>
             </div>
             <div class="card border-l-4 border-purple-500">
-                <p class="text-gray-500 text-sm font-medium">作業繳交</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-1">${displayAssignments.length} <span class="text-sm font-normal text-gray-400">submitted</span></h3>
+                <p class="text-gray-500 text-sm font-medium">${window.t('dash_assignments_submitted', '作業繳交')}</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-1">${displayAssignments.length} <span class="text-sm font-normal text-gray-400">${window.t('dash_submitted_unit', 'submitted')}</span></h3>
             </div>
              <div class="card border-l-4 border-green-500">
-                <p class="text-gray-500 text-sm font-medium">帳號狀態</p>
-                <h3 class="text-3xl font-bold text-green-600 mt-1">Active</h3>
+                <p class="text-gray-500 text-sm font-medium">${window.t('dash_account_status', '帳號狀態')}</p>
+                <h3 class="text-3xl font-bold text-green-600 mt-1">${window.t('dash_account_active', 'Active')}</h3>
             </div>
             ${hasPhysical ? `
             <div class="card border-l-4 border-orange-500">
-                <p class="text-gray-500 text-sm font-medium">實體教材出貨</p>
-                <h3 class="text-3xl font-bold ${isShipped ? 'text-green-600' : 'text-orange-600'} mt-1">${isShipped ? '已出貨' : '準備中'}</h3>
+                <p class="text-gray-500 text-sm font-medium">${window.t('dash_kit_shipment', '實體教材出貨')}</p>
+                <h3 class="text-3xl font-bold ${isShipped ? 'text-green-600' : 'text-orange-600'} mt-1">${isShipped ? window.t('dash_shipped', '已出貨') : window.t('dash_preparing', '準備中')}</h3>
             </div>
             ` : ''}
         </div>
 
         ${shipmentRecords.length > 0 ? `
         <div class="card mb-8">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">我的出貨狀態 (My Shipments)</h3>
+            <h3 class="text-lg font-bold text-gray-800 mb-4">${window.t('dash_my_shipments', '我的出貨狀態 (My Shipments)')}</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="text-sm text-gray-500 border-b">
-                            <th class="py-3 px-2">訂單</th>
-                            <th class="py-3 px-2">收件資訊</th>
-                            <th class="py-3 px-2">物流地址</th>
-                            <th class="py-3 px-2 text-center">狀態</th>
+                            <th class="py-3 px-2">${window.t('dash_shipment_order', '訂單')}</th>
+                            <th class="py-3 px-2">${window.t('dash_th_shipping_info', '收件資訊')}</th>
+                            <th class="py-3 px-2">${window.t('dash_shipment_address', '物流地址')}</th>
+                            <th class="py-3 px-2 text-center">${window.t('dash_status', '狀態')}</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm text-gray-700 divide-y">
                         ${shipmentRecords.map(o => {
-                            const receiverName = o.shippingContact?.name || o.logistics?.receiverName || o.logistics?.ReceiverName || '未提供';
-                            const receiverPhone = o.shippingContact?.phone || o.logistics?.receiverPhone || o.logistics?.ReceiverCellPhone || o.logistics?.ReceiverPhone || '未提供';
-                            const shippingAddress = o.shippingAddress || o.logistics?.storeAddress || o.logistics?.CVSAddress || o.logistics?.ReceiverAddress || '未提供';
+                            const notProvided = window.t('not_provided', '未提供');
+                            const receiverName = o.shippingContact?.name || o.logistics?.receiverName || o.logistics?.ReceiverName || notProvided;
+                            const receiverPhone = o.shippingContact?.phone || o.logistics?.receiverPhone || o.logistics?.ReceiverCellPhone || o.logistics?.ReceiverPhone || notProvided;
+                            const shippingAddress = o.shippingAddress || o.logistics?.storeAddress || o.logistics?.CVSAddress || o.logistics?.ReceiverAddress || notProvided;
                             const isDone = o.fulfillmentStatus === 'SHIPPED';
                             const paidAtText = o.paidAt?.seconds
                                 ? new Date(o.paidAt.seconds * 1000).toLocaleString()
@@ -860,13 +861,13 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                         <div class="text-[10px] text-gray-400 mt-0.5">${escapeHtml(paidAtText)}</div>
                                     </td>
                                     <td class="py-3 px-2">
-                                        <div class="text-xs text-slate-700 font-semibold">收件人: ${escapeHtml(receiverName)}</div>
-                                        <div class="text-xs text-slate-600">電話: ${escapeHtml(receiverPhone)}</div>
+                                        <div class="text-xs text-slate-700 font-semibold">${window.t('dash_shipment_receiver', '收件人')}: ${escapeHtml(receiverName)}</div>
+                                        <div class="text-xs text-slate-600">${window.t('dash_shipment_phone', '電話')}: ${escapeHtml(receiverPhone)}</div>
                                     </td>
                                     <td class="py-3 px-2 text-xs text-slate-700 break-all">${escapeHtml(shippingAddress)}</td>
                                     <td class="py-3 px-2 text-center">
                                         <span class="px-2 py-1 rounded text-xs font-bold ${isDone ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
-                                            ${isDone ? '已出貨' : '待出貨'}
+                                            ${isDone ? window.t('dash_shipped', '已出貨') : window.t('dash_to_ship', '待出貨')}
                                         </span>
                                     </td>
                                 </tr>
@@ -880,16 +881,16 @@ function renderStudentDashboard(data, filterUnitId = null) {
 
         <!-- My Assignments -->
         <div class="card">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">我的作業 (My Assignments)</h3>
+            <h3 class="text-lg font-bold text-gray-800 mb-4">${window.t('dash_my_assignments', '我的作業 (My Assignments)')}</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="text-sm text-gray-500 border-b">
-                            <th class="py-3 px-2">作業名稱</th>
-                            <th class="py-3 px-2">提交時間</th>
-                            <th class="py-3 px-2">狀態</th>
-                            <th class="py-3 px-2 text-right">分數</th>
-                            <th class="py-3 px-2 text-right">評語</th>
+                            <th class="py-3 px-2">${window.t('dash_assignment_name', '作業名稱')}</th>
+                            <th class="py-3 px-2">${window.t('dash_submitted_time', '提交時間')}</th>
+                            <th class="py-3 px-2">${window.t('dash_status', '狀態')}</th>
+                            <th class="py-3 px-2 text-right">${window.t('dash_score', '分數')}</th>
+                            <th class="py-3 px-2 text-right">${window.t('dash_feedback', '評語')}</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm text-gray-700 divide-y">
@@ -902,7 +903,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                 <td class="py-3 px-2 text-gray-500 text-xs">${a.submittedAt ? new Date(a.submittedAt.seconds * 1000).toLocaleString() : '-'}</td>
                                 <td class="py-3 px-2">
                                     <span class="px-2 py-1 rounded text-xs font-bold ${isAssignmentGraded(a) ? 'bg-green-100 text-green-700' : ((a.currentStatus || a.status) === 'started' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700')}">
-                                        ${isAssignmentGraded(a) ? '已評分' : resolveAssignmentStatusLabel(a.currentStatus || a.status || 'submitted')}
+                                        ${isAssignmentGraded(a) ? window.t('dash_graded', '已評分') : resolveAssignmentStatusLabel(a.currentStatus || a.status || 'submitted')}
                                     </span>
                                 </td>
                                 <td class="py-3 px-2 text-right font-bold text-blue-600">${resolveAssignmentGradeDisplay(a)}</td>
@@ -910,7 +911,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                     ${a.tutorFeedback ? escapeHtml(a.tutorFeedback) : '-'}
                                 </td>
                             </tr>
-                        `).join('') : '<tr><td colspan="5" class="py-4 text-center text-gray-500">此課程尚無繳交作業</td></tr>'}
+                        `).join('') : `<tr><td colspan="5" class="py-4 text-center text-gray-500">${window.t('dash_no_assignments_submitted', '此課程尚無繳交作業')}</td></tr>`}
                     </tbody>
                 </table>
             </div>
@@ -927,11 +928,11 @@ function renderStudentDashboard(data, filterUnitId = null) {
         <div class="card mt-8">
              <div class="flex flex-col md:flex-row gap-8 items-center">
                 <div class="w-full md:w-1/3">
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">學習分佈</h3>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2" data-i18n="dash_learning_distribution">學習分佈</h3>
                     <canvas id="chart-activity"></canvas>
                 </div>
                 <div class="w-full md:w-2/3">
-                     <h3 class="text-lg font-bold text-gray-800 mb-4">課程進度詳情</h3>
+                     <h3 class="text-lg font-bold text-gray-800 mb-4" data-i18n="dash_course_progress_details">課程進度詳情</h3>
                      <div class="space-y-3">
                         ${Object.entries(displayCourseProgress).length > 0 ? Object.entries(displayCourseProgress).map(([cid, p]) => `
                             <div>
@@ -943,7 +944,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                     <div class="bg-blue-600 h-2 rounded-full" style="width: ${Math.min(100, (p.total / 3600) * 100)}%"></div> 
                                 </div>
                             </div>
-                        `).join('') : '<p class="text-gray-500">尚無學習紀錄</p>'}
+                        `).join('') : `<p class="text-gray-500">${window.t('dash_no_learning_records', '尚無學習紀錄')}</p>`}
                      </div>
                 </div>
             </div>
@@ -1571,12 +1572,12 @@ function isAssignmentGraded(assignment) {
 }
 
 function resolveAssignmentStatusLabel(status) {
-    if (status === 'started' || status === 'in_progress') return '進行中';
-    if (status === 'submitted') return '待評分';
-    if (status === 'graded') return '已評分';
-    if (status === 'blocked') return '🔴 遭遇卡點';
-    if (status === 'coaching') return '🟡 導師引導中';
-    if (status === 'resolved') return '🟢 已解決';
+    if (status === 'started' || status === 'in_progress') return window.t('status_in_progress', '進行中');
+    if (status === 'submitted') return window.t('status_submitted', '待評分');
+    if (status === 'graded') return window.t('status_graded', '已評分');
+    if (status === 'blocked') return window.t('status_blocked', '🔴 遭遇卡點');
+    if (status === 'coaching') return window.t('status_coaching', '🟡 導師引導中');
+    if (status === 'resolved') return window.t('status_resolved', '🟢 已解決');
     return status || 'new';
 }
 
