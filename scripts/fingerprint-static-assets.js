@@ -127,6 +127,10 @@ function main() {
   if (fs.existsSync(privateCoursesDir)) {
     htmlRoots.push(privateCoursesDir);
   }
+  const contentRepoDir = '/Users/roverchen/Documents/Apps/content-repo';
+  if (fs.existsSync(contentRepoDir)) {
+    htmlRoots.push(contentRepoDir);
+  }
   const htmlFiles = htmlRoots
     .flatMap((dir) => walkFiles(dir))
     .filter((f) => f.endsWith('.html'));
