@@ -8,6 +8,7 @@
 
 - **GitHub 原生整合計劃 (Native Integration)**：已新增完整遷移與替代 GitHub Classroom 的實作計劃，支援在平台直接建立學生私有 Repo、以 Collaborator 身分邀請學生、以及自動回寫自動評分結果。詳見：docs/github-api-native-integration-plan.md
 - **前端體驗優化**：學生端新增「一鍵領取作業」流程（Native API 模式），導師端可在 Settings 提供 GitHub Org / Template / PAT 以實現一班一組織的派發隔離。
+- **平台擴張計畫 (Platform Expansion)**：新增平台擴張與營運策略文件，說明國際化、合作夥伴模式與分潤延伸策略。詳見：docs/platform-expansion-plan.md
 
 
 ## ✨ 平台特色 (Platform Highlights)
