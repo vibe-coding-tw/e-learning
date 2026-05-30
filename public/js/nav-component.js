@@ -38,7 +38,7 @@ async function startGoogleLogin() {
         alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請改用 login.html。");
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v1";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v2";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
@@ -50,11 +50,12 @@ const DEFAULT_LEARNING_PATHS = [
 
 function getDefaultLearningPaths(uiLocale = "zh-TW") {
     const isZh = isZhLocale(uiLocale);
+    // 注意：不論語系，一律連到 tw-* 路徑（Firestore 課程資料皆為 tw-*），只有標籤文字切換語系
     return [
-        { key: `${isZh ? 'tw' : 'en'}-common`, href: `learning-path.html?path=${isZh ? 'tw' : 'en'}-common`, icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
-        { key: `${isZh ? 'tw' : 'en'}-car-starter`, href: `learning-path.html?path=${isZh ? 'tw' : 'en'}-car-starter`, icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Course" },
-        { key: `${isZh ? 'tw' : 'en'}-car-basic`, href: `learning-path.html?path=${isZh ? 'tw' : 'en'}-car-basic`, icon: "fa-code", label: isZh ? "基礎課程" : "Basic Course" },
-        { key: `${isZh ? 'tw' : 'en'}-car-advanced`, href: `learning-path.html?path=${isZh ? 'tw' : 'en'}-car-advanced`, icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Course" }
+        { key: "tw-common", href: "learning-path.html?path=tw-common", icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
+        { key: "tw-car-starter", href: "learning-path.html?path=tw-car-starter", icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Course" },
+        { key: "tw-car-basic", href: "learning-path.html?path=tw-car-basic", icon: "fa-code", label: isZh ? "基礎課程" : "Basic Course" },
+        { key: "tw-car-advanced", href: "learning-path.html?path=tw-car-advanced", icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Course" }
     ];
 }
 
@@ -349,10 +350,8 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
                 key = resolveCategoryFromFilename(filename);
             }
             if (key) {
-                // If English mode, consistently map tw- prefixed keys to en- prefix
-                if (uiLocale === "en" && key.startsWith("tw-")) {
-                    key = key.replace(/^tw-/, "en-");
-                }
+                // 不論語系，一律保留 tw-* 路徑 key（Firestore 課程皆以 tw-* 存儲）
+                // 英文版的 label 由 getCategoryLabel/CATEGORY_TRANSLATIONS 決定，不透過 key 前綴
                 keys.add(key);
                 if (!labels.has(key)) {
                     const label = pickLessonCategoryLabel(lesson, uiLocale);
@@ -363,7 +362,8 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         const dynamic = sortCategoryKeys(Array.from(keys), uiLocale).map((key) => ({
             key,
             href: getCategoryHref(key),
-            label: labels.get(key) || "",
+            // 優先使用 Firestore 課程的多語系標籤，否則 fallback 到 CATEGORY_TRANSLATIONS 字典
+            label: labels.get(key) || getCategoryLabel(key, uiLocale),
             icon: key.includes("advanced") ? "fa-microchip" :
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"
