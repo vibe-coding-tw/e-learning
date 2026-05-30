@@ -2049,6 +2049,7 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
 
 // 4. 安全檔案服務 (serveCourse)
 // ==========================================
+// trigger cache clear and container recycle
 exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, res) => {
     const resolvePreferredLocales = (runtimeConfig = null) => {
         const queryLocale = normalizeLocale(req.query.lang || req.query.locale || "");
