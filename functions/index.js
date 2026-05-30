@@ -1875,6 +1875,60 @@ exports.getLessonsMetadata = onCall(async (request) => {
     return { lessons: lessons, categoryLabels: categoryLabels };
 });
 
+/**
+ * [i18n Admin] 更新課程英文多語系欄位（僅限 admin 角色）
+ * 接受 { courseId, titleEn, summaryEn, descriptionEn, coreContentEn, lessonLabelEn }
+ * 寫入對應 metadata_lessons 文件的 *En 欄位
+ */
+exports.updateLessonI18n = onCall(async (request) => {
+    const { auth, data } = request;
+
+    // 驗證登入與 admin 角色
+    if (!auth) {
+        throw new Error('unauthenticated');
+    }
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    if (userData.role !== 'admin') {
+        throw new Error('permission-denied');
+    }
+
+    const { courseId, titleEn, summaryEn, descriptionEn, coreContentEn, lessonLabelEn } = data || {};
+    if (!courseId) {
+        throw new Error('missing-course-id');
+    }
+
+    // 查找對應的 metadata_lessons 文件（以 courseId 為主鍵）
+    const lessonsSnap = await db.collection('metadata_lessons')
+        .where('courseId', '==', courseId)
+        .limit(1)
+        .get();
+
+    if (lessonsSnap.empty) {
+        throw new Error(`lesson-not-found: ${courseId}`);
+    }
+
+    const lessonDocRef = lessonsSnap.docs[0].ref;
+
+    // 只寫入有值的欄位（undefined 不覆蓋）
+    const updatePayload = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        i18nUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        i18nUpdatedBy: auth.uid,
+    };
+    if (typeof titleEn === 'string') updatePayload.titleEn = titleEn.trim();
+    if (typeof summaryEn === 'string') updatePayload.summaryEn = summaryEn.trim();
+    if (typeof descriptionEn === 'string') updatePayload.descriptionEn = descriptionEn.trim();
+    if (Array.isArray(coreContentEn)) updatePayload.coreContentEn = coreContentEn.map(s => String(s).trim()).filter(Boolean);
+    if (typeof lessonLabelEn === 'string') updatePayload.lessonLabelEn = lessonLabelEn.trim();
+
+    await lessonDocRef.set(updatePayload, { merge: true });
+    console.log(`[updateLessonI18n] ✅ Updated i18n fields for courseId=${courseId} by uid=${auth.uid}`);
+
+    return { success: true, courseId };
+});
+
 
 // [V12.4.7] ONCALL WRAPPER: For frontend's httpsCallable('checkPaymentAuthorization')
 exports.checkPaymentAuthorization = onCall(async (request) => {
