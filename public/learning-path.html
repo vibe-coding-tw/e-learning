@@ -416,11 +416,22 @@
         const entryUrl = resolveEntryUrl(lesson);
         const unitFile = resolveUnitFile(lesson);
         const price = Number(lesson.price || 0);
-        const contentList = toList(lesson.coreContent).slice(0, 4);
-        const summary = String(lesson.summary || lesson.description || (uiLocale === "zh-TW" ? "課程內容由系統資料動態載入。" : "Course content loaded dynamically."));
+        // 英文模式優先讀取 *En 欄位，fallback 到中文欄位
+        const isEn = uiLocale === 'en';
+        const displayTitle = String((isEn ? (lesson.titleEn || lesson.title) : lesson.title) || lesson.courseId || "");
+        const contentList = toList(isEn ? (lesson.coreContentEn || lesson.coreContent) : lesson.coreContent).slice(0, 4);
+        const summary = String(
+          (isEn ? (lesson.summaryEn || lesson.summary || lesson.descriptionEn || lesson.description)
+                : (lesson.summary || lesson.description))
+          || (isEn ? "Course content loaded dynamically." : "課程內容由系統資料動態載入。")
+        );
         const duration = String(lesson.duration || lesson.estimatedDuration || "");
-        const lessonLabel = String(lesson.lessonLabel || lesson.tagText || "").trim();
-        const displayLessonLabel = lessonLabel || (uiLocale === "zh-TW" ? "課程單元" : "Course Unit");
+        const lessonLabel = String(
+          (isEn ? (lesson.lessonLabelEn || lesson.lessonLabel || lesson.tagText)
+                : (lesson.lessonLabel || lesson.tagText))
+          || ""
+        ).trim();
+        const displayLessonLabel = lessonLabel || (isEn ? "Course Unit" : "課程單元");
         const icon = String(lesson.cardIcon || lesson.icon || "📘");
         const imageUrl = pickImage(lesson);
         const videoUrl = pickVideo(lesson);
@@ -433,7 +444,7 @@
           ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
           : `<p class="text-sm text-slate-500">${summary}</p>`;
         const imageHtml = imageUrl
-          ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${imageUrl}" alt="${lesson.title || "course"}" class="w-full h-40 object-cover"></div>`
+          ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${imageUrl}" alt="${displayTitle || "course"}" class="w-full h-40 object-cover"></div>`
           : "";
         return `
           <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
@@ -447,7 +458,7 @@
               <div class="min-w-0 text-xs text-slate-500 truncate">${lesson.courseKey || lesson.courseId || ""}</div>
               ${duration ? `<span class="flex-shrink-0 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${duration}</span>` : ""}
             </div>
-            <h2 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || lesson.courseId || "Untitled Course"}</h2>
+            <h2 class="text-xl font-bold text-slate-800 mb-2">${displayTitle || lesson.courseId || "Untitled Course"}</h2>
             <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${displayLessonLabel}</div>
             ${imageHtml}
             <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary}</div>

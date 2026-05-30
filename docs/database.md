@@ -109,6 +109,24 @@
 | `i18n` | map | 可選的多語內容設定，例如各語系內容路徑或語系可用性資訊。 |
 | `learningPathLabel*` / `categoryLabel*` / `navLabel*` | string | 學習路徑分類顯示名稱。前端會優先讀取 Firestore / lesson metadata，而不是在程式碼中寫死。 |
 
+### `metadata_lessons` 英文多語系欄位（i18n Content Fields）
+
+下列欄位於 2026-05-30 新增，供英文使用者在課程目錄頁看到對應的英文課程資訊。
+**命名約定**：延續 `learningPathLabelEn` / `navLabelEn` 已有慣例，一律以 `*En` 後綴表示英文版欄位。
+
+| 欄位名稱 | 類型 | 中文對應欄位 | 說明 |
+| :--- | :--- | :--- | :--- |
+| `titleEn` | string | `title` | 課程英文標題（必填，優先級最高）。 |
+| `summaryEn` | string | `summary` | 課程英文摘要（一句話簡介）。 |
+| `descriptionEn` | string | `description` | 課程英文詳細說明（較長）。 |
+| `coreContentEn` | array | `coreContent` | 核心學習內容英文列表（對應中文 bullet list）。 |
+| `lessonLabelEn` | string | `lessonLabel` / `tagText` | 課程分類標籤英文（藍色 badge 顯示）。 |
+
+**使用規則**：
+- 前端（`learning-path.html`）在英文模式（`uiLocale === 'en'`）下優先讀取 `*En` 欄位，若欄位不存在則 fallback 到中文欄位。
+- `getLessonsMetadata` Cloud Function 直接傳回 Firestore 文件所有欄位，**不需要後端修改**即可生效。
+- 欄位維護透過 `admin-i18n.html` 管理頁面，呼叫 `updateLessonI18n` Cloud Function 寫入。
+
 執行期 canonical identity 規則：
 - 課程型 metadata：優先使用 `courseKey`
 - 商品型 metadata（`metadataType=product|legacy_product` 或 `isPhysical=true`）：優先使用 `productId`
