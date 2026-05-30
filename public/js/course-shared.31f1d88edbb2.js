@@ -45,43 +45,100 @@ function ensureUnitTabsTheme() {
                 display: block !important;
                 background: #f8fafc !important;
                 border-bottom: 1px solid #e2e8f0 !important;
-                padding: 10px 16px !important;
+                padding: 12px 16px !important;
                 overflow-x: auto !important;
                 white-space: nowrap !important;
+                -webkit-overflow-scrolling: touch;
             }
-            .unit-tabs-container { display: block !important; min-width: max-content !important; }
+            .unit-tabs-container {
+                display: block !important;
+                min-width: max-content !important;
+            }
             .unit-tabs-flex {
                 display: inline-flex !important;
-                gap: 10px !important;
+                gap: 4px !important;
                 align-items: center !important;
             }
             .unit-tab-btn {
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                border: 1px solid #cbd5e1 !important;
-                background: #ffffff !important;
-                color: #334155 !important;
-                border-radius: 999px !important;
-                padding: 8px 14px !important;
-                margin: 0 !important;
-                font-size: 14px !important;
+                border: none !important;
+                cursor: pointer !important;
+                transition: all .16s ease-in-out !important;
+                font-size: 13px !important;
                 font-weight: 700 !important;
                 line-height: 1.2 !important;
-                cursor: pointer !important;
-                transition: all .16s ease !important;
+                margin: 0 !important;
+                padding: 8px 22px 8px 22px !important;
+                clip-path: polygon(0% 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 0% 100%, 10px 50%) !important;
+                border-radius: 0 !important;
+                height: 36px !important;
+                white-space: nowrap !important;
+                outline: none !important;
             }
-            .unit-tab-btn:hover {
-                border-color: #3b82f6 !important;
-                color: #1d4ed8 !important;
-                background: #eff6ff !important;
+            .unit-tab-btn.first-tab {
+                padding-left: 14px !important;
+                clip-path: polygon(0% 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 0% 100%) !important;
             }
+            
+            /* Pending / Uncompleted state */
+            .unit-tab-btn.pending {
+                background-color: #e2e8f0 !important;
+                color: #475569 !important;
+            }
+            .unit-tab-btn.pending:hover {
+                background-color: #cbd5e1 !important;
+                color: #1e293b !important;
+            }
+            
+            /* Active state */
             .unit-tab-btn.active {
-                border-color: #2563eb !important;
-                background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
-                color: #fff !important;
-                box-shadow: 0 4px 12px rgba(37, 99, 235, .25) !important;
+                background: linear-gradient(135deg, #0078d4, #005a9e) !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
             }
+            .unit-tab-btn.active:hover {
+                background: linear-gradient(135deg, #0086ed, #0066b3) !important;
+            }
+            
+            /* Completed state */
+            .unit-tab-btn.completed {
+                background-color: #d1fae5 !important;
+                color: #065f46 !important;
+            }
+            .unit-tab-btn.completed:hover {
+                background-color: #a7f3d0 !important;
+                color: #047857 !important;
+            }
+            
+            /* Badge styles */
+            .unit-tab-btn .step-badge {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 18px !important;
+                height: 18px !important;
+                border-radius: 50% !important;
+                font-size: 10px !important;
+                font-weight: 800 !important;
+                margin-right: 6px !important;
+                flex-shrink: 0 !important;
+                transition: all 0.16s ease-in-out !important;
+            }
+            .unit-tab-btn.pending .step-badge {
+                background-color: #cbd5e1 !important;
+                color: #475569 !important;
+            }
+            .unit-tab-btn.active .step-badge {
+                background-color: #ffffff !important;
+                color: #005a9e !important;
+            }
+            .unit-tab-btn.completed .step-badge {
+                background-color: #059669 !important;
+                color: #ffffff !important;
+            }
+            
             .ms-achievement h3 {
                 color: #ffffff !important;
             }
@@ -177,73 +234,23 @@ async function ensureDynamicUnitTabsFromFirestore() {
         units.forEach((unitFile, idx) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'unit-tab-btn';
             const isActive = idx === activeIndex;
             const isCompleted = idx < activeIndex;
 
-            // Apply high-quality styles inline to completely bypass any external stylesheet resets
-            btn.style.display = 'inline-flex';
-            btn.style.alignItems = 'center';
-            btn.style.justifyContent = 'center';
-            btn.style.padding = '8px 18px 8px 10px';
-            btn.style.fontSize = '14px';
-            btn.style.fontWeight = '600';
-            btn.style.borderRadius = '999px';
-            btn.style.cursor = 'pointer';
-            btn.style.transition = 'all 0.16s ease-in-out';
-            btn.style.border = '1px solid';
-            btn.style.whiteSpace = 'nowrap';
-            btn.style.margin = '0';
-            btn.style.outline = 'none';
-
-            let badgeBg = '#f1f5f9';
-            let badgeColor = '#64748b';
-            let badgeText = `${idx + 1}`;
-
+            const classList = ['unit-tab-btn'];
+            if (idx === 0) classList.push('first-tab');
             if (isActive) {
-                btn.style.background = 'linear-gradient(135deg, #0078d4, #005a9e)';
-                btn.style.color = '#ffffff';
-                btn.style.borderColor = '#005a9e';
-                btn.style.boxShadow = '0 4px 10px rgba(0, 120, 212, 0.3)';
-                badgeBg = '#ffffff';
-                badgeColor = '#005a9e';
+                classList.push('active');
             } else if (isCompleted) {
-                btn.style.backgroundColor = '#f0fdf4';
-                btn.style.color = '#166534';
-                btn.style.borderColor = '#86efac';
-                badgeBg = '#22c55e';
-                badgeColor = '#ffffff';
-                badgeText = '✓';
-
-                // Setup hover dynamic updates
-                btn.addEventListener('mouseenter', () => {
-                    btn.style.borderColor = '#22c55e';
-                    btn.style.color = '#15803d';
-                    btn.style.backgroundColor = '#d1fae5';
-                });
-                btn.addEventListener('mouseleave', () => {
-                    btn.style.backgroundColor = '#f0fdf4';
-                    btn.style.color = '#166534';
-                    btn.style.borderColor = '#86efac';
-                });
+                classList.push('completed');
             } else {
-                btn.style.backgroundColor = '#ffffff';
-                btn.style.color = '#64748b';
-                btn.style.borderColor = '#cbd5e1';
-                badgeBg = '#f1f5f9';
-                badgeColor = '#64748b';
+                classList.push('pending');
+            }
+            btn.className = classList.join(' ');
 
-                // Setup hover dynamic updates
-                btn.addEventListener('mouseenter', () => {
-                    btn.style.borderColor = '#0078d4';
-                    btn.style.color = '#005a9e';
-                    btn.style.backgroundColor = '#eff6ff';
-                });
-                btn.addEventListener('mouseleave', () => {
-                    btn.style.backgroundColor = '#ffffff';
-                    btn.style.color = '#64748b';
-                    btn.style.borderColor = '#cbd5e1';
-                });
+            let badgeText = `${idx + 1}`;
+            if (isCompleted) {
+                badgeText = '✓';
             }
 
             let titleText = '';
@@ -255,7 +262,7 @@ async function ensureDynamicUnitTabsFromFirestore() {
             titleText = sanitizeTitle(titleText);
 
             btn.innerHTML = `
-                <span class="step-badge" style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 8px; flex-shrink: 0; background-color: ${badgeBg}; color: ${badgeColor}; transition: all 0.16s ease-in-out;">${badgeText}</span>
+                <span class="step-badge">${badgeText}</span>
                 <span>${titleText}</span>
             `;
 
@@ -263,20 +270,6 @@ async function ensureDynamicUnitTabsFromFirestore() {
                 window.location.href = buildUnitAuthUrl(unitFile);
             });
             
-            if (idx > 0) {
-                const separator = document.createElement('div');
-                separator.className = 'unit-tab-separator';
-                separator.style.display = 'inline-flex';
-                separator.style.alignItems = 'center';
-                separator.style.justifyContent = 'center';
-                const isPassed = idx <= activeIndex;
-                separator.style.color = isPassed ? '#2563eb' : '#cbd5e1';
-                separator.style.fontSize = '12px';
-                separator.style.fontWeight = '700';
-                separator.style.margin = '0 2px';
-                separator.innerHTML = '<i class="fas fa-chevron-right"></i>';
-                flex.appendChild(separator);
-            }
             flex.appendChild(btn);
         });
 
