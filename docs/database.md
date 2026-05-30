@@ -104,7 +104,7 @@
 | `courseKey` | string | 新的穩定課程主鍵，取代對 HTML 檔名的直接依賴。 |
 | `track` | string | 課程主軸，例如 `common`、`car`。 |
 | `level` | string | 課程層級，例如 `common`、`starter`、`basic`、`advanced`。 |
-| `entryUnitId` | string | 課程入口單元 ID，用於取代 `*-master-*` 頁面的進入責任。 |
+| `entryUnitId` | string | 課程入口單元 ID，用於取代 `*-master-*` 頁面的進入責任（2026-05-30 起統一修正並指向課程的第一個單元，即 `courseUnits[0]`）。 |
 | `contentRef` | string | 對應外部內容倉的內容路徑，例如 `courses/zh-TW/tw-car-starter-html5-basics.html`。 |
 | `i18n` | map | 可選的多語內容設定，例如各語系內容路徑或語系可用性資訊。 |
 | `learningPathLabel*` / `categoryLabel*` / `navLabel*` | string | 學習路徑分類顯示名稱。前端會優先讀取 Firestore / lesson metadata，而不是在程式碼中寫死。 |
