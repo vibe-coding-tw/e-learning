@@ -1,7 +1,9 @@
-# GitHub Classroom 學生 Repo 同步 PR 流程
+# 舊版學生 Repo 同步 PR 流程（歷史備查）
+
+> GitHub Classroom 已停用。此文件僅保留舊學生 repo / template 同步 PR 的歷史操作紀錄，現行新課程請以平台原生作業派發與內容倉流程為準。
 
 ## 目的
-當單元 template repo（例如 `01-unit-vscode-setup`）更新後，批次對學生 assignment repo 開「同步 PR」，避免學生停留在舊版題目或舊測試。
+當單元 template repo（例如 `01-unit-vscode-setup`）更新後，批次對學生 assignment repo 開「同步 PR」，避免學生停留在舊版題目或舊測試。此流程僅供歷史舊 repo 維護使用。
 
 ## 先備條件
 - 已安裝並登入 GitHub CLI：`gh auth status`
@@ -49,7 +51,7 @@ scripts/sync_classroom_repos.sh \
 - 若 template 改動包含評分規則，請同步通知 tutor 與學生重跑/重交。
 
 ## 與系統自動評分的關係
-- 同步 PR merge 後，學生 push 新提交會觸發 GitHub Classroom 內建的自動評分機制。
-- GitHub Classroom 會透過 Webhook 將結果直接發送給 Vibe Coding 後端 (`ingestGithubAutograde`)。
+- 同步 PR merge 後，學生 push 新提交會觸發各 repo 內建的自動評分機制。
+- repo 會透過 Webhook 將結果直接發送給 Vibe Coding 後端 (`ingestGithubAutograde`)。
 - `autograde-and-sync.yml` 等 workflow 定義由學生 / bridge repo 維護，這個 repo 不包含該 workflow 檔案。
 - 自動評分結果將回寫至 Firestore `assignments.autoGrade*`，不需在個別 repo 中維護額外的 GitHub Actions workflow。

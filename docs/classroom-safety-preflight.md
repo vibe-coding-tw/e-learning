@@ -1,11 +1,13 @@
-# Classroom Starter Repo 安全檢查（防解答外洩）
+# Starter Repo 安全檢查（防解答外洩）
+
+> GitHub Classroom 已停用。本文件適用於所有會對學生可見的 starter / template repo 發佈前檢查。
 
 ## 目的
-在發佈或更新 GitHub Classroom starter repo 前，先檢查是否把教師答案或解答檔一起放進學生可見 repo。
+在發佈或更新學生可見 starter / template repo 前，先檢查是否把教師答案或解答檔一起放進學生可見 repo。
 
 ## 工具
 - 腳本：`scripts/check_classroom_solution_leak.sh`
-- 預設掃描路徑：`/Users/roverchen/Documents/Classrooms`
+- 預設掃描路徑：`/Users/roverchen/Documents/Classrooms`（舊資料夾名；也可改為你的 starter / template repo 路徑）
 
 ## 使用方式
 ```bash
@@ -13,7 +15,7 @@
 scripts/check_classroom_solution_leak.sh
 
 # 指定其他路徑
-scripts/check_classroom_solution_leak.sh /path/to/Classrooms
+scripts/check_classroom_solution_leak.sh /path/to/starter-repos
 ```
 
 ## 判讀結果

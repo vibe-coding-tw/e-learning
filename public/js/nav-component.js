@@ -526,7 +526,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                     </div>
                     <div class="flex items-center gap-4">
                         <!-- Language Selector Dropdown -->
-                        <div class="relative dropdown group flex items-center">
+                        <div class="hidden md:flex relative dropdown group items-center">
                             <button id="lang-btn" aria-expanded="false" aria-haspopup="true" class="flex items-center hover:text-cyan-600 transition-all cursor-pointer py-2 gap-1.5 text-gray-600 font-medium select-none">
                                 <i class="fa-solid fa-globe opacity-70 text-sm"></i>
                                 <span class="text-sm">${isZh ? '繁中' : 'EN'}</span>
@@ -551,7 +551,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
                                 </svg>
                             </a>
-                            <div id="auth-status" class="text-sm flex items-center">
+                            <div id="auth-status" class="text-sm hidden md:flex items-center">
                                 <span id="user-display" class="text-gray-600 hidden md:inline mr-2">${isZh ? '訪客' : 'Guest'}</span>
                                 <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">${isZh ? '登入' : 'Login'}</button>
                             </div>

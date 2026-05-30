@@ -18,7 +18,7 @@ This backlog captures the highest-value system improvements identified from revi
 Status:
 - Partial implementation completed:
 - Main navigation login now launches Google Auth directly (`signInWithRedirect` in production, `signInWithPopup` in local emulator) instead of routing ordinary users through `login.html` first.
-- Assignment CTA now prefers the direct Classroom path (`前往教室寫作業 -> Promotion code 綁定 -> GitHub Classroom`) and no longer opens the legacy `Submit for Review` modal by default.
+- Assignment CTA now prefers the direct platform-native repo path (`前往作業 -> Promotion code 綁定 -> direct assignment repo`) and no longer opens the legacy `Submit for Review` modal by default.
 - `learning-path.html` now derives category labels from Firestore / lesson metadata first, with string fallback only as last resort.
 - Dashboard course summaries now resolve canonical course identity through lesson metadata lookup instead of a hardcoded legacy mapping table.
 - Backend legacy master mapping is now opt-in via explicit compatibility paths.

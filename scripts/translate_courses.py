@@ -6,7 +6,7 @@ import argparse
 import subprocess
 import requests
 import json
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup, NavigableString, Comment
 
 CONTENT_REPO_DIR = "/Users/roverchen/Documents/Apps/content-repo"
 ZH_DIR = os.path.join(CONTENT_REPO_DIR, "courses", "zh-TW")
@@ -215,7 +215,11 @@ def translate_file(filename, token, project, location, model, force):
     # Replace NavigableStrings
     for node in text_nodes:
         if translated_index < len(translated_texts):
-            node.replace_with(translated_texts[translated_index])
+            translated_val = translated_texts[translated_index]
+            if isinstance(node, Comment):
+                node.replace_with(Comment(translated_val))
+            else:
+                node.replace_with(translated_val)
             translated_index += 1
             
     # Replace Attribute strings
