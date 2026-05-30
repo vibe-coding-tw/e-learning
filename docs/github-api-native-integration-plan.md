@@ -1,8 +1,10 @@
 # GitHub API 原生整合計劃
 
+> GitHub Classroom 已停用；本文件為現行作業派發架構的規劃與歷史演進說明，active path 以平台原生 Repo 派發為準。
+
 ## 概述
 
-本計劃旨在在 GitHub Classroom 停止支援前，將其核心功能直接整合到 Vibe Coding 平台。通過自建邀請派發、自動評分、權限管理等功能，實現對 Classroom 功能的完全替代，並提供更高度的客製化與安全控制。
+本計劃旨在將作業派發、權限管理與自動評分直接整合到 Vibe Coding 平台。通過自建派發、自動評分、權限管理等功能，實現對舊 Classroom 流程的完全替代，並提供更高度的客製化與安全控制。
 
 **目標效果**：
 - 學生一鍵領取作業，無需進入組織 Pending 流程
@@ -17,7 +19,7 @@
 
 ### 1.1 現狀分析
 
-**GitHub Classroom 在 Vibe Coding 中的作用**：
+**GitHub Classroom（歷史）在 Vibe Coding 中的作用**：
 - 建立學生作業 Repo（Template Repo → Student Repo）
 - 發送邀請連結與權限管理
 - 觸發自動評分 Workflow（GitHub Actions）
@@ -26,7 +28,6 @@
 **問題點**：
 - Classroom 依賴組織成員邀請，學生有時卡在 Pending
 - Classroom API 功能有限，難以客製化
-- GitHub 官方已宣佈停止支援
 - 無法與 Vibe Coding 的導師分潤、推薦連結等機制深度整合
 
 ### 1.2 新架構目標
@@ -78,7 +79,7 @@ graph TB
 * **流程**：
   1. **建立組織**：新老師建立一個全新的 Org（例如 `vibe-coding-2026-fall`）。
   2. **複製樣板**：新老師到您的官方教材（Upstream Template Repo）點擊 **Fork**，將樣板複製一份到他自己的 Org 下，成為他那一班的專屬樣板。
-  3. **綁定與派發**：他可以使用 GitHub Classroom 或自建 API 腳本，將自訂的樣板與其 Org 綁定，並把「領取作業連結」發給學生。
+   3. **綁定與派發**：他可以使用平台原生 API 腳本，將自訂的樣板與其 Org 綁定，並把「領取作業連結」發給學生。
 
 * **優點**：
   - **完全隔離**：不同班級的學生和作業 Repo 絕對不會混在一起。
@@ -94,7 +95,7 @@ graph TB
 2. **回饋母版（PR）**：
    如果新老師在教學過程中發現原始教材的 Bug，或是優化了自動評分（Autograding）腳本，可以發起 **Pull Request (PR)** 回到您的 Upstream 母版，讓 Vibe Coding 的教材生態系越做越強大。
 3. **學生複製（Clone/Generate）**：
-   學生透過老師提供的管道（Classroom 連結或自建 API 網頁），複製屬於自己的私有作業 Repo 並開始撰寫程式。
+   學生透過老師提供的平台作業派發管道（原生作業頁或歷史舊連結），複製屬於自己的私有作業 Repo 並開始撰寫程式。
 
 #### 1.3.3 未來營運與擴展建議
 
@@ -469,13 +470,13 @@ async function createSyncPR(orgName, studentRepoName, templateRepoName) {
 
 ### 4.2 第二階段：資料庫適配與架構調整 (Database Adjustments)
 3. **調整 Firestore 的資料欄位**：
-   - 為了同時支援 GitHub Classroom 與自建 API，調整 `assignments` 集合。
-   - 新增 `createdVia: "native-api" | "classroom"` 欄位。
+   - 為了支援歷史資料與平台原生作業，調整 `assignments` 集合。
+   - 新增 `createdVia: "native-api" | "legacy-classroom"` 欄位。
    - 擴充欄位包含 `repositoryUrl` (學生倉庫連結)、`repositoryName` (倉庫名稱) 及 `feedbackPullRequestUrl` (回饋 PR 連結)。
 
 ### 4.3 第三階段：前端按鈕與流程改造 (Frontend Integration)
 4. **改造「寫作業」按鈕互動流程**：
-   - 當學生點擊「前往教室寫作業」時，不再直接導向 GitHub Classroom 的邀請連結，而是：
+   - 當學生點擊「前往作業」時，不再直接導向 GitHub Classroom 的邀請連結，而是：
      1. 呼叫 Cloud Function `createStudentRepository`。
      2. 前端按鈕狀態變更為「正在為您建立專屬倉庫... (Loading)」。
      3. 背景呼叫 GitHub API 完成創庫、加人、開 Feedback PR。
@@ -496,17 +497,16 @@ async function createSyncPR(orgName, studentRepoName, templateRepoName) {
 
 ### 4.6 第六階段：數據與學生遷移策略 (Migration)
 7. **漸進式切換與停用 GitHub Classroom**：
-   - **第一步：新學生/新班級預設使用自建系統**
-     - 新班級不再發放 GitHub Classroom 的邀請連結，全部走自建按鈕。
-   - **第二步：既有班級保持 Classroom 直至結業**
-     - 正在進行中的學生不需要強行遷移，讓他們在原有的 Classroom Repo 完成課程，避免 Git 歷史中斷。
-   - **第三步：關閉 Classroom 派發並封存**
-     - 學期結束後，將 GitHub Classroom 上的舊作業設定為「不接受新提交」（Set to inactive）。
-     - 備份/歸檔舊的 Classroom 倉庫，關閉舊的 Classroom 整合，完成 100% 自建化。
+   - **第一步：新學生/新班級預設使用平台原生系統**
+     - 新班級不再發放 GitHub Classroom 的邀請連結，全部走平台原生按鈕。
+   - **第二步：既有班級保留歷史相容**
+     - 歷史資料與舊連結保留最小相容層，避免影響已存在的學習紀錄。
+   - **第三步：封存歷史 Classroom 流程**
+     - 將舊 Classroom 相關資料與倉庫歸檔，保留必要的查核與轉址，不再作為主流程。
 
 ### 4.7 回檔與容災計劃
-- 保留所有 Classroom Repo 的 Git Mirror。
-- 確保當 GitHub API 發生 Rate Limit 或異常時，允許自動切換回 Classroom 預備模式，保障教學連續性。
+- 保留所有歷史 Classroom Repo 的 Git Mirror（僅供查核）。
+- 確保當 GitHub API 發生 Rate Limit 或異常時，允許自動切換回平台原生備援模式，保障教學連續性。
 
 ---
 
@@ -514,7 +514,7 @@ async function createSyncPR(orgName, studentRepoName, templateRepoName) {
 
 ### 5.1 「領取作業」流程優化
 ```
-當前：「進入教室寫作業」→ Classroom 邀請連結
+當前：「進入作業」→ 平台原生作業 Repo
 改進：「領取作業」（一鍵）→ 建立 Repo → 直接開啟 IDE
 ```
 
@@ -597,7 +597,7 @@ describe('GitHubAPIHelper', () => {
 
 ## 9. 成功標準
 
-- [ ] 新系統 100% 相容 Classroom 的邀請派發
+- [ ] 新系統 100% 由平台原生派發接管
 - [ ] 自動評分結果成功回寫 ≥ 95%
 - [ ] 導師推薦連結點擊率 ≥ 90%
 - [ ] 教材同步 PR 審核流程順暢

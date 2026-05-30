@@ -10,21 +10,21 @@ graph TD
     A[學生 Push 並產生自動評分] -->|達推薦門檻| B[導師點擊 推薦此學生]
     B -->|建立申請紀錄| C(Firestore: tutor_applications)
     C -->|status: AWAITING_CANDIDATE_LINK| C1[學生收到被推薦通知]
-    C1 -->|填寫 Classroom 邀請連結| C2[submitTutorRecommendationInviteLink]
+    C1 -->|填寫 Tutor Promotion code| C2[submitTutorRecommendationInviteLink]
     C2 -->|status: PENDING + 通知 admin| D{管理員收到 Email}
     D -->|登入後台| E[進入 合格教師 分頁]
     E -->|查看申請資料| F{管理員審核}
     F -->|核准 Approve| G[自動發送 授權成功郵件]
     F -->|拒絕 Reject| H[紀錄存檔不授權]
-    G -->|內容包含| I[GitHub Classroom 招生連結]
+    G -->|內容包含| I[新作業派發連結 / 作業 Repo]
     G -->|權限更新| J[新教師可管理該單元]
 ```
 
 ## 2. Application & Recommendation Lifecycle
 | State | Description | Trigger |
 | :--- | :--- | :--- |
-| `AWAITING_CANDIDATE_LINK` | Candidate was recommended and must submit classroom invite link first. | Tutor clicks "Recommend Student" in assignment workflow. |
-| `PENDING` | Ready for admin review. | Candidate submits classroom invite link (or self-application directly submits). |
+| `AWAITING_CANDIDATE_LINK` | Candidate was recommended and must confirm tutor binding / promo code first. | Tutor clicks "Recommend Student" in assignment workflow. |
+| `PENDING` | Ready for admin review. | Candidate submits promo code confirmation (or self-application directly submits). |
 | `APPROVED` | Applicant is granted tutoring rights for a specific unit. | Admin clicks "Approve" in Tutor Management tab. |
 | `REJECTED` | Application is dismissed. | Admin clicks "Reject" in Tutor Management tab. |
 
@@ -39,7 +39,7 @@ graph TD
   - Sends candidate-facing notification via `sendTutorRecommendationCandidateEmail`.
 
 ### 3.2 Step 2: Candidate Link Submission (Student Action)
-- **Interface**: Candidate opens email deep link to Dashboard and submits GitHub Classroom invite URL.
+- **Interface**: Candidate opens email deep link to Dashboard and submits Tutor Promotion code / binding confirmation.
 - **Function**: `submitTutorRecommendationInviteLink`.
 - **Action**: Updates `tutor_applications.status` from `awaiting_candidate_link` to `pending`.
 - **Notification**: Sends admin notification via `sendAdminNewApplicationEmail`.
@@ -53,21 +53,21 @@ graph TD
 
 ### 3.4 Step 4: Automated Onboarding (System Action)
 - **Notification**: Calls `sendTutorAuthorizationEmail` via `emailService.js`.
-- **Payload**: Includes the unit name, the tutor's dashboard link, and the **GitHub Classroom Invitation Link** for the specific unit.
+- **Payload**: Includes the unit name, the tutor's dashboard link, and the **new assignment / repo link** for the specific unit.
 - **Authorization**: The new tutor now has access to the **Assignments** and **Settings** tabs for the authorized unit to manage their future students.
 
 ## 4. Technical Integration Points
 
 ### Firestore Collections
 - `tutor_applications`: Source of truth for all tutor requests and review status.
-- `users.tutorConfigs`: Stores unit-level tutor authorizations and GitHub Classroom URLs.
+- `users.tutorConfigs`: Stores unit-level tutor authorizations and assignment / repo settings（歷史 Classroom URL 僅作相容欄位）。
 - `users`: Also keeps `tutorApplications` as a legacy-compatible snapshot.
 
 ### Cloud Functions
 - `getDashboardData`: Aggregates pending applications for the admin view.
 - `decideTutorApplication`: The primary endpoint for approving or rejecting applications.
 - `recommendTutorForUnit`: Creates recommendation applications and validates auto-grade threshold.
-- `submitTutorRecommendationInviteLink`: Candidate submits classroom invite link and triggers admin notification.
+- `submitTutorRecommendationInviteLink`: Candidate submits promo-code binding confirmation and triggers admin notification（歷史函式名保留）。
 
 ## 5. Security & Validation
 - **Role Enforcement**: Only users with `role === 'admin'` can see or execute the `handleDecideApplication` logic.
@@ -76,9 +76,9 @@ graph TD
 
 ## 6. Related Specs
 - `docs/email-notifications.md` (notification matrix and runbook)
-- `docs/classroom-bridge-sync-workflow.md` (template -> bridge sync SOP)
-- `docs/template-org-migration-runbook.md` (source/publish layer policy)
-- `docs/admin-invite-binding-tool.md` (admin invite-link binding lookup)
+- `docs/classroom-bridge-sync-workflow.md` (template -> bridge sync SOP，歷史備查)
+- `docs/template-org-migration-runbook.md` (source/publish layer policy，歷史備查)
+- `docs/admin-invite-binding-tool.md` (admin binding lookup，歷史備查)
 
 ## 7. Tutor Binding via Promotion Code (Updated 2026-05-20)
 - 綁定入口為作業頁（Assignment modal），由學生確認或輸入 Tutor 的 `Promotion code`。
@@ -89,6 +89,6 @@ graph TD
 - **合格導師驗證**：若有輸入代碼，系統在儲存前會先驗證該 code 是否對應此單元的合格授權導師：
   - 依 `users.promotionCode` 找到 Tutor
   - 檢查 Tutor 在該單元 `tutorConfigs[unitId].authorized === true`
-  - 檢查該單元已配置 `assignmentUrl/githubClassroomUrl`
-  - 驗證通過後，寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`，並直接開啟 GitHub Classroom；若未通過，則提示錯誤阻擋進入。
+  - 檢查該單元已配置 `assignmentUrl` / `assignmentRepoUrl`（歷史 Classroom URL 僅作相容）
+  - 驗證通過後，寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`，並直接開啟對應作業 Repo；若未通過，則提示錯誤阻擋進入。
   - 舊版 `正式提交作業 (Submit for Review)` 視窗保留為手動 fallback，不再是一般學生的預設路徑。

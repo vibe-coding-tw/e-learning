@@ -1,7 +1,9 @@
-# Classroom 中間層 Repo 同步流程
+# 中間層 Repo 同步流程（歷史備查）
+
+> GitHub Classroom 已停用。此文件僅保留舊 bridge repo 同步的歷史流程與遷移紀錄；現行新課程請以平台原生作業派發與內容倉流程為準。
 
 ## 目的
-將中間層 Classroom repo（例如 `vibe-coding-classroom-...`）從 canonical template repo 同步更新，避免學生後續接受作業時仍拿到舊內容。
+將中間層 repo（例如 `vibe-coding-classroom-...`）從 canonical template repo 同步更新，避免歷史舊課程內容停留在舊版。
 
 目前建議來源/發佈分工：
 - `template_repo`: `vibe-coding-template/*`（source）
@@ -38,7 +40,7 @@ scripts/sync_classroom_bridge_repos.sh \
 ## 注意
 1. 這只更新中間層 repo，不會自動更新既有學生 repo。
 2. 既有學生 repo 請再跑 `scripts/sync_classroom_repos.sh` 回補。
-3. 同步完成後，請用測試帳號重新接受 assignment 驗證 starter 內容。
+3. 同步完成後，請用測試帳號驗證 starter 內容與作業派發是否一致。
 4. 若 bridge 先有修正，請同步回 template 開 PR/issue；template 合併後再重跑 bridge sync，避免雙方長期漂移。
 
 ## 今日執行補充（2026-05-15）

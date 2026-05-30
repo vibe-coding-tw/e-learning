@@ -11,7 +11,7 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.dc3bdc091330.js"></script>
+  <script type="module" src="./js/nav-component.955086dbd47c.js"></script>
   <script src="./js/course-shared.f5976a641bb0.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
@@ -419,6 +419,7 @@
         // 英文模式優先讀取 *En 欄位，fallback 到中文欄位
         const isEn = uiLocale === 'en';
         const displayTitle = String((isEn ? (lesson.titleEn || lesson.title) : lesson.title) || lesson.courseId || "");
+        const displayKey = isEn ? (lesson.courseKey || lesson.courseId || "").replace(/^tw-/, "en-") : (lesson.courseKey || lesson.courseId || "");
         const contentList = toList(isEn ? (lesson.coreContentEn || lesson.coreContent) : lesson.coreContent).slice(0, 4);
         const summary = String(
           (isEn ? (lesson.summaryEn || lesson.summary || lesson.descriptionEn || lesson.description)
@@ -455,7 +456,7 @@
                data-is-physical="${lesson.isPhysical === true}"
                data-classroom-url="${entryUrl}">
             <div class="flex items-start justify-between gap-3 mb-3">
-              <div class="min-w-0 text-xs text-slate-500 truncate">${lesson.courseKey || lesson.courseId || ""}</div>
+              <div class="min-w-0 text-xs text-slate-500 truncate">${displayKey}</div>
               ${duration ? `<span class="flex-shrink-0 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${duration}</span>` : ""}
             </div>
             <h2 class="text-xl font-bold text-slate-800 mb-2">${displayTitle || lesson.courseId || "Untitled Course"}</h2>
@@ -481,6 +482,8 @@
         const entryUrl = resolveEntryUrl(lesson);
         const unitFile = resolveUnitFile(lesson);
         const price = Number(lesson.price || 0);
+        const isEn = uiLocale === 'en';
+        const displayKey = isEn ? (lesson.courseKey || lesson.courseId || "").replace(/^tw-/, "en-") : (lesson.courseKey || lesson.courseId || "");
         const hardwareId = String(lesson.courseId || "").toLowerCase();
         const imageUrl = pickImage(lesson);
         const summary = String(lesson.summary || lesson.description || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations"));
@@ -501,7 +504,7 @@
                data-course-price="${price}"
                data-is-physical="true"
                data-classroom-url="${entryUrl}">
-            <div class="min-w-0 text-xs text-slate-500 mb-2 truncate">${lesson.courseKey || lesson.courseId || ""}</div>
+            <div class="min-w-0 text-xs text-slate-500 mb-2 truncate">${displayKey}</div>
             <h3 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit")}</h3>
             ${imageHtml}
             <div class="text-sm text-slate-700 mb-4">${listHtml}</div>
