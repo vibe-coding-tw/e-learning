@@ -12,7 +12,7 @@
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
   <script type="module" src="./js/nav-component.955086dbd47c.js"></script>
-  <script src="./js/course-shared.f5976a641bb0.js"></script>
+  <script src="./js/course-shared.31f1d88edbb2.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -205,16 +205,16 @@
     }
     function resolveUnitFile(lesson = {}) {
       const pickFile = (value = "") => String(value || "").split("/").pop().split("?")[0];
+      if (Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0) {
+        const file = pickFile(lesson.courseUnits[0]);
+        if (file) return normalizeLegacyUnitFilename(file);
+      }
       if (lesson.entryUnitId) {
         const file = pickFile(lesson.entryUnitId);
         if (file) return normalizeLegacyUnitFilename(file);
       }
       if (lesson.contentRef) {
         const file = pickFile(lesson.contentRef);
-        if (file) return normalizeLegacyUnitFilename(file);
-      }
-      if (Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0) {
-        const file = pickFile(lesson.courseUnits[0]);
         if (file) return normalizeLegacyUnitFilename(file);
       }
       if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
@@ -236,6 +236,10 @@
     }
 
     function resolveEntryUrl(lesson = {}, fallbackUrl = "") {
+      if (Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0) {
+        const firstUnit = normalizeLegacyUnitFilename(String(lesson.courseUnits[0]));
+        if (firstUnit) return `/courses/${firstUnit}`;
+      }
       const entryUnit = lesson.entryUnitId
         ? normalizeLegacyUnitFilename(String(lesson.entryUnitId))
         : "";
