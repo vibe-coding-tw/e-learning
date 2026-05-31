@@ -679,6 +679,8 @@ console.log(repo.data.html_url);
 }
 ```
 
+---
+
 ### users/{uid}/tutorConfigs[unitId] 新增欄位
 ```
 {
@@ -692,5 +694,25 @@ console.log(repo.data.html_url);
 
 ---
 
-最後更新：2026-05-28
-計劃版本：v1.0
+## 10. 中央動態評分與極簡模板倉庫架構 (2026-05-31 擴充)
+
+為了將模板倉庫與學生作業倉庫的雜亂檔案（測試腳本、Playwright 配置、npm 依賴等）徹底清除，評分系統演進為**中央動態評分架構 (Centralized Dynamic Grading)**：
+
+### 10.1 極簡的 Template Repos
+所有 `vibe-coding-classroom` 組織下的模板倉庫，**除了 `.github/workflows/autograde-and-sync.yml` 以外沒有任何其他檔案與資料夾**。這避免了：
+1. 學生在作業倉庫中看到雜亂的測試腳本與配置。
+2. 學生透過竄改本地測試腳本來繞過評分。
+3. 未來升級評分回送邏輯時需要批次推送更新 105 個 Repo 的麻煩。
+
+### 10.2 中央化 Orchestrator 與 Grader
+- **引導入口 (`run.sh`)**：GitHub Actions Workflow 僅包含一行引導指令 `curl -fsSL https://vibe-coding.tw/graders/run.sh | bash`。該中央引導腳本在 Actions 容器中動態執行：
+  1. 下載對應單元的評分腳本（例如 `${UNIT_ID}.sh`）。若無專屬腳本則 fallback 下載 `default.sh`（通用 Checklist 與代碼存在性檢測）。
+  2. 執行評分腳本，獲得分數。
+  3. 組裝 JSON Payload，使用共享的 `VC_AUTOGRADE_TOKEN` 進行 HMAC-SHA256 簽署。
+  4. 回送至 Vibe Coding webhook 端點。
+- **優勢**：平台管理員隨時修改 `/graders/*.sh` 腳本即可即時對全網生效，無需變更任何學生或模板倉庫。
+
+---
+
+最後更新：2026-05-31
+計劃版本：v1.1
