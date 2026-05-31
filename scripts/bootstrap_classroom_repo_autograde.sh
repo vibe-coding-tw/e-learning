@@ -6,7 +6,8 @@ set -euo pipefail
 # What it does per repo:
 # 1) Install unit-specific autograde workflow template
 # 2) Set required Variables:
-#    - VC_USER_ID + VC_UNIT_ID
+#    - VC_USER_ID + VC_UNIT_KEY (canonical)
+#    - VC_UNIT_ID (legacy compatibility)
 # 3) Optionally set required Secrets:
 #    - VC_AUTOGRADE_URL
 #    - VC_AUTOGRADE_TOKEN
@@ -70,6 +71,21 @@ set_var() {
   $GH api "repos/${repo}/actions/variables" -X POST -f name="$name" -f value="$value" >/dev/null 2>&1
 }
 
+normalize_unit_key() {
+  local raw="$1"
+  raw="${raw##*/}"
+  raw="${raw%%\?*}"
+  raw="${raw%.html}"
+  [[ -z "$raw" ]] && return 0
+  raw="$(printf '%s' "$raw" | sed -E \
+    -e 's/^tw-//' \
+    -e 's/^start-[0-9]{2}-unit-/car-starter-/' \
+    -e 's/^basic-[0-9]{2}-unit-/car-basic-/' \
+    -e 's/^(adv|advanced)-[0-9]{2}-unit-/car-advanced-/' \
+    -e 's/^[0-9]{2}-unit-/common-/')"
+  printf '%s' "$raw"
+}
+
 set_secret() {
   local repo="$1"
   local name="$2"
@@ -121,6 +137,7 @@ tail -n +2 "$CSV" | while IFS=, read -r repo unit_id user_id _rest; do
   repo="${repo//$'\r'/}"
   unit_id="${unit_id//$'\r'/}"
   user_id="${user_id//$'\r'/}"
+  unit_key="$(normalize_unit_key "$unit_id")"
 
   [[ -z "$repo" ]] && continue
 
@@ -144,6 +161,7 @@ tail -n +2 "$CSV" | while IFS=, read -r repo unit_id user_id _rest; do
   fi
 
   if ! set_var "$repo" "VC_USER_ID" "$user_id" \
+    || ! set_var "$repo" "VC_UNIT_KEY" "$unit_key" \
     || ! set_var "$repo" "VC_UNIT_ID" "$unit_id"; then
     variable_state="failed"
     result="failed"

@@ -159,6 +159,7 @@ PY
         shell: bash
         env:
           DEFAULT_USER_ID: ${{ vars.VC_USER_ID }}
+          DEFAULT_UNIT_KEY: ${{ vars.VC_UNIT_KEY }}
           DEFAULT_UNIT_ID: ${{ vars.VC_UNIT_ID }}
           REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -170,6 +171,7 @@ PY
 
           USER_ID="${DEFAULT_USER_ID:-}"
           UNIT_ID="${DEFAULT_UNIT_ID:-}"
+          UNIT_KEY="${DEFAULT_UNIT_KEY:-$UNIT_ID}"
           SCORE="${{ steps.grader.outputs.score }}"
           MAX_SCORE="${{ steps.grader.outputs.max_score }}"
           STATUS="${{ steps.grader.outputs.status }}"
@@ -177,13 +179,14 @@ PY
           if [ -z "$SCORE" ]; then
             echo "score missing"; exit 1
           fi
-          if [ -z "$USER_ID" ] || [ -z "$UNIT_ID" ]; then
-            echo "Need vars.VC_USER_ID+VC_UNIT_ID."; exit 1
+          if [ -z "$USER_ID" ] || [ -z "$UNIT_KEY" ]; then
+            echo "Need vars.VC_USER_ID+VC_UNIT_KEY (or legacy VC_UNIT_ID)."; exit 1
           fi
 
           PAYLOAD=$(jq -cn \
             --arg userId "$USER_ID" \
             --arg unitId "$UNIT_ID" \
+            --arg unitKey "$UNIT_KEY" \
             --argjson score "$SCORE" \
             --argjson maxScore "$MAX_SCORE" \
             --arg status "$STATUS" \
@@ -195,6 +198,7 @@ PY
             '{
               userId: ($userId | select(length > 0)),
               unitId: ($unitId | select(length > 0)),
+              unitKey: ($unitKey | select(length > 0)),
               score: $score,
               maxScore: $maxScore,
               status: $status,

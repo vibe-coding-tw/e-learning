@@ -208,7 +208,7 @@ async function main() {
   for (const repo of repos) {
     try {
       let userId = getRepoVar(repo, "VC_USER_ID");
-      let unitId = getRepoVar(repo, "VC_UNIT_ID");
+      let unitId = getRepoVar(repo, "VC_UNIT_ID") || getRepoVar(repo, "VC_UNIT_KEY");
 
       if (!unitId || !userId) {
         const parsed = splitRepoUnitAndHandle(repo, knownUnits);

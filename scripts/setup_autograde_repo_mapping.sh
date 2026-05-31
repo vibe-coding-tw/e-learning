@@ -2,6 +2,10 @@
 set -euo pipefail
 
 # Batch configure per-repo unit-level mapping variables for autograde sync.
+# Canonical variable:
+#   - VC_UNIT_KEY (locale-neutral repo/grader slug)
+# Legacy compatibility:
+#   - VC_UNIT_ID (page/unit identifier)
 # CSV format:
 # repo,unit_id,user_id
 # vibe-coding-classroom/vibe-coding-classroom-xx,01-unit-developer-identity.html,uid_xxx
@@ -49,10 +53,26 @@ set_var() {
   $GH api "repos/${repo}/actions/variables" -X POST -f name="$name" -f value="$value" >/dev/null 2>&1
 }
 
+normalize_unit_key() {
+  local raw="$1"
+  raw="${raw##*/}"
+  raw="${raw%%\?*}"
+  raw="${raw%.html}"
+  [[ -z "$raw" ]] && return 0
+  raw="$(printf '%s' "$raw" | sed -E \
+    -e 's/^tw-//' \
+    -e 's/^start-[0-9]{2}-unit-/car-starter-/' \
+    -e 's/^basic-[0-9]{2}-unit-/car-basic-/' \
+    -e 's/^(adv|advanced)-[0-9]{2}-unit-/car-advanced-/' \
+    -e 's/^[0-9]{2}-unit-/common-/')"
+  printf '%s' "$raw"
+}
+
 tail -n +2 "$CSV" | while IFS=, read -r repo unit_id user_id _rest; do
   repo="${repo//$'\r'/}"
   unit_id="${unit_id//$'\r'/}"
   user_id="${user_id//$'\r'/}"
+  unit_key="$(normalize_unit_key "$unit_id")"
 
   if [[ -z "$repo" ]]; then
     continue
@@ -65,12 +85,14 @@ tail -n +2 "$CSV" | while IFS=, read -r repo unit_id user_id _rest; do
 
   if [[ "$MODE" == "--dry-run" ]]; then
     set_var "$repo" "VC_USER_ID" "$user_id" >/dev/null
+    set_var "$repo" "VC_UNIT_KEY" "$unit_key" >/dev/null
     set_var "$repo" "VC_UNIT_ID" "$unit_id" >/dev/null
     echo "${repo},dry-run,ok" >> "$OUT"
     continue
   fi
 
   if set_var "$repo" "VC_USER_ID" "$user_id" \
+    && set_var "$repo" "VC_UNIT_KEY" "$unit_key" \
     && set_var "$repo" "VC_UNIT_ID" "$unit_id"; then
     echo "${repo},updated,ok" >> "$OUT"
   else
