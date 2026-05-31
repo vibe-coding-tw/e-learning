@@ -53,9 +53,9 @@ function getDefaultLearningPaths(uiLocale = "zh-TW") {
     // 注意：不論語系，一律連到 tw-* 路徑（Firestore 課程資料皆為 tw-*），只有標籤文字切換語系
     return [
         { key: "tw-common", href: "learning-path.html?path=tw-common", icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
-        { key: "tw-car-starter", href: "learning-path.html?path=tw-car-starter", icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Course" },
-        { key: "tw-car-basic", href: "learning-path.html?path=tw-car-basic", icon: "fa-code", label: isZh ? "基礎課程" : "Basic Course" },
-        { key: "tw-car-advanced", href: "learning-path.html?path=tw-car-advanced", icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Course" }
+        { key: "tw-car-starter", href: "learning-path.html?path=tw-car-starter", icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Unit" },
+        { key: "tw-car-basic", href: "learning-path.html?path=tw-car-basic", icon: "fa-code", label: isZh ? "基礎課程" : "Basic Unit" },
+        { key: "tw-car-advanced", href: "learning-path.html?path=tw-car-advanced", icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Unit" }
     ];
 }
 
@@ -264,13 +264,13 @@ const CATEGORY_TRANSLATIONS = {
     },
     "en": {
         "tw-common": "Preparation",
-        "tw-car-starter": "Starter Course",
-        "tw-car-basic": "Basic Course",
-        "tw-car-advanced": "Advanced Course",
+        "tw-car-starter": "Starter Unit",
+        "tw-car-basic": "Basic Unit",
+        "tw-car-advanced": "Advanced Unit",
         "en-common": "Preparation",
-        "en-car-starter": "Starter Course",
-        "en-car-basic": "Basic Course",
-        "en-car-advanced": "Advanced Course"
+        "en-car-starter": "Starter Unit",
+        "en-car-basic": "Basic Unit",
+        "en-car-advanced": "Advanced Unit"
     }
 };
 

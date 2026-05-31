@@ -36,6 +36,7 @@ function init() {
     normalizeStartButtonText();
     cleanUpCourseTitles();
     normalizeTerminology();
+    interceptGoToUnit();
 }
 
 function ensureUnitTabsTheme() {
@@ -1039,6 +1040,8 @@ window.addEventListener('load', () => {
     initAnimations();
     enhanceAssignmentEntryButtons();
     toggleUnitTabsVisibility();
+    normalizeTerminology();
+    interceptGoToUnit();
 });
 
 // Global State (Using var for redeclaration safety in Master/Unit contexts)
@@ -3270,78 +3273,125 @@ function normalizeTerminology() {
         
         console.log("[CourseShared] Normalizing English terminology: Unit->Page, Course->Unit, Module->Unit");
 
-        // 1. Update buttons: Previous Unit -> Previous Page, Next Unit -> Next Page
-        document.querySelectorAll('.nav-btn-prev').forEach(btn => {
-            btn.innerHTML = btn.innerHTML.replace(/\bPrevious Unit\b/gi, 'Previous Page');
-        });
-        document.querySelectorAll('.nav-btn-next').forEach(btn => {
-            btn.innerHTML = btn.innerHTML.replace(/\bNext Unit\b/gi, 'Next Page');
-        });
-
-        // 2. Update Start button (Start Module / Start Course -> Start Unit)
-        document.querySelectorAll('button, .ms-btn').forEach(btn => {
-            const onclickAttr = btn.getAttribute('onclick') || '';
-            if (onclickAttr.includes('goToUnit(1)') || btn.textContent.includes('Start Module') || btn.textContent.includes('Start Course')) {
-                btn.innerHTML = btn.innerHTML.replace(/\bStart Module\b/gi, 'Start Unit');
-                btn.innerHTML = btn.innerHTML.replace(/\bStart Course\b/gi, 'Start Unit');
-            }
-        });
-
-        // 3. Update top-nav label (Starter Course -> Starter Unit, etc.)
-        const topNav = document.querySelector('.ms-topnav');
-        if (topNav) {
-            const navLabel = topNav.querySelector('.nav-label');
-            if (navLabel) {
-                navLabel.textContent = navLabel.textContent.replace(/\bCourse\b/gi, 'Unit');
-            }
-        }
-
-        // 4. Update sidebar labels and text
-        const sidebar = document.querySelector('.ms-sidebar');
-        if (sidebar) {
-            // Module label: "Module" -> "Unit"
-            const moduleLabel = sidebar.querySelector('.module-label');
-            if (moduleLabel) {
-                moduleLabel.textContent = moduleLabel.textContent.replace(/\bModule\b/gi, 'Unit');
-            }
-            
-            // Meta details: "7 units" -> "7 pages", "Approx. 201 minutes · 7 units" -> "Approx. 201 minutes · 7 pages"
-            const meta = sidebar.querySelector('.meta');
-            if (meta) {
-                meta.innerHTML = meta.innerHTML.replace(/(\d+)\s+units?\b/gi, '$1 pages');
-            }
-        }
-
-        // 5. Update index/overview page labels
-        const pageIndex = document.getElementById('page-index');
-        if (pageIndex) {
-            // Title tags or tags lists
-            const tags = pageIndex.querySelectorAll('.ms-tag');
-            tags.forEach(tag => {
-                if (tag.textContent.trim().toLowerCase() === 'module') {
-                    tag.textContent = 'Unit';
-                } else if (/\d+\s+units?\b/i.test(tag.textContent)) {
-                    tag.textContent = tag.textContent.replace(/(\d+)\s+units?\b/gi, '$1 pages');
-                }
-            });
-            
-            // Header: "This Module Unit" -> "This Unit's Pages"
-            const headings = pageIndex.querySelectorAll('h2');
-            headings.forEach(h => {
-                if (h.textContent.includes('This Module Unit') || h.textContent.includes('This Module\'s Units') || h.textContent.includes('This Module’s Units')) {
-                    h.textContent = 'This Unit\'s Pages';
+        // 1. Modify the global UNITS array if it exists to prevent goToUnit from restoring un-normalized values
+        if (typeof UNITS !== 'undefined' && Array.isArray(UNITS)) {
+            UNITS.forEach(u => {
+                if (u.label) {
+                    u.label = u.label
+                        .replace(/\bCourse\s+Overview\b/gi, 'Unit Overview')
+                        .replace(/\bCourse\b/gi, 'Unit')
+                        .replace(/\bModule\b/gi, 'Unit');
                 }
             });
         }
-        
-        // 6. Update breadcrumbs "入門課程" / "Starter Course" -> "Starter Unit"
-        const bcModuleLink = document.getElementById('bc-module-link');
-        if (bcModuleLink) {
-            bcModuleLink.textContent = bcModuleLink.textContent.replace(/\bCourse\b/gi, 'Unit');
+
+        // 2. Modify unitTitles array (used in start-xx pages) if it exists
+        if (typeof unitTitles !== 'undefined' && Array.isArray(unitTitles)) {
+            for (let i = 0; i < unitTitles.length; i++) {
+                if (typeof unitTitles[i] === 'string') {
+                    unitTitles[i] = unitTitles[i]
+                        .replace(/\bCourse\s+Overview\b/gi, 'Unit Overview')
+                        .replace(/\bCourse\b/gi, 'Unit')
+                        .replace(/\bModule\b/gi, 'Unit');
+                }
+            }
         }
-        
+
+        // 3. Define a walker to recursively find and normalize text nodes in standard UI containers
+        const mapTerms = {
+            'Previous\\s+Unit': 'Previous Page',
+            'Next\\s+Unit': 'Next Page',
+            'Start\\s+Module': 'Start Unit',
+            'Start\\s+Course': 'Start Unit',
+            'Complete\\s+Module': 'Complete Unit',
+            'Module\\s+Completed': 'Unit Completed',
+            'Course\\s+Overview': 'Unit Overview',
+            'Starter\\s+Course': 'Starter Unit',
+            'Basic\\s+Course': 'Basic Unit',
+            'Advanced\\s+Course': 'Advanced Unit',
+            'This\\s+Module\\s+Unit': "This Unit's Pages",
+            'This\\s+Module\'s\\s+Units': "This Unit's Pages",
+            'This\\s+Module’s\\s+Units': "This Unit's Pages",
+        };
+
+        const containers = document.querySelectorAll(
+            '.ms-topnav, .ms-sidebar, .ms-breadcrumb, #page-index, .unit-nav, .nav-btn-prev, .nav-btn-next, .ms-btn, button, .unit-page-indicator, .unit-completed-badge, .unit-card, .ms-unit-item'
+        );
+
+        containers.forEach(container => {
+            const walk = document.createTreeWalker(
+                container,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode(node) {
+                        const tag = node.parentElement?.tagName.toLowerCase();
+                        if (['script', 'style', 'code', 'pre'].includes(tag)) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                }
+            );
+
+            let node;
+            while (node = walk.nextNode()) {
+                let text = node.textContent;
+                let changed = false;
+                for (const [target, replacement] of Object.entries(mapTerms)) {
+                    const regex = new RegExp(`\\b${target}\\b`, 'gi');
+                    if (regex.test(text)) {
+                        text = text.replace(regex, replacement);
+                        changed = true;
+                    }
+                }
+                if (changed) {
+                    node.textContent = text;
+                }
+            }
+        });
+
+        // 4. Update elements with inline onclick alerts (e.g. Complete Module alerts)
+        document.querySelectorAll('[onclick]').forEach(el => {
+            let clickStr = el.getAttribute('onclick') || '';
+            if (clickStr.includes('alert(') && (clickStr.toLowerCase().includes('module') || clickStr.toLowerCase().includes('course'))) {
+                clickStr = clickStr
+                    .replace(/\bmodule\b/gi, 'unit')
+                    .replace(/\bcourse\b/gi, 'unit');
+                el.setAttribute('onclick', clickStr);
+            }
+        });
+
+        // 5. Update meta details (e.g. unit counts "7 units" -> "7 pages")
+        const meta = document.querySelector('.ms-sidebar .meta');
+        if (meta) {
+            meta.innerHTML = meta.innerHTML.replace(/(\d+)\s+units?\b/gi, '$1 pages');
+        }
+
+        // 6. Update document title fallback
+        if (document.title.includes('Course') || document.title.includes('Module')) {
+            document.title = document.title
+                .replace(/\bCourse\b/g, 'Unit')
+                .replace(/\bModule\b/g, 'Unit');
+        }
+
     } catch (e) {
         console.warn('[CourseShared] normalizeTerminology failed:', e);
+    }
+}
+
+function interceptGoToUnit() {
+    try {
+        if (typeof window.goToUnit === 'function' && !window.goToUnit.__isIntercepted) {
+            const orig = window.goToUnit;
+            window.goToUnit = function(id) {
+                orig(id);
+                setTimeout(normalizeTerminology, 50); // Small delay to let DOM changes apply
+            };
+            window.goToUnit.__isIntercepted = true;
+            console.log("[CourseShared] Successfully intercepted window.goToUnit");
+        }
+    } catch (e) {
+        console.warn('[CourseShared] interceptGoToUnit failed:', e);
     }
 }
 } // end window.__courseSharedLoaded guard
