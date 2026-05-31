@@ -1,6 +1,6 @@
 # Vibe Coding — 程式教學平台 (E-Learning)
 
-Firebase 架構的程式教學平台，整合互動課程、自動評分、綠界金流 (ECPay)、硬體履約與多層級分潤。
+專為軟硬體與 IoT 整合教育打造的 Serverless 全端教學平台，整合 GitHub 自動評分、多元金流支付 (ECPay / Stripe)、實體教具履約與多層級導師分潤。
 
 ---
 
