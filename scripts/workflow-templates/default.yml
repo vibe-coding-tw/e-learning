@@ -35,7 +35,8 @@ jobs:
   grade_and_sync:
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      contains(github.event.head_commit.message, 'autograde')
+      vars.VC_AUTOGRADE_ON_PUSH == 'true' ||
+      contains(github.event.head_commit.message, '[autograde]')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,6 +47,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           RUN_MODE="${{ github.event.inputs.run_mode }}"
           SCORE_OVERRIDE="${{ github.event.inputs.score_override }}"
           MAX_SCORE="${{ github.event.inputs.max_score || '100' }}"
@@ -65,11 +67,72 @@ jobs:
             exit 0
           fi
 
-          if [ -f README.md ] && [ -n "$(tr -d '[:space:]' < README.md)" ]; then
-            SCORE_VAL=100
-          else
-            SCORE_VAL=0
-          fi
+          # Inline grading based on env-check.md (or README.md fallback) checklist progress with optional weights.
+          # Supported weight formats per checklist line:
+          # - [ ] Task title [w:20]
+          # - [ ] Task title (20%)
+          # - [ ] Task title [weight=20]
+          # If no weights are provided, fallback to equal-weight checklist scoring.
+          SCORE_VAL=$(python3 - <<'PY'
+import re
+import os
+from pathlib import Path
+
+max_score = int("${MAX_SCORE}")
+p = Path("env-check.md") if Path("env-check.md").exists() else Path("README.md")
+if not p.exists():
+    print(0)
+    raise SystemExit
+
+text = p.read_text(encoding="utf-8", errors="ignore")
+lines = text.splitlines()
+
+check_re = re.compile(r'^\s*[-*]\s+\[(?P<done>[ xX])\]\s+(?P<body>.+)$')
+weight_patterns = [
+    re.compile(r'\[w(?:eight)?\s*[:=]\s*(\d+(?:\.\d+)?)\]', re.IGNORECASE),
+    re.compile(r'\((\d+(?:\.\d+)?)%\)')
+]
+
+items = []
+for line in lines:
+    m = check_re.match(line)
+    if not m:
+        continue
+    done = m.group("done").lower() == "x"
+    body = m.group("body")
+    weight = None
+    for p_pat in weight_patterns:
+        wm = p_pat.search(body)
+        if wm:
+            try:
+                weight = float(wm.group(1))
+            except Exception:
+                weight = None
+            break
+    items.append((done, weight))
+
+if not items:
+    # No checklist: fallback
+    score = max_score if text.strip() else 0
+    print(score)
+    raise SystemExit
+
+weighted_items = [(d, w) for d, w in items if w is not None and w > 0]
+
+if weighted_items:
+    total_w = sum(w for _, w in weighted_items)
+    done_w = sum(w for d, w in weighted_items if d)
+    ratio = 0 if total_w <= 0 else done_w / total_w
+else:
+    total = len(items)
+    done = sum(1 for d, _ in items if d)
+    ratio = 0 if total == 0 else done / total
+
+score = int(round(max_score * ratio))
+score = max(0, min(max_score, score))
+print(score)
+PY
+)
 
           echo "score=$SCORE_VAL" >> "$GITHUB_OUTPUT"
           echo "max_score=$MAX_SCORE" >> "$GITHUB_OUTPUT"
@@ -94,6 +157,7 @@ jobs:
           ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
+
           USER_ID="${DEFAULT_USER_ID:-}"
           UNIT_ID="${DEFAULT_UNIT_ID:-}"
           SCORE="${{ steps.grader.outputs.score }}"
