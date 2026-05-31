@@ -302,24 +302,43 @@ function normalizeCourseTopNav() {
                 navLabel.parentNode.replaceChild(link, navLabel);
                 navLabel = link;
             }
-            if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) {
-                navLabel.textContent = '入門課程';
-                navLabel.setAttribute('href', '/learning-path.html?path=tw-car-starter');
+            const isStarter = file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file);
+            const isBasic = file.startsWith('basic-') || /^(?:tw|en)-car-basic-/i.test(file);
+            const isAdvanced = file.startsWith('adv-') || /^(?:tw|en)-car-advanced-/i.test(file);
+            const isPrepare = file.startsWith('prepare-') || /^(?:tw|en)-common-/i.test(file);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
+            const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
+            const pathPrefix = isEn ? 'en-' : 'tw-';
+            const langQuery = isEn ? '&lang=en' : '';
+            const homeLangQuery = isEn ? '?lang=en' : '';
+
+            const translate = (key, defaultText) => {
+                if (typeof window.t === 'function') {
+                    return window.t(key);
+                }
+                return defaultText;
+            };
+
+            if (isStarter) {
+                navLabel.textContent = translate('starter_title', '入門課程');
+                navLabel.setAttribute('href', `/learning-path.html?path=${pathPrefix}car-starter${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
-            else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) {
-                navLabel.textContent = '基礎課程';
-                navLabel.setAttribute('href', '/learning-path.html?path=tw-car-basic');
+            else if (isBasic) {
+                navLabel.textContent = translate('basic_title', '基礎課程');
+                navLabel.setAttribute('href', `/learning-path.html?path=${pathPrefix}car-basic${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
-            else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) {
-                navLabel.textContent = '進階課程';
-                navLabel.setAttribute('href', '/learning-path.html?path=tw-car-advanced');
+            else if (isAdvanced) {
+                navLabel.textContent = translate('advanced_title', '進階課程');
+                navLabel.setAttribute('href', `/learning-path.html?path=${pathPrefix}car-advanced${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
-            else if (file.startsWith('prepare-') || file.startsWith('tw-common-')) {
-                navLabel.textContent = '準備課程';
-                navLabel.setAttribute('href', '/learning-path.html?path=tw-common');
+            else if (isPrepare) {
+                navLabel.textContent = translate('prepare_title', '準備課程');
+                navLabel.setAttribute('href', `/learning-path.html?path=${pathPrefix}common${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
         }
@@ -328,9 +347,11 @@ function normalizeCourseTopNav() {
         const brandLink = topNav.querySelector('.brand');
         if (!brandLink) return;
 
+        const isEnMode = (new URLSearchParams(window.location.search).get('lang') || '').toLowerCase().startsWith('en') || file.startsWith('en-');
+
         // Normalize brand text/icon style using the current production baseline.
         brandLink.innerHTML = '<i class="fas fa-rocket"></i> Vibe Coding';
-        brandLink.setAttribute('href', '/index.html');
+        brandLink.setAttribute('href', isEnMode ? '/index.html?lang=en' : '/index.html');
         brandLink.setAttribute('target', '_top');
     } catch (e) {
         console.warn('[CourseShared] normalizeCourseTopNav failed:', e);
