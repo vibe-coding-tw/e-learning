@@ -423,7 +423,7 @@
         // 英文模式優先讀取 *En 欄位，fallback 到中文欄位
         const isEn = uiLocale === 'en';
         const displayTitle = String((isEn ? (lesson.titleEn || lesson.title) : lesson.title) || lesson.courseId || "");
-        const displayKey = isEn ? (lesson.courseKey || lesson.courseId || "").replace(/^tw-/, "en-") : (lesson.courseKey || lesson.courseId || "");
+        const displayKey = String(lesson.courseKey || lesson.courseId || "");
         const contentList = toList(isEn ? (lesson.coreContentEn || lesson.coreContent) : lesson.coreContent).slice(0, 4);
         const summary = String(
           (isEn ? (lesson.summaryEn || lesson.summary || lesson.descriptionEn || lesson.description)
@@ -487,7 +487,7 @@
         const unitFile = resolveUnitFile(lesson);
         const price = Number(lesson.price || 0);
         const isEn = uiLocale === 'en';
-        const displayKey = isEn ? (lesson.courseKey || lesson.courseId || "").replace(/^tw-/, "en-") : (lesson.courseKey || lesson.courseId || "");
+        const displayKey = String(lesson.courseKey || lesson.courseId || "");
         const hardwareId = String(lesson.courseId || "").toLowerCase();
         const imageUrl = pickImage(lesson);
         const summary = String(lesson.summary || lesson.description || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations"));

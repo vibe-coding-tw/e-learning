@@ -28,13 +28,14 @@ The goal is to keep one source of truth for the next-stage platform changes.
 1. Firestore remains the source of truth.
 2. Stable IDs first; display naming can change before canonical IDs do.
 3. Display labels and storage keys must be separated.
-4. Migration must be staged with fallback and rollback paths.
+4. `courseKey` is locale-neutral in Firestore; page filenames / routes may still keep `tw-*` prefixes for content delivery and backward compatibility.
+5. Migration must be staged with fallback and rollback paths.
 
 ### 2.3 Target data model additions
 
 For `metadata_lessons`:
 
-- `courseKey`
+- `courseKey` (locale-neutral canonical key, e.g. `common-vscode-setup`, `car-starter-web-app`)
 - `track`
 - `level`
 - `entryUnitId`
@@ -52,7 +53,7 @@ For `metadata_lessons`:
   - `?path=tw-car-advanced`
 - Legacy entry pages `prepare/start/basic/advanced` are compatibility redirects only.
 - Top nav learning-path menu is generated dynamically from Firestore `metadata_lessons`:
-  - grouping key source: `locale + track + level (+ courseKey context)`
+- grouping key source: `locale + track + level (+ locale-neutral courseKey context)`
   - label source priority:
     1. `learningPathLabelZh/En`
     2. `categoryLabelZh/En`
@@ -80,13 +81,13 @@ New naming examples:
 ### 2.5 Confirmed Taiwan file naming rules
 
 1. Original preparation/unit files `*-unit-*.html`
-   - Rename to `tw-common-*.html`
+   - Rename to `tw-common-*.html` (page filename target only; Firestore `courseKey` remains locale-neutral)
 2. Original starter course files `start-*-unit-*.html`
-   - Rename to `tw-car-starter-*.html`
+   - Rename to `tw-car-starter-*.html` (page filename target only; Firestore `courseKey` remains locale-neutral)
 3. Original basic course files `basic-*-unit-*.html`
-   - Rename to `tw-car-basic-*.html`
+   - Rename to `tw-car-basic-*.html` (page filename target only; Firestore `courseKey` remains locale-neutral)
 4. Original advanced course files `advanced-*-unit-*.html`
-   - Rename to `tw-car-advanced-*.html`
+   - Rename to `tw-car-advanced-*.html` (page filename target only; Firestore `courseKey` remains locale-neutral)
 
 This naming rule is a planning target. Existing Firestore keys should migrate gradually.
 
@@ -312,7 +313,7 @@ Admin needs:
 
 ## 6. Confirmed Decisions
 
-1. Use `courseKey` as the new main course key.
+1. Use locale-neutral `courseKey` as the new main course key.
 2. Use pure display names such as `Agent Mode`.
 3. `track` and `level` use fixed enums, not instructor-defined free text.
 4. Keep guides embedded for now instead of splitting them out.
@@ -342,7 +343,7 @@ Admin needs:
 
 ### Phase 1
 
-1. Add `courseKey/track/level/entryUnitId/contentRef`
+1. Add `courseKey/track/level/entryUnitId/contentRef` (with locale-neutral `courseKey`)
 2. Switch entry pages to `entryUnitId`
 3. Start `zh-TW/en` content repo pilot
 4. Add `revenue_share_policies`
@@ -362,7 +363,7 @@ Admin needs:
 
 ### 7.1 Data model and Firestore
 
-- [x] Add `courseKey` to `metadata_lessons`
+- [x] Add locale-neutral `courseKey` to `metadata_lessons`
 - [x] Add `track` to `metadata_lessons`
 - [x] Add `level` to `metadata_lessons`
 - [x] Add `entryUnitId` to `metadata_lessons`
@@ -407,7 +408,7 @@ Admin needs:
 - [x] Create old `unitId` -> `contentRef` mapping table
 - [x] Remove `master` check from shared nav FAB injection logic
 - [ ] Hide `-unit-` technical prefixes in all UI surfaces
-- [ ] Move prepare course units from `prepare-*` compatibility names to target `tw-common-*` / `tw-car-*` naming
+- [ ] Move prepare course units from `prepare-*` compatibility names to target `tw-common-*` / `tw-car-*` page naming (Firestore `courseKey` stays locale-neutral)
 
 Reference artifacts:
 

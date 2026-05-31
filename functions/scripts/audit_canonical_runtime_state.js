@@ -14,32 +14,32 @@ if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
 const STATIC_ORDER_ITEM_ALIAS_TARGETS = {
-  ydb63bg: "tw-car-starter-web-app",
-  a45cwlak: "tw-car-starter-web-ble",
-  a7smdfeq: "tw-car-starter-remote-control",
-  hkdq5j3m: "tw-car-starter-touch-events",
-  io5rxgxl: "tw-car-starter-joystick-lab",
+  ydb63bg: "car-starter-web-app",
+  a45cwlak: "car-starter-web-ble",
+  a7smdfeq: "car-starter-remote-control",
+  hkdq5j3m: "car-starter-touch-events",
+  io5rxgxl: "car-starter-joystick-lab",
 
-  "01-master-getting-started.html": "tw-common-developer-identity",
-  "02-master-ai-agents.html": "tw-common-agent-mode",
-  "03-master-wifi-motor.html": "tw-common-github-classroom",
-  "start-01-master-web-app.html": "tw-car-starter-web-app",
-  "start-02-master-web-ble.html": "tw-car-starter-web-ble",
-  "start-03-master-remote-control.html": "tw-car-starter-remote-control",
-  "start-04-master-touch-events.html": "tw-car-starter-touch-events",
-  "start-05-master-joystick-lab.html": "tw-car-starter-joystick-lab",
-  "basic-01-master-environment.html": "tw-car-basic-environment",
-  "adv-01-master-s3-cam.html": "tw-car-advanced-s3-cam",
+  "01-master-getting-started.html": "common-developer-identity",
+  "02-master-ai-agents.html": "common-agent-mode",
+  "03-master-wifi-motor.html": "common-github-classroom",
+  "start-01-master-web-app.html": "car-starter-web-app",
+  "start-02-master-web-ble.html": "car-starter-web-ble",
+  "start-03-master-remote-control.html": "car-starter-remote-control",
+  "start-04-master-touch-events.html": "car-starter-touch-events",
+  "start-05-master-joystick-lab.html": "car-starter-joystick-lab",
+  "basic-01-master-environment.html": "car-basic-environment",
+  "adv-01-master-s3-cam.html": "car-advanced-s3-cam",
 
   // Historical short codes inferred from co-occurring legacy master keys in existing orders.
-  "72uyaadl": "tw-common-developer-identity",
-  "rs7hx3nf": "tw-car-basic-environment",
-  "w4lrkqmk": "tw-car-advanced-s3-cam",
+  "72uyaadl": "common-developer-identity",
+  "rs7hx3nf": "car-basic-environment",
+  "w4lrkqmk": "car-advanced-s3-cam",
 
   // Historical proposed prepare course keys
-  "tw-common-getting-started": "tw-common-developer-identity",
-  "tw-common-ai-agents": "tw-common-agent-mode",
-  "tw-common-wifi-motor": "tw-common-github-classroom"
+  "tw-common-getting-started": "common-developer-identity",
+  "tw-common-ai-agents": "common-agent-mode",
+  "tw-common-wifi-motor": "common-github-classroom"
 };
 
 function arg(name, fallback = "") {
@@ -49,6 +49,10 @@ function arg(name, fallback = "") {
 
 function normalizeFile(value = "") {
   return String(value || "").split("/").pop().split("?")[0].trim();
+}
+
+function normalizeCanonicalCourseKey(value = "") {
+  return normalizeFile(value).replace(/\.html$/i, "").replace(/^(?:tw|en)-/i, "");
 }
 
 function normalizeLoose(value = "") {
@@ -67,7 +71,13 @@ function isCourseLike(lesson = {}) {
 }
 
 function pickCatalogIdentity(lesson = {}) {
-  return String(lesson.courseKey || lesson.courseId || lesson.id || "").trim();
+  return String(
+    normalizeCanonicalCourseKey(lesson.courseKey) ||
+    normalizeCanonicalCourseKey(lesson.contentRef) ||
+    normalizeCanonicalCourseKey(lesson.courseId) ||
+    normalizeCanonicalCourseKey(lesson.id) ||
+    ""
+  ).trim();
 }
 
 function getPrimaryMetadataIdentity(lesson = {}) {
@@ -75,7 +85,14 @@ function getPrimaryMetadataIdentity(lesson = {}) {
   if (lesson.isPhysical === true || metadataType === "product" || metadataType === "legacy_product") {
     return String(lesson.productId || lesson.courseKey || lesson.courseId || lesson.id || "").trim();
   }
-  return String(lesson.courseKey || lesson.courseId || lesson.productId || lesson.id || "").trim();
+  return String(
+    normalizeCanonicalCourseKey(lesson.courseKey) ||
+    normalizeCanonicalCourseKey(lesson.contentRef) ||
+    normalizeCanonicalCourseKey(lesson.courseId) ||
+    normalizeCanonicalCourseKey(lesson.id) ||
+    lesson.productId ||
+    ""
+  ).trim();
 }
 
 function resolveCanonicalItemKey(aliasMap, canonicalKeySet, itemKey) {
@@ -202,6 +219,8 @@ async function main() {
     add(lesson.id);
     add(lesson.courseId);
     add(lesson.courseKey);
+    add(normalizeCanonicalCourseKey(lesson.courseKey));
+    add(normalizeCanonicalCourseKey(lesson.contentRef));
     add(lesson.entryUnitId);
     add(lesson.productId);
     if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);

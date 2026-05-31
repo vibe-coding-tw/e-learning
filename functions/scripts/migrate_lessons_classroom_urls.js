@@ -65,6 +65,16 @@ function buildContentRef(entryUnitId) {
   return `courses/zh-TW/${file}.html`;
 }
 
+function normalizeCanonicalCourseKey(value = '') {
+  return String(value || '')
+    .split('/')
+    .pop()
+    .split('?')[0]
+    .replace(/\.html$/i, '')
+    .replace(/^(?:tw|en)-/i, '')
+    .trim();
+}
+
 function resolveCanonicalCourseId(data) {
   const rawCourseId = String(data.courseId || '').trim();
   const firstUnit = Array.isArray(data.courseUnits) && data.courseUnits.length > 0 ? data.courseUnits[0] : '';
@@ -118,7 +128,7 @@ async function run() {
       entryUnitId: resolvedEntryUnitId,
       classroomUrl: `/courses/${resolvedEntryUnitId}`,
       contentRef: data.contentRef || buildContentRef(resolvedEntryUnitId),
-      courseKey: data.courseKey || canonicalCourseId.replace(/\.html$/i, '').toLowerCase(),
+      courseKey: normalizeCanonicalCourseKey(data.courseKey || data.contentRef || canonicalCourseId),
       track: data.track || (canonicalCourseId.startsWith('start-') || canonicalCourseId.startsWith('basic-') || canonicalCourseId.startsWith('adv-') ? 'car' : 'common'),
       level: data.level || (
         canonicalCourseId.startsWith('start-') ? 'starter' :

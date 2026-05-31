@@ -24,6 +24,12 @@ function buildContentRef(entryUnitId) {
   return `courses/zh-TW/${file}.html`;
 }
 
+function normalizeCanonicalCourseKey(value = '') {
+  return String(value || '')
+    .replace(/\.html$/i, '')
+    .replace(/^(?:tw|en)-/i, '');
+}
+
 function resolveCanonicalCourseId(course) {
   const rawCourseId = String(course.courseId || '').trim();
   const firstUnit = Array.isArray(course.courseUnits) && course.courseUnits.length > 0 ? course.courseUnits[0] : '';
@@ -54,7 +60,7 @@ function withEntryMetadata(course) {
   return {
     ...course,
     courseId: canonicalCourseId,
-    courseKey: course.courseKey || String(canonicalCourseId || '').replace(/\.html$/i, '').toLowerCase(),
+    courseKey: normalizeCanonicalCourseKey(course.courseKey || course.contentRef || canonicalCourseId),
     track: course.track || (String(canonicalCourseId || '').startsWith('start-') || String(canonicalCourseId || '').startsWith('basic-') || String(canonicalCourseId || '').startsWith('adv-') ? 'car' : 'common'),
     level: course.level || (
       String(canonicalCourseId || '').startsWith('start-') ? 'starter' :
@@ -77,7 +83,7 @@ const courses = [
   {
     id: 'tw-common-developer-identity',
     courseId: 'tw-common-developer-identity.html',
-    courseKey: 'tw-common-developer-identity',
+    courseKey: 'common-developer-identity',
     title: '開發者身分 (Developer Identity)',
     lessonLabel: '準備課程 01', icon: '🆔', tagText: '免費', duration: '30 分鐘',
     price: 0, category: 'prepare',
@@ -89,7 +95,7 @@ const courses = [
   {
     id: 'tw-common-vscode-online',
     courseId: 'tw-common-vscode-online.html',
-    courseKey: 'tw-common-vscode-online',
+    courseKey: 'common-vscode-online',
     title: 'VS Code Online',
     lessonLabel: '準備課程 02', icon: '🌐', tagText: '免費', duration: '20 分鐘',
     price: 0, category: 'prepare',
@@ -101,7 +107,7 @@ const courses = [
   {
     id: 'tw-common-vscode-setup',
     courseId: 'tw-common-vscode-setup.html',
-    courseKey: 'tw-common-vscode-setup',
+    courseKey: 'common-vscode-setup',
     title: '開發環境 (VS Code Setup)',
     lessonLabel: '準備課程 03', icon: '💻', tagText: '免費', duration: '40 分鐘',
     price: 0, category: 'prepare',
@@ -113,7 +119,7 @@ const courses = [
   {
     id: 'tw-common-agent-mode',
     courseId: 'tw-common-agent-mode.html',
-    courseKey: 'tw-common-agent-mode',
+    courseKey: 'common-agent-mode',
     title: 'AI Agent 模式實務',
     lessonLabel: '準備課程 04', icon: '🤖', tagText: '免費', duration: '35 分鐘',
     price: 0, category: 'prepare',
@@ -125,7 +131,7 @@ const courses = [
   {
     id: 'tw-common-vibe-coding',
     courseId: 'tw-common-vibe-coding.html',
-    courseKey: 'tw-common-vibe-coding',
+    courseKey: 'common-vibe-coding',
     title: 'Vibe Coding 實戰',
     lessonLabel: '準備課程 05', icon: '🎵', tagText: '免費', duration: '45 分鐘',
     price: 0, category: 'prepare',
@@ -137,7 +143,7 @@ const courses = [
   {
     id: 'tw-common-web-agents',
     courseId: 'tw-common-web-agents.html',
-    courseKey: 'tw-common-web-agents',
+    courseKey: 'common-web-agents',
     title: '網頁版 AI 代理人實務',
     lessonLabel: '準備課程 06', icon: '🌍', tagText: '免費', duration: '30 分鐘',
     price: 0, category: 'prepare',
@@ -149,7 +155,7 @@ const courses = [
   {
     id: 'tw-common-github-classroom',
     courseId: 'tw-common-github-classroom.html',
-    courseKey: 'tw-common-github-classroom',
+    courseKey: 'common-github-classroom',
     title: 'GitHub Classroom & Vibe Coding 實務',
     lessonLabel: '準備課程 07', icon: '📚', tagText: '免費', duration: '25 分鐘',
     price: 0, category: 'prepare',
@@ -161,7 +167,7 @@ const courses = [
   {
     id: 'tw-common-wifi-setup',
     courseId: 'tw-common-wifi-setup.html',
-    courseKey: 'tw-common-wifi-setup',
+    courseKey: 'common-wifi-setup',
     title: 'WiFi 組態設定',
     lessonLabel: '準備課程 08', icon: '📡', tagText: '免費', duration: '25 分鐘',
     price: 0, category: 'prepare',
@@ -173,7 +179,7 @@ const courses = [
   {
     id: 'tw-common-motor-ramping',
     courseId: 'tw-common-motor-ramping.html',
-    courseKey: 'tw-common-motor-ramping',
+    courseKey: 'common-motor-ramping',
     title: '馬達 Ramping 控制',
     lessonLabel: '準備課程 09', icon: '⚙️', tagText: '免費', duration: '25 分鐘',
     price: 0, category: 'prepare',
@@ -192,7 +198,7 @@ const courses = [
     price: 990, category: 'started',
     courseUnits: ['start-01-unit-html5-basics.html', 'start-01-unit-flexbox-layout.html', 'start-01-unit-ui-ux-standards.html'],
     coreContent: ['HTML5 基礎結構', 'Flexbox 版面佈局', 'UI/UX 設計標準'],
-    courseKey: 'tw-car-starter-web-app',
+    courseKey: 'car-starter-web-app',
     entryUnitId: 'start-01-unit-flexbox-layout.html',
     orderWeight: 10, isPhysical: false,
   },
@@ -204,7 +210,7 @@ const courses = [
     price: 990, category: 'started',
     courseUnits: ['start-02-unit-ble-async.html', 'start-02-unit-ble-security.html', 'start-02-unit-typed-arrays.html'],
     coreContent: ['BLE 非同步連線', 'BLE 安全機制', 'TypedArray 資料處理'],
-    courseKey: 'tw-car-starter-web-ble',
+    courseKey: 'car-starter-web-ble',
     entryUnitId: 'start-02-unit-ble-async.html',
     orderWeight: 11, isPhysical: false,
   },
@@ -216,7 +222,7 @@ const courses = [
     price: 990, category: 'started',
     courseUnits: ['start-03-unit-control-panel.html', 'start-03-unit-data-json.html', 'start-03-unit-flow-logic.html'],
     coreContent: ['控制面板設計', 'JSON 資料交換', '流程邏輯設計'],
-    courseKey: 'tw-car-starter-remote-control',
+    courseKey: 'car-starter-remote-control',
     entryUnitId: 'start-03-unit-control-panel.html',
     orderWeight: 12, isPhysical: false,
   },
@@ -228,7 +234,7 @@ const courses = [
     price: 990, category: 'started',
     courseUnits: ['start-04-unit-touch-basics.html', 'start-04-unit-prevent-default.html', 'start-04-unit-long-press.html'],
     coreContent: ['觸控基礎事件', 'preventDefault 應用', '長按事件實作'],
-    courseKey: 'tw-car-starter-touch-events',
+    courseKey: 'car-starter-touch-events',
     entryUnitId: 'start-04-unit-long-press.html',
     orderWeight: 13, isPhysical: false,
   },
@@ -240,7 +246,7 @@ const courses = [
     price: 990, category: 'started',
     courseUnits: ['start-05-unit-canvas-joystick.html', 'start-05-unit-joystick-math.html', 'start-05-unit-touch-vs-mouse.html'],
     coreContent: ['Canvas 搖桿繪製', '搖桿數學運算', '觸控與滑鼠相容'],
-    courseKey: 'tw-car-starter-joystick-lab',
+    courseKey: 'car-starter-joystick-lab',
     entryUnitId: 'start-05-unit-canvas-joystick.html',
     orderWeight: 14, isPhysical: false,
   },

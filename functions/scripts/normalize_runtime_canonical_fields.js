@@ -20,33 +20,33 @@ const db = admin.firestore();
 
 const STATIC_ORDER_ITEM_ALIAS_TARGETS = {
   // Legacy starter short codes
-  ydb63bg: "tw-car-starter-web-app",
-  a45cwlak: "tw-car-starter-web-ble",
-  a7smdfeq: "tw-car-starter-remote-control",
-  hkdq5j3m: "tw-car-starter-touch-events",
-  io5rxgxl: "tw-car-starter-joystick-lab",
+  ydb63bg: "car-starter-web-app",
+  a45cwlak: "car-starter-web-ble",
+  a7smdfeq: "car-starter-remote-control",
+  hkdq5j3m: "car-starter-touch-events",
+  io5rxgxl: "car-starter-joystick-lab",
 
   // Legacy master entry pages
-  "01-master-getting-started.html": "tw-common-developer-identity",
-  "02-master-ai-agents.html": "tw-common-agent-mode",
-  "03-master-wifi-motor.html": "tw-common-github-classroom",
-  "start-01-master-web-app.html": "tw-car-starter-web-app",
-  "start-02-master-web-ble.html": "tw-car-starter-web-ble",
-  "start-03-master-remote-control.html": "tw-car-starter-remote-control",
-  "start-04-master-touch-events.html": "tw-car-starter-touch-events",
-  "start-05-master-joystick-lab.html": "tw-car-starter-joystick-lab",
-  "basic-01-master-environment.html": "tw-car-basic-environment",
-  "adv-01-master-s3-cam.html": "tw-car-advanced-s3-cam",
+  "01-master-getting-started.html": "common-developer-identity",
+  "02-master-ai-agents.html": "common-agent-mode",
+  "03-master-wifi-motor.html": "common-github-classroom",
+  "start-01-master-web-app.html": "car-starter-web-app",
+  "start-02-master-web-ble.html": "car-starter-web-ble",
+  "start-03-master-remote-control.html": "car-starter-remote-control",
+  "start-04-master-touch-events.html": "car-starter-touch-events",
+  "start-05-master-joystick-lab.html": "car-starter-joystick-lab",
+  "basic-01-master-environment.html": "car-basic-environment",
+  "adv-01-master-s3-cam.html": "car-advanced-s3-cam",
 
   // Historical short codes inferred from co-occurring legacy master keys in existing orders.
-  "72uyaadl": "tw-common-developer-identity",
-  "rs7hx3nf": "tw-car-basic-environment",
-  "w4lrkqmk": "tw-car-advanced-s3-cam",
+  "72uyaadl": "common-developer-identity",
+  "rs7hx3nf": "car-basic-environment",
+  "w4lrkqmk": "car-advanced-s3-cam",
 
   // Historical proposed prepare course keys
-  "tw-common-getting-started": "tw-common-developer-identity",
-  "tw-common-ai-agents": "tw-common-agent-mode",
-  "tw-common-wifi-motor": "tw-common-github-classroom"
+  "tw-common-getting-started": "common-developer-identity",
+  "tw-common-ai-agents": "common-agent-mode",
+  "tw-common-wifi-motor": "common-github-classroom"
 };
 
 function parseArgs(argv) {
@@ -58,6 +58,10 @@ function parseArgs(argv) {
 
 function normalizeFile(value = "") {
   return String(value || "").split("/").pop().split("?")[0].trim();
+}
+
+function normalizeCanonicalCourseKey(value = "") {
+  return normalizeFile(value).replace(/\.html$/i, "").replace(/^(?:tw|en)-/i, "");
 }
 
 function normalizeLoose(value = "") {
@@ -83,15 +87,26 @@ function inferTrack(track = "") {
 }
 
 function buildCourseKeyFromLesson(lesson = {}) {
+  const candidates = [
+    lesson.courseKey,
+    lesson.contentRef,
+    lesson.courseId,
+    lesson.entryUnitId,
+    lesson.id
+  ];
+  for (const candidate of candidates) {
+    const normalized = normalizeCanonicalCourseKey(candidate);
+    if (normalized) return normalized;
+  }
   const locale = inferLocale(lesson.locale);
   const level = inferLevel(lesson.category, lesson.level);
   const track = inferTrack(lesson.track);
   const entryUnitId = normalizeFile(lesson.entryUnitId || "");
   const stem = entryUnitId.replace(/\.html$/i, "").replace(/^(?:tw|en)-(?:common|car-(?:starter|basic|advanced))-/i, "");
   if (!stem) return "";
-  if (level === "common") return `${locale}-common-${stem}`;
-  if (track === "common") return `${locale}-${level}-${stem}`;
-  return `${locale}-${track}-${level}-${stem}`;
+  if (level === "common") return `common-${stem}`;
+  if (track === "common") return `${level}-${stem}`;
+  return `${track}-${level}-${stem}`;
 }
 
 function isCourseLike(lesson = {}) {
@@ -106,7 +121,15 @@ function getPrimaryMetadataIdentity(lesson = {}) {
   if (lesson.isPhysical === true || metadataType === "product" || metadataType === "legacy_product") {
     return String(lesson.productId || lesson.courseKey || lesson.courseId || lesson.id || "").trim();
   }
-  return String(lesson.courseKey || lesson.courseId || lesson.productId || lesson.id || "").trim();
+  return String(
+    normalizeCanonicalCourseKey(lesson.courseKey) ||
+    normalizeCanonicalCourseKey(lesson.contentRef) ||
+    normalizeCanonicalCourseKey(lesson.courseId) ||
+    normalizeCanonicalCourseKey(lesson.entryUnitId) ||
+    normalizeCanonicalCourseKey(lesson.id) ||
+    lesson.productId ||
+    ""
+  ).trim();
 }
 
 function resolveCanonicalItemKey(aliasMap, canonicalKeySet, itemKey) {
@@ -166,9 +189,12 @@ async function main() {
     }
 
     const nextEntryUnitId = patch.entryUnitId || entryUnitId;
-    if (!String(lesson.courseKey || "").trim() && nextEntryUnitId) {
+    const nextCanonicalCourseKey = normalizeCanonicalCourseKey(lesson.courseKey || "");
+    if (!nextCanonicalCourseKey && nextEntryUnitId) {
       const nextCourseKey = buildCourseKeyFromLesson({ ...lesson, entryUnitId: nextEntryUnitId });
       if (nextCourseKey) patch.courseKey = nextCourseKey;
+    } else if (nextCanonicalCourseKey && nextCanonicalCourseKey !== lesson.courseKey) {
+      patch.courseKey = nextCanonicalCourseKey;
     }
 
     if (Object.keys(patch).length > 0) {
