@@ -18,6 +18,7 @@ function init() {
     if (staleFabHide) staleFabHide.remove();
     ensureUnitTabsTheme();
     normalizeCourseTopNav();
+    normalizeCourseBreadcrumbs();
     ensureDynamicUnitTabsFromFirestore();
     hideGlobalNavOnCoursePage();
     applyHideTabsPreference();
@@ -368,8 +369,85 @@ function normalizeCourseTopNav() {
         brandLink.innerHTML = '<i class="fas fa-rocket"></i> Vibe Coding';
         brandLink.setAttribute('href', isEnMode ? '/index.html?lang=en' : '/index.html');
         brandLink.setAttribute('target', '_top');
+
+        // 入門課程 top-nav 整合：注入第三段課程名稱 (nav-course-name)
+        const isStarter = file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file);
+        if (isStarter) {
+            let navCourseNameSpan = document.getElementById('nav-course-name');
+            if (!navCourseNameSpan) {
+                const divider = document.createElement('div');
+                divider.className = 'divider';
+                
+                navCourseNameSpan = document.createElement('span');
+                navCourseNameSpan.id = 'nav-course-name';
+                navCourseNameSpan.style.cssText = 'color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                
+                topNav.appendChild(divider);
+                topNav.appendChild(navCourseNameSpan);
+            }
+            
+            const moduleTitleEl = document.querySelector('.ms-sidebar-header .module-title') || document.querySelector('.module-title');
+            if (moduleTitleEl) {
+                const moduleTitle = moduleTitleEl.textContent.trim();
+                let courseNum = '';
+                
+                const startMatch = file.match(/^start-(\d{2})-unit-/i);
+                if (startMatch) {
+                    courseNum = startMatch[1];
+                } else {
+                    const lookup = {
+                        'html5-basics': '01', 'flexbox-layout': '01', 'ui-ux-standards': '01',
+                        'ble-security': '02', 'ble-async': '02', 'typed-arrays': '02',
+                        'control-panel': '03', 'data-json': '03', 'flow-logic': '03',
+                        'touch-basics': '04', 'long-press': '04', 'prevent-default': '04',
+                        'touch-vs-mouse': '05', 'canvas-joystick': '05', 'joystick-math': '05'
+                    };
+                    const suffixMatch = file.match(/^(?:tw|en)-car-starter-(.+)\.html$/i);
+                    if (suffixMatch && lookup[suffixMatch[1]]) {
+                        courseNum = lookup[suffixMatch[1]];
+                    }
+                }
+                
+                if (courseNum) {
+                    const prefix = isEnMode ? `Starter ${courseNum}: ` : `入門 ${courseNum}：`;
+                    navCourseNameSpan.textContent = prefix + moduleTitle;
+                } else {
+                    navCourseNameSpan.textContent = moduleTitle;
+                }
+            }
+        }
     } catch (e) {
         console.warn('[CourseShared] normalizeCourseTopNav failed:', e);
+    }
+}
+
+/**
+ * 規格化入門課程的麵包屑 (ms-breadcrumb)
+ * 使其與基礎/進階課程一致（包含 bc-module-link 與 bc-current）
+ */
+function normalizeCourseBreadcrumbs() {
+    try {
+        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        if (!file.endsWith('.html')) return;
+
+        const isStarter = file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file);
+        if (!isStarter) return;
+
+        const breadcrumb = document.querySelector('.ms-breadcrumb');
+        if (!breadcrumb) return;
+
+        let bcModuleLink = document.getElementById('bc-module-link');
+        if (!bcModuleLink) {
+            breadcrumb.innerHTML = '<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">課程總覽</span>';
+            bcModuleLink = document.getElementById('bc-module-link');
+        }
+
+        const moduleTitleEl = document.querySelector('.ms-sidebar-header .module-title') || document.querySelector('.module-title');
+        if (moduleTitleEl && bcModuleLink) {
+            bcModuleLink.textContent = moduleTitleEl.textContent.trim();
+        }
+    } catch (e) {
+        console.warn('[CourseShared] normalizeCourseBreadcrumbs failed:', e);
     }
 }
 
