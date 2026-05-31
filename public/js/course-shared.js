@@ -548,9 +548,9 @@ function upgradeLegacyStartUnitToMsLayout() {
         sidebar.className = 'ms-sidebar';
         sidebar.innerHTML = `
             <div class="ms-sidebar-header">
-                <div class="module-label">模組</div>
+                <div class="module-label">單元</div>
                 <div class="module-title"></div>
-                <div class="meta"><i class="far fa-clock"></i> 約 45 分鐘 · ${legacySections.length + 1} 個單元</div>
+                <div class="meta"><i class="far fa-clock"></i> 約 45 分鐘 · ${legacySections.length + 1} 頁</div>
             </div>
             <nav class="ms-unit-list" id="sidebar-nav"></nav>
             <div class="sidebar-progress">
@@ -610,9 +610,9 @@ function upgradeLegacyStartUnitToMsLayout() {
             const prevTarget = pageNo === 1 ? 0 : pageNo - 1;
             const nextTarget = pageNo === legacySections.length ? 0 : pageNo + 1;
             nav.innerHTML = `
-                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;${pageNo === 1 ? '總覽' : '上一個單元'}</button>
+                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;${pageNo === 1 ? '總覽' : '上一頁'}</button>
                 <span class="unit-page-indicator">${pageNo} / ${legacySections.length}</span>
-                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? '返回總覽' : '下一個單元'} &nbsp;›</button>
+                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? '返回總覽' : '下一頁'} &nbsp;›</button>
             `;
 
             page.appendChild(contentWrap);
@@ -3261,7 +3261,7 @@ window.retryNativeAssignmentCreation = async function() {
     document.getElementById('native-creation-status-modal').classList.add('hidden');
     document.getElementById('github-username-modal').classList.remove('hidden');
 };
-
+// 3. Define a walker to recursively find and normalize text nodes in standard UI containers
 function normalizeTerminology() {
     try {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
@@ -3269,18 +3269,20 @@ function normalizeTerminology() {
         const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
         const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
         
-        if (!isEn) return; // Only adjust terminology in English mode
-        
-        console.log("[CourseShared] Normalizing English terminology: Unit->Page, Course->Unit, Module->Unit");
+        console.log(`[CourseShared] Normalizing terminology (isEn=${isEn})`);
 
         // 1. Modify the global UNITS array if it exists to prevent goToUnit from restoring un-normalized values
         if (typeof UNITS !== 'undefined' && Array.isArray(UNITS)) {
             UNITS.forEach(u => {
                 if (u.label) {
-                    u.label = u.label
-                        .replace(/\bCourse\s+Overview\b/gi, 'Unit Overview')
-                        .replace(/\bCourse\b/gi, 'Unit')
-                        .replace(/\bModule\b/gi, 'Unit');
+                    if (isEn) {
+                        u.label = u.label
+                            .replace(/\bCourse\s+Overview\b/gi, 'Unit Overview')
+                            .replace(/\bCourse\b/gi, 'Unit')
+                            .replace(/\bModule\b/gi, 'Unit');
+                    } else {
+                        u.label = u.label.replace(/模組/g, '單元');
+                    }
                 }
             });
         }
@@ -3289,33 +3291,51 @@ function normalizeTerminology() {
         if (typeof unitTitles !== 'undefined' && Array.isArray(unitTitles)) {
             for (let i = 0; i < unitTitles.length; i++) {
                 if (typeof unitTitles[i] === 'string') {
-                    unitTitles[i] = unitTitles[i]
-                        .replace(/\bCourse\s+Overview\b/gi, 'Unit Overview')
-                        .replace(/\bCourse\b/gi, 'Unit')
-                        .replace(/\bModule\b/gi, 'Unit');
+                    if (isEn) {
+                        unitTitles[i] = unitTitles[i]
+                            .replace(/\bCourse\s+Overview\b/gi, 'Unit Overview')
+                            .replace(/\bCourse\b/gi, 'Unit')
+                            .replace(/\bModule\b/gi, 'Unit');
+                    } else {
+                        unitTitles[i] = unitTitles[i].replace(/模組/g, '單元');
+                    }
                 }
             }
         }
 
         // 3. Define a walker to recursively find and normalize text nodes in standard UI containers
-        const mapTerms = {
-            'Previous\\s+Unit': 'Previous Page',
-            'Next\\s+Unit': 'Next Page',
-            'Start\\s+Module': 'Start Unit',
-            'Start\\s+Course': 'Start Unit',
-            'Complete\\s+Module': 'Complete Unit',
-            'Module\\s+Completed': 'Unit Completed',
-            'Course\\s+Overview': 'Unit Overview',
-            'Starter\\s+Course': 'Starter Unit',
-            'Basic\\s+Course': 'Basic Unit',
-            'Advanced\\s+Course': 'Advanced Unit',
-            'This\\s+Module\\s+Unit': "This Unit's Pages",
-            'This\\s+Module\'s\\s+Units': "This Unit's Pages",
-            'This\\s+Module’s\\s+Units': "This Unit's Pages",
-        };
+        let mapTerms = [];
+        if (isEn) {
+            mapTerms = [
+                ['Previous\\s+Unit', 'Previous Page'],
+                ['Next\\s+Unit', 'Next Page'],
+                ['Start\\s+Module', 'Start Unit'],
+                ['Start\\s+Course', 'Start Unit'],
+                ['Complete\\s+Module', 'Complete Unit'],
+                ['Module\\s+Completed', 'Unit Completed'],
+                ['Course\\s+Overview', 'Unit Overview'],
+                ['Starter\\s+Course', 'Starter Unit'],
+                ['Basic\\s+Course', 'Basic Unit'],
+                ['Advanced\\s+Course', 'Advanced Unit'],
+                ['This\\s+Module\\s+Unit', "This Unit's Pages"],
+                ['This\\s+Module\'s\\s+Units', "This Unit's Pages"],
+                ['This\\s+Module’s\\s+Units', "This Unit's Pages"],
+            ];
+        } else {
+            mapTerms = [
+                ['上一個單元', '上一頁'],
+                ['下一個單元', '下一頁'],
+                ['本模組單元', '本單元頁面'],
+                ['開始模組', '開始單元'],
+                ['完成模組', '完成單元'],
+                ['模組完成', '單元完成'],
+                ['本模組', '本單元'],
+                ['模組', '單元']
+            ];
+        }
 
         const containers = document.querySelectorAll(
-            '.ms-topnav, .ms-sidebar, .ms-breadcrumb, #page-index, .unit-nav, .nav-btn-prev, .nav-btn-next, .ms-btn, button, .unit-page-indicator, .unit-completed-badge, .unit-card, .ms-unit-item'
+            '.ms-topnav, .ms-sidebar, .ms-breadcrumb, #page-index, .unit-nav, .nav-btn-prev, .nav-btn-next, .ms-btn, button, .unit-page-indicator, .unit-completed-badge, .unit-card, .ms-unit-item, .ms-content, .ms-layout'
         );
 
         containers.forEach(container => {
@@ -3324,9 +3344,13 @@ function normalizeTerminology() {
                 NodeFilter.SHOW_TEXT,
                 {
                     acceptNode(node) {
-                        const tag = node.parentElement?.tagName.toLowerCase();
-                        if (['script', 'style', 'code', 'pre'].includes(tag)) {
-                            return NodeFilter.FILTER_REJECT;
+                        let parent = node.parentElement;
+                        while (parent) {
+                            const tag = parent.tagName.toLowerCase();
+                            if (['script', 'style', 'code', 'pre'].includes(tag)) {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            parent = parent.parentElement;
                         }
                         return NodeFilter.FILTER_ACCEPT;
                     }
@@ -3337,8 +3361,8 @@ function normalizeTerminology() {
             while (node = walk.nextNode()) {
                 let text = node.textContent;
                 let changed = false;
-                for (const [target, replacement] of Object.entries(mapTerms)) {
-                    const regex = new RegExp(`\\b${target}\\b`, 'gi');
+                for (const [target, replacement] of mapTerms) {
+                    const regex = isEn ? new RegExp(`\\b${target}\\b`, 'gi') : new RegExp(target, 'g');
                     if (regex.test(text)) {
                         text = text.replace(regex, replacement);
                         changed = true;
@@ -3353,25 +3377,44 @@ function normalizeTerminology() {
         // 4. Update elements with inline onclick alerts (e.g. Complete Module alerts)
         document.querySelectorAll('[onclick]').forEach(el => {
             let clickStr = el.getAttribute('onclick') || '';
-            if (clickStr.includes('alert(') && (clickStr.toLowerCase().includes('module') || clickStr.toLowerCase().includes('course'))) {
-                clickStr = clickStr
-                    .replace(/\bmodule\b/gi, 'unit')
-                    .replace(/\bcourse\b/gi, 'unit');
-                el.setAttribute('onclick', clickStr);
+            if (clickStr.includes('alert(')) {
+                if (isEn) {
+                    if (clickStr.toLowerCase().includes('module') || clickStr.toLowerCase().includes('course')) {
+                        clickStr = clickStr
+                            .replace(/\bmodule\b/gi, 'unit')
+                            .replace(/\bcourse\b/gi, 'unit');
+                        el.setAttribute('onclick', clickStr);
+                    }
+                } else {
+                    if (clickStr.includes('模組')) {
+                        clickStr = clickStr.replace(/模組/g, '單元');
+                        el.setAttribute('onclick', clickStr);
+                    }
+                }
             }
         });
 
-        // 5. Update meta details (e.g. unit counts "7 units" -> "7 pages")
+        // 5. Update meta details (e.g. unit counts "7 units" -> "7 pages", "7 個單元" -> "7 頁")
         const meta = document.querySelector('.ms-sidebar .meta');
         if (meta) {
-            meta.innerHTML = meta.innerHTML.replace(/(\d+)\s+units?\b/gi, '$1 pages');
+            if (isEn) {
+                meta.innerHTML = meta.innerHTML.replace(/(\d+)\s+units?\b/gi, '$1 pages');
+            } else {
+                meta.innerHTML = meta.innerHTML.replace(/(\d+)\s*個單元/g, '$1 頁');
+            }
         }
 
         // 6. Update document title fallback
-        if (document.title.includes('Course') || document.title.includes('Module')) {
-            document.title = document.title
-                .replace(/\bCourse\b/g, 'Unit')
-                .replace(/\bModule\b/g, 'Unit');
+        if (isEn) {
+            if (document.title.includes('Course') || document.title.includes('Module')) {
+                document.title = document.title
+                    .replace(/\bCourse\b/g, 'Unit')
+                    .replace(/\bModule\b/g, 'Unit');
+            }
+        } else {
+            if (document.title.includes('模組')) {
+                document.title = document.title.replace(/模組/g, '單元');
+            }
         }
 
     } catch (e) {
