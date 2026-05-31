@@ -45,6 +45,8 @@ jobs:
       - name: Run Grader
         id: grader
         shell: bash
+        env:
+          UNIT_ID: ${{ vars.VC_UNIT_ID }}
         run: |
           set -euo pipefail
 
@@ -67,72 +69,26 @@ jobs:
             exit 0
           fi
 
-          # Inline grading based on env-check.md (or README.md fallback) checklist progress with optional weights.
-          # Supported weight formats per checklist line:
-          # - [ ] Task title [w:20]
-          # - [ ] Task title (20%)
-          # - [ ] Task title [weight=20]
-          # If no weights are provided, fallback to equal-weight checklist scoring.
-          SCORE_VAL=$(python3 - <<'PY'
-import re
-import os
-from pathlib import Path
+          # Create a sandbox directory for grader output
+          mkdir -p .grader_workspace
 
-max_score = int("${MAX_SCORE}")
-p = Path("env-check.md") if Path("env-check.md").exists() else Path("README.md")
-if not p.exists():
-    print(0)
-    raise SystemExit
+          # Try to download the unit-specific grader from centralized hosting
+          echo "Attempting to download grader for $UNIT_ID..."
+          HTTP_CODE=$(curl -s -w "%{http_code}" -o .grader_workspace/grader.sh "https://vibe-coding.tw/graders/${UNIT_ID}.sh" || echo "500")
 
-text = p.read_text(encoding="utf-8", errors="ignore")
-lines = text.splitlines()
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Grader for $UNIT_ID not found (HTTP $HTTP_CODE). Downloading default grader..."
+            curl -fsSL -o .grader_workspace/grader.sh "https://vibe-coding.tw/graders/default.sh"
+          fi
 
-check_re = re.compile(r'^\s*[-*]\s+\[(?P<done>[ xX])\]\s+(?P<body>.+)$')
-weight_patterns = [
-    re.compile(r'\[w(?:eight)?\s*[:=]\s*(\d+(?:\.\d+)?)\]', re.IGNORECASE),
-    re.compile(r'\((\d+(?:\.\d+)?)%\)')
-]
+          chmod +x .grader_workspace/grader.sh
 
-items = []
-for line in lines:
-    m = check_re.match(line)
-    if not m:
-        continue
-    done = m.group("done").lower() == "x"
-    body = m.group("body")
-    weight = None
-    for p_pat in weight_patterns:
-        wm = p_pat.search(body)
-        if wm:
-            try:
-                weight = float(wm.group(1))
-            except Exception:
-                weight = None
-            break
-    items.append((done, weight))
+          # Run the grader script
+          echo "Running grader..."
+          SCORE_VAL=$(bash .grader_workspace/grader.sh "$MAX_SCORE" || echo "0")
 
-if not items:
-    # No checklist: fallback
-    score = max_score if text.strip() else 0
-    print(score)
-    raise SystemExit
-
-weighted_items = [(d, w) for d, w in items if w is not None and w > 0]
-
-if weighted_items:
-    total_w = sum(w for _, w in weighted_items)
-    done_w = sum(w for d, w in weighted_items if d)
-    ratio = 0 if total_w <= 0 else done_w / total_w
-else:
-    total = len(items)
-    done = sum(1 for d, _ in items if d)
-    ratio = 0 if total == 0 else done / total
-
-score = int(round(max_score * ratio))
-score = max(0, min(max_score, score))
-print(score)
-PY
-)
+          # Clean up grader workspace
+          rm -rf .grader_workspace
 
           echo "score=$SCORE_VAL" >> "$GITHUB_OUTPUT"
           echo "max_score=$MAX_SCORE" >> "$GITHUB_OUTPUT"

@@ -58,33 +58,58 @@ def process_repo(repo_name, dry_run=True):
         if rc_b == 0 and stdout_b:
             default_branch = stdout_b.strip()
             
-    # 2. Re-create workflow structure
+    # 2. Re-create workflow structure and copy template
     workflows_dir = os.path.join(local_dir, ".github", "workflows")
     os.makedirs(workflows_dir, exist_ok=True)
     
     dest_file = os.path.join(workflows_dir, "autograde-and-sync.yml")
     shutil.copy2(DEFAULT_YML, dest_file)
     
-    # Remove obsolete files
-    obsolete_files = ["classroom.yml", "autograde-sync-vibe-coding.yml", "autograde-sync.yml", "grading.yml"]
-    for ob in obsolete_files:
-        p = os.path.join(workflows_dir, ob)
-        if os.path.exists(p):
-            os.remove(p)
+    # Remove all other files outside `.github/`
+    for item in os.listdir(local_dir):
+        if item == ".github" or item == ".git":
+            continue
+        item_path = os.path.join(local_dir, item)
+        if os.path.isdir(item_path):
+            shutil.rmtree(item_path)
+        else:
+            os.remove(item_path)
+
+    # Clean up everything inside `.github/` except `workflows/autograde-and-sync.yml`
+    github_dir = os.path.join(local_dir, ".github")
+    if os.path.exists(github_dir):
+        for item in os.listdir(github_dir):
+            if item == "workflows":
+                # Clean workflows dir except for autograde-and-sync.yml
+                workflows_dir = os.path.join(github_dir, "workflows")
+                for wf_file in os.listdir(workflows_dir):
+                    if wf_file != "autograde-and-sync.yml":
+                        wf_path = os.path.join(workflows_dir, wf_file)
+                        if os.path.isdir(wf_path):
+                            shutil.rmtree(wf_path)
+                        else:
+                            os.remove(wf_path)
+            else:
+                # Delete any other folders/files inside .github, e.g. .github/classroom/ or .github/scripts/
+                item_path = os.path.join(github_dir, item)
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                else:
+                    os.remove(item_path)
             
-    # Add all changes to staging
-    run_cmd(["git", "add", ".github/workflows"], cwd=local_dir)
+    # Add all changes to staging (including deletions)
+    run_cmd(["git", "add", "-A"], cwd=local_dir)
     
     # Check if there are any changes
     rc, stdout, stderr = run_cmd(["git", "diff", "--cached", "--quiet"], cwd=local_dir)
     if rc == 0:
         # No changes
         shutil.rmtree(local_dir)
-        return True, "No changes (already integrated)"
+        return True, "No changes (already consolidated and cleaned)"
         
     if dry_run:
         shutil.rmtree(local_dir)
-        return True, f"[Dry-Run] Would merge workflows on branch {default_branch}"
+        return True, f"[Dry-Run] Would consolidate workflow and clean template repository on branch {default_branch}"
         
     # 3. Apply changes (Commit and Push)
     # 3.a Disable GitHub Actions before pushing
@@ -93,7 +118,7 @@ def process_repo(repo_name, dry_run=True):
         return False, "Failed to disable Actions before push"
         
     # 3.b Commit
-    commit_msg = "ci: merge grading+sync workflow into autograde-and-sync [skip ci]"
+    commit_msg = "ci: consolidate workflow and clean template repository [skip ci]"
     rc_c, stdout_c, stderr_c = run_cmd(["git", "commit", "-m", commit_msg], cwd=local_dir)
     if rc_c != 0:
         toggle_actions(repo_full_name, enable=True) # Ensure actions are re-enabled
