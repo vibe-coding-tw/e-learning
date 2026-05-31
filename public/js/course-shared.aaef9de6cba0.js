@@ -35,6 +35,7 @@ function init() {
     ensureMobileResponsiveLayout();
     normalizeStartButtonText();
     cleanUpCourseTitles();
+    normalizeTerminology();
 }
 
 function ensureUnitTabsTheme() {
@@ -327,10 +328,10 @@ function normalizeCourseTopNav() {
                 // 當未載入 i18n 翻譯器且處於英文模式時，回傳英文預設標題
                 if (isEn) {
                     const enDict = {
-                        'starter_title': 'Starter Course',
-                        'basic_title': 'Basic Course',
-                        'advanced_title': 'Advanced Course',
-                        'prepare_title': 'Preparation Course'
+                        'starter_title': 'Starter Unit',
+                        'basic_title': 'Basic Unit',
+                        'advanced_title': 'Advanced Unit',
+                        'prepare_title': 'Preparation Unit'
                     };
                     return enDict[key] || defaultText;
                 }
@@ -3025,9 +3026,9 @@ function normalizeStartButtonText() {
             const onclickAttr = btn.getAttribute('onclick') || '';
             if (onclickAttr.includes('goToUnit(1)')) {
                 if (isEn) {
-                    btn.innerHTML = 'Start Course &nbsp;›';
+                    btn.innerHTML = 'Start Unit &nbsp;›';
                 } else {
-                    btn.innerHTML = '開始課程 &nbsp;›';
+                    btn.innerHTML = '開始單元 &nbsp;›';
                 }
             }
         });
@@ -3257,4 +3258,90 @@ window.retryNativeAssignmentCreation = async function() {
     document.getElementById('native-creation-status-modal').classList.add('hidden');
     document.getElementById('github-username-modal').classList.remove('hidden');
 };
+
+function normalizeTerminology() {
+    try {
+        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
+        const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
+        
+        if (!isEn) return; // Only adjust terminology in English mode
+        
+        console.log("[CourseShared] Normalizing English terminology: Unit->Page, Course->Unit, Module->Unit");
+
+        // 1. Update buttons: Previous Unit -> Previous Page, Next Unit -> Next Page
+        document.querySelectorAll('.nav-btn-prev').forEach(btn => {
+            btn.innerHTML = btn.innerHTML.replace(/\bPrevious Unit\b/gi, 'Previous Page');
+        });
+        document.querySelectorAll('.nav-btn-next').forEach(btn => {
+            btn.innerHTML = btn.innerHTML.replace(/\bNext Unit\b/gi, 'Next Page');
+        });
+
+        // 2. Update Start button (Start Module / Start Course -> Start Unit)
+        document.querySelectorAll('button, .ms-btn').forEach(btn => {
+            const onclickAttr = btn.getAttribute('onclick') || '';
+            if (onclickAttr.includes('goToUnit(1)') || btn.textContent.includes('Start Module') || btn.textContent.includes('Start Course')) {
+                btn.innerHTML = btn.innerHTML.replace(/\bStart Module\b/gi, 'Start Unit');
+                btn.innerHTML = btn.innerHTML.replace(/\bStart Course\b/gi, 'Start Unit');
+            }
+        });
+
+        // 3. Update top-nav label (Starter Course -> Starter Unit, etc.)
+        const topNav = document.querySelector('.ms-topnav');
+        if (topNav) {
+            const navLabel = topNav.querySelector('.nav-label');
+            if (navLabel) {
+                navLabel.textContent = navLabel.textContent.replace(/\bCourse\b/gi, 'Unit');
+            }
+        }
+
+        // 4. Update sidebar labels and text
+        const sidebar = document.querySelector('.ms-sidebar');
+        if (sidebar) {
+            // Module label: "Module" -> "Unit"
+            const moduleLabel = sidebar.querySelector('.module-label');
+            if (moduleLabel) {
+                moduleLabel.textContent = moduleLabel.textContent.replace(/\bModule\b/gi, 'Unit');
+            }
+            
+            // Meta details: "7 units" -> "7 pages", "Approx. 201 minutes · 7 units" -> "Approx. 201 minutes · 7 pages"
+            const meta = sidebar.querySelector('.meta');
+            if (meta) {
+                meta.innerHTML = meta.innerHTML.replace(/(\d+)\s+units?\b/gi, '$1 pages');
+            }
+        }
+
+        // 5. Update index/overview page labels
+        const pageIndex = document.getElementById('page-index');
+        if (pageIndex) {
+            // Title tags or tags lists
+            const tags = pageIndex.querySelectorAll('.ms-tag');
+            tags.forEach(tag => {
+                if (tag.textContent.trim().toLowerCase() === 'module') {
+                    tag.textContent = 'Unit';
+                } else if (/\d+\s+units?\b/i.test(tag.textContent)) {
+                    tag.textContent = tag.textContent.replace(/(\d+)\s+units?\b/gi, '$1 pages');
+                }
+            });
+            
+            // Header: "This Module Unit" -> "This Unit's Pages"
+            const headings = pageIndex.querySelectorAll('h2');
+            headings.forEach(h => {
+                if (h.textContent.includes('This Module Unit') || h.textContent.includes('This Module\'s Units') || h.textContent.includes('This Module’s Units')) {
+                    h.textContent = 'This Unit\'s Pages';
+                }
+            });
+        }
+        
+        // 6. Update breadcrumbs "入門課程" / "Starter Course" -> "Starter Unit"
+        const bcModuleLink = document.getElementById('bc-module-link');
+        if (bcModuleLink) {
+            bcModuleLink.textContent = bcModuleLink.textContent.replace(/\bCourse\b/gi, 'Unit');
+        }
+        
+    } catch (e) {
+        console.warn('[CourseShared] normalizeTerminology failed:', e);
+    }
+}
 } // end window.__courseSharedLoaded guard
