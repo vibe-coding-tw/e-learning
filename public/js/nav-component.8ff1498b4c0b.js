@@ -35,7 +35,7 @@ async function startGoogleLogin() {
     } catch (error) {
         console.error("[NavComp] Google login failed:", error);
         sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
-        alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請改用 login.html。");
+        alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。");
     }
 }
 const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v2";
@@ -769,7 +769,6 @@ function injectDashboardFAB() {
         'tutors.html',
         'dashboard.html',
         'cart.html',
-        'login.html',
         'payment-return.html',
         'learning-path.html'
     ]);

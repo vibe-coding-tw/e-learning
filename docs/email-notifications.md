@@ -28,10 +28,10 @@ It is the source of truth for:
 | New tutor application | `applyForTutorRole` / `submitTutorRecommendationInviteLink` | Admin | `sendAdminNewApplicationEmail` | `/dashboard.html?unitId=...&tab=tutors`（Tutor Management） |
 | Tutor application result | `decideTutorApplication` | Applicant | `sendApplicationResultEmail` | `/dashboard.html?unitId=...&tab=assignments` |
 | Pending tutor-binding reminder | Daily schedule | Student | `sendStudentPendingTutorAssignmentReminder` | `/dashboard.html?tab=assignments` |
-| Admin pending shipment reminder | Daily schedule | Admin | `sendAdminShipmentReminder` | `/dashboard.html?tab=shipments` |
+| Admin pending shipment reminder | Daily schedule | Admin / ops | `sendAdminShipmentReminder` | `/dashboard.html?tab=shipments` |
 | Autograde result (student) | `ingestGithubAutograde` success | Student | `sendAutogradeResultToStudent` | `/dashboard.html?unitId=...&tab=assignments` |
 | Autograde result (tutor) | `ingestGithubAutograde` success | Assigned tutor | `sendAutogradeResultToTutor` | `/dashboard.html?unitId=...&tab=assignments` |
-| Order shipped | `markOrderShipped` success | Student | `sendOrderShippedEmail` | `/dashboard.html?tab=overview` |
+| Order shipped | Distributor / partner marks order as shipped | Student | `sendOrderShippedEmail` | `/dashboard.html?tab=overview` |
 | Tutor recommendation candidate | `recommendTutorForUnit` success | Candidate student | `sendTutorRecommendationCandidateEmail` | `/dashboard.html?unitId=...&tab=assignments&action=submitTutorInvite&applicationId=...` |
 | Autograde failure alert | `ingestGithubAutograde` validation/runtime failure | Admin | `sendAutogradeFailureAlertEmail` | `/dashboard.html?tab=tutors`（Tutor Management） |
 | Order activation failure alert | `paymentNotify` success but activation validation fails | Admin | `sendAutogradeFailureAlertEmail` | `/dashboard.html?tab=overview` |
@@ -42,7 +42,8 @@ It is the source of truth for:
 3. Autograde writeback failures must notify admin with payload preview to speed incident triage.
 4. Notification send failures should not block business transaction completion (current behavior: best-effort send with error logging).
 5. Pending tutor-binding reminder only targets students with paid course units that still have no tutor assignment; hardware items and free courses are excluded.
-6. Payment success must run order activation validation immediately. If a paid digital item cannot map to a canonical course/unit or cannot pass the shared authorization logic, the order stores `activationValidationStatus=failed` and sends an admin alert.
+6. Shipment reminders now refer to pending fulfillment tasks assigned to distributors / partners, not direct platform-to-customer shipping.
+7. Payment success must run order activation validation immediately. If a paid digital item cannot map to a canonical course/unit or cannot pass the shared authorization logic, the order stores `activationValidationStatus=failed` and sends an admin alert.
 
 ## 4. Deprecated / Legacy Notes
 1. `sendGradingNotification` currently exists as a legacy template from manual grading flow.
