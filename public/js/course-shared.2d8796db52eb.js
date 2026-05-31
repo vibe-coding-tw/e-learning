@@ -142,6 +142,9 @@ function ensureUnitTabsTheme() {
             .ms-achievement h3 {
                 color: #ffffff !important;
             }
+            .ms-sidebar-header .module-label {
+                display: none !important;
+            }
         `;
         document.head.appendChild(style);
     } catch (e) {
