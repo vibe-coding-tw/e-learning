@@ -418,6 +418,85 @@ function normalizeCourseTopNav() {
                 }
             }
         }
+
+        // 課程單元右上角加入語言選項 (Language Switcher)
+        if (!document.getElementById('course-lang-select-container')) {
+            const isEnMode = (new URLSearchParams(window.location.search).get('lang') || '').toLowerCase().startsWith('en') || file.startsWith('en-');
+            
+            const container = document.createElement('div');
+            container.id = 'course-lang-select-container';
+            container.style.cssText = 'margin-left: auto; display: flex; align-items: center; gap: 6px;';
+            
+            container.innerHTML = `
+                <i class="fa-solid fa-globe" style="color: rgba(255,255,255,0.75); font-size: 13px;"></i>
+                <select id="course-lang-select" style="background: transparent; color: #fff; border: none; font-size: 13px; font-weight: 500; cursor: pointer; outline: none; padding: 4px 6px; border-radius: 4px;">
+                    <option value="zh-TW" ${!isEnMode ? 'selected' : ''} style="color: #333;">繁中</option>
+                    <option value="en" ${isEnMode ? 'selected' : ''} style="color: #333;">EN</option>
+                </select>
+            `;
+            
+            topNav.appendChild(container);
+            
+            const select = container.querySelector('#course-lang-select');
+            select.addEventListener('change', (e) => {
+                const newLocale = e.target.value;
+                try {
+                    localStorage.setItem('vibe_user_locale', newLocale);
+                } catch (_) {}
+                
+                const currentFile = window.location.pathname.split('/').pop() || '';
+                let targetFile = currentFile;
+                
+                if (newLocale === 'en') {
+                    if (currentFile.startsWith('tw-')) {
+                        targetFile = currentFile.replace(/^tw-/, 'en-');
+                    } else if (currentFile.startsWith('start-')) {
+                        const lookup = {
+                            'start-01-unit-html5-basics.html': 'en-car-starter-html5-basics.html',
+                            'start-01-unit-flexbox-layout.html': 'en-car-starter-flexbox-layout.html',
+                            'start-01-unit-ui-ux-standards.html': 'en-car-starter-ui-ux-standards.html',
+                            'start-02-unit-ble-security.html': 'en-car-starter-ble-security.html',
+                            'start-02-unit-ble-async.html': 'en-car-starter-ble-async.html',
+                            'start-02-unit-typed-arrays.html': 'en-car-starter-typed-arrays.html',
+                            'start-03-unit-control-panel.html': 'en-car-starter-control-panel.html',
+                            'start-03-unit-data-json.html': 'en-car-starter-data-json.html',
+                            'start-03-unit-flow-logic.html': 'en-car-starter-flow-logic.html',
+                            'start-04-unit-touch-basics.html': 'en-car-starter-touch-basics.html',
+                            'start-04-unit-long-press.html': 'en-car-starter-long-press.html',
+                            'start-04-unit-prevent-default.html': 'en-car-starter-prevent-default.html',
+                            'start-05-unit-touch-vs-mouse.html': 'en-car-starter-touch-vs-mouse.html',
+                            'start-05-unit-canvas-joystick.html': 'en-car-starter-canvas-joystick.html',
+                            'start-05-unit-joystick-math.html': 'en-car-starter-joystick-math.html'
+                        };
+                        targetFile = lookup[currentFile] || currentFile.replace(/^start-/, 'en-');
+                    } else if (currentFile.match(/^\d{2}-unit-/)) {
+                        targetFile = currentFile.replace(/^\d{2}-unit-/, 'en-common-');
+                    } else if (currentFile.match(/^prepare-/)) {
+                        targetFile = currentFile.replace(/^prepare-/, 'en-common-');
+                    }
+                } else {
+                    if (targetFile.startsWith('en-car-starter-')) {
+                        targetFile = targetFile.replace(/^en-car-starter-/, 'tw-car-starter-');
+                    } else if (targetFile.startsWith('en-car-basic-')) {
+                        targetFile = targetFile.replace(/^en-car-basic-/, 'tw-car-basic-');
+                    } else if (targetFile.startsWith('en-car-advanced-')) {
+                        targetFile = targetFile.replace(/^en-car-advanced-/, 'tw-car-advanced-');
+                    } else if (targetFile.startsWith('en-common-')) {
+                        targetFile = targetFile.replace(/^en-common-/, 'tw-common-');
+                    } else if (targetFile.startsWith('en-')) {
+                        targetFile = targetFile.replace(/^en-/, 'tw-');
+                    }
+                }
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('lang', newLocale === 'en' ? 'en' : 'zh-TW');
+                urlParams.set('locale', newLocale === 'en' ? 'en' : 'zh-TW');
+                
+                const newSearch = urlParams.toString();
+                const newPath = window.location.pathname.replace(currentFile, targetFile);
+                window.location.href = newPath + (newSearch ? '?' + newSearch : '') + window.location.hash;
+            });
+        }
     } catch (e) {
         console.warn('[CourseShared] normalizeCourseTopNav failed:', e);
     }
