@@ -31,7 +31,7 @@
 ---
 
 ## 2. `orders` 集合
-儲存綠界付款訂單與後續履約狀態。
+儲存付款訂單與後續履約狀態。平台收款由系統統一處理，實體商品履約則由經銷商 / 履約夥伴負責。
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
@@ -54,7 +54,19 @@
 | `activationAlerts` | array | 開通驗證失敗時的可讀警示訊息。 |
 | `activationCheckedItems` | array | 每個訂單項目的 mapping / 授權檢查結果。實體商品會標記但不要求 `courseUnits`。 |
 | `activationValidatedAt` | timestamp | 最近一次開通驗證時間。 |
-| `fulfillmentStatus` | string | 出貨狀態（如 `PENDING`, `SHIPPED`）。 |
+| `fulfillmentType` | string | 履約模式，建議固定為 `distributor`。 |
+| `fulfillmentPartnerId` | string | 履約經銷商 / 合作夥伴識別碼。 |
+| `fulfillmentPartnerName` | string | 履約夥伴名稱。 |
+| `fulfillmentRegion` | string | 履約地區（如 `TW`, `SG`, `US-West`）。 |
+| `fulfillmentStatus` | string | 履約狀態（如 `PENDING`, `ASSIGNED`, `ACCEPTED`, `SHIPPED`, `DELIVERED`）。 |
+| `fulfillmentAssignedAt` | timestamp | 平台派單時間。 |
+| `fulfillmentAcceptedAt` | timestamp | 經銷商接單時間。 |
+| `fulfillmentShippedAt` | timestamp | 經銷商出貨時間。 |
+| `trackingNumber` | string | 物流追蹤號碼。 |
+| `carrier` | string | 承運商或配送方式。 |
+| `shippingCost` | number | 實際履約成本。 |
+| `handlingFee` | number | 經銷商處理費 / 履約費。 |
+| `fulfillmentNotes` | array | 履約異常、缺貨、改派等備註。 |
 | `logistics` | map | 物流資料（門市/收件資訊，支援 ECPay CVS 及國際直郵結構）。 |
 | `logisticsMissing` | boolean | 實體商品訂單付款後物流資料不完整時的警示旗標。 |
 | `ecpayTradeNo` | string | 綠界交易編號 (僅於 gateway 為 ECPAY 時存在)。 |
@@ -64,6 +76,7 @@
 > 購物車不再輸入 Promotion code / 推薦連結。  
 > 導師綁定在作業頁進行，並寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`。
 > 實體商品下單會在 `initiatePayment` 驗證物流必要欄位（收件人、電話、門市/地址）；若歷史資料或例外流程造成缺漏，`paymentNotify` 會標記 `logisticsMissing=true` 供後台追蹤。
+> `fulfillmentStatus` 現在代表「經銷商 / 履約夥伴」的工作流狀態，不再單純等同於平台直送狀態。
 > **重複購買限制**：`initiatePayment` 在建立新訂單前，會自動檢查學員已成功付款且未到期的線上課程訂單（`expiryDate > now`）。若偵測到購物車中有學員已擁有的未到期課程，後端會直接拒絕交易並回傳錯誤訊息，阻止重複付款。
 > **付款後開通驗證**：`paymentNotify` 寫入 `SUCCESS` 後會立即檢查每個數位課程項目是否能解析到 canonical course、是否具備 `courseUnits`，並用共用授權邏輯確認學生可通過課程授權。失敗時會寫入 `activationAlerts` 並寄送 Admin 告警。實體商品不要求 `courseUnits`。
 

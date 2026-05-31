@@ -8,6 +8,7 @@ This document consolidates:
 2. Content quality standardization
 3. I18N content repo MVP
 4. Channel partner / revenue share parameterization
+5. Distributor / fulfillment partner operating model
 
 The goal is to keep one source of truth for the next-stage platform changes.
 
@@ -254,6 +255,7 @@ Notes:
 
 - Tutors may belong to an agent.
 - The system distributes revenue by role instead of using a single bundled partner model.
+- Physical goods fulfillment should be handled by regional distributors / partners while the platform remains the payment and order-control layer.
 - Current courses do not have an owner, so `CourseDev` share is reserved but not paid.
 
 ### 5.3 Confirmed initial parameters

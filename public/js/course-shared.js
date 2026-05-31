@@ -194,7 +194,7 @@ function buildUnitAuthUrl(unitFile = '') {
 async function ensureDynamicUnitTabsFromFirestore() {
     try {
         const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        const excluded = new Set(['', 'index.html', 'prepare.html', 'start.html', 'basic.html', 'advanced.html', 'learning-path.html', 'dashboard.html', 'students.html', 'tutors.html', 'cart.html', 'login.html', 'payment-return.html']);
+        const excluded = new Set(['', 'index.html', 'prepare.html', 'start.html', 'basic.html', 'advanced.html', 'learning-path.html', 'dashboard.html', 'students.html', 'tutors.html', 'cart.html', 'payment-return.html']);
         if (!fileName.endsWith('.html') || excluded.has(fileName)) return;
 
         if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
@@ -489,7 +489,6 @@ function ensureDashboardFabFallback() {
             'tutors.html',
             'dashboard.html',
             'cart.html',
-            'login.html',
             'payment-return.html'
         ]);
         if (!file.endsWith('.html') || excluded.has(file)) return;

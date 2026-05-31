@@ -3,17 +3,17 @@
 **Objective**: Define the automated management and fulfillment protocol for physical hardware products.
 
 ## 1. System Overview
-The Logistics MVP governs the lifecycle of "Physical Products" from payment confirmation to final shipment. It centralizes order tracking for administrators and provides transparency for students.
+The Logistics MVP governs the lifecycle of "Physical Products" from payment confirmation to final fulfillment. In the target operating model, Vibe Coding centrally collects payment, while local distributors / fulfillment partners handle physical delivery to end customers. It centralizes order and partner tracking for administrators and provides transparency for students.
 
 ```mermaid
 graph TD
     A[使用者購買硬體產品] -->|支付成功| B(Firestore: orders)
-    B -->|fulfillmentStatus: PENDING| C{管理員每日提醒}
-    C -->|Email Link| D[管理員開啟 Logistics Tab]
-    D -->|查看待辦訂單| E{實際出貨流程}
-    E -->|完成出貨| F[點擊 Mark as Shipped]
+    B -->|fulfillmentStatus: PENDING| C{平台建立履約任務}
+    C -->|派單| D[指定區域經銷商 / 履約夥伴]
+    D -->|確認接單| E[經銷商開始備貨與配送]
+    E -->|完成出貨| F[更新 tracking / fulfillmentStatus]
     F -->|呼叫 Cloud Function| G(更新狀態為 SHIPPED)
-    G -->|同步更新| H[學員儀表板顯示: 已出貨]
+    G -->|同步更新| H[學員儀表板顯示: 已履約完成]
     G -->|存檔| I[完成物流週期]
 ```
 
@@ -21,7 +21,9 @@ graph TD
 | State | Description | Trigger |
 | :--- | :--- | :--- |
 | `PENDING` | Default state for successful orders containing physical items. | `paymentNotify` success flow. |
-| `SHIPPED` | Order has been processed and handed over to the logistics provider. | Admin clicks "Mark as Shipped" in Logistics Tab. |
+| `ASSIGNED` | Fulfillment task has been routed to a distributor / partner. | Platform creates the fulfillment task. |
+| `ACCEPTED` | Distributor accepted the task and is preparing shipment. | Partner confirms the order. |
+| `SHIPPED` | Order has been fulfilled / shipped by the distributor / logistics partner. | Distributor / partner updates tracking or admin confirms fulfillment completion. |
 | `ARCHIVED` | Completed and historic orders (Future expansion). | Manual or automated cleanup. |
 
 ## 3. Data Integration & Aggregation
@@ -48,20 +50,20 @@ An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHI
 ## 4. Admin Interface Protocol (`dashboard.js`)
 
 ### 4.1 Access Control
-- The **Shipment Management Tab** (`#tab-btn-shipments`) must only be visible if `myRole === 'admin'`.
+- The **Fulfillment Management Tab** (`#tab-btn-shipments`) now acts as the **Fulfillment Management** queue.
 - Access via URL parameter `?tab=shipments` must be validated against user roles.
 - Backward compatibility: legacy link `?tab=logistics` is redirected to `shipments`.
 
 ### 4.2 Rendering (`renderLogisticsTab`)
 - **Data Source**: `dashboardData.hardwareOrders`.
-- **View**: A comprehensive table displaying order ID, customer info, item details, receiver contact info (name/phone), and logistics address metadata (CVS store or receiver address).
-- **Action**: Provides a "Mark as Shipped" button for any order in `PENDING` status.
+- **View**: A comprehensive table displaying order ID, customer info, item details, fulfillment partner, receiver contact info (name/phone), and logistics address metadata (CVS store or receiver address).
+- **Action**: Provides a fulfillment action button for orders in `PENDING` / `ASSIGNED` / `ACCEPTED` status.
 
 ## 5. Communication Protocol (`emailService.js`)
 
 ### 5.1 Admin Reminders (`sendAdminShipmentReminder`)
 - **Trigger**: Daily 9:30 AM cron job.
-- **Protocol**: Aggregates all `PENDING` shipments and sends a summary to the admin.
+- **Protocol**: Aggregates all pending fulfillment tasks and sends a summary to the admin / ops queue.
 - **Deep Link**: Must point to `${APP_BASE_URL}/dashboard.html?tab=shipments`.
 
 ### 5.2 Student Confirmation (`sendPaymentSuccessEmail`)
@@ -70,13 +72,13 @@ An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHI
 - **Deep Link**: Points to `${APP_BASE_URL}/dashboard.html?tab=overview`（學生在 Overview 檢視個人出貨狀態卡片）。
 
 ### 5.3 Student Shipment Notice (`sendOrderShippedEmail`)
-- **Trigger**: Admin marks order as shipped (`markOrderShipped`).
-- **Protocol**: Notifies student that hardware order is now `SHIPPED`, including order/item summary and logistics metadata (if available).
+- **Trigger**: Distributor / partner marks order as shipped (`markOrderShipped`).
+- **Protocol**: Notifies student that hardware order is now `SHIPPED` / fulfilled, including order/item summary and logistics metadata (if available).
 - **Deep Link**: Points to `${APP_BASE_URL}/dashboard.html?tab=overview`（與目前學生端 UI 一致）。
 
 ## 6. Implementation Notes
-- **Zero-Cost Strategy**: Relies on Cloud Functions `onCall` and `Firestore` triggers without expensive 3rd party logistics API polling (manual transition to `SHIPPED`).
-- **Data Integrity**: Logistics information (e.g., ECPay CVS info) is stored directly in the `orders` document under the `logistics` key.
+- **Zero-Cost Strategy**: Relies on Cloud Functions `onCall` and `Firestore` triggers without expensive 3rd party logistics API polling (manual transition to `SHIPPED` / fulfillment completion).
+- **Data Integrity**: Logistics information (e.g., ECPay CVS info / distributor delivery metadata) is stored directly in the `orders` document under the `logistics` key.
 - **Notification Spec**: See `docs/email-notifications.md` for delivery matrix and failure handling.
 
 ## 7. Batch Recovery Tool (ECPay -> Firestore)

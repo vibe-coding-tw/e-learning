@@ -41,15 +41,19 @@
         <div class="text-red-500 text-5xl mb-4">⚠️</div>
         <h2 class="text-2xl font-bold text-gray-800 mb-2">無法存取課程</h2>
         <p id="error-msg" class="text-gray-600 mb-6">您尚未購買此課程，或權限已過期。</p>
-        <a href="index.html"
-            class="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">返回首頁</a>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button id="retry-login-btn"
+                class="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">重新登入</button>
+            <a href="index.html"
+                class="bg-gray-100 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-200 transition">返回首頁</a>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-        import { firebaseConfig, connectFirebaseEmulators } from "./js/firebase-local.js";
+        import { firebaseConfig, connectFirebaseEmulators, isLocalDev } from "./js/firebase-local.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
@@ -58,6 +62,22 @@
         const functions = getFunctions(app, 'asia-east1');
         connectFirebaseEmulators({ auth, db, functions });
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
+        const loginProvider = new GoogleAuthProvider();
+        document.getElementById('retry-login-btn').addEventListener('click', startGoogleLogin);
+
+        async function startGoogleLogin() {
+            try {
+                if (isLocalDev()) {
+                    await signInWithPopup(auth, loginProvider);
+                    return;
+                }
+
+                await signInWithRedirect(auth, loginProvider);
+            } catch (error) {
+                console.error("[Auth] Google login failed:", error);
+                showError("Google 登入失敗，請返回首頁後再試一次。");
+            }
+        }
 
         function showError(message) {
             document.getElementById('loading-ui').classList.add('hidden');
@@ -169,11 +189,8 @@
                 // 如果沒登入，保留一點時間讓 Firebase 嘗試自動登入
                 setTimeout(() => {
                     if (!auth.currentUser) {
-                        console.warn("[Auth] Still no user after 3s. Redirecting to index.html");
-                        // Only alert if we really have no user and no params? 
-                        // Actually, if they was sent here, they SHOULD be logged in.
-                        const currentUrl = encodeURIComponent(window.location.href);
-                        window.location.href = `login.html?returnUrl=${currentUrl}`;
+                        console.warn("[Auth] Still no user after 3s. Starting Google login on this page...");
+                        startGoogleLogin();
                     } else {
                         console.log("[Auth] User detected after delay. Resuming...");
                     }

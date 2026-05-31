@@ -825,22 +825,22 @@ function renderStudentDashboard(data, filterUnitId = null) {
             </div>
             ${hasPhysical ? `
             <div class="card border-l-4 border-orange-500">
-                <p class="text-gray-500 text-sm font-medium">${window.t('dash_kit_shipment', '實體教材出貨')}</p>
-                <h3 class="text-3xl font-bold ${isShipped ? 'text-green-600' : 'text-orange-600'} mt-1">${isShipped ? window.t('dash_shipped', '已出貨') : window.t('dash_preparing', '準備中')}</h3>
+                <p class="text-gray-500 text-sm font-medium">${window.t('dash_kit_shipment', '實體教材履約')}</p>
+                <h3 class="text-3xl font-bold ${isShipped ? 'text-green-600' : 'text-orange-600'} mt-1">${isShipped ? window.t('dash_shipped', '已履約完成') : window.t('dash_preparing', '準備中')}</h3>
             </div>
             ` : ''}
         </div>
 
         ${shipmentRecords.length > 0 ? `
         <div class="card mb-8">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">${window.t('dash_my_shipments', '我的出貨狀態 (My Shipments)')}</h3>
+            <h3 class="text-lg font-bold text-gray-800 mb-4">${window.t('dash_my_shipments', '我的履約狀態 (My Fulfillment)')}</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="text-sm text-gray-500 border-b">
                             <th class="py-3 px-2">${window.t('dash_shipment_order', '訂單')}</th>
                             <th class="py-3 px-2">${window.t('dash_th_shipping_info', '收件資訊')}</th>
-                            <th class="py-3 px-2">${window.t('dash_shipment_address', '物流地址')}</th>
+                            <th class="py-3 px-2">${window.t('dash_shipment_address', '履約地址')}</th>
                             <th class="py-3 px-2 text-center">${window.t('dash_status', '狀態')}</th>
                         </tr>
                     </thead>
@@ -867,7 +867,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                     <td class="py-3 px-2 text-xs text-slate-700 break-all">${escapeHtml(shippingAddress)}</td>
                                     <td class="py-3 px-2 text-center">
                                         <span class="px-2 py-1 rounded text-xs font-bold ${isDone ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
-                                            ${isDone ? window.t('dash_shipped', '已出貨') : window.t('dash_to_ship', '待出貨')}
+                                            ${isDone ? window.t('dash_shipped', '已履約完成') : window.t('dash_to_ship', '待履約')}
                                         </span>
                                     </td>
                                 </tr>
@@ -1024,7 +1024,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
         }
     }
 
-    // 1.5 Shipment Management Tab (Admin Only, global dashboard)
+    // 1.5 Fulfillment Management Tab (Admin Only, global dashboard)
     if (shipmentsTabBtn) {
         if (!isUnitContext && myRole === 'admin') {
             shipmentsTabBtn.classList.remove('hidden');
@@ -1898,7 +1898,7 @@ window.switchTab = function (tabName) {
         return;
     }
 
-    // Shipment Management Tab Specific Rendering
+    // Fulfillment Management Tab Specific Rendering
     if (tabName === 'shipments') {
         renderLogisticsTab();
     }
@@ -2159,14 +2159,14 @@ window.renderLogisticsTab = function() {
                 </td>
                 <td class="py-4 px-2 text-center">
                     <span class="px-2 py-1 rounded-full text-[10px] font-bold ${isShipped ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
-                        ${isShipped ? '已出貨 (SHIPPED)' : '待出貨 (PENDING)'}
+                        ${isShipped ? '已履約完成' : '待履約'}
                     </span>
                 </td>
                 <td class="py-4 px-2 text-right">
                     ${!isShipped ? `
                         <button onclick="markAsShipped('${o.id}')" 
                             class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition shadow-sm">
-                            標記為出貨
+                            標記為履約完成
                         </button>
                     ` : `
                         <span class="text-gray-400 text-xs italic">已完成</span>
@@ -2188,7 +2188,7 @@ window.renderLogisticsTab = function() {
 };
 
 window.markAsShipped = async function(orderId) {
-    if (!confirm(`確定要將訂單 ${orderId} 標記為「已出貨」嗎？\n這將會同步更新學員的查看狀態。`)) return;
+    if (!confirm(`確定要將訂單 ${orderId} 標記為「履約完成」嗎？\n這將會同步更新學員的查看狀態。`)) return;
 
     try {
         const markShippedFunc = httpsCallable(functions, 'markOrderShipped');
