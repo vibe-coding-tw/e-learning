@@ -62,10 +62,10 @@
 - 非付費/過期用戶在單元視角下應看到鎖定提示，不得顯示 Assignments/Settings 內容。
 - 管理員在 Tutor Mode OFF 時，必須完全模擬一般學員，不得保留特權。
 - 管理員在 Tutor Mode ON 時，僅顯示 Settings；OFF 時，僅顯示 Assignments。
-- 單元內點擊作業時：
-  - 合格導師：不提供 GitHub Classroom 連結，僅顯示通用繳交對話框。
-  - 已付費且有效學生：導向 `unitAssignments[unitId]` 的 GitHub Classroom assignment URL。
-  - 未付費或已過期學生：只顯示通用對話框。
+- 單元內點擊作業時的行為：
+  - 合格導師：開啟導師專屬繳交與審核對話框（或在一般學員模擬視角下工作）。
+  - 已付費且有效學員：開啟作業確認/綁定對話框（`assignment-link-modal`），學生可輸入/確認導師的 Promotion code/Email；確認後系統呼叫 `createStudentRepository` 動態在 GitHub 組織中建立專屬私有 Repo，並邀請學生為 Collaborator，同時自動開啟 Feedback PR。
+  - 未付費或已過期學員：不允許建立 Repo 或開啟作業，並顯示鎖定提示。
 - 隱藏獨立 Earnings 分頁，所有財務資訊必須整合進 Settings。
 - 作業列表中嚴禁顯示單元標題或課程分類；顯示格式為：上方 `unitId`、下方 `Assignment Title`。
 - 單元視角比對 `unitId` 時，應對 `.html` 後綴與常見前綴具容錯性。
@@ -74,14 +74,15 @@
 
 ---
 
-## 6. 推薦連結與分潤整合規則
+## 6. 推薦人與導師綁定分潤規則
 
-- 導師推廣一律使用 GitHub Classroom 原始連結，禁止中間跳轉頁或短網址。
-- 合格導師預設分潤為 20%，系統應支援針對個別導師調整。
-- 學員結帳時，如果輸入推薦連結，系統必須解析並綁定對應 `unitId`。
-- `verifyReferralLink` 必須解析 GitHub Classroom 連結，並回傳對應內部 `unitId`，以便購物車綁定正確產品。
-- 結帳成功後，應在訂單與學員資料中寫入 `referredByTutor`。
-- 連結匹配時必須執行 ID 歸一化，移除 `.html` 等後綴。
+- **推薦碼/推薦人綁定入口**：學生結帳時購物車不再輸入推薦連結或導師推薦碼。導師綁定移至**作業頁/彈出視窗（Assignment modal）**。
+- **Promotion Code 綁定流程**：學生在開始作業前，必須確認或輸入導師的 Promotion code/Email。驗證成功後：
+  - 系統將導師資料寫入 `users.unitAssignments[unitId]` 與 `users.unitAssignmentMeta[unitId]`。
+  - 後端會自動調用 `backfillTutorReferralForPaidOrders` 回填歷史已付款訂單的 `referredTutorEmail` 與 `referralLink` 欄位，確保該訂單交易與導師正確關聯。
+- **分潤計算**：每月 1 號的 `calculateMonthlySharing` 排程工作會讀取已成功付款並回填導師之訂單項目，依據對應的 `revenue_share_policies` 計算並分發利潤明細至 `revenue_share_credits`。
+- **導師推廣連結**：歷史 `verifyReferralLink` 仍支援解析 GitHub Classroom 連結並綁定，但在購物車前台已顯示忽略提示。導師推廣請優先引導學員在作業視窗中直接輸入 Promotion code。
+- **ID 歸一化**：在進行任何導師單元設定、鏈結解析與訂單回填比對時，必須對 `unitId` 執行 ID 歸一化（如移除 `.html` 後綴）。
 
 ---
 
@@ -123,15 +124,16 @@ git commit -m "docs: update README"
 
 ## 10. 開發與部署流程
 
-- 任何功能更新、Bug 修復或設定調整完成後，
-  1. `git add .`
-  2. `git commit`
-  3. `git push`
-  4. `firebase deploy`
+- 任何功能更新、Bug 修復或設定調整完成後：
+  1. 若有修改前端靜態資源 (JS/CSS)，必須先執行 `node scripts/fingerprint-static-assets.js` 更新資產指紋。
+  2. `git add .`
+  3. `git commit`（commit 訊息需符合 Conventional Commits 與 `[skip ci]` 規範）
+  4. 依循 Rule 6a，在 `git push` 前暫時關閉 Actions 功能，推送後重開。
+  5. 部署至 Firebase：`firebase deploy --project e-learning-942f7` (或依需求指定 `--only`)
 - 確保生產環境與最新程式碼同步。
 
 ---
 
 > 本文件是本專案 AI agent 的正式工作手冊，任何其他 agent 或訓練資料若要引用專案規則，請一律參考 `AGENT.md`。
 > 
-> 最後更新：2026-05-21
+> 最後更新：2026-05-31
