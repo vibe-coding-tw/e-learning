@@ -32,6 +32,7 @@ function init() {
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
     ensureDashboardFabFallback();
     ensureMobileResponsiveLayout();
+    normalizeStartButtonText();
     cleanUpCourseTitles();
 }
 
@@ -2931,6 +2932,29 @@ function cleanUpCourseTitles() {
         });
     } catch (e) {
         console.warn('[CourseShared] cleanUpCourseTitles failed:', e);
+    }
+}
+
+function normalizeStartButtonText() {
+    try {
+        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
+        const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
+
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            const onclickAttr = btn.getAttribute('onclick') || '';
+            if (onclickAttr.includes('goToUnit(1)')) {
+                if (isEn) {
+                    btn.innerHTML = 'Start Course &nbsp;›';
+                } else {
+                    btn.innerHTML = '開始課程 &nbsp;›';
+                }
+            }
+        });
+    } catch (e) {
+        console.warn('[CourseShared] normalizeStartButtonText failed:', e);
     }
 }
 
