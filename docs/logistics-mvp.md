@@ -118,6 +118,20 @@ Write-back fields:
 
 為了讓平台能將教具（如 Vibe Racer 車子平台）銷售至海外，物流架構需由台灣 CVS 超商取貨擴展為支持國際直郵（如 DHL, FedEx, UPS, EMS）的架構。
 
+### 8.0 Current Status
+
+This section is **expansion design**, not fully finished production functionality.
+
+- **已部分完成**
+  - `cart.html` 在英文 / 非中文介面下，已切換為國際地址輸入表單。
+  - `functions/index.js` 的 `initiatePayment` 與 Stripe 分支已支援 `logistics.isInternational` 與國際地址結構。
+  - `orders.logistics` 已預留國際直郵欄位。
+- **尚未正式完成**
+  - EasyPost / Shippo / DHL / FedEx / EMS 等國際物流 API 聚合。
+  - 自動運單建立與 label / Commercial Invoice 產生。
+  - 國際出貨後台與追蹤號碼自動回寫流程。
+  - 多幣別、稅務、退款與跨境運費政策表。
+
 ### 8.1 前端介面調整 (Address Input & Toggle)
 1. **語系/國家偵測**：當用戶將 UI 語系設為非中文（如 `en`）或在結帳頁面選擇非台灣地區收件時，系統自動隱藏「超商電子地圖選擇」按鈕。
 2. **標準英文地址欄位**：切換為顯示標準國際收件地址表單，包含：
@@ -140,4 +154,3 @@ Write-back fields:
 - `logistics.trackingNumber` (string): 國際包裹追蹤號碼。
 - `logistics.shippingFee` (number): 實收海外運費。
 - `logistics.address` (map): 結構化國際地址（含 `country`, `state`, `city`, `postalCode`, `line1`, `line2`）。
-
