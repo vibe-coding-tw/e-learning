@@ -15,11 +15,17 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+function normalizeCanonicalCourseKey(value = '') {
+  return String(value || '')
+    .replace(/\.html$/i, '')
+    .replace(/^(?:tw|en)-/i, '');
+}
+
 const prepareCourses = [
   {
     id: 'tw-common-developer-identity',
     courseId: 'tw-common-developer-identity.html',
-    courseKey: 'tw-common-developer-identity',
+    courseKey: 'common-developer-identity',
     title: '開發者身分 (Developer Identity)',
     lessonLabel: '準備課程 01', icon: '🆔', tagText: '免費', duration: '30 分鐘',
     price: 0, category: 'prepare',
@@ -31,7 +37,7 @@ const prepareCourses = [
   {
     id: 'tw-common-vscode-online',
     courseId: 'tw-common-vscode-online.html',
-    courseKey: 'tw-common-vscode-online',
+    courseKey: 'common-vscode-online',
     title: 'VS Code Online',
     lessonLabel: '準備課程 02', icon: '🌐', tagText: '免費', duration: '20 分鐘',
     price: 0, category: 'prepare',
@@ -43,7 +49,7 @@ const prepareCourses = [
   {
     id: 'tw-common-vscode-setup',
     courseId: 'tw-common-vscode-setup.html',
-    courseKey: 'tw-common-vscode-setup',
+    courseKey: 'common-vscode-setup',
     title: '開發環境 (VS Code Setup)',
     lessonLabel: '準備課程 03', icon: '💻', tagText: '免費', duration: '40 分鐘',
     price: 0, category: 'prepare',
@@ -55,7 +61,7 @@ const prepareCourses = [
   {
     id: 'tw-common-agent-mode',
     courseId: 'tw-common-agent-mode.html',
-    courseKey: 'tw-common-agent-mode',
+    courseKey: 'common-agent-mode',
     title: 'AI Agent 模式實務',
     lessonLabel: '準備課程 04', icon: '🤖', tagText: '免費', duration: '35 分鐘',
     price: 0, category: 'prepare',
@@ -67,7 +73,7 @@ const prepareCourses = [
   {
     id: 'tw-common-vibe-coding',
     courseId: 'tw-common-vibe-coding.html',
-    courseKey: 'tw-common-vibe-coding',
+    courseKey: 'common-vibe-coding',
     title: 'Vibe Coding 實戰',
     lessonLabel: '準備課程 05', icon: '🎵', tagText: '免費', duration: '45 分鐘',
     price: 0, category: 'prepare',
@@ -79,7 +85,7 @@ const prepareCourses = [
   {
     id: 'tw-common-web-agents',
     courseId: 'tw-common-web-agents.html',
-    courseKey: 'tw-common-web-agents',
+    courseKey: 'common-web-agents',
     title: '網頁版 AI 代理人實務',
     lessonLabel: '準備課程 06', icon: '🌍', tagText: '免費', duration: '30 分鐘',
     price: 0, category: 'prepare',
@@ -91,7 +97,7 @@ const prepareCourses = [
   {
     id: 'tw-common-github-classroom',
     courseId: 'tw-common-github-classroom.html',
-    courseKey: 'tw-common-github-classroom',
+    courseKey: 'common-github-classroom',
     title: 'GitHub Classroom & Vibe Coding 實務',
     lessonLabel: '準備課程 07', icon: '📚', tagText: '免費', duration: '25 分鐘',
     price: 0, category: 'prepare',
@@ -103,7 +109,7 @@ const prepareCourses = [
   {
     id: 'tw-common-wifi-setup',
     courseId: 'tw-common-wifi-setup.html',
-    courseKey: 'tw-common-wifi-setup',
+    courseKey: 'common-wifi-setup',
     title: 'WiFi 組態設定',
     lessonLabel: '準備課程 08', icon: '📡', tagText: '免費', duration: '25 分鐘',
     price: 0, category: 'prepare',
@@ -115,7 +121,7 @@ const prepareCourses = [
   {
     id: 'tw-common-motor-ramping',
     courseId: 'tw-common-motor-ramping.html',
-    courseKey: 'tw-common-motor-ramping',
+    courseKey: 'common-motor-ramping',
     title: '馬達 Ramping 控制',
     lessonLabel: '準備課程 09', icon: '⚙️', tagText: '免費', duration: '25 分鐘',
     price: 0, category: 'prepare',
@@ -182,7 +188,7 @@ function withEntryMetadata(course) {
   return {
     ...course,
     courseId: canonicalCourseId,
-    courseKey: course.courseKey,
+    courseKey: normalizeCanonicalCourseKey(course.courseKey || course.contentRef || course.courseId),
     track: 'common',
     level: 'common',
     entryUnitId: resolvedEntryUnitId,

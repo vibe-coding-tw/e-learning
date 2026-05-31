@@ -1206,6 +1206,12 @@ function normalizeForFirestore(unitId) {
     return unitId.replace(/\.html$/, '');
 }
 
+function normalizeCanonicalCourseKey(value = "") {
+    return normalizeCourseFile(value)
+        .replace(/\.html$/i, "")
+        .replace(/^(?:tw|en)-/i, "");
+}
+
 /**
  * Robustly extracts tutor configuration for a given unitId from the tutorConfigs map.
  * Handles both flat keys and Firestore's automatic nesting of dot-containing keys (e.g. .html).
@@ -1240,10 +1246,12 @@ function getCanonicalLessonIdentity(lesson = {}) {
         ).trim();
     }
     return String(
-        lesson.courseKey ||
-        lesson.courseId ||
+        normalizeCanonicalCourseKey(lesson.courseKey) ||
+        normalizeCanonicalCourseKey(lesson.contentRef) ||
+        normalizeCanonicalCourseKey(lesson.courseId) ||
+        normalizeCanonicalCourseKey(lesson.entryUnitId) ||
+        normalizeCanonicalCourseKey(lesson.id) ||
         lesson.productId ||
-        lesson.id ||
         ''
     ).trim();
 }
@@ -1318,6 +1326,8 @@ function getLessonLookupKeys(lesson = {}) {
     add(lesson.id);
     add(lesson.courseId);
     add(lesson.courseKey);
+    add(normalizeCanonicalCourseKey(lesson.courseKey));
+    add(normalizeCanonicalCourseKey(lesson.contentRef));
     add(lesson.entryUnitId);
     add(lesson.classroomUrl);
     add(lesson.productId);

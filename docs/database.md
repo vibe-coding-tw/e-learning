@@ -114,7 +114,7 @@
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
-| `courseKey` | string | 新的穩定課程主鍵，取代對 HTML 檔名的直接依賴。 |
+| `courseKey` | string | 課程的 locale-neutral 穩定主鍵，例如 `common-vscode-setup`、`car-starter-web-app`；取代對 HTML 檔名與語系前綴的直接依賴。 |
 | `track` | string | 課程主軸，例如 `common`、`car`。 |
 | `level` | string | 課程層級，例如 `common`、`starter`、`basic`、`advanced`。 |
 | `entryUnitId` | string | 課程入口單元 ID，用於取代 `*-master-*` 頁面的進入責任（2026-05-30 起統一修正並指向課程的第一個單元，即 `courseUnits[0]`）。 |
@@ -141,9 +141,10 @@
 - 欄位維護透過 `admin-i18n.html` 管理頁面，呼叫 `updateLessonI18n` Cloud Function 寫入。
 
 執行期 canonical identity 規則：
-- 課程型 metadata：優先使用 `courseKey`
+- 課程型 metadata：優先使用 locale-neutral `courseKey`
 - 商品型 metadata（`metadataType=product|legacy_product` 或 `isPhysical=true`）：優先使用 `productId`
 - `courseId` 保留作為頁面入口 / 歷史相容欄位，不再作為所有執行期判斷的唯一主鍵
+- `contentRef` / 頁面路由仍可保留 `tw-*` 檔名；`courseKey` 與頁面檔名是分離的兩個概念
 
 參考模板：
 - `docs/examples/metadata-lessons-migration-template.csv`
@@ -359,7 +360,7 @@
 1. **退役計畫狀態**：`*-master-*.html` 頁面在架構上已退役，新生產網頁不再使用此命名。然而，**代碼與資料庫中的相容層仍處於啟用（ACTIVE）狀態**，不可直接移除。
 2. **舊網址重導向**：已在 Cloud Functions 的 `serveCourse` 實作 301 轉址，將歷史書籤重導向至 canonical courseId。
 3. **歷史訂單授權相容性**：因遷移前成立之歷史訂單中 `items` 仍使用 legacy master 鍵值（例如 `start-01-master-web-app.html`），後端目前只在歷史訂單 / 歷史網址相容路徑中透過 `mapLegacyMasterToCanonical()` 進行轉換，確保舊學員權益，同時避免該相容表滲入一般 runtime 判斷。
-4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 legacy master item key。歷史 `referral_links.unitId` 也已完成 canonical 清理，另 1 筆 malformed referral index 已刪除。`mapLegacyMasterToCanonical()` 目前只保留在舊網址 redirect 與舊 token scope 驗證用途，且 token-scope fallback 只在請求或 token 仍明確帶有 `*-master-*` page id 時啟用。
+4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 legacy master item key。歷史 `referral_links.unitId` 也已完成 canonical 清理，另 1 筆 malformed referral index 已刪除。`mapLegacyMasterToCanonical()` 目前只保留在舊網址 redirect 與舊 token scope 驗證用途，且 token-scope fallback 只在請求或 token 仍明確帶有 `*-master-*` page id 時啟用。`metadata_lessons.courseKey` 已收斂為 locale-neutral key（例如 `common-vscode-setup`、`car-starter-web-app`），而頁面路由與 `contentRef` 仍保留 `tw-*` 檔名以維持內容倉與舊網址相容。
 5. **完全移除相容層之門檻**：相容代碼（如 `functions/index.js` 中的 `LEGACY_MASTER_TO_CANONICAL`）只有在以下條件皆滿足後，方可刪除：
    - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `courseKey`，商品項目維持 `productId`。
    - 經過至少一次完整生產環境 pilot validation，確認無任何歷史用戶存取異常。

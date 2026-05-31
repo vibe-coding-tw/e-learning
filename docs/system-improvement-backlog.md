@@ -66,7 +66,7 @@ Problem:
 - `courseId`, `courseKey`, and `unitId` are still mixed across payment, routing, tabs, and dashboard logic.
 
 Target model:
-- `courseKey`: stable business/category key
+- `courseKey`: locale-neutral stable business/category key
 - `courseId`: canonical course entry page URL / compatibility route field
 - `entryUnitId`: first unit to open for the course
 - `courseUnits[]`: ordered units in the course
