@@ -316,7 +316,18 @@ function normalizeCourseTopNav() {
 
             const translate = (key, defaultText) => {
                 if (typeof window.t === 'function') {
-                    return window.t(key);
+                    const res = window.t(key);
+                    if (res && res !== key) return res;
+                }
+                // 當未載入 i18n 翻譯器且處於英文模式時，回傳英文預設標題
+                if (isEn) {
+                    const enDict = {
+                        'starter_title': 'Starter Course',
+                        'basic_title': 'Basic Course',
+                        'advanced_title': 'Advanced Course',
+                        'prepare_title': 'Preparation Course'
+                    };
+                    return enDict[key] || defaultText;
                 }
                 return defaultText;
             };
