@@ -7,8 +7,8 @@ Make repo grading write back to Vibe Coding automatically with no manual input f
 - **極簡化 Workflow 設計**：所有學生作業與模板倉庫之 `.github/workflows/autograde-and-sync.yml` 已被極簡化為只包含 Checkout 及單行執行命令：
   `curl -fsSL https://vibe-coding.tw/graders/run.sh | bash`
   這大幅降低了各倉庫 Actions 的維護複雜度，亦確保模板倉庫除 `.github/` 外無其他殘留輔助檔案。
-- **中央引導器 (`run.sh`)**：由 CDN 託管的引導器會在 Actions 運行時自動建立沙盒工作區，動態取得對應的單元評分檔 `${VC_UNIT_ID}.sh`。若該單元無特製腳本，則自動降級 (fallback) 採用 `default.sh` 通用評分器。
-- **全量評分檔覆蓋 (104 個單元)**：線上 Firebase Hosting CDN 的 `/graders/` 目錄下已全量覆蓋所有 104 個課程單元之評分腳本（包含 VS Code、Flexbox、UI/UX 等 6 個核心活躍單元的客製化檢查，以及其餘 98 個單元的 fallback `default.sh` 複選框檢核器），完全避免了 404 下載失敗報錯。
+- **中央引導器 (`run.sh`)**：由 CDN 託管的引導器會在 Actions 運行時自動建立沙盒工作區，動態取得對應的單元評分檔 `${VC_UNIT_KEY}.sh`（`VC_UNIT_ID` 保留作 legacy fallback）。若該單元無特製腳本，則自動降級 (fallback) 採用 `default.sh` 通用評分器。
+- **全量評分檔覆蓋 (104 個單元)**：線上 Firebase Hosting CDN 的 `/graders/` 目錄下已全量覆蓋所有 104 個課程單元之評分腳本（例如 `common-vscode-setup.sh`、`car-starter-flexbox-layout.sh`、`car-basic-platformio-setup.sh`、`car-advanced-s3-cam.sh` 等客製化檢查，以及其餘 98 個單元的 fallback `default.sh` 複選框檢核器），完全避免了 404 下載失敗報錯。
 - **後端 Webhook 簽署與寫入 (`ingestGithubAutograde`)**：
   - 評分腳本輸出分數後，`run.sh` 會組裝 JSON Payload，並用 `VC_AUTOGRADE_TOKEN` 進行 HMAC-SHA256 簽署，透過 Header `X-Hub-Signature-256` POST 回傳給雲端函式。
   - 後端 `ingestGithubAutograde` 驗簽成功後，會以 `assignmentDocId` 優先或 `userId + unitId` (採 `unitId-first` 自動去除 `.html` 後綴對齊) 定位 Firestore `assignments` 集合對應的作業紀錄並寫入 `autoGrade` 欄位（分數、時間、Sha、Run URL 等）。
@@ -38,6 +38,7 @@ Make repo grading write back to Vibe Coding automatically with no manual input f
          - name: Run Central Grader
            env:
              VC_USER_ID: ${{ vars.VC_USER_ID }}
+             VC_UNIT_KEY: ${{ vars.VC_UNIT_KEY }}
              VC_UNIT_ID: ${{ vars.VC_UNIT_ID }}
              VC_AUTOGRADE_URL: ${{ secrets.VC_AUTOGRADE_URL }}
              VC_AUTOGRADE_TOKEN: ${{ secrets.VC_AUTOGRADE_TOKEN }}
@@ -62,7 +63,8 @@ Make repo grading write back to Vibe Coding automatically with no manual input f
    - `autoGradeSource`
 4. 到該學生作業 repo 的 Settings -> Secrets and variables -> Actions -> Variables，確認有：
    - `VC_USER_ID`
-   - `VC_UNIT_ID`
+   - `VC_UNIT_KEY`
+   - `VC_UNIT_ID`（legacy fallback）
 
 ## New Repo Bootstrap (Native student repos)
 當平台產生新的學生作業 repo 時，Template 不會自動繼承 Secrets。建議使用批次腳本補齊設定：
@@ -81,7 +83,8 @@ Make repo grading write back to Vibe Coding automatically with no manual input f
 - 套用位置：`repo/.github/workflows/autograde-and-sync.yml`
 - 會寫入 Variables：
   - `VC_USER_ID`
-  - `VC_UNIT_ID`
+  - `VC_UNIT_KEY`
+  - `VC_UNIT_ID`（legacy fallback）
 - Secrets 檢查：
   - 若 repo 已有 `VC_AUTOGRADE_URL` + `VC_AUTOGRADE_TOKEN`：通過
   - 若缺少且有提供環境變數 `VC_AUTOGRADE_URL_VALUE` / `VC_AUTOGRADE_TOKEN_VALUE`：自動寫入
@@ -89,7 +92,7 @@ Make repo grading write back to Vibe Coding automatically with no manual input f
 
 ### Firestore source-of-truth scope (important)
 - `unit_id`、課程結構、授權與作業紀錄來源皆以 Firestore 為準。
-- `VC_USER_ID` + `VC_UNIT_ID` 可直接由課程/使用者關聯取得，不依賴單一 task doc。
+- `VC_USER_ID` + `VC_UNIT_KEY` 可直接由課程/使用者關聯取得，不依賴單一 task doc；`VC_UNIT_ID` 只作 legacy 相容。
 - `missing_mapping` 不代表錯誤，代表目前缺少 `user_id` 或 `unit_id` 對應資料。
 - 建議策略：
   1. 新 repo 先補齊 workflow + secrets。

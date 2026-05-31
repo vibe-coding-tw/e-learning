@@ -4661,6 +4661,7 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
                 const assignmentData = assignmentDoc.data() || {};
                 const backfillUserId = assignmentData.userId || userId;
                 const backfillUnitId = (assignmentData.unitId || unitIdFromPayload || assignmentId || "").replace(/\.html$/, "");
+                const backfillUnitKey = normalizeTemplateRepoName(backfillUnitId);
                 
                 if (backfillUserId && backfillUnitId) {
                     const upsertUserRes = await upsertGithubActionsVariable({
@@ -4675,13 +4676,21 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
                         name: "VC_UNIT_ID",
                         value: String(backfillUnitId)
                     });
-                    if (!upsertUserRes.ok || !upsertUnitRes.ok) {
+                    const upsertUnitKeyRes = backfillUnitKey ? await upsertGithubActionsVariable({
+                        owner,
+                        repo,
+                        name: "VC_UNIT_KEY",
+                        value: String(backfillUnitKey)
+                    }) : { ok: true };
+                    if (!upsertUserRes.ok || !upsertUnitRes.ok || !upsertUnitKeyRes.ok) {
                         console.warn("[ingestGithubAutograde] Failed to backfill variables:", {
                             repoFullName,
                             backfillUserId,
                             backfillUnitId,
+                            backfillUnitKey,
                             upsertUserRes,
-                            upsertUnitRes
+                            upsertUnitRes,
+                            upsertUnitKeyRes
                         });
                     }
                 }
@@ -6167,20 +6176,35 @@ exports.submitTutorCoachingLog = onCall(async (request) => {
 });
 
 /**
- * Normalizes a unit ID to the new template repository naming convention.
- * e.g., start-01-unit-flexbox-layout -> tw-car-starter-flexbox-layout
- *       basic-01-unit-drivers-ports -> tw-car-basic-drivers-ports
- *       adv-01-unit-jpeg-quality -> tw-car-advanced-jpeg-quality
- *       01-unit-vscode-setup -> tw-common-vscode-setup
+ * Normalizes a unit ID to the canonical template repository naming convention.
+ * e.g., start-01-unit-flexbox-layout -> car-starter-flexbox-layout
+ *       basic-01-unit-drivers-ports -> car-basic-drivers-ports
+ *       adv-01-unit-jpeg-quality -> car-advanced-jpeg-quality
+ *       01-unit-vscode-setup -> common-vscode-setup
  */
 function normalizeTemplateRepoName(id) {
     const v = String(id || '').trim();
-    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v;
-    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'tw-car-starter-');
-    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'tw-car-basic-');
-    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'tw-car-advanced-');
-    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'tw-common-');
+    if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
+    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
+    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
+    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
+    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'common-');
     return v;
+}
+
+function legacyTemplateRepoNameFromCanonical(id) {
+    const v = normalizeTemplateRepoName(id);
+    if (!v) return '';
+    if (/^common-/i.test(v)) return `tw-${v}`;
+    if (/^car-(starter|basic|advanced)-/i.test(v)) return `tw-${v}`;
+    return v;
+}
+
+function templateRepoCandidates(id) {
+    const canonical = normalizeTemplateRepoName(id);
+    const legacy = legacyTemplateRepoNameFromCanonical(canonical);
+    return [...new Set([canonical, legacy].filter(Boolean))];
 }
 
 /**
@@ -6236,7 +6260,7 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
 
         // 3. 取得導師配置的 Org 名稱與自訂 Token（若無，預設使用 vibe-coding-classroom 與系統 Token）
         let targetOrg = 'vibe-coding-classroom';
-        let templateRepo = normalizeTemplateRepoName(normalizedUnitId); // 預設樣板倉庫名稱與單元 ID 相同
+        let templateRepo = normalizeTemplateRepoName(normalizedUnitId); // canonical template repo name
         let customToken = null;
 
         const tutorEmail = access.assignedTutorEmail;
@@ -6271,10 +6295,25 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
         // 5. 調用 API Helper 進行創庫、加人、開 PR 流程
         const ghHelper = new GitHubAPIHelper(token);
         const effectiveUnitName = normalizeTemplateRepoName(normalizedUnitId);
-        const newRepoName = `${effectiveUnitName}-${uid.substring(0, 8)}`; // 例：tw-common-vscode-setup-abc12345
+        const newRepoName = `${effectiveUnitName}-${uid.substring(0, 8)}`; // 例：common-vscode-setup-abc12345
+        const templateRepoCandidatesList = templateRepoCandidates(templateRepo);
 
-        console.log(`[createStudentRepository] Creating repo ${newRepoName} from template ${templateRepo} in org ${targetOrg}...`);
-        const studentRepo = await ghHelper.createRepoFromTemplate(targetOrg, templateRepo, newRepoName, true);
+        let studentRepo = null;
+        let lastCreateErr = null;
+        for (const candidateTemplateRepo of templateRepoCandidatesList) {
+            try {
+                console.log(`[createStudentRepository] Creating repo ${newRepoName} from template ${candidateTemplateRepo} in org ${targetOrg}...`);
+                studentRepo = await ghHelper.createRepoFromTemplate(targetOrg, candidateTemplateRepo, newRepoName, true);
+                templateRepo = candidateTemplateRepo;
+                break;
+            } catch (err) {
+                lastCreateErr = err;
+                console.warn(`[createStudentRepository] Template repo not usable: ${candidateTemplateRepo}`, err?.message || err);
+            }
+        }
+        if (!studentRepo) {
+            throw lastCreateErr || new HttpsError('failed-precondition', '無法從樣板倉庫建立作業 repo');
+        }
 
         console.log(`[createStudentRepository] Adding collaborator ${githubUsername} with push permission...`);
         await ghHelper.addCollaborator(targetOrg, newRepoName, githubUsername, 'push');

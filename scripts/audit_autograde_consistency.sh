@@ -134,8 +134,8 @@ tail -n +2 "$CSV_PATH" | while IFS=, read -r bridge_repo _rest; do
     issues+=("missing_autograde_secrets")
   fi
 
-  # Unit-level mapping is required: VC_USER_ID + VC_UNIT_ID
-  if has_var "$repo" "VC_USER_ID" && has_var "$repo" "VC_UNIT_ID"; then
+  # Unit-level mapping is required: VC_USER_ID + VC_UNIT_KEY (legacy VC_UNIT_ID accepted)
+  if has_var "$repo" "VC_USER_ID" && (has_var "$repo" "VC_UNIT_KEY" || has_var "$repo" "VC_UNIT_ID"); then
     vars_ok="yes"
   else
     issues+=("missing_unit_mapping_vars")

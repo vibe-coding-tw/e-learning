@@ -381,9 +381,9 @@ jobs:
 ##### 4.3.2 自動化連結與建庫邏輯
 當系統取得上述 4 項資料後，後端的執行邏輯如下：
 1. **讀取學生資料**。
-2. **生成專屬名稱**：系統自動拼接出標準化的作業倉庫名稱，格式為：`作業前綴-學號`（例如：`tw-common-developer-identity-115001`）。
-3. **複製倉庫 (API)**：系統拿著老師的 `Token`，呼叫 GitHub API，命令組織從 `tw-common-developer-identity` 複製出一個名為 `tw-common-developer-identity-115001` 的 **Private Repository**。
-4. **直接綁定學生 (API)**：系統立刻呼叫新增協力者 API，將學生的 GitHub 帳號（例如 `xiaoming-chang`）直接加入 `tw-common-developer-identity-115001` 中，並給予 `Push`（寫入）權限。
+2. **生成專屬名稱**：系統自動拼接出標準化的作業倉庫名稱，格式為：`作業前綴-學號`（例如：`common-developer-identity-115001`）。
+3. **複製倉庫 (API)**：系統拿著老師的 `Token`，呼叫 GitHub API，命令組織從 `common-developer-identity` 複製出一個名為 `common-developer-identity-115001` 的 **Private Repository**。（歷史 `tw-common-*` 名稱仍可作 legacy fallback）
+4. **直接綁定學生 (API)**：系統立刻呼叫新增協力者 API，將學生的 GitHub 帳號（例如 `xiaoming-chang`）直接加入 `common-developer-identity-115001` 中，並給予 `Push`（寫入）權限。
 
 ---
 

@@ -167,6 +167,32 @@ function normalizeUnitFilenameForRoute(file = '') {
     return v;
 }
 
+function normalizeCanonicalRepoSlug(value = '') {
+    const v = String(value || '').split('/').pop().split('?')[0].trim().replace(/\.html$/i, '');
+    if (!v) return '';
+    if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
+    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
+    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
+    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
+    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'common-');
+    return v;
+}
+
+function legacyRepoSlugFromCanonical(value = '') {
+    const canonical = normalizeCanonicalRepoSlug(value);
+    if (!canonical) return '';
+    if (/^common-/i.test(canonical)) return `tw-${canonical}`;
+    if (/^car-(starter|basic|advanced)-/i.test(canonical)) return `tw-${canonical}`;
+    return canonical;
+}
+
+function repoSlugCandidatesFromValue(value = '') {
+    const canonical = normalizeCanonicalRepoSlug(value);
+    const legacy = legacyRepoSlugFromCanonical(canonical);
+    return [...new Set([canonical, legacy].filter(Boolean))];
+}
+
 function formatUnitTabTitle(unitFile = '', fallbackIndex = 0) {
     const raw = String(unitFile || '').replace('.html', '');
     const stem = raw
@@ -2779,14 +2805,23 @@ async function initGithubReadme() {
     }
 
     // 3. Fetch README
-    const GITHUB_ORG = 'vibe-coding-classroom';
-    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${unitId}/main/README.md`;
+    const GITHUB_ORG = 'vibe-coding-template';
+    const repoCandidates = repoSlugCandidatesFromValue(unitId);
 
     try {
         console.log("[CourseShared] Fetching README from Github Raw...");
-        const resp = await fetch(rawUrl);
-        if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
-        const text = await resp.text();
+        let text = '';
+        let usedRepo = '';
+        for (const candidate of repoCandidates) {
+            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${candidate}/main/README.md`;
+            const resp = await fetch(rawUrl);
+            if (resp.ok) {
+                text = await resp.text();
+                usedRepo = candidate;
+                break;
+            }
+        }
+        if (!text) throw new Error(`README not found for any candidate repo: ${repoCandidates.join(', ')}`);
         const html = window.marked.parse(text);
 
         // 4. Inject - [V14.8.4] Only if specifically requested or in non-hide-mode
@@ -2799,7 +2834,7 @@ async function initGithubReadme() {
         target.parentNode.insertBefore(mdContainer, target);
         */
         
-        console.log("[CourseShared] README loaded but hidden in main body as requested.");
+        console.log(`[CourseShared] README loaded from ${usedRepo} but hidden in main body as requested.`);
     } catch (e) {
         console.warn("[CourseShared] Failed to load GitHub README:", e);
     }

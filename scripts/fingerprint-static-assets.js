@@ -128,7 +128,7 @@ function main() {
     htmlRoots.push(privateCoursesDir);
   }
   const contentRepoDir = '/Users/roverchen/Documents/Apps/content-repo';
-  if (fs.existsSync(contentRepoDir)) {
+  if (!process.env.FINGERPRINT_SKIP_CONTENT_REPO && fs.existsSync(contentRepoDir)) {
     htmlRoots.push(contentRepoDir);
   }
   const htmlFiles = htmlRoots

@@ -119,6 +119,42 @@ function normalizeDashboardLooseKey(value = "") {
     return String(value || "").split('/').pop().split('?')[0].replace(/\.html$/i, '').toLowerCase();
 }
 
+function normalizeCanonicalRepoSlug(value = "") {
+    const v = String(value || "").split('/').pop().split('?')[0].trim().replace(/\.html$/i, '');
+    if (!v) return '';
+    if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
+    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
+    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
+    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
+    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'common-');
+    return v;
+}
+
+function legacyRepoSlugFromCanonical(value = "") {
+    const canonical = normalizeCanonicalRepoSlug(value);
+    if (!canonical) return '';
+    if (/^common-/i.test(canonical)) return `tw-${canonical}`;
+    if (/^car-(starter|basic|advanced)-/i.test(canonical)) return `tw-${canonical}`;
+    return canonical;
+}
+
+async function loadMarkdownFromRepoWithFallback(org, candidateSlugs) {
+    const candidates = [...new Set((Array.isArray(candidateSlugs) ? candidateSlugs : [candidateSlugs]).filter(Boolean))];
+    for (const repo of candidates) {
+        const readmeUrl = `https://raw.githubusercontent.com/${org}/${repo}/main/README.md`;
+        try {
+            const markdown = await loadMarkdown(readmeUrl);
+            if (markdown && !markdown.includes('無法讀取')) {
+                return { markdown, repo, readmeUrl };
+            }
+        } catch (err) {
+            console.warn('[Dashboard] README fetch failed for repo:', repo, err);
+        }
+    }
+    return { markdown: '', repo: '', readmeUrl: '' };
+}
+
 function getLessonLookupKeys(lesson = {}) {
     const keys = new Set();
     const add = (value) => {
@@ -1681,7 +1717,8 @@ async function vibeRefreshReadmeContent(filterUnitId, targetKinds = ['settings',
     });
 
     try {
-        const repoName = filterUnitId.replace(/\.html$/, '');
+        const repoName = normalizeCanonicalRepoSlug(filterUnitId);
+        const legacyRepoName = legacyRepoSlugFromCanonical(repoName);
         const GITHUB_ORG = 'vibe-coding-template';
         const embeddedAssignmentGuide = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
         const embeddedTutorGuide = getEmbeddedGuideByUnit(filterUnitId, 'tutor');
@@ -1722,11 +1759,12 @@ async function vibeRefreshReadmeContent(filterUnitId, targetKinds = ['settings',
                     markdownHtml = embeddedAssignmentGuide;
                     console.log(`[V17.1] AssignmentTab using embedded assignment-guide for unit: ${filterUnitId}`);
                 } else {
-                    const readmeUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
+                    const result = await loadMarkdownFromRepoWithFallback(GITHUB_ORG, [repoName, legacyRepoName]);
+                    const readmeUrl = result.readmeUrl || `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
                     console.log(`[V17.1] AssignmentTab fallback to README: ${readmeUrl}`);
                     
                     placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在抓取任務說明 (README.md)...</div>`;
-                    markdownHtml = await loadMarkdown(readmeUrl);
+                    markdownHtml = result.markdown;
                 }
             }
 
@@ -1795,11 +1833,12 @@ async function renderAssignmentsGuideMain(filterUnitId) {
     }
 
     // Priority 3: template repo README fallback
-    const repoName = filterUnitId.replace(/\.html$/, '');
-    const readmeUrl = `https://raw.githubusercontent.com/vibe-coding-template/${repoName}/main/README.md`;
+    const repoName = normalizeCanonicalRepoSlug(filterUnitId);
+    const legacyRepoName = legacyRepoSlugFromCanonical(repoName);
     placeholder.classList.remove('hidden');
     placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在抓取任務說明 (README.md)...</div>`;
-    const markdownHtml = await loadMarkdown(readmeUrl);
+    const result = await loadMarkdownFromRepoWithFallback('vibe-coding-template', [repoName, legacyRepoName]);
+    const markdownHtml = result.markdown;
     if (markdownHtml && !markdownHtml.includes('無法讀取')) {
         placeholder.innerHTML = markdownHtml;
         normalizeGuideHeadingStyles(placeholder);
@@ -3180,7 +3219,7 @@ window.formatUnitName = window.formatUnitName || function(fileName) {
         .replace(/^master-/i, '');
 
     // Fallback: if unit/master/prepare still appears in middle, trim the left part.
-    const nameMatch = name.match(/(?:unit-|master-|prepare-|tw-common-|tw-car-(?:starter|basic|advanced)-)(.+)/i);
+    const nameMatch = name.match(/(?:unit-|master-|prepare-|tw-common-|tw-car-(?:starter|basic|advanced)-|common-|car-(?:starter|basic|advanced)-)(.+)/i);
     if (nameMatch && nameMatch[1]) name = nameMatch[1];
     return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); // Title Case
 }
@@ -3559,7 +3598,7 @@ window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(
                                     </div>
                                     <div class="flex-grow flex flex-col gap-1 w-1/2">
                                         <span class="text-[9px] text-gray-400 font-bold">樣板倉庫名稱 (Template Repo)</span>
-                                        <input type="text" placeholder="樣板名稱 (e.g. tw-common-vscode-setup)" value="${escapeHtml(details.templateRepo || fileName.replace('.html', ''))}" 
+                                        <input type="text" placeholder="樣板名稱 (e.g. common-vscode-setup)" value="${escapeHtml(details.templateRepo || normalizeCanonicalRepoSlug(fileName))}"
                                             class="assignment-template-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono font-bold text-gray-700">
                                     </div>
                                 </div>

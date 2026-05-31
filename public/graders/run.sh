@@ -3,13 +3,57 @@ set -euo pipefail
 
 # Inputs passed from GitHub Actions environment variables
 USER_ID="${VC_USER_ID:-}"
-UNIT_ID="${VC_UNIT_ID:-}"
+UNIT_ID_RAW="${VC_UNIT_ID:-}"
+UNIT_KEY="${VC_UNIT_KEY:-${UNIT_ID_RAW:-}}"
 AUTOGRADE_URL="${VC_AUTOGRADE_URL:-}"
 AUTOGRADE_TOKEN="${VC_AUTOGRADE_TOKEN:-}"
 MAX_SCORE="100"
 
-if [ -z "$USER_ID" ] || [ -z "$UNIT_ID" ] || [ -z "$AUTOGRADE_URL" ] || [ -z "$AUTOGRADE_TOKEN" ]; then
-  echo "Error: Missing required environment variables (VC_USER_ID, VC_UNIT_ID, VC_AUTOGRADE_URL, VC_AUTOGRADE_TOKEN)."
+normalize_unit_key() {
+  local raw="${1:-}"
+  raw="${raw##*/}"
+  raw="${raw%%\?*}"
+  raw="${raw%.html}"
+  if [ -z "$raw" ]; then
+    echo ""
+    return 0
+  fi
+  raw="$(printf '%s' "$raw" | sed -E \
+    -e 's/^tw-//' \
+    -e 's/^start-[0-9]{2}-unit-/car-starter-/' \
+    -e 's/^basic-[0-9]{2}-unit-/car-basic-/' \
+    -e 's/^(adv|advanced)-[0-9]{2}-unit-/car-advanced-/' \
+    -e 's/^[0-9]{2}-unit-/common-/')"
+  echo "$raw"
+}
+
+legacy_unit_key_from_canonical() {
+  local raw="${1:-}"
+  raw="${raw##*/}"
+  raw="${raw%%\?*}"
+  raw="${raw%.html}"
+  if [ -z "$raw" ]; then
+    echo ""
+    return 0
+  fi
+  case "$raw" in
+    common-*) echo "tw-$raw" ;;
+    car-starter-*) echo "tw-$raw" ;;
+    car-basic-*) echo "tw-$raw" ;;
+    car-advanced-*) echo "tw-$raw" ;;
+    *) echo "$raw" ;;
+  esac
+}
+
+UNIT_KEY="$(normalize_unit_key "$UNIT_KEY")"
+LEGACY_UNIT_KEY="$(legacy_unit_key_from_canonical "$UNIT_KEY")"
+GRADE_CANDIDATES=("$UNIT_KEY")
+if [ -n "$LEGACY_UNIT_KEY" ] && [ "$LEGACY_UNIT_KEY" != "$UNIT_KEY" ]; then
+  GRADE_CANDIDATES+=("$LEGACY_UNIT_KEY")
+fi
+
+if [ -z "$USER_ID" ] || [ -z "$UNIT_KEY" ] || [ -z "$AUTOGRADE_URL" ] || [ -z "$AUTOGRADE_TOKEN" ]; then
+  echo "Error: Missing required environment variables (VC_USER_ID, VC_UNIT_KEY/VC_UNIT_ID, VC_AUTOGRADE_URL, VC_AUTOGRADE_TOKEN)."
   exit 1
 fi
 
@@ -17,11 +61,19 @@ fi
 mkdir -p .grader_workspace
 
 # 2. Try to download the unit-specific grader
-echo "Attempting to download grader for $UNIT_ID..."
-HTTP_CODE=$(curl -s -w "%{http_code}" -o .grader_workspace/grader.sh "https://vibe-coding.tw/graders/${UNIT_ID}.sh" || echo "500")
+echo "Attempting to download grader for $UNIT_KEY..."
+HTTP_CODE="000"
+for CANDIDATE in "${GRADE_CANDIDATES[@]}"; do
+  [ -z "$CANDIDATE" ] && continue
+  HTTP_CODE=$(curl -s -w "%{http_code}" -o .grader_workspace/grader.sh "https://vibe-coding.tw/graders/${CANDIDATE}.sh" || echo "500")
+  if [ "$HTTP_CODE" = "200" ]; then
+    UNIT_KEY="$CANDIDATE"
+    break
+  fi
+done
 
 if [ "$HTTP_CODE" != "200" ]; then
-  echo "Grader for $UNIT_ID not found (HTTP $HTTP_CODE). Downloading default grader..."
+  echo "Grader for $UNIT_KEY not found (HTTP $HTTP_CODE). Downloading default grader..."
   curl -fsSL -o .grader_workspace/grader.sh "https://vibe-coding.tw/graders/default.sh"
 fi
 
@@ -53,7 +105,8 @@ ACTOR="${GITHUB_ACTOR:-}"
 
 PAYLOAD=$(jq -cn \
   --arg userId "$USER_ID" \
-  --arg unitId "$UNIT_ID" \
+  --arg unitId "${UNIT_ID_RAW:-$UNIT_KEY}" \
+  --arg unitKey "$UNIT_KEY" \
   --argjson score "$SCORE_VAL" \
   --argjson maxScore "$MAX_SCORE" \
   --arg status "$STATUS" \
@@ -65,6 +118,7 @@ PAYLOAD=$(jq -cn \
   '{
     userId: ($userId | select(length > 0)),
     unitId: ($unitId | select(length > 0)),
+    unitKey: ($unitKey | select(length > 0)),
     score: $score,
     maxScore: $maxScore,
     status: $status,
