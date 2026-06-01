@@ -392,6 +392,10 @@
         else if (explicitLocale === "tw") score -= 50;
         if (hasLatin && !hasHan) score += 20;
         if (hasHan) score -= 5;
+        // [新增] 英文模式下，若文件含有英文翻譯欄位，給予顯著加分以避免因欄位混合中文字而被當成純中文卡片
+        if (lesson.titleEn) score += 1000;
+        if (lesson.coreContentEn && lesson.coreContentEn.length > 0) score += 500;
+        if (lesson.lessonLabelEn) score += 500;
       }
       return score;
     }
