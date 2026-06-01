@@ -11,7 +11,7 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.8ff1498b4c0b.js"></script>
+  <script type="module" src="./js/nav-component.4afeeb0305ed.js"></script>
   <script src="./js/course-shared.fd04d4da8280.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
@@ -48,6 +48,16 @@
     const CART_URL = "cart.html";
 
     function detectUiLocale() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const path = params.get('path');
+        if (path) {
+          const cleanPath = String(path).trim().toLowerCase();
+          if (cleanPath.startsWith('en-')) return 'en';
+          if (cleanPath.startsWith('tw-')) return 'zh-TW';
+        }
+      } catch (_) {}
+
       try {
         const stored = localStorage.getItem('vibe_user_locale');
         if (stored) {
