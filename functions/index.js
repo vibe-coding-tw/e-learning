@@ -31,6 +31,29 @@ const {
     upsertGithubActionsVariable
 } = require('./lib/github-utils');
 const {
+    DEFAULT_REVENUE_SHARE_POLICY,
+    buildRevenueShareBalanceRecord,
+    buildRevenueShareCreditRecord,
+    buildRevenueSharePolicySnapshot,
+    buildRevenueSharePayoutRow,
+    collectRevenueShareChainTargets,
+    loadRevenueSharePolicy,
+    resolveRevenueShareRoleEmails,
+    round2Amount
+} = require('./lib/revenue-sharing');
+const {
+    addAssignmentHistoryEntry,
+    backfillAutogradeGithubVariables,
+    buildAssignmentSubmissionRecord,
+    buildGithubAutogradePayload,
+    buildNativeRepositoryAssignmentRecord,
+    isAssignmentAuthorized,
+    resolveAutogradeAssignmentDocId,
+    sendAutogradeNotifications,
+    syncAutoGradeInterventions,
+    updateActiveAssignmentInterventions
+} = require('./lib/assignment-flow');
+const {
     sendWelcomeEmail, sendPaymentSuccessEmail, sendTrialExpiringEmail, sendCourseExpiringEmail,
     sendAssignmentNotification, sendTutorAuthorizationEmail, sendGradingNotification,
     sendStudentLinkedToTutorEmail, sendTutorLinkedToStudentEmail, sendAdminAssignmentReminder, sendStudentPendingTutorAssignmentReminder,
@@ -38,6 +61,32 @@ const {
     sendAutogradeResultToStudent, sendAutogradeResultToTutor, sendOrderShippedEmail,
     sendTutorRecommendationCandidateEmail, sendAutogradeFailureAlertEmail
 } = require('./emailService');
+const {
+    buildTutorApplicationLegacyEntry,
+    buildTutorApplicationRecord,
+    buildTutorConfigEntry,
+    fallbackNameFromEmail,
+    generatePromotionCode,
+    getEffectiveTutorConfig,
+    getUserTutorConfig,
+    indexAuthorizedTutorConfigForDashboard,
+    queryTutorApplications,
+    resolveNameFromUserData,
+    upsertTutorApplicationLegacyEntry,
+    upsertTutorConfigForUser,
+} = require('./lib/tutor-utils');
+const {
+    buildOrderRecordSummary,
+    buildPendingShipmentReminderEntry,
+    buildReferralLinkDocId,
+    buildShippingAddress,
+    buildShippingContact,
+    buildStudentOrderRecord,
+    getPhysicalUnitIdSet,
+    isPhysicalOrderItem,
+    normalizeGitHubUrl,
+    normalizeLogisticsData
+} = require('./lib/order-utils');
 
 admin.initializeApp({
     projectId: "e-learning-942f7"
@@ -78,6 +127,9 @@ const GITHUB_CLASSROOM_ORG = process.env.GITHUB_CLASSROOM_ORG || "vibe-coding-cl
 const GITHUB_ORG_ADMIN_TOKEN = process.env.GITHUB_ORG_ADMIN_TOKEN || "";
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 const GITHUB_API_TOKEN = defineSecret("GITHUB_API_TOKEN");
+
+// 用於快取外部課程內容的記憶體 Cache (鍵值格式: repoOwner/repoName@ref|locale|localeCandidate)
+const CONTENT_FILE_CACHE = new Map();
 
 const REGION = "asia-east1";
 // 為了避免專案 ID 寫死，我們也可以動態抓取，或者您保留原本寫死的字串
@@ -125,13 +177,256 @@ function getCurrentTime() {
     return `${date.getFullYear()}/${('0' + (date.getMonth() + 1)).slice(-2)}/${('0' + date.getDate()).slice(-2)} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}:${('0' + date.getSeconds()).slice(-2)}`;
 }
 
+function ensureStudentStatsEntry(studentStats, sid, userData = {}, options = {}) {
+    const {
+        accountStatus = 'free',
+        includeOrderRecords = false
+    } = options;
+
+    if (!studentStats[sid]) {
+        studentStats[sid] = {
+            uid: sid,
+            email: userData.email || 'Unknown',
+            name: userData.name || '',
+            role: userData.role || 'user',
+            totalTime: 0,
+            videoTime: 0,
+            docTime: 0,
+            pageTime: 0,
+            lastActive: null,
+            courseProgress: {},
+            unitAssignments: userData.unitAssignments || {},
+            orders: []
+        };
+
+        if (accountStatus !== null) {
+            studentStats[sid].accountStatus = accountStatus;
+        }
+        if (includeOrderRecords) {
+            studentStats[sid].orderRecords = [];
+        }
+    } else {
+        if (!studentStats[sid].unitAssignments) {
+            studentStats[sid].unitAssignments = userData.unitAssignments || {};
+        }
+        if (accountStatus !== null) {
+            studentStats[sid].accountStatus = accountStatus;
+        }
+        if (includeOrderRecords && !studentStats[sid].orderRecords) {
+            studentStats[sid].orderRecords = [];
+        }
+    }
+
+    return studentStats[sid];
+}
+
+function ensureCourseProgressBucket(studentStatsEntry, cid, options = {}) {
+    if (!studentStatsEntry.courseProgress) studentStatsEntry.courseProgress = {};
+    if (!studentStatsEntry.courseProgress[cid]) {
+        studentStatsEntry.courseProgress[cid] = {
+            total: 0,
+            video: 0,
+            doc: 0,
+            page: 0,
+            logs: []
+        };
+    }
+    if (options.isLicenseOnly) {
+        studentStatsEntry.courseProgress[cid].isLicenseOnly = true;
+    }
+    return studentStatsEntry.courseProgress[cid];
+}
+
+function resolveStudentEmailLabel(usersMap = {}, uid, fallbackPrefix = 'Unknown Student', record = {}) {
+    const studentInfo = usersMap[uid] || {};
+    return studentInfo.email || record.userEmail || record.studentEmail || (uid ? `${fallbackPrefix}: ${String(uid).slice(0, 8)}` : fallbackPrefix);
+}
+
+function appendCourseProgressActivity(studentStatsEntry, cid, log = {}) {
+    const cp = ensureCourseProgressBucket(studentStatsEntry, cid);
+    const duration = log.duration || 0;
+
+    cp.total += duration;
+    if (log.action === 'VIDEO') cp.video += duration;
+    if (log.action === 'DOC') cp.doc += duration;
+    if (log.action === 'PAGE_VIEW') cp.page += duration;
+
+    cp.logs.push({
+        action: log.action,
+        duration,
+        timestamp: log.timestamp,
+        metadata: log.metadata
+    });
+
+    return cp;
+}
+
+function buildDashboardReferenceEntry(usersMap = {}, uid, baseData = {}, fallbackPrefix = 'Unknown Student') {
+    return {
+        ...baseData,
+        studentEmail: resolveStudentEmailLabel(usersMap, uid, fallbackPrefix, baseData)
+    };
+}
+
+function shouldIncludeDashboardUser(role = '', requesterRole = 'user') {
+    const normalizedRole = role || 'user';
+    return requesterRole === 'admin' || normalizedRole === 'user' || !normalizedRole;
+}
+
+function addDashboardUserEntry(usersMap, docId, userData = {}, requesterRole = 'user') {
+    const role = userData.role || 'user';
+    if (!shouldIncludeDashboardUser(role, requesterRole)) return false;
+    usersMap[docId] = { ...userData, role, _id: docId };
+    return true;
+}
+
+function buildTutorList(usersMap = {}) {
+    return Object.entries(usersMap).reduce((list, [uid, data]) => {
+        const role = data.role || 'user';
+        if (role === 'admin' || hasQualifiedTutorStatus(data)) {
+            list.push({
+                uid,
+                email: data.email || 'No Email',
+                name: data.name || 'Anonymous',
+                role,
+                tutorConfigs: data.tutorConfigs || {}
+            });
+        }
+        return list;
+    }, []);
+}
+
+function buildDashboardSummary(students = []) {
+    const registeredUserStats = students;
+    const paidStudentStats = students.filter(s => s.accountStatus === 'paid' && (s.role === 'user' || !s.role));
+    return {
+        totalStudents: registeredUserStats.length,
+        totalPaidStudents: paidStudentStats.length,
+        totalHours: paidStudentStats.reduce((acc, curr) => acc + curr.totalTime, 0) / 3600
+    };
+}
+
+function finalizeHardwareOrders(hardwareOrders = []) {
+    const sorted = [...hardwareOrders].sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt));
+    const pendingShipments = sorted.filter(order => order.fulfillmentStatus !== 'SHIPPED');
+    return {
+        hardwareOrders: sorted,
+        pendingShipments,
+        pendingShipmentsCount: pendingShipments.length
+    };
+}
+
+function assertAuthenticated(auth, message = '請先登入') {
+    if (!auth) throw new HttpsError('unauthenticated', message);
+}
+
+function assertAdminRole(requesterRole, message = '僅限管理員執行此操作') {
+    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', message);
+}
+
+function assertRequiredValue(value, message = '缺少必要參數') {
+    if (!value) throw new HttpsError('invalid-argument', message);
+}
+
+function assertAdminOrAssignedTutor(isRequesterAdmin, isAssignedTutor, message = '您並非指派給此學生的導師，無法提交指導紀錄。') {
+    if (!isRequesterAdmin && !isAssignedTutor) {
+        throw new HttpsError('permission-denied', message);
+    }
+}
+
+async function resolveSubmissionAccessOrThrow(db, uid, courseId, unitId, lessons = [], tutorMode = false) {
+    const access = await resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons, tutorMode);
+    if (!access.authorized) {
+        throw new HttpsError('permission-denied', access.reason || '尚未完成此課程付款授權。');
+    }
+    if (access.requiresTutorAssignment && !access.assignedTutorEmail) {
+        throw new HttpsError('failed-precondition', '此單元尚未完成老師指派，暫時無法建立作業紀錄。');
+    }
+    return access;
+}
+
+async function assertTutorRecommendationPermission(db, auth, canonicalUnitId, assignment, requesterRole) {
+    if (requesterRole === 'admin') return;
+
+    const requesterDoc = await db.collection('users').doc(auth.uid).get();
+    const requesterData = requesterDoc.exists ? requesterDoc.data() : {};
+    const requesterTutorConfigs = requesterData.tutorConfigs || {};
+    const isAuthorizedForThisUnit = !!(getEffectiveTutorConfig(canonicalUnitId, requesterTutorConfigs)?.authorized);
+
+    if (!isAuthorizedForThisUnit) {
+        throw new HttpsError('permission-denied', 'Only the qualified tutor for this unit can recommend students.');
+    }
+    if (assignment.assignedTutorEmail !== auth.token.email) {
+        throw new HttpsError('permission-denied', 'Only the assigned tutor can recommend this student.');
+    }
+}
+
+function assertTutorApplicationState(appData = {}, { source = null, status = null } = {}) {
+    if (source && appData.source !== source) {
+        throw new HttpsError('failed-precondition', 'This action is only valid for the expected application type.');
+    }
+    if (status && appData.status !== status) {
+        throw new HttpsError('failed-precondition', 'This application is not in the expected state.');
+    }
+}
+
+function normalizeEmail(value = "") {
+    return normalizeText(value).toLowerCase();
+}
+
+function normalizeText(value = "") {
+    return String(value || "").trim();
+}
+
+async function findUserDocByEmail(db, email = "") {
+    const normalized = normalizeEmail(email);
+    if (!normalized) return null;
+    const snap = await db.collection('users').where('email', '==', normalized).limit(1).get();
+    return snap.empty ? null : snap.docs[0];
+}
+
+function toIsoTimestamp(value, fallback = null) {
+    if (!value) return fallback;
+    if (typeof value.toDate === 'function') return value.toDate().toISOString();
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'string') return value;
+    return fallback;
+}
+
+function formatTaipeiDateTime(value, fallback = '未知') {
+    if (!value) return fallback;
+    const date = typeof value.toDate === 'function'
+        ? value.toDate()
+        : value instanceof Date
+            ? value
+            : new Date(value);
+    if (Number.isNaN(date.getTime())) return fallback;
+    return date.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+}
+
+function nowIsoTimestamp() {
+    return new Date().toISOString();
+}
+
+function applyCorsHeaders(res, {
+    origin = '*',
+    methods = 'GET, POST, OPTIONS',
+    headers = 'Content-Type, Authorization',
+    contentType = null
+} = {}) {
+    res.set('Access-Control-Allow-Origin', origin);
+    res.set('Access-Control-Allow-Methods', methods);
+    res.set('Access-Control-Allow-Headers', headers);
+    if (contentType) {
+        res.set('Content-Type', contentType);
+    }
+}
+
 // ==========================================
 // 1. 建立訂單 (initiatePayment)
 // ==========================================
 exports.initiatePayment = onRequest(async (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    applyCorsHeaders(res);
 
     if (req.method === 'OPTIONS') {
         res.status(204).send('');
@@ -206,29 +501,16 @@ exports.initiatePayment = onRequest(async (req, res) => {
         }
 
         // Guardrail: physical-product orders must include complete logistics info.
-        const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
-        const hasPhysicalItem = Object.keys(normalizedItems || {}).some(id => {
-            const canonicalId = normalizeLegacyId(id);
-            const itemData = normalizedItems[id] || {};
-            if (itemData.isPhysical === true) return true;
-            return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
-        });
+        const physicalUnitIds = getPhysicalUnitIdSet(lessons);
+        const hasPhysicalItem = Object.keys(normalizedItems || {}).some((id) =>
+            isPhysicalOrderItem(id, normalizedItems[id] || {}, physicalUnitIds)
+        );
 
         let logisticsPayload = (logistics && typeof logistics === 'object') ? logistics : {};
         if (hasPhysicalItem) {
-            const receiverName = String(logisticsPayload.receiverName || logisticsPayload.ReceiverName || '').trim();
-            const receiverPhone = String(logisticsPayload.receiverPhone || logisticsPayload.ReceiverCellPhone || logisticsPayload.ReceiverPhone || '').trim();
-            const shippingAddress = String(logisticsPayload.storeAddress || logisticsPayload.CVSAddress || logisticsPayload.ReceiverAddress || '').trim();
-            const storeId = String(logisticsPayload.storeId || logisticsPayload.CVSStoreID || '').trim();
+            const logisticsInfo = normalizeLogisticsData(logisticsPayload);
 
-            const hasIntlAddress = logisticsPayload.isInternational === true && (
-                logisticsPayload.address &&
-                logisticsPayload.address.country &&
-                logisticsPayload.address.city &&
-                logisticsPayload.address.line1
-            );
-
-            if (!receiverName || !receiverPhone || (!shippingAddress && !storeId && !hasIntlAddress)) {
+            if (!logisticsInfo.isComplete) {
                 return res.status(400).json({
                     error: {
                         message: "實體商品訂單缺少完整物流資訊（收件人、電話、門市/地址/國家）。"
@@ -425,9 +707,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
 // 1.5. 取得物流地圖參數 (getLogisticsMapParams)
 // ==========================================
 exports.getLogisticsMapParams = onRequest(async (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    applyCorsHeaders(res);
 
     if (req.method === 'OPTIONS') {
         res.status(204).send('');
@@ -571,7 +851,7 @@ async function activateOrderPermissionsAndNotify(orderId) {
         for (const [key, val] of Object.entries(oItems)) {
             const itemReferralLink = val.referralLink || val.promoCode || null;
             if (itemReferralLink && !val.referredTutorEmail) {
-                const linkId = Buffer.from(normalizeGitHubUrl(itemReferralLink)).toString('base64');
+                const linkId = buildReferralLinkDocId(itemReferralLink);
                 const lDoc = await db.collection('referral_links').doc(linkId).get();
                 if (lDoc.exists) {
                     oItems[key].referredTutorEmail = lDoc.data().tutorEmail;
@@ -591,28 +871,15 @@ async function activateOrderPermissionsAndNotify(orderId) {
     // 3. 物流欄位缺漏檢查與寄送 Email 通知
     try {
         const lessons = await getLessons();
-        const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
+        const physicalUnitIds = getPhysicalUnitIdSet(lessons);
         const orderDocFresh = await db.collection("orders").doc(orderId).get();
         const orderData = orderDocFresh.data();
         const orderItems = orderData.items || {};
-        const hasPhysicalItem = Object.keys(orderItems).some(id => {
-            const canonicalId = normalizeLegacyId(id);
-            const itemData = orderItems[id] || {};
-            if (itemData.isPhysical === true) return true;
-            return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
-        });
-        const logisticsData = orderData.logistics || {};
-        const hasReceiverName = !!String(logisticsData.receiverName || logisticsData.ReceiverName || '').trim();
-        const hasReceiverPhone = !!String(logisticsData.receiverPhone || logisticsData.ReceiverCellPhone || logisticsData.ReceiverPhone || '').trim();
-        const hasShippingAddress = !!String(logisticsData.storeAddress || logisticsData.CVSAddress || logisticsData.ReceiverAddress || '').trim();
-        const hasStoreId = !!String(logisticsData.storeId || logisticsData.CVSStoreID || '').trim();
-        const hasIntlAddress = logisticsData.isInternational === true && (
-            logisticsData.address &&
-            logisticsData.address.country &&
-            logisticsData.address.city &&
-            logisticsData.address.line1
+        const hasPhysicalItem = Object.keys(orderItems).some((id) =>
+            isPhysicalOrderItem(id, orderItems[id] || {}, physicalUnitIds)
         );
-        const logisticsMissing = hasPhysicalItem && (!hasReceiverName || !hasReceiverPhone || (!hasShippingAddress && !hasStoreId && !hasIntlAddress));
+        const logisticsInfo = normalizeLogisticsData(orderData.logistics || {});
+        const logisticsMissing = hasPhysicalItem && !logisticsInfo.isComplete;
 
         if (hasPhysicalItem) {
             await db.collection("orders").doc(orderId).update({ logisticsMissing });
@@ -639,7 +906,7 @@ async function activateOrderPermissionsAndNotify(orderId) {
             const referralAssignments = extractReferralAssignmentsFromOrder(orderData.items || {}, lessons);
 
             for (const assignment of referralAssignments) {
-                const linkId = Buffer.from(normalizeGitHubUrl(assignment.referralLink)).toString('base64');
+                const linkId = buildReferralLinkDocId(assignment.referralLink);
                 const referralDoc = await db.collection('referral_links').doc(linkId).get();
                 if (!referralDoc.exists) continue;
 
@@ -672,8 +939,7 @@ async function activateOrderPermissionsAndNotify(orderId) {
  * 綠界金流付款通知端點 (ECPay Webhook)
  */
 exports.paymentNotify = onRequest(async (req, res) => {
-    res.set('Content-Type', 'text/plain');
-    res.set('Access-Control-Allow-Origin', '*');
+    applyCorsHeaders(res, { methods: 'GET, POST, OPTIONS', headers: 'Content-Type, Authorization', contentType: 'text/plain' });
 
     if (req.method === 'GET') {
         return res.status(200).send('1|OK');
@@ -868,8 +1134,7 @@ async function getLessons() {
 
 function cleanUnitId(unitId) {
     if (!unitId) return "";
-    return String(unitId)
-        .trim()
+    return normalizeText(unitId)
         .toLowerCase()
         .replace(/\.html$/, '')
         .replace(/^(?:tw-(?:common|car-(?:starter|basic|advanced))-|start-|basic-|adv-|advanced-|prepare-)?(?:\d{2}-)?(?:unit-|lesson-|master-)?/i, '');
@@ -882,7 +1147,7 @@ function mapLegacyMasterToCanonical(value = '') {
 }
 
 function isLegacyMasterPage(value = '') {
-    const normalized = String(value || '').split('/').pop().split('?')[0].trim();
+    const normalized = normalizeText(value || '').split('/').pop().split('?')[0];
     if (!normalized.includes('-master-')) return false;
     const mapping = peekLegacyMasterMapping();
     return Object.prototype.hasOwnProperty.call(mapping, normalized);
@@ -922,28 +1187,6 @@ function normalizeCanonicalCourseKey(value = "") {
     return normalizeCourseFile(value)
         .replace(/\.html$/i, "")
         .replace(/^(?:tw|en)-/i, "");
-}
-
-/**
- * Robustly extracts tutor configuration for a given unitId from the tutorConfigs map.
- * Handles both flat keys and Firestore's automatic nesting of dot-containing keys (e.g. .html).
- */
-function getEffectiveTutorConfig(unitId, tutorConfigs = {}) {
-    if (!unitId) return null;
-    
-    // 1. Precise Match (Original)
-    if (tutorConfigs[unitId] && tutorConfigs[unitId].authorized) return tutorConfigs[unitId];
-
-    // 2. Normalized Match (No .html)
-    const normalized = unitId.replace(/\.html$/, '');
-    const config = tutorConfigs[normalized];
-
-    // 3. Nested HTML Match (Firestore's dot-in-key behavior: unit.html -> { unit: { html: { ... } } })
-    if (config && !config.authorized && config.html) {
-        return config.html;
-    }
-
-    return config || null;
 }
 
 function getCanonicalLessonIdentity(lesson = {}) {
@@ -1028,7 +1271,7 @@ function getLessonLookupKeys(lesson = {}) {
     const keys = new Set();
     const add = (value) => {
         if (!value) return;
-        const raw = String(value).trim();
+        const raw = normalizeText(value);
         if (!raw) return;
         keys.add(raw);
         keys.add(raw.replace(/\.html$/i, ''));
@@ -1056,8 +1299,8 @@ function getLessonLookupKeys(lesson = {}) {
 function findLessonByCourseRef(courseRef = '', lessons = []) {
     if (!courseRef) return null;
     const candidates = new Set([
-        String(courseRef || '').trim(),
-        String(courseRef || '').replace(/\.html$/i, ''),
+        normalizeText(courseRef || ''),
+        normalizeText(courseRef || '').replace(/\.html$/i, ''),
         normalizeLookupValue(courseRef),
         cleanUnitId(courseRef)
     ].filter(Boolean));
@@ -1127,10 +1370,10 @@ function findMatchingOrderItemIdForReferral(items = {}, referralTargetId = '', l
 function normalizeOrderItems(cartDetails = {}, referralLink = '', referredTutorEmail = '', lessons = []) {
     const items = JSON.parse(JSON.stringify(cartDetails || {}));
     const normalizedReferralLink = referralLink && referralLink.trim()
-        ? String(referralLink).trim()
+        ? normalizeText(referralLink)
         : null;
     const normalizedReferredTutorEmail = referredTutorEmail && referredTutorEmail.trim()
-        ? String(referredTutorEmail).trim()
+        ? normalizeText(referredTutorEmail)
         : 'info@vibe-coding.tw';
 
     Object.entries(items).forEach(([itemKey, itemValue]) => {
@@ -1139,9 +1382,9 @@ function normalizeOrderItems(cartDetails = {}, referralLink = '', referredTutorE
         const itemReferredTutorEmail = itemValue?.referredTutorEmail || itemValue?.referralTutor || 'info@vibe-coding.tw';
         const itemReferredTutorName = itemValue?.referredTutorName || itemValue?.referralTutorName || null;
 
-        items[itemKey].referralLink = itemReferralLink ? String(itemReferralLink).trim() : null;
-        items[itemKey].referredTutorEmail = itemReferredTutorEmail ? String(itemReferredTutorEmail).trim() : 'info@vibe-coding.tw';
-        items[itemKey].referredTutorName = itemReferredTutorName ? String(itemReferredTutorName).trim() : null;
+        items[itemKey].referralLink = itemReferralLink ? normalizeText(itemReferralLink) : null;
+        items[itemKey].referredTutorEmail = itemReferredTutorEmail ? normalizeText(itemReferredTutorEmail) : 'info@vibe-coding.tw';
+        items[itemKey].referredTutorName = itemReferredTutorName ? normalizeText(itemReferredTutorName) : null;
     });
 
     if (normalizedReferralLink) {
@@ -1170,8 +1413,8 @@ function extractReferralAssignmentsFromOrder(orderItems = {}, lessons = []) {
 
         assignments.push({
             itemKey,
-            referralLink: String(itemReferralLink).trim(),
-            referredTutorEmail: itemTutor ? String(itemTutor).trim() : null,
+            referralLink: normalizeText(itemReferralLink),
+            referredTutorEmail: itemTutor ? normalizeText(itemTutor) : null,
             purchasedUnits
         });
     });
@@ -1212,9 +1455,9 @@ async function backfillTutorReferralForPaidOrders(db, {
 
     let updatedOrders = 0;
     let updatedItems = 0;
-    const normalizedTutorEmail = String(tutorEmail).trim();
-    const normalizedPromotionCode = String(promotionCode || '').trim().toUpperCase();
-    const normalizedAssignmentUrl = String(assignmentUrl || '').trim();
+    const normalizedTutorEmail = normalizeText(tutorEmail);
+    const normalizedPromotionCode = normalizeText(promotionCode || '').toUpperCase();
+    const normalizedAssignmentUrl = normalizeText(assignmentUrl || '');
 
     for (const orderDoc of ordersSnap.docs) {
         const orderData = orderDoc.data() || {};
@@ -1342,40 +1585,8 @@ function isTutorFullyQualifiedForCourse(userData = {}, courseId = '', lessons = 
     });
 }
 
-/**
- * Normalizes a GitHub Classroom URL for consistent matching.
- */
-function normalizeGitHubUrl(url = '') {
-    if (!url) return '';
-    try {
-        let clean = url.trim().toLowerCase();
-        // Remove trailing slashes
-        clean = clean.replace(/\/+$/, '');
-        // Ensure it has protocol for URL parsing if needed, but here we just need a string match
-        return clean;
-    } catch (e) {
-        return url.trim().toLowerCase();
-    }
-}
-
-function fallbackNameFromEmail(email, defaultName = "使用者") {
-    if (!email || typeof email !== "string") return defaultName;
-    const localPart = email.split("@")[0] || "";
-    return localPart.trim() || defaultName;
-}
-
-function generatePromotionCode(length = 6) {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // avoid 0/O and 1/I ambiguity
-    let out = '';
-    for (let i = 0; i < length; i += 1) {
-        const idx = crypto.randomInt(0, chars.length);
-        out += chars[idx];
-    }
-    return out;
-}
-
 async function ensureTutorPromotionCode(db, userRef, userData = {}, uid = '', email = '') {
-    const existing = String(userData.promotionCode || '').trim().toUpperCase();
+    const existing = normalizeText(userData.promotionCode || '').toUpperCase();
     if (existing) return existing;
 
     let finalCode = '';
@@ -1402,10 +1613,6 @@ async function ensureTutorPromotionCode(db, userRef, userData = {}, uid = '', em
     return finalCode;
 }
 
-function resolveNameFromUserData(userData = {}, email = "", authDisplayName = "") {
-    return userData.name || userData.displayName || authDisplayName || fallbackNameFromEmail(email);
-}
-
 async function resolveUserDisplayName(db, uid, email = "", authDisplayName = "") {
     try {
         if (!uid) return resolveNameFromUserData({}, email, authDisplayName);
@@ -1427,7 +1634,7 @@ async function syncReferralLink(db, url, tutorEmail, tutorName, unitId) {
     if (!normalized) return;
     
     // Key: Base64 of normalized URL to avoid issues with slashes in document IDs
-    const linkId = Buffer.from(normalized).toString('base64');
+    const linkId = buildReferralLinkDocId(normalized);
     await db.collection('referral_links').doc(linkId).set({
         url: normalized,
         tutorEmail,
@@ -1615,20 +1822,14 @@ exports.updateLessonI18n = onCall(async (request) => {
     const { auth, data } = request;
 
     // 驗證登入與 admin 角色
-    if (!auth) {
-        throw new Error('unauthenticated');
-    }
+    assertAuthenticated(auth);
     const db = admin.firestore();
     const userDoc = await db.collection('users').doc(auth.uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-    if (userData.role !== 'admin') {
-        throw new Error('permission-denied');
-    }
+    assertAdminRole(userData.role);
 
     const { courseId, titleEn, summaryEn, descriptionEn, coreContentEn, lessonLabelEn } = data || {};
-    if (!courseId) {
-        throw new Error('missing-course-id');
-    }
+    assertRequiredValue(courseId, 'missing-course-id');
 
     // 查找對應的 metadata_lessons 文件（以 courseId 為主鍵）
     const lessonsSnap = await db.collection('metadata_lessons')
@@ -1637,7 +1838,7 @@ exports.updateLessonI18n = onCall(async (request) => {
         .get();
 
     if (lessonsSnap.empty) {
-        throw new Error(`lesson-not-found: ${courseId}`);
+        throw new HttpsError('not-found', `lesson-not-found: ${courseId}`);
     }
 
     const lessonDocRef = lessonsSnap.docs[0].ref;
@@ -1648,11 +1849,11 @@ exports.updateLessonI18n = onCall(async (request) => {
         i18nUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
         i18nUpdatedBy: auth.uid,
     };
-    if (typeof titleEn === 'string') updatePayload.titleEn = titleEn.trim();
-    if (typeof summaryEn === 'string') updatePayload.summaryEn = summaryEn.trim();
-    if (typeof descriptionEn === 'string') updatePayload.descriptionEn = descriptionEn.trim();
-    if (Array.isArray(coreContentEn)) updatePayload.coreContentEn = coreContentEn.map(s => String(s).trim()).filter(Boolean);
-    if (typeof lessonLabelEn === 'string') updatePayload.lessonLabelEn = lessonLabelEn.trim();
+    if (typeof titleEn === 'string') updatePayload.titleEn = normalizeText(titleEn);
+    if (typeof summaryEn === 'string') updatePayload.summaryEn = normalizeText(summaryEn);
+    if (typeof descriptionEn === 'string') updatePayload.descriptionEn = normalizeText(descriptionEn);
+    if (Array.isArray(coreContentEn)) updatePayload.coreContentEn = coreContentEn.map(s => normalizeText(s)).filter(Boolean);
+    if (typeof lessonLabelEn === 'string') updatePayload.lessonLabelEn = normalizeText(lessonLabelEn);
 
     await lessonDocRef.set(updatePayload, { merge: true });
     console.log(`[updateLessonI18n] ✅ Updated i18n fields for courseId=${courseId} by uid=${auth.uid}`);
@@ -1709,7 +1910,7 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
 
 
 const normalizeLocale = (locale = "") => {
-    const raw = String(locale || "").trim();
+    const raw = normalizeText(locale || "");
     if (!raw) return "";
     if (/^zh[-_]tw$/i.test(raw)) return "zh-TW";
     if (/^zh/i.test(raw)) return "zh-TW";
@@ -2092,25 +2293,17 @@ const getRole = async (uid) => {
 // ==========================================
 exports.setUserRole = onCall(async (request) => {
     const { data, auth } = request;
-    // 1. Check Authentication
-    if (!auth) {
-        throw new HttpsError('unauthenticated', 'User must be logged in.');
-    }
+    assertAuthenticated(auth, 'User must be logged in.');
 
     const adminUid = auth.uid;
     const adminRole = await getRole(adminUid);
 
-    // 2. Check Authorization (Must be Admin)
     // NOTE: For bootstrapping, you might need to temporarily bypass this or set the first admin in Firestore Console.
-    if (adminRole !== 'admin') {
-        throw new HttpsError('permission-denied', 'Only admins can set roles.');
-    }
+    assertAdminRole(adminRole, 'Only admins can set roles.');
 
     const { email, role } = data;
 
-    if (!['user', 'admin'].includes(role)) {
-        throw new HttpsError('invalid-argument', 'Invalid role.');
-    }
+    assertRequiredValue(['user', 'admin'].includes(role), 'Invalid role.');
 
     try {
         const userRecord = await admin.auth().getUserByEmail(email);
@@ -2129,11 +2322,9 @@ exports.setUserRole = onCall(async (request) => {
 exports.getRevenueSharePolicies = onCall(async (request) => {
     const db = admin.firestore();
     const uid = request.auth?.uid;
-    if (!uid) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(request.auth, '請先登入');
     const userDoc = await db.collection('users').doc(uid).get();
-    if ((userDoc.data() || {}).role !== 'admin') {
-        throw new HttpsError('permission-denied', 'Only admins can read revenue policies.');
-    }
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can read revenue policies.');
 
     const snap = await db.collection('revenue_share_policies').get();
     const policies = snap.docs
@@ -2145,15 +2336,13 @@ exports.getRevenueSharePolicies = onCall(async (request) => {
 exports.upsertRevenueSharePolicy = onCall(async (request) => {
     const db = admin.firestore();
     const uid = request.auth?.uid;
-    if (!uid) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(request.auth, '請先登入');
     const userDoc = await db.collection('users').doc(uid).get();
-    if ((userDoc.data() || {}).role !== 'admin') {
-        throw new HttpsError('permission-denied', 'Only admins can write revenue policies.');
-    }
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can write revenue policies.');
 
     const payload = request.data || {};
-    const policyId = String(payload.policyId || '').trim();
-    if (!policyId) throw new HttpsError('invalid-argument', 'policyId is required');
+    const policyId = normalizeText(payload.policyId || '');
+    assertRequiredValue(policyId, 'policyId is required');
 
     const asRate = (v, fallback = 0) => {
         const n = Number(v);
@@ -2165,7 +2354,7 @@ exports.upsertRevenueSharePolicy = onCall(async (request) => {
 
     const docRef = db.collection('revenue_share_policies').doc(policyId);
     await docRef.set({
-        policyName: String(payload.policyName || payload.name || policyId).trim() || policyId,
+        policyName: normalizeText(payload.policyName || payload.name || policyId) || policyId,
         tutorRate: asRate(payload.tutorRate, 0),
         tutorUplineRate: asRate(payload.tutorUplineRate, 0),
         agentRate: asRate(payload.agentRate, 0),
@@ -2185,18 +2374,13 @@ exports.upsertRevenueSharePolicy = onCall(async (request) => {
 // ==========================================
 exports.logActivity = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) {
-        // Allow anonymous logging? Probably not for specific student tracking.
-        // But for now, let's require auth.
-        throw new HttpsError('unauthenticated', 'User must be logged in.');
-    }
+    assertAuthenticated(auth, 'User must be logged in.');
 
     const uid = auth.uid;
     const { courseId, action, duration, metadata } = data;
 
-    if (!courseId || !action) {
-        throw new HttpsError('invalid-argument', 'Missing courseId or action.');
-    }
+    assertRequiredValue(courseId, 'Missing courseId or action.');
+    assertRequiredValue(action, 'Missing courseId or action.');
 
     // [NEW] Disable Page View Logging
     if (action === 'PAGE_VIEW') {
@@ -2224,16 +2408,13 @@ exports.logActivity = onCall(async (request) => {
 // ==========================================
 const saveTutorConfigsHandler = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) {
-        throw new HttpsError('unauthenticated', 'User must be logged in.');
-    }
+    assertAuthenticated(auth, 'User must be logged in.');
     const uid = auth.uid;
     const email = auth.token.email;
     const role = await getRole(uid);
     const { courseId, configs } = data;
-    if (!courseId || !configs) {
-        throw new HttpsError('invalid-argument', 'Missing courseId or configs.');
-    }
+    assertRequiredValue(courseId, 'Missing courseId or configs.');
+    assertRequiredValue(configs, 'Missing courseId or configs.');
 
     const userRef = admin.firestore().collection('users').doc(uid);
     const userDoc = await userRef.get();
@@ -2267,24 +2448,14 @@ const saveTutorConfigsHandler = onCall(async (request) => {
                         try {
                             const userRecord = await admin.auth().getUserByEmail(tEmail);
                             const tutorUid = userRecord.uid;
-                            
-                            // 使用 FieldPath 或嵌套物件更新以避開點號問題，但在 set({merge: true}) 中直接傳遞對象是合規的
-                            await db.collection('users').doc(tutorUid).set({
-                                tutorConfigs: {
-                                    [unitId]: {
-                                        githubClassroomUrl: url,
-                                        authorized: true,
-                                        email: tEmail,
-                                        updatedAt: new Date().toISOString()
-                                    }
-                                }
-                            }, { merge: true });
-                            
-                            // [V15.9] ARCHITECTURE SYNC: Update the global referral index for fast lookup
-                            const tDoc = await db.collection('users').doc(tutorUid).get();
-                            const tData = tDoc.exists ? tDoc.data() : {};
-                            const tName = tData.name || tData.displayName || tEmail;
-                            await syncReferralLink(db, url, tEmail, tName, unitId);
+
+                            await upsertTutorConfigForUser(db, tutorUid, unitId, buildTutorConfigEntry({
+                                email: tEmail,
+                                githubClassroomUrl: url
+                            }), {
+                                syncReferralUrl: url,
+                                syncReferralLinkFn: syncReferralLink
+                            });
 
                             console.log(`[saveTutorConfigs] ✅ Synced ${unitId} for ${tEmail}`);
                         } catch (err) {
@@ -2303,37 +2474,16 @@ const saveTutorConfigsHandler = onCall(async (request) => {
                         const userRecord = await admin.auth().getUserByEmail(tEmail.toLowerCase());
                         const tutorUid = userRecord.uid;
 
-                        const payload = {
-                            tutorConfigs: {
-                                [unitId]: {
-                                    authorized: true,
-                                    email: tEmail.toLowerCase(),
-                                    updatedAt: new Date().toISOString()
-                                }
-                            }
-                        };
-
-                        if (configObj.githubClassroomUrl !== undefined) {
-                            payload.tutorConfigs[unitId].githubClassroomUrl = configObj.githubClassroomUrl;
-                        }
-                        if (configObj.githubOrg !== undefined) {
-                            payload.tutorConfigs[unitId].githubOrg = configObj.githubOrg;
-                        }
-                        if (configObj.templateRepo !== undefined) {
-                            payload.tutorConfigs[unitId].templateRepo = configObj.templateRepo;
-                        }
-                        if (configObj.githubToken !== undefined) {
-                            payload.tutorConfigs[unitId].githubToken = configObj.githubToken;
-                        }
-
-                        await db.collection('users').doc(tutorUid).set(payload, { merge: true });
-
-                        if (configObj.githubClassroomUrl) {
-                            const tDoc = await db.collection('users').doc(tutorUid).get();
-                            const tData = tDoc.exists ? tDoc.data() : {};
-                            const tName = tData.name || tData.displayName || tEmail;
-                            await syncReferralLink(db, configObj.githubClassroomUrl, tEmail.toLowerCase(), tName, unitId);
-                        }
+                        await upsertTutorConfigForUser(db, tutorUid, unitId, buildTutorConfigEntry({
+                            email: tEmail.toLowerCase(),
+                            githubClassroomUrl: configObj.githubClassroomUrl,
+                            githubOrg: configObj.githubOrg,
+                            templateRepo: configObj.templateRepo,
+                            githubToken: configObj.githubToken
+                        }), {
+                            syncReferralUrl: configObj.githubClassroomUrl || null,
+                            syncReferralLinkFn: syncReferralLink
+                        });
                         
                         console.log(`[saveTutorConfigs] ✅ Saved custom config for ${unitId} and tutor ${tEmail}`);
                     } catch (err) {
@@ -2417,10 +2567,10 @@ exports.getTutorConfigs = getTutorConfigsHandler;
 
 exports.resolveAssignmentAccess = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(auth);
 
     const { unitId, courseId, tutorMode, assignmentId } = data || {};
-    if (!unitId) throw new HttpsError('invalid-argument', '缺少單元 ID');
+    assertRequiredValue(unitId, '缺少單元 ID');
 
     const db = admin.firestore();
     const lessons = await getLessons();
@@ -2554,7 +2704,7 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
 
 exports.precheckGithubClassroomAccess = onCall(async (request) => {
     const { auth, data } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(auth);
 
     if (!GITHUB_ORG_ADMIN_TOKEN) {
         return {
@@ -2565,7 +2715,7 @@ exports.precheckGithubClassroomAccess = onCall(async (request) => {
         };
     }
 
-    const classroomUrl = String(data?.classroomUrl || "").trim();
+    const classroomUrl = normalizeText(data?.classroomUrl || "");
     const isClassroom = /classroom\.github\.com\/a\//i.test(classroomUrl);
     if (!isClassroom) {
         return {
@@ -2608,14 +2758,15 @@ exports.precheckGithubClassroomAccess = onCall(async (request) => {
 // 7.3 授權課程老師 (Admin Only)
 exports.authorizeTutorForCourse = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(auth);
 
     const uid = auth.uid;
     const requesterRole = await getRole(uid);
-    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', '僅限管理員');
+    assertAdminRole(requesterRole, '僅限管理員');
 
     const { courseId, tutorEmail, action, parentCourseId } = data; // action: 'add' or 'remove'
-    if (!courseId || !tutorEmail) throw new HttpsError('invalid-argument', '缺少必要參數');
+    assertRequiredValue(courseId, '缺少必要參數');
+    assertRequiredValue(tutorEmail, '缺少必要參數');
 
     try {
         const db = admin.firestore();
@@ -2633,7 +2784,7 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
                 console.log(`[Role] Metadata skip: ${err.message}`);
             }
 
-            const tutorData = { email: tutorEmail, name: tutorName, qualifiedAt: new Date().toISOString() };
+            const tutorData = buildTutorConfigEntry({ email: tutorEmail, name: tutorName, qualifiedAt: nowIsoTimestamp() });
 
             // [V12.0.2] Removed legacy writes. All logic now syncs to User Document (below).
 
@@ -2641,16 +2792,11 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
             try {
                 const userRecord = await admin.auth().getUserByEmail(tutorEmail);
                 const tutorUid = userRecord.uid;
-                await db.collection('users').doc(tutorUid).set({
-                    tutorConfigs: {
-                        [courseId]: {
-                            authorized: true,
-                            email: tutorEmail,
-                            name: tutorName,
-                            qualifiedAt: new Date().toISOString()
-                        }
-                    }
-                }, { merge: true });
+                await upsertTutorConfigForUser(db, tutorUid, courseId, buildTutorConfigEntry({
+                    email: tutorEmail,
+                    name: tutorName,
+                    qualifiedAt: nowIsoTimestamp()
+                }));
                 console.log(`[Role] Successfully synched auth for ${tutorEmail} into user doc.`);
             } catch (authSyncErr) {
                 console.warn(`[Role] Failed to sync user doc for ${tutorEmail}: ${authSyncErr.message}`);
@@ -2670,7 +2816,7 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
                 const tutorUid = tutorUserRecord.uid;
                 const tutorDoc = await db.collection('users').doc(tutorUid).get();
                 const tutorData = tutorDoc.exists ? tutorDoc.data() : {};
-                const assignmentUrl = tutorData.tutorConfigs?.[courseId]?.assignmentUrl || null;
+                const assignmentUrl = getUserTutorConfig(tutorData, courseId)?.assignmentUrl || null;
 
                 await sendTutorAuthorizationEmail(tutorEmail, unitName, courseId, assignmentUrl);
                 console.log(`[Auth] Authorization link ${assignmentUrl || 'None'} sent to ${tutorEmail} for ${courseId}`);
@@ -2688,14 +2834,10 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
             try {
                 const userRecord = await admin.auth().getUserByEmail(tutorEmail);
                 const tutorUid = userRecord.uid;
-                await db.collection('users').doc(tutorUid).set({
-                    tutorConfigs: {
-                        [courseId]: {
-                            authorized: false,
-                            updatedAt: new Date().toISOString()
-                        }
-                    }
-                }, { merge: true });
+                await upsertTutorConfigForUser(db, tutorUid, courseId, buildTutorConfigEntry({
+                    email: tutorEmail,
+                    authorized: false
+                }));
                 console.log(`[Role] Successfully removed auth for ${tutorEmail} from user doc.`);
             } catch (authSyncErr) {
                 console.warn(`[Role] Failed to sync user doc removal for ${tutorEmail}: ${authSyncErr.message}`);
@@ -2716,10 +2858,10 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
 exports.applyForTutorRole = onCall(async (request) => {
     const data = request.data || {};
     const auth = request.auth;
-    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+    assertAuthenticated(auth, 'User must be logged in.');
 
     const { unitId } = data;
-    if (!unitId) throw new HttpsError('invalid-argument', 'Missing unitId');
+    assertRequiredValue(unitId, 'Missing unitId');
 
     const uid = auth.uid;
     const email = auth.token.email;
@@ -2738,22 +2880,25 @@ exports.applyForTutorRole = onCall(async (request) => {
         throw new HttpsError('already-exists', 'You are already a qualified tutor for this unit.');
     }
 
-    // Check for existing pending application in the user's own document
-    const applications = userData.tutorApplications || [];
-    const hasPending = applications.some(app => app.unitId === canonicalUnitId && app.status === 'pending');
-    if (hasPending) {
+    // Check for existing pending application in the canonical collection
+    const existingPending = await queryTutorApplications(db, {
+        userId: uid,
+        unitId: canonicalUnitId,
+        statuses: ['pending'],
+        limit: 1
+    });
+    if (!existingPending.empty) {
         throw new HttpsError('already-exists', 'You have a pending application for this unit.');
     }
 
     // Create application object
-    const application = {
+    const application = buildTutorApplicationRecord({
         userId: uid,
         userEmail: email,
         unitId: canonicalUnitId,
         status: 'pending',
-        source: 'self_application',
-        appliedAt: new Date().toISOString()
-    };
+        source: 'self_application'
+    });
 
     // [Single Source of Truth] write to tutor_applications
     const newAppRef = await db.collection('tutor_applications').add({
@@ -2763,10 +2908,9 @@ exports.applyForTutorRole = onCall(async (request) => {
 
     // Update User Document
     await userRef.set({
-        tutorApplications: admin.firestore.FieldValue.arrayUnion({
-            ...application,
-            applicationId: newAppRef.id
-        }),
+        tutorApplications: admin.firestore.FieldValue.arrayUnion(
+            buildTutorApplicationLegacyEntry(newAppRef.id, application)
+        ),
         hasPendingApplication: true,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
@@ -2799,12 +2943,12 @@ exports.debugTutorAuth = onRequest(async (req, res) => {
 exports.recommendTutorForUnit = onCall(async (request) => {
     const data = request.data || {};
     const auth = request.auth;
-    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+    assertAuthenticated(auth, 'User must be logged in.');
 
     const requesterRole = await getRole(auth.uid);
 
     const { assignmentId } = data;
-    if (!assignmentId) throw new HttpsError('invalid-argument', 'Missing assignmentId');
+    assertRequiredValue(assignmentId, 'Missing assignmentId');
 
     const db = admin.firestore();
     const lessons = await getLessons();
@@ -2828,33 +2972,21 @@ exports.recommendTutorForUnit = onCall(async (request) => {
         throw new HttpsError('failed-precondition', `Auto-grade score must be >= ${recommendationThreshold} before recommendation.`);
     }
 
-    // Check permissions of the requester in their own user document
-    const requesterDoc = await db.collection('users').doc(auth.uid).get();
-    const requesterData = requesterDoc.exists ? requesterDoc.data() : {};
-    const requesterTutorConfigs = requesterData.tutorConfigs || {};
-    const isAuthorizedForThisUnit = !!(getEffectiveTutorConfig(canonicalUnitId, requesterTutorConfigs)?.authorized);
-
-    if (requesterRole !== 'admin' && !isAuthorizedForThisUnit) {
-        throw new HttpsError('permission-denied', 'Only the qualified tutor for this unit can recommend students.');
-    }
-    if (requesterRole !== 'admin' && assignment.assignedTutorEmail !== auth.token.email) {
-        throw new HttpsError('permission-denied', 'Only the assigned tutor can recommend this student.');
-    }
+    await assertTutorRecommendationPermission(db, auth, canonicalUnitId, assignment, requesterRole);
 
     // Check if candidate is already qualified
     const candidateDoc = await db.collection('users').doc(candidateUid).get();
     const candidateData = candidateDoc.exists ? candidateDoc.data() : {};
-    const candidateTutorConfigs = candidateData.tutorConfigs || {};
-    if (getEffectiveTutorConfig(canonicalUnitId, candidateTutorConfigs)?.authorized) {
+    if (getUserTutorConfig(candidateData, canonicalUnitId)?.authorized) {
         throw new HttpsError('already-exists', 'Student is already a qualified tutor for this unit.');
     }
 
-    const existingPending = await db.collection('tutor_applications')
-        .where('userId', '==', candidateUid)
-        .where('unitId', '==', canonicalUnitId)
-        .where('status', 'in', ['pending', 'awaiting_candidate_link'])
-        .limit(1)
-        .get();
+    const existingPending = await queryTutorApplications(db, {
+        userId: candidateUid,
+        unitId: canonicalUnitId,
+        statuses: ['pending', 'awaiting_candidate_link'],
+        limit: 1
+    });
 
     if (!existingPending.empty) {
         const existingStatus = (existingPending.docs[0].data() || {}).status;
@@ -2864,7 +2996,7 @@ exports.recommendTutorForUnit = onCall(async (request) => {
         throw new HttpsError('already-exists', 'Student already has a pending application for this unit.');
     }
 
-    const application = {
+    const application = buildTutorApplicationRecord({
         userId: candidateUid,
         userEmail: candidateEmail,
         unitId: canonicalUnitId,
@@ -2877,7 +3009,7 @@ exports.recommendTutorForUnit = onCall(async (request) => {
         candidateClassroomInviteUrl: '',
         candidateLinkSubmittedAt: null,
         appliedAt: null
-    };
+    });
 
     const newAppRef = await db.collection('tutor_applications').add(application);
     await sendTutorRecommendationCandidateEmail(candidateEmail, canonicalUnitId, auth.token.email || '', newAppRef.id);
@@ -2888,14 +3020,13 @@ exports.recommendTutorForUnit = onCall(async (request) => {
 exports.submitTutorRecommendationInviteLink = onCall(async (request) => {
     const data = request.data || {};
     const auth = request.auth;
-    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+    assertAuthenticated(auth, 'User must be logged in.');
 
     const { applicationId, classroomInviteUrl } = data;
-    if (!applicationId || !classroomInviteUrl) {
-        throw new HttpsError('invalid-argument', 'Missing applicationId or classroomInviteUrl');
-    }
+    assertRequiredValue(applicationId, 'Missing applicationId or classroomInviteUrl');
+    assertRequiredValue(classroomInviteUrl, 'Missing applicationId or classroomInviteUrl');
 
-    const normalizedInvite = normalizeGitHubUrl(String(classroomInviteUrl).trim());
+    const normalizedInvite = normalizeGitHubUrl(normalizeText(classroomInviteUrl));
     if (!normalizedInvite.includes('classroom.github.com/a/')) {
         throw new HttpsError('invalid-argument', 'Classroom invite link must be a valid GitHub Classroom invitation URL.');
     }
@@ -2909,12 +3040,7 @@ exports.submitTutorRecommendationInviteLink = onCall(async (request) => {
     if (appData.userId !== auth.uid) {
         throw new HttpsError('permission-denied', 'You can only submit your own application link.');
     }
-    if (appData.source !== 'tutor_recommendation') {
-        throw new HttpsError('failed-precondition', 'This action is only valid for tutor recommendations.');
-    }
-    if (appData.status !== 'awaiting_candidate_link') {
-        throw new HttpsError('failed-precondition', 'This application is not waiting for candidate invite link.');
-    }
+    assertTutorApplicationState(appData, { source: 'tutor_recommendation', status: 'awaiting_candidate_link' });
 
     await appRef.update({
         candidateClassroomInviteUrl: normalizedInvite,
@@ -2934,15 +3060,14 @@ exports.submitTutorRecommendationInviteLink = onCall(async (request) => {
 exports.decideTutorApplication = onCall(async (request) => {
     const data = request.data || {};
     const auth = request.auth;
-    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+    assertAuthenticated(auth, 'User must be logged in.');
 
     const requesterRole = await getRole(auth.uid);
-    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', 'Only admins can resolve applications.');
+    assertAdminRole(requesterRole, 'Only admins can resolve applications.');
 
     const { applicationId, status, adminMessage } = data; // status: 'approved' or 'rejected'
-    if (!applicationId || !['approved', 'rejected'].includes(status)) {
-        throw new HttpsError('invalid-argument', 'Invalid parameters');
-    }
+    assertRequiredValue(applicationId, 'Invalid parameters');
+    if (!['approved', 'rejected'].includes(status)) throw new HttpsError('invalid-argument', 'Invalid parameters');
 
     const db = admin.firestore();
     const appRef = db.collection('tutor_applications').doc(applicationId);
@@ -2950,9 +3075,7 @@ exports.decideTutorApplication = onCall(async (request) => {
     if (!appSnap.exists) throw new HttpsError('not-found', 'Pending application not found.');
 
     const appData = appSnap.data() || {};
-    if (appData.status !== 'pending') {
-        throw new HttpsError('failed-precondition', 'Application is already resolved.');
-    }
+    assertTutorApplicationState(appData, { status: 'pending' });
     const { userEmail, unitId, userId } = appData;
     const targetUserRef = db.collection('users').doc(userId);
     const targetUserDoc = await targetUserRef.get();
@@ -2967,13 +3090,12 @@ exports.decideTutorApplication = onCall(async (request) => {
     if (status === 'approved') {
         const tutorName = resolveNameFromUserData(userData, userEmail, "");
 
-        const tutorData = { 
-            authorized: true,
-            email: userEmail, 
-            name: tutorName, 
-            qualifiedAt: new Date().toISOString(),
+        const tutorData = buildTutorConfigEntry({
+            email: userEmail,
+            name: tutorName,
+            qualifiedAt: nowIsoTimestamp(),
             githubClassroomUrl: "authorized" // Initial placeholder
-        };
+        });
 
         updateData[new admin.firestore.FieldPath('tutorConfigs', canonicalUnitId)] = tutorData;
 
@@ -2988,25 +3110,22 @@ exports.decideTutorApplication = onCall(async (request) => {
     });
 
     // Keep user snapshot in sync for legacy UI compatibility
-    const userApplications = Array.isArray(userData.tutorApplications) ? [...userData.tutorApplications] : [];
-    const legacyIndex = userApplications.findIndex(a => a.applicationId === applicationId);
-    if (legacyIndex >= 0) {
-        userApplications[legacyIndex].status = status;
-        userApplications[legacyIndex].adminMessage = adminMessage || "";
-        userApplications[legacyIndex].resolvedAt = new Date().toISOString();
-    } else {
-        userApplications.push({
-            applicationId,
+    const userApplications = upsertTutorApplicationLegacyEntry(
+        userData.tutorApplications,
+        applicationId,
+        {
             userId,
             userEmail,
             unitId: canonicalUnitId,
+            source: appData.source || 'unknown',
+            appliedAt: appData.appliedAt || nowIsoTimestamp()
+        },
+        {
             status,
             adminMessage: adminMessage || "",
-            source: appData.source || 'unknown',
-            appliedAt: appData.appliedAt || new Date().toISOString(),
-            resolvedAt: new Date().toISOString()
-        });
-    }
+            resolvedAt: nowIsoTimestamp()
+        }
+    );
 
     const stillHasPendingSnap = await db.collection('tutor_applications')
         .where('userId', '==', userId)
@@ -3033,9 +3152,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
     const auth = request.auth;
     console.log(`[getDashboardData] Start - UID: ${auth?.uid}, data: ${JSON.stringify(data)}`);
     
-    if (!auth) {
-        throw new HttpsError('unauthenticated', 'User must be logged in.');
-    }
+    assertAuthenticated(auth, 'User must be logged in.');
 
     const uid = auth.uid;
     const email = auth.token.email;
@@ -3043,7 +3160,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
     console.log(`[getDashboardData] Requester UID: ${uid}, Email: ${email}, Role: ${requesterRole}`);
     const db = admin.firestore();
     const lessons = await getLessons();
-    const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
+    const physicalUnitIds = getPhysicalUnitIdSet(lessons);
     
     // [V12.1.2] SECURITY RULE: Global dashboard (no unitId) is ADMIN ONLY.
     if (!data.unitId && !data.courseId && requesterRole !== 'admin') {
@@ -3064,11 +3181,10 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         const userDoc = await db.collection('users').doc(uid).get();
         const userData = userDoc.exists ? userDoc.data() : {};
         try {
-            const myAppsSnapshot = await db.collection('tutor_applications')
-                .where('userId', '==', uid)
-                .orderBy('appliedAt', 'desc')
-                .limit(100)
-                .get();
+            const myAppsSnapshot = await queryTutorApplications(db, {
+                userId: uid,
+                limit: 100
+            });
             myAppsSnapshot.forEach(doc => {
                 const app = doc.data() || {};
                 if (!app.unitId) return;
@@ -3100,9 +3216,10 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         // (Admin Only) Fetch all PENDING applications from tutor_applications
         let allPendingApplications = [];
         if (requesterRole === 'admin' && data.tutorMode !== false) {
-            const pendingAppsSnapshot = await db.collection('tutor_applications')
-                .where('status', '==', 'pending')
-                .get();
+            const pendingAppsSnapshot = await queryTutorApplications(db, {
+                statuses: ['pending'],
+                limit: 1000
+            });
 
             pendingAppsSnapshot.forEach(doc => {
                 const app = doc.data() || {};
@@ -3131,69 +3248,19 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             const tutorConfigs = uData.tutorConfigs || {};
 
             for (let [unitId, config] of Object.entries(tutorConfigs)) {
-                // [FIX] Un-nest if dot-in-key caused nested mapping (e.g. .html)
-                if (config && !config.authorized && config.html && config.html.authorized) {
-                    config = config.html;
-                    if (!unitId.endsWith('.html')) unitId += '.html';
-                }
-
-                if (!config.authorized) continue;
-
-                // 尋找此單元所屬的課程 ID
-                const courseRecord = findCourseByUnitId(unitId, lessons) || findCourseByPageOrUnit(unitId, unitId, lessons);
-                const cid = courseRecord ? courseRecord.courseId : unitId;
-
-                if (!synthesizedConfigs[cid]) {
-                    synthesizedConfigs[cid] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: {} };
-                }
-
-                if (!synthesizedConfigs[cid].githubClassroomUrls[unitId]) {
-                    synthesizedConfigs[cid].githubClassroomUrls[unitId] = {};
-                }
-
-                if (!synthesizedConfigs[cid].authorizedTutors.includes(email)) {
-                    synthesizedConfigs[cid].authorizedTutors.push(email);
-                }
-                synthesizedConfigs[cid].tutorDetails[email] = {
+                indexAuthorizedTutorConfigForDashboard({
+                    uData,
                     email,
-                    name: resolveNameFromUserData(uData, email, ""),
-                    qualifiedAt: config.updatedAt || config.qualifiedAt,
-                    githubClassroomUrl: config.githubClassroomUrl || "",
-                    githubOrg: config.githubOrg || "",
-                    templateRepo: config.templateRepo || "",
-                    githubToken: config.githubToken || ""
-                };
-
-                if (config.githubClassroomUrl) {
-                    synthesizedConfigs[cid].githubClassroomUrls[unitId][email] = config.githubClassroomUrl;
-                }
-
-                if (unitId.endsWith('.html')) {
-                    if (!unitTutorConfigs[unitId]) {
-                        unitTutorConfigs[unitId] = {
-                            courseId: cid,
-                            authorizedTutors: [],
-                            tutorDetails: {},
-                            githubClassroomUrls: {}
-                        };
-                    }
-
-                    if (!unitTutorConfigs[unitId].authorizedTutors.includes(email)) {
-                        unitTutorConfigs[unitId].authorizedTutors.push(email);
-                    }
-                    unitTutorConfigs[unitId].tutorDetails[email] = {
-                        email,
-                        name: resolveNameFromUserData(uData, email, ""),
-                        qualifiedAt: config.updatedAt || config.qualifiedAt,
-                        githubClassroomUrl: config.githubClassroomUrl || "",
-                        githubOrg: config.githubOrg || "",
-                        templateRepo: config.templateRepo || "",
-                        githubToken: config.githubToken || ""
-                    };
-                    if (config.githubClassroomUrl) {
-                        unitTutorConfigs[unitId].githubClassroomUrls[email] = config.githubClassroomUrl;
-                    }
-                }
+                    unitId,
+                    config,
+                    lessons,
+                    synthesizedConfigs,
+                    unitTutorConfigs,
+                    unitToDocId,
+                    authorizedCourseIds,
+                    findCourseByUnitIdFn: findCourseByUnitId,
+                    findCourseByPageOrUnitFn: findCourseByPageOrUnit
+                });
             }
         });
 
@@ -3506,13 +3573,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
 
             usersSnapshot.forEach(doc => {
                 const uData = doc.data();
-                const role = uData.role || 'user';
-                // [V13.0.16] Visibility Rule: Admin Global View (No Context) ALWAYS shows all users.
-                // tutorMode only filters content (not people) in Global View for Admin.
-                const isAdmin = requesterRole === 'admin';
-                if (isAdmin || role === 'user' || !role) {
-                    usersMap[doc.id] = { ...uData, role: role, _id: doc.id };
-                }
+                addDashboardUserEntry(usersMap, doc.id, uData, requesterRole);
             });
         } else {
             // Student ONLY view
@@ -3551,16 +3612,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
 
             if (isAuthorizedForLog && usersMap[sid]) {
                 if (!studentStats[sid]) {
-                    studentStats[sid] = {
-                        uid: sid,
-                        email: usersMap[sid]?.email || 'Unknown',
-                        name: usersMap[sid]?.name || '', // [NEW] Include student name
-                        role: usersMap[sid]?.role || 'user',
-                        totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
-                        courseProgress: {},
-                        unitAssignments: usersMap[sid]?.unitAssignments || {},
-                        orders: [] // Will be populated below
-                    };
+                    ensureStudentStatsEntry(studentStats, sid, usersMap[sid] || {}, { accountStatus: null });
                 }
 
                 const duration = log.duration || 0;
@@ -3572,21 +3624,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                     studentStats[sid].lastActive = log.timestamp ? log.timestamp.toDate() : null;
                 }
 
-                if (!studentStats[sid].courseProgress[cid]) {
-                    studentStats[sid].courseProgress[cid] = { total: 0, video: 0, doc: 0, page: 0, logs: [] };
-                }
-                const cp = studentStats[sid].courseProgress[cid];
-                cp.total += duration;
-                if (log.action === 'VIDEO') cp.video += duration;
-                if (log.action === 'DOC') cp.doc += duration;
-                if (log.action === 'PAGE_VIEW') cp.page += duration;
-
-                cp.logs.push({
-                    action: log.action,
-                    duration: duration,
-                    timestamp: log.timestamp,
-                    metadata: log.metadata
-                });
+                appendCourseProgressActivity(studentStats[sid], cid, log);
             }
         });
 
@@ -3601,56 +3639,21 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
 
                     // If student already has activity, their entry exists in studentStats.
                     // If not, we create a placeholder entry so they show up in the list.
-                    if (!studentStats[sid] && usersMap[sid]) {
-                        studentStats[sid] = {
-                            uid: sid,
-                            email: usersMap[sid].email || 'Unknown',
-                            name: usersMap[sid].name || '', // [NEW] Include name
-                            role: usersMap[sid].role || 'user',
-                            totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
-                            courseProgress: {},
-                            accountStatus: 'paid',
-                            unitAssignments: usersMap[sid].unitAssignments || {},
-                            orders: []
-                        };
-                    } else if (studentStats[sid]) {
-                        // Just ensure they have the unitAssignments field
-                        studentStats[sid].unitAssignments = usersMap[sid].unitAssignments || {};
-                        studentStats[sid].accountStatus = 'paid';
-                        if (!studentStats[sid].orders) studentStats[sid].orders = [];
+                    if (usersMap[sid] || studentStats[sid]) {
+                        ensureStudentStatsEntry(studentStats, sid, usersMap[sid] || {}, { accountStatus: 'paid' });
                     }
 
                     // Map order items to course progress placeholder if missing
                     // This ensures the student appears under the specific course/unit management listing
                     if (studentStats[sid] && order.items) {
                         if (!studentStats[sid].orderRecords) studentStats[sid].orderRecords = [];
-                        const logistics = order.logistics || {};
-                        studentStats[sid].orderRecords.push({
-                            id: doc.id,
-                            createdAt: order.createdAt || null,
-                            paidAt: order.paidAt || null,
-                            paymentDate: order.paymentDate || null,
-                            expiryDate: order.expiryDate || null,
-                            fulfillmentStatus: order.fulfillmentStatus || 'PENDING',
-                            logistics,
-                            shippingContact: {
-                                name: logistics.receiverName || logistics.ReceiverName || '',
-                                phone: logistics.receiverPhone || logistics.ReceiverCellPhone || logistics.ReceiverPhone || ''
-                            },
-                            shippingAddress: logistics.storeAddress || logistics.CVSAddress || logistics.ReceiverAddress || '',
-                            items: order.items
-                        });
+                        studentStats[sid].orderRecords.push(buildStudentOrderRecord(order, doc.id));
                         Object.keys(order.items).forEach(originalCid => {
                             const cid = canonicalCourseId(originalCid);
                             if (!studentStats[sid].orders.includes(cid)) {
                                 studentStats[sid].orders.push(cid);
                             }
-                            if (!studentStats[sid].courseProgress[cid]) {
-                                studentStats[sid].courseProgress[cid] = {
-                                    total: 0, video: 0, doc: 0, page: 0, logs: [],
-                                    isLicenseOnly: true // Mark as having license but no activity
-                                };
-                            }
+                            ensureCourseProgressBucket(studentStats[sid], cid, { isLicenseOnly: true });
                         });
                     }
                 });
@@ -3668,38 +3671,12 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                     .get();
 
                 if (!studentStats[uid] && usersMap[uid]) {
-                    studentStats[uid] = {
-                        uid,
-                        email: usersMap[uid]?.email || 'Unknown',
-                        name: usersMap[uid]?.name || '',
-                        role: usersMap[uid]?.role || 'user',
-                        totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
-                        courseProgress: {},
-                        unitAssignments: usersMap[uid]?.unitAssignments || {},
-                        orders: [],
-                        orderRecords: []
-                    };
+                    ensureStudentStatsEntry(studentStats, uid, usersMap[uid] || {}, { includeOrderRecords: true });
                 }
 
                 myOrdersSnapshot.forEach(doc => {
                     const order = doc.data() || {};
-                    const logistics = order.logistics || {};
-                    if (!studentStats[uid].orderRecords) studentStats[uid].orderRecords = [];
-                    studentStats[uid].orderRecords.push({
-                        id: doc.id,
-                        createdAt: order.createdAt || null,
-                        paidAt: order.paidAt || null,
-                        paymentDate: order.paymentDate || null,
-                        expiryDate: order.expiryDate || null,
-                        fulfillmentStatus: order.fulfillmentStatus || 'PENDING',
-                        logistics,
-                        shippingContact: {
-                            name: logistics.receiverName || logistics.ReceiverName || '',
-                            phone: logistics.receiverPhone || logistics.ReceiverCellPhone || logistics.ReceiverPhone || ''
-                        },
-                        shippingAddress: logistics.storeAddress || logistics.CVSAddress || logistics.ReceiverAddress || '',
-                        items: order.items || {}
-                    });
+                    studentStats[uid].orderRecords.push(buildStudentOrderRecord(order, doc.id));
 
                     Object.keys(order.items || {}).forEach(originalCid => {
                         const cid = canonicalCourseId(originalCid);
@@ -3724,19 +3701,8 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                 const shouldIncludeUser = shouldIncludeAllRegisteredUsers || userRole === 'user' || !userRole;
                 
                 if (!studentStats[sid] && shouldIncludeUser) {
-                    studentStats[sid] = {
-                        uid: sid,
-                        email: usersMap[sid].email || 'Unknown',
-                        name: usersMap[sid].name || '',
-                        role: userRole,
-                        createdAt: usersMap[sid].createdAt || null,
-                        totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
-                        courseProgress: {},
-                        accountStatus: 'free',
-                        unitAssignments: usersMap[sid].unitAssignments || {},
-                        orders: [],
-                        orderRecords: []
-                    };
+                    ensureStudentStatsEntry(studentStats, sid, usersMap[sid] || {}, { accountStatus: 'free', includeOrderRecords: true });
+                    studentStats[sid].createdAt = usersMap[sid].createdAt || null;
                 } else if (studentStats[sid]) {
                     // Always try to use the raw createdAt from usersMap if available
                     if (!studentStats[sid].createdAt) {
@@ -3795,20 +3761,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         result.students = filteredStudentStats;
 
         // 2.5 Fetch Tutors (Administrators and Authorized Tutors)
-        const tutorList = [];
-        Object.entries(usersMap).forEach(([uid, data]) => {
-            const role = data.role || 'user';
-            if (role === 'admin' || hasQualifiedTutorStatus(data)) {
-                tutorList.push({
-                    uid,
-                    email: data.email || 'No Email',
-                    name: data.name || 'Anonymous',
-                    role: role,
-                    tutorConfigs: data.tutorConfigs || {}
-                });
-            }
-        });
-        result.tutors = tutorList;
+        result.tutors = buildTutorList(usersMap);
 
         // 3. Fetch Assignments
         let assignQuery = db.collection('assignments');
@@ -3836,28 +3789,26 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             // 3. Tutor can see if: assigned to them OR they have access to the (possibly legacy) courseId
             // [V14.10] DECOUPLED: Tutors authorized for any relevant course can see the assignment if unit matches.
             const requesterHasTutorAccess = hasQualifiedTutorStatus(userData);
-            const isAuthorizedForAssign = (targetUid === uid) || 
-                                          (requesterRole === 'admin') || 
-                                          (requesterHasTutorAccess && (
-                                              assignmentTutor === requesterEmail || 
-                                              authorizedCourseIds.includes(mappedCid) ||
-                                              (data.unitId && authorizedCourseIds.some(cid => {
-                                                  // Basic check: if tutor has access to a course that includes this unit
-                                                  // (This is advanced/deferred: currently trust mappedCid)
-                                                  return false; 
-                                              }))
-                                          ));
+            const isAuthorizedForAssign = isAssignmentAuthorized({
+                targetUid,
+                uid,
+                requesterRole,
+                requesterHasTutorAccess,
+                assignmentTutor,
+                requesterEmail,
+                mappedCid,
+                authorizedCourseIds,
+                unitId: data.unitId
+            });
 
             if (isAuthorizedForAssign) {
                 // If admin, we allow it through even if student info is partially missing
-                const studentInfo = usersMap[targetUid] || {};
-                result.assignments.push({
+                result.assignments.push(buildDashboardReferenceEntry(usersMap, targetUid, {
                     id: doc.id,
                     ...data,
                     userId: targetUid, // Ensure normalized UID is present
-                    courseId: mappedCid, 
-                    studentEmail: studentInfo.email || data.userEmail || data.studentEmail || (targetUid ? `User: ${targetUid.slice(0,8)}` : 'Unknown Student')
-                });
+                    courseId: mappedCid
+                }));
             }
         });
 
@@ -3872,18 +3823,16 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                 intSnapshot.forEach(doc => {
                     const intData = doc.data();
                     const studentUid = intData.studentUid;
-                    const studentInfo = usersMap[studentUid] || {};
 
                     // In-memory filter for tutor owned / unassigned
                     if (requesterRole !== 'admin' && intData.ownerTutorEmail && intData.ownerTutorEmail !== email) {
                         return; // Owned by another tutor
                     }
 
-                    interventions.push({
+                    interventions.push(buildDashboardReferenceEntry(usersMap, studentUid, {
                         id: doc.id,
-                        ...intData,
-                        studentEmail: studentInfo.email || data.userEmail || data.studentEmail || (studentUid ? `User: ${studentUid.slice(0,8)}` : 'Unknown Student')
-                    });
+                        ...intData
+                    }));
                 });
             } catch (intErr) {
                 console.warn("[getDashboardData] Failed to fetch assignment_interventions:", intErr.message);
@@ -3892,18 +3841,10 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         result.interventions = interventions;
 
         // Summary
-        const registeredUserStats = result.students;
-        const paidStudentStats = result.students.filter(s => s.accountStatus === 'paid' && (s.role === 'user' || !s.role));
-
-        result.summary = {
-            totalStudents: registeredUserStats.length,
-            totalPaidStudents: paidStudentStats.length,
-            totalHours: paidStudentStats.reduce((acc, curr) => acc + curr.totalTime, 0) / 3600
-        };
+        result.summary = buildDashboardSummary(result.students);
 
         // [NEW] 2.6 Aggregate Pending Shipments for Admin
         if (requesterRole === 'admin') {
-            const pendingShipments = [];
             try {
                 const shipmentsSnapshot = await db.collection('orders')
                     .where('status', '==', 'SUCCESS')
@@ -3912,47 +3853,31 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                 shipmentsSnapshot.forEach(doc => {
                     const data = doc.data();
                     const items = data.items || {};
-                    const physicalItems = Object.keys(items).filter(id => {
-                        const canonicalId = canonicalCourseId(id);
-                        const itemData = items[id] || {};
-                        if (itemData.isPhysical === true) return true;
-                        return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
-                    });
+                    const physicalItems = Object.keys(items).filter((id) =>
+                        isPhysicalOrderItem(id, items[id] || {}, physicalUnitIds)
+                    );
 
                     if (physicalItems.length > 0) {
                         const student = usersMap[data.uid] || {};
                         const logistics = data.logistics || {};
-                        const shippingContact = {
-                            name: logistics.receiverName || logistics.ReceiverName || '',
-                            phone: logistics.receiverPhone || logistics.ReceiverCellPhone || logistics.ReceiverPhone || ''
-                        };
-                        const shippingAddress = logistics.storeAddress || logistics.CVSAddress || logistics.ReceiverAddress || '';
-                        const orderRecord = {
-                            id: doc.id,
+                        const orderRecord = buildOrderRecordSummary({
+                            docId: doc.id,
                             uid: data.uid,
-                            email: student.email || '未提供',
-                            name: student.name || '未提供',
-                            amount: data.amount || 0,
-                            paidAt: data.paidAt ? data.paidAt.toDate().toISOString() : (data.createdAt ? data.createdAt.toDate().toISOString() : null),
-                            status: data.status,
-                            fulfillmentStatus: data.fulfillmentStatus || 'PENDING',
+                            student,
+                            data,
                             logistics,
-                            shippingContact,
-                            shippingAddress,
-                            items: physicalItems.map(id => {
-                                const canonicalId = canonicalCourseId(id);
-                                return lessons.find(l => l.id === canonicalId)?.title || items[id]?.name || id;
-                            })
-                        };
+                            items,
+                            physicalItems,
+                            lessons,
+                            canonicalCourseId
+                        });
                         result.hardwareOrders.push(orderRecord);
-                        if (data.fulfillmentStatus !== 'SHIPPED') {
-                            pendingShipments.push(orderRecord);
-                        }
                     }
                 });
-                result.hardwareOrders.sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt));
-                result.pendingShipments = pendingShipments;
-                result.pendingShipmentsCount = pendingShipments.length;
+                const shipmentSummary = finalizeHardwareOrders(result.hardwareOrders);
+                result.hardwareOrders = shipmentSummary.hardwareOrders;
+                result.pendingShipments = shipmentSummary.pendingShipments;
+                result.pendingShipmentsCount = shipmentSummary.pendingShipmentsCount;
             } catch (shipErr) {
                 console.error("Error aggregating shipments:", shipErr);
             }
@@ -3970,17 +3895,15 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
 // 8.0 指派學生給老師 (Admin/Tutor)
 exports.assignStudentToTutor = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(auth);
 
     const uid = auth.uid;
     const requesterRole = await getRole(uid);
-    if (requesterRole !== 'admin') {
-        throw new HttpsError('permission-denied', '僅限管理員執行此操作');
-    }
+    assertAdminRole(requesterRole);
 
     const { studentUid, unitId, tutorEmail } = data;
-    if (!studentUid) throw new HttpsError('invalid-argument', '缺少學生 ID');
-    if (!unitId) throw new HttpsError('invalid-argument', '缺少單元 ID');
+    assertRequiredValue(studentUid, '缺少學生 ID');
+    assertRequiredValue(unitId, '缺少單元 ID');
 
     try {
         await upsertStudentUnitAssignment(admin.firestore(), studentUid, unitId, tutorEmail || null, uid, true);
@@ -3999,9 +3922,7 @@ exports.assignStudentToTutor = onCall(async (request) => {
 exports.submitAssignment = onCall(async (request) => {
     const { data, auth } = request;
     // 1. Verify Auth
-    if (!auth) {
-        throw new HttpsError('unauthenticated', '請先登入');
-    }
+    assertAuthenticated(auth);
 
     const { courseId, unitId, assignmentId, url, note, title, status, assignmentType } = data;
     const userId = auth.uid;
@@ -4021,17 +3942,10 @@ exports.submitAssignment = onCall(async (request) => {
 
     try {
         const lessons = await getLessons();
-        const access = await resolveStudentAssignmentAccess(db, userId, courseId, unitId, lessons);
-        if (!access.authorized) {
-            throw new HttpsError('permission-denied', '尚未完成此課程付款授權。');
-        }
-
+        const access = await resolveSubmissionAccessOrThrow(db, userId, courseId, unitId, lessons);
         const assignedTutorEmail = access.assignedTutorEmail || null;
-        if (access.requiresTutorAssignment && !assignedTutorEmail) {
-            throw new HttpsError('failed-precondition', '此單元尚未完成老師指派，暫時無法建立作業紀錄。');
-        }
 
-        const submissionUrl = String(url || "").trim();
+        const submissionUrl = normalizeText(url || "");
         const isClassroomInvite = /classroom\.github\.com\/a\//i.test(submissionUrl);
         if (currentStatus === "submitted" && isClassroomInvite && GITHUB_ORG_ADMIN_TOKEN) {
             const membership = await ensureGithubOrgMembership({
@@ -4063,7 +3977,7 @@ exports.submitAssignment = onCall(async (request) => {
         }
 
         const now = admin.firestore.Timestamp.now();
-        const submittedAtISO = new Date().toISOString();
+        const submittedAtISO = nowIsoTimestamp();
 
         const historyEntry = {
             timestamp: submittedAtISO,
@@ -4073,40 +3987,33 @@ exports.submitAssignment = onCall(async (request) => {
         };
 
         const assignmentData = {
-            id: docId,
-            userId,
-            userEmail,
-            userName,
-            courseId: courseId || "unknown_course",
-            unitId: unitId || "unknown_unit",
-            assignmentId,
-            assignmentTitle: title || assignmentId,
-            assignmentUrl: url || "",
-            studentNote: note || "",
-            status: finalStatus,
-            currentStatus: finalStatus,
-            assignmentType: assignmentType || "manual",
-            assignedTutorEmail,
-            learningState: existingDoc.exists ? (existingDoc.data().learningState || 'in_progress') : 'in_progress',
+            ...buildAssignmentSubmissionRecord({
+                docId,
+                userId,
+                userEmail,
+                userName,
+                courseId,
+                unitId,
+                assignmentId,
+                title,
+                url,
+                note,
+                finalStatus,
+                assignmentType,
+                assignedTutorEmail,
+                existingLearningState: existingDoc.exists ? (existingDoc.data().learningState || 'in_progress') : 'in_progress'
+            }),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
-        if (existingDoc.exists) {
-            // 更新現有紀錄：推送 historyEntry 並覆蓋 assignment 元數據
-            await docRef.update({
-                ...assignmentData,
-                submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
-            });
-        } else {
-            // 全新繳交：初始化並設定 submittedAt
-            await docRef.set({
-                ...assignmentData,
-                submittedAt: admin.firestore.FieldValue.serverTimestamp(),
-                grade: null,
-                tutorFeedback: null,
-                submissionHistory: [historyEntry]
-            }, { merge: true });
-        }
+        const submissionWrite = {
+            ...assignmentData,
+            submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+            grade: null,
+            tutorFeedback: null
+        };
+
+        await addAssignmentHistoryEntry(docRef, submissionWrite, historyEntry, existingDoc.exists ? 'update' : 'set');
 
         if (currentStatus === 'submitted' && assignedTutorEmail) {
             const dashboardUrl = `https://vibe-coding.tw/dashboard.html?courseId=${encodeURIComponent(access.effectiveCourseId)}&unitId=${encodeURIComponent(access.canonicalUnitId)}&tab=assignments`;
@@ -4163,100 +4070,41 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
         const score = Number(scoreRaw);
         const maxScore = maxScoreRaw !== null && maxScoreRaw !== undefined ? Number(maxScoreRaw) : null;
 
-        const effectiveUnitId = (unitIdFromPayload || assignmentId || "").replace(/\.html$/, "");
-        let resolvedDocId = assignmentDocId || (userId && effectiveUnitId ? `${userId}_${effectiveUnitId}` : null);
+        const { resolvedDocId, inferredUnitId, candidateCount, candidateIds } = await resolveAutogradeAssignmentDocId(db, {
+            assignmentDocId,
+            userId,
+            assignmentId,
+            unitIdFromPayload,
+            repositoryFullName
+        });
 
-        const inferUnitIdFromRepo = (repoFullName = "") => {
-            const repoName = String(repoFullName || "").split("/").pop() || "";
-            // Typical classroom repo name pattern contains duplicated unit id:
-            // vibe-coding-classroom-01-unit-vscode-online-01-unit-vscode-online
-            const m = repoName.match(/((?:\d{2}|start-\d{2}|basic-\d{2}|adv-\d{2})-unit-[a-z0-9-]+)/i);
-            if (!m || !m[1]) return null;
-            return `${m[1].toLowerCase()}.html`;
-        };
-
-        const scoreStatusRank = (status = "") => {
-            const s = String(status || "").toLowerCase();
-            if (s === "graded") return 0;
-            if (s === "submitted") return 1;
-            if (s === "started") return 9;
-            return 5;
-        };
-
-        const tsToMs = (value) => {
-            if (!value) return 0;
-            if (typeof value.toMillis === "function") return value.toMillis();
-            if (typeof value === "number") return value;
-            return 0;
-        };
-
-        if (!resolvedDocId) {
-            const inferredUnitId = unitIdFromPayload || inferUnitIdFromRepo(repositoryFullName);
-            if (inferredUnitId) {
-                const unitCandidates = Array.from(new Set([
-                    String(inferredUnitId || "").trim(),
-                    String(inferredUnitId || "").replace(/\.html$/, "").trim(),
-                ].filter(Boolean)));
-
-                const candidateDocs = [];
-                for (const unitCandidate of unitCandidates) {
-                    const snap = await db.collection("assignments").where("unitId", "==", unitCandidate).limit(200).get();
-                    snap.forEach((doc) => candidateDocs.push(doc));
+        if (!resolvedDocId && candidateCount > 1) {
+            await sendAutogradeFailureAlertEmail(
+                process.env.ADMIN_EMAIL || process.env.MAIL_USER,
+                `Ambiguous assignment mapping for unit ${inferredUnitId}`,
+                {
+                    repository: repositoryFullName,
+                    inferredUnitId,
+                    candidateCount,
+                    candidateIds,
+                    payload
                 }
-
-                const dedup = new Map();
-                for (const doc of candidateDocs) dedup.set(doc.id, doc);
-                let candidates = Array.from(dedup.values()).map((doc) => ({ id: doc.id, data: doc.data() || {} }));
-
-                if (repositoryFullName) {
-                    const strictMatched = candidates.filter((row) =>
-                        String(row.data.assignmentUrl || "").includes(repositoryFullName)
-                    );
-                    if (strictMatched.length > 0) candidates = strictMatched;
-                }
-
-                if (userId) {
-                    candidates = candidates.filter((row) => String(row.data.userId || row.data.uid || "") === String(userId));
-                }
-
-                if (assignmentId) {
-                    const exactMatched = candidates.filter((row) => String(row.data.assignmentId || "") === String(assignmentId));
-                    if (exactMatched.length > 0) candidates = exactMatched;
-                }
-
-                candidates.sort((a, b) => {
-                    const sr = scoreStatusRank(a.data.currentStatus) - scoreStatusRank(b.data.currentStatus);
-                    if (sr !== 0) return sr;
-                    return tsToMs(b.data.updatedAt) - tsToMs(a.data.updatedAt);
-                });
-
-                if (candidates.length === 1) {
-                    resolvedDocId = candidates[0].id;
-                } else if (candidates.length > 1) {
-                    await sendAutogradeFailureAlertEmail(
-                        process.env.ADMIN_EMAIL || process.env.MAIL_USER,
-                        `Ambiguous assignment mapping for unit ${inferredUnitId}`,
-                        {
-                            repository: repositoryFullName,
-                            inferredUnitId,
-                            candidateCount: candidates.length,
-                            candidateIds: candidates.slice(0, 20).map((c) => c.id),
-                            payload,
-                        }
-                    );
-                    return res.status(409).json({
-                        success: false,
-                        error: "Ambiguous assignment mapping. Please provide userId + unitId.",
-                        inferredUnitId,
-                        candidateCount: candidates.length,
-                    });
-                }
-            }
+            );
+            return res.status(409).json({
+                success: false,
+                error: "Ambiguous assignment mapping. Please provide userId + unitId.",
+                inferredUnitId,
+                candidateCount
+            });
         }
 
         if (!resolvedDocId) {
             try {
-                await sendAutogradeFailureAlertEmail(process.env.ADMIN_EMAIL || process.env.MAIL_USER, 'Missing assignment identifier', payload);
+                await sendAutogradeFailureAlertEmail(
+                    process.env.ADMIN_EMAIL || process.env.MAIL_USER,
+                    'Missing assignment identifier',
+                    payload
+                );
             } catch (notifyErr) {
                 console.error("[ingestGithubAutograde] Failed to send alert for missing identifier:", notifyErr);
             }
@@ -4304,7 +4152,7 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
                     .get();
                 if (!tutorSnap.empty) {
                     const tutorData = tutorSnap.docs[0].data();
-                    const config = tutorData.tutorConfigs?.[assignmentIdVal];
+                    const config = getUserTutorConfig(tutorData, assignmentIdVal);
                     if (config && config.githubOrg && config.githubOrg === repoOwner) {
                         isAllowedOrg = true;
                     }
@@ -4317,175 +4165,51 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
             }
         }
 
-        let learningStateUpdate = null;
-
-        if (score < 70) {
-            // Check if there is an active intervention (status in ['open', 'in_progress'])
-            const interventionsSnap = await db.collection('assignment_interventions')
-                .where('assignmentId', '==', assignmentIdVal)
-                .where('studentUid', '==', studentUid)
-                .where('status', 'in', ['open', 'in_progress'])
-                .limit(1)
-                .get();
-
-            if (interventionsSnap.empty) {
-                // Create a new intervention task
-                const newInterventionRef = db.collection('assignment_interventions').doc();
-                await newInterventionRef.set({
-                    assignmentId: assignmentIdVal,
-                    studentUid,
-                    triggerScore: score,
-                    threshold: 70,
-                    status: 'open',
-                    ownerTutorEmail,
-                    createdAt: now,
-                    updatedAt: now
-                });
-            }
-            learningStateUpdate = 'blocked';
-        } else {
-            // score >= 70: resolve any open/in_progress interventions
-            const interventionsSnap = await db.collection('assignment_interventions')
-                .where('assignmentId', '==', assignmentIdVal)
-                .where('studentUid', '==', studentUid)
-                .where('status', 'in', ['open', 'in_progress'])
-                .get();
-
-            if (!interventionsSnap.empty) {
-                const batch = db.batch();
-                interventionsSnap.forEach(doc => {
-                    batch.update(doc.ref, {
-                        status: 'resolved',
-                        resolvedAt: now,
-                        updatedAt: now
-                    });
-                });
-                await batch.commit();
-            }
-            // If currently blocked, update to resolved; otherwise preserve coaching/resolved
-            if (assignmentData.learningState === 'blocked') {
-                learningStateUpdate = 'resolved';
-            }
-        }
-
-        const autoGrade = {
+        const learningStateUpdate = await syncAutoGradeInterventions(db, {
+            assignmentId: assignmentIdVal,
+            studentUid,
+            ownerTutorEmail,
             score,
-            maxScore: Number.isFinite(maxScore) ? maxScore : null,
-            status: payload.status || payload.conclusion || "completed",
-            source: "github_actions",
-            runUrl: payload.runUrl || payload.html_url || payload.workflow_run?.html_url || null,
-            repository: payload.repository?.full_name || payload.repo || null,
-            workflow: payload.workflow || payload.workflow_run?.name || null,
-            commitSha: payload.commitSha || payload.head_sha || payload.workflow_run?.head_sha || null,
-            actor: payload.actor || payload.sender?.login || null,
-            summary: payload.summary || payload.feedback || null,
-            updatedAt: now
-        };
+            now,
+            assignmentLearningState: assignmentData.learningState || ''
+        });
 
-        const updatePayload = {
-            autoGrade,
-            autoGradeRaw: {
-                score: scoreRaw,
-                maxScore: maxScoreRaw,
-                status: payload.status || payload.conclusion || null,
-                runUrl: payload.runUrl || payload.html_url || payload.workflow_run?.html_url || null
-            },
-            autoGradeSource: "github_actions",
-            autoGradeUpdatedAt: now,
-            updatedAt: now,
-            submissionHistory: admin.firestore.FieldValue.arrayUnion({
-                timestamp: now,
-                action: "AUTO_GRADE",
-                content: `GitHub auto-grade: ${score}${Number.isFinite(maxScore) ? `/${maxScore}` : ""}`
-            })
-        };
+        const updatePayload = buildGithubAutogradePayload({
+            score,
+            maxScore,
+            scoreRaw,
+            maxScoreRaw,
+            payload,
+            now,
+            learningStateUpdate
+        });
 
-        if (learningStateUpdate) {
-            updatePayload.learningState = learningStateUpdate;
-        }
+        await addAssignmentHistoryEntry(assignmentRef, updatePayload, {
+            timestamp: now,
+            action: "AUTO_GRADE",
+            content: `GitHub auto-grade: ${score}${Number.isFinite(maxScore) ? `/${maxScore}` : ""}`
+        }, 'set');
 
-        await assignmentRef.set(updatePayload, { merge: true });
-
-        // Backfill GitHub Actions variables so future runs can always include userId and unitId.
-        // This makes auto-grade write-back deterministic even if repo mapping is incomplete.
         try {
-            const repoFullName = autoGrade.repository || repositoryFullName || "";
-            const parts = String(repoFullName).split("/");
-            if (parts.length === 2) {
-                const [owner, repo] = parts;
-                const assignmentData = assignmentDoc.data() || {};
-                const backfillUserId = assignmentData.userId || userId;
-                const backfillUnitId = (assignmentData.unitId || unitIdFromPayload || assignmentId || "").replace(/\.html$/, "");
-                const backfillUnitKey = normalizeTemplateRepoName(backfillUnitId);
-                
-                if (backfillUserId && backfillUnitId) {
-                    const upsertUserRes = await upsertGithubActionsVariable(GITHUB_ORG_ADMIN_TOKEN, {
-                        owner,
-                        repo,
-                        name: "VC_USER_ID",
-                        value: String(backfillUserId)
-                    });
-                    const upsertUnitRes = await upsertGithubActionsVariable(GITHUB_ORG_ADMIN_TOKEN, {
-                        owner,
-                        repo,
-                        name: "VC_UNIT_ID",
-                        value: String(backfillUnitId)
-                    });
-                    const upsertUnitKeyRes = backfillUnitKey ? await upsertGithubActionsVariable(GITHUB_ORG_ADMIN_TOKEN, {
-                        owner,
-                        repo,
-                        name: "VC_UNIT_KEY",
-                        value: String(backfillUnitKey)
-                    }) : { ok: true };
-                    if (!upsertUserRes.ok || !upsertUnitRes.ok || !upsertUnitKeyRes.ok) {
-                        console.warn("[ingestGithubAutograde] Failed to backfill variables:", {
-                            repoFullName,
-                            backfillUserId,
-                            backfillUnitId,
-                            backfillUnitKey,
-                            upsertUserRes,
-                            upsertUnitRes,
-                            upsertUnitKeyRes
-                        });
-                    }
-                }
-            }
+            await backfillAutogradeGithubVariables({
+                repositoryFullName: updatePayload.autoGrade.repository || repositoryFullName || "",
+                assignmentData: assignmentDoc.data() || {},
+                userId,
+                unitIdFromPayload,
+                assignmentId
+            }, GITHUB_ORG_ADMIN_TOKEN);
         } catch (varErr) {
             console.warn("[ingestGithubAutograde] Variable backfill error:", varErr);
         }
 
         try {
-            const assignmentData = assignmentDoc.data() || {};
-            const dashboardUrl = assignmentData.unitId
-                ? `https://vibe-coding.tw/dashboard.html?unitId=${encodeURIComponent(assignmentData.unitId)}&tab=assignments`
-                : 'https://vibe-coding.tw/dashboard.html?tab=assignments';
-            const assignmentTitle = assignmentData.assignmentTitle || assignmentData.assignmentId || resolvedDocId;
-            const studentEmail = assignmentData.userEmail || assignmentData.studentEmail || '';
-            const studentName = assignmentData.userName || assignmentData.studentName || '';
-            const tutorEmail = assignmentData.assignedTutorEmail || '';
-
-            const resolvedUnitId = assignmentData.unitId || (resolvedDocId && resolvedDocId.includes('_') ? resolvedDocId.split('_').pop() : '');
-            await sendAutogradeResultToStudent(
-                studentEmail,
-                studentName,
-                assignmentTitle,
+            await sendAutogradeNotifications({
+                assignmentData: assignmentDoc.data() || {},
+                resolvedDocId,
                 score,
-                Number.isFinite(maxScore) ? maxScore : null,
-                dashboardUrl,
-                autoGrade.runUrl || '',
-                resolvedUnitId
-            );
-
-            await sendAutogradeResultToTutor(
-                tutorEmail,
-                studentName || studentEmail || '學生',
-                assignmentTitle,
-                score,
-                Number.isFinite(maxScore) ? maxScore : null,
-                dashboardUrl,
-                autoGrade.runUrl || '',
-                resolvedUnitId
-            );
+                maxScore,
+                updatePayload
+            });
         } catch (notifyErr) {
             console.error("[ingestGithubAutograde] Notification send failed:", notifyErr);
         }
@@ -4795,7 +4519,7 @@ exports.remindAdminPendingShipments = onSchedule({
 
     try {
         const lessons = await getLessons();
-        const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
+        const physicalUnitIds = getPhysicalUnitIdSet(lessons);
 
         // 1. Get all successful orders that contain physical items and aren't shipped
         const ordersSnapshot = await db.collection('orders')
@@ -4809,21 +4533,18 @@ exports.remindAdminPendingShipments = onSchedule({
             if (data.fulfillmentStatus === 'SHIPPED') continue;
 
             const items = data.items || {};
-            const physicalItems = Object.keys(items).filter(id => {
-                if (items[id]?.isPhysical === true) return true;
-                return physicalUnitIds.has(id);
-            });
+            const physicalItems = Object.keys(items).filter((id) => isPhysicalOrderItem(id, items[id] || {}, physicalUnitIds));
             if (physicalItems.length > 0) {
                 // Fetch user info for the email
                 const userDoc = await db.collection('users').doc(data.uid).get();
                 const userData = userDoc.exists ? userDoc.data() : {};
 
-                pendingShipments.push({
+                pendingShipments.push(buildPendingShipmentReminderEntry({
                     orderId: doc.id,
                     email: userData.email || '未提供',
                     items: physicalItems.map(id => lessons.find(l => l.id === id)?.title || items[id]?.name || id),
-                    paidAt: data.paidAt ? data.paidAt.toDate().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) : '未知'
-                });
+                    paidAt: formatTaipeiDateTime(data.paidAt)
+                }));
             }
         }
 
@@ -4884,7 +4605,7 @@ const verifyReferralLinkHandler = onCall(async (request) => {
 
     try {
         const db = admin.firestore();
-        const inputStr = referralLink.trim();
+        const inputStr = normalizeText(referralLink);
 
         const lowerInput = inputStr.toLowerCase();
         const isUrl = lowerInput.includes('github.com/classroom/') || lowerInput.includes('classroom.github.com/');
@@ -4892,7 +4613,7 @@ const verifyReferralLinkHandler = onCall(async (request) => {
         if (isUrl) {
             console.log(`[Referral] Resolving GitHub Link via index: ${inputStr}`);
             const normalizedLink = normalizeGitHubUrl(inputStr);
-            const linkId = Buffer.from(normalizedLink).toString('base64');
+            const linkId = buildReferralLinkDocId(normalizedLink);
             const linkDoc = await db.collection('referral_links').doc(linkId).get();
 
             if (!linkDoc.exists) {
@@ -4901,11 +4622,11 @@ const verifyReferralLinkHandler = onCall(async (request) => {
 
             const lData = linkDoc.data();
             const tEmail = lData.tutorEmail;
-            const tutorUserSnap = await db.collection('users').where('email', '==', tEmail).limit(1).get();
-            if (tutorUserSnap.empty) {
+            const tutorUserDoc = await findUserDocByEmail(db, tEmail);
+            if (!tutorUserDoc) {
                 return { success: false, message: '對應的導師帳號似乎已被移除' };
             }
-            const tutorData = tutorUserSnap.docs[0].data();
+            const tutorData = tutorUserDoc.data() || {};
             const lessons = await getLessons();
 
             if (cartItems && cartItems.length > 0) {
@@ -4943,7 +4664,7 @@ exports.verifyReferralLink = verifyReferralLinkHandler;
 exports.verifyPromoCode = verifyReferralLinkHandler;
 
 function normalizeClassroomInvite(value = '') {
-    const s = String(value || '').trim();
+    const s = normalizeText(value || '');
     if (!s) return '';
     try {
         const url = new URL(s);
@@ -4995,9 +4716,9 @@ async function lookupClassroomInviteBinding(inputRaw) {
 // 11.1-b Admin 工具：查詢 GitHub Classroom 邀請連結目前綁定在哪些單元
 exports.findClassroomInviteBinding = onCall(async (request) => {
     const auth = request.auth;
-    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+    assertAuthenticated(auth, 'User must be logged in.');
     const requesterRole = await getRole(auth.uid);
-    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', 'Only admins can query invite bindings.');
+    assertAdminRole(requesterRole, 'Only admins can query invite bindings.');
 
     const inputRaw = String(
         request.data?.inviteCodeOrUrl ||
@@ -5005,7 +4726,7 @@ exports.findClassroomInviteBinding = onCall(async (request) => {
         request.data?.inviteCode ||
         ''
     ).trim();
-    if (!inputRaw) throw new HttpsError('invalid-argument', '缺少 inviteCodeOrUrl');
+    assertRequiredValue(inputRaw, '缺少 inviteCodeOrUrl');
     return lookupClassroomInviteBinding(inputRaw);
 });
 
@@ -5051,22 +4772,9 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 
     console.log(`Starting profit sharing calculation for: ${lastMonth.toISOString()} to ${endOfLastMonth.toISOString()}`);
 
-    const fallbackPolicy = {
-        policyId: "default-v1",
-        policyName: "Default Tutor Sharing Policy",
-        tutorRate: 0.2,
-        tutorUplineRate: 0.2,
-        agentRate: 0,
-        agentUplineRate: 0,
-        courseDevRate: 0,
-        courseDevUplineRate: 0,
-        enabled: true
-    };
-
     const policyCache = new Map();
     const userByEmailCache = new Map();
     const balanceAgg = new Map();
-    const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
     const ymFromDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const parseYm = (ym) => {
         const m = /^(\d{4})-(\d{2})$/.exec(String(ym || ""));
@@ -5101,90 +4809,20 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
         return typeof candidate === "string" ? candidate.trim() : "";
     };
     const getUserByEmail = async (email = "") => {
-        const normalized = String(email || "").trim().toLowerCase();
+        const normalized = normalizeEmail(email);
         if (!normalized) return null;
         if (userByEmailCache.has(normalized)) return userByEmailCache.get(normalized);
-        const snap = await db.collection('users').where('email', '==', normalized).limit(1).get();
-        const userData = snap.empty ? null : (snap.docs[0].data() || null);
+        const userDoc = await findUserDocByEmail(db, normalized);
+        const userData = userDoc ? (userDoc.data() || null) : null;
         userByEmailCache.set(normalized, userData);
         return userData;
-    };
-
-    const resolveOrderRoleEmails = async ({ itemValue, order, initialTutor }) => {
-        const itemAgent = String(
-            itemValue?.agentEmail ||
-            itemValue?.referredAgentEmail ||
-            itemValue?.referralAgent ||
-            ""
-        ).trim().toLowerCase();
-        const orderAgent = String(order?.agentEmail || "").trim().toLowerCase();
-        const tutorData = await getUserByEmail(initialTutor);
-        const tutorAgent = String(tutorData?.agentEmail || "").trim().toLowerCase();
-        const resolvedAgent = itemAgent || orderAgent || tutorAgent || "";
-
-        const courseDev = String(
-            itemValue?.courseDevEmail ||
-            itemValue?.ownerTutorEmail ||
-            order?.courseDevEmail ||
-            ""
-        ).trim().toLowerCase();
-        const courseDevData = courseDev ? await getUserByEmail(courseDev) : null;
-        const courseDevUpline = String(
-            courseDevData?.courseDevEmail ||
-            courseDevData?.tutorEmail ||
-            ""
-        ).trim().toLowerCase();
-
-        return {
-            agentEmail: resolvedAgent,
-            courseDevEmail: courseDev,
-            courseDevUplineEmail: courseDevUpline
-        };
-    };
-    const loadPolicyById = async (policyId = "") => {
-        const normalized = String(policyId || "").trim() || fallbackPolicy.policyId;
-        if (policyCache.has(normalized)) return policyCache.get(normalized);
-
-        let policy = fallbackPolicy;
-        if (normalized !== fallbackPolicy.policyId) {
-            try {
-                const snap = await db.collection("revenue_share_policies").doc(normalized).get();
-                if (snap.exists) {
-                    const raw = snap.data() || {};
-                    policy = {
-                        policyId: normalized,
-                        policyName: raw.policyName || raw.name || normalized,
-                        tutorRate: Number(raw.tutorRate ?? fallbackPolicy.tutorRate),
-                        tutorUplineRate: Number(raw.tutorUplineRate ?? fallbackPolicy.tutorUplineRate),
-                        agentRate: Number(raw.agentRate ?? fallbackPolicy.agentRate),
-                        agentUplineRate: Number(raw.agentUplineRate ?? fallbackPolicy.agentUplineRate),
-                        courseDevRate: Number(raw.courseDevRate ?? fallbackPolicy.courseDevRate),
-                        courseDevUplineRate: Number(raw.courseDevUplineRate ?? fallbackPolicy.courseDevUplineRate),
-                        enabled: raw.enabled !== false
-                    };
-                    if (!policy.enabled) {
-                        console.warn(`[sharing] policy disabled (${normalized}), fallback to default.`);
-                        policy = fallbackPolicy;
-                    }
-                } else {
-                    console.warn(`[sharing] policy not found (${normalized}), fallback to default.`);
-                    policy = fallbackPolicy;
-                }
-            } catch (e) {
-                console.warn(`[sharing] load policy failed (${normalized}), fallback to default:`, e.message || e);
-                policy = fallbackPolicy;
-            }
-        }
-
-        policyCache.set(normalized, policy);
-        return policy;
     };
 
     try {
         const revenueConfigDoc = await db.collection("metadata_settings").doc("revenue_share_config").get();
         const revenueConfig = revenueConfigDoc.exists ? (revenueConfigDoc.data() || {}) : {};
         const defaultValidityMonths = Math.max(1, Number(revenueConfig.defaultValidityMonths || 12));
-        const fallbackPayoutEmail = String(revenueConfig.defaultPayoutEmail || "info@vibe-coding.tw").trim().toLowerCase() || "info@vibe-coding.tw";
+        const fallbackPayoutEmail = normalizeEmail(revenueConfig.defaultPayoutEmail || "info@vibe-coding.tw") || "info@vibe-coding.tw";
         const targetPeriod = ymFromDate(lastMonth);
 
         // 1) For last month successful orders, generate/refresh share credits.
@@ -5199,56 +4837,55 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
         const collectShareTargets = async ({ order, orderId, studentUid, itemKey, itemValue, lineAmount, policy }) => {
             const targets = [];
             const initialTutor = (itemValue?.referredTutorEmail && itemValue.referredTutorEmail.trim())
-                ? itemValue.referredTutorEmail.trim().toLowerCase()
-                : ((itemValue?.referralTutor && itemValue.referralTutor.trim()) ? itemValue.referralTutor.trim().toLowerCase() : fallbackPayoutEmail);
+                ? normalizeEmail(itemValue.referredTutorEmail)
+                : ((itemValue?.referralTutor && itemValue.referralTutor.trim()) ? normalizeEmail(itemValue.referralTutor) : fallbackPayoutEmail);
 
-            let currentTutorEmail = initialTutor;
-            let currentTutorShare = lineAmount * Number(policy.tutorRate || fallbackPolicy.tutorRate);
-            let tutorLevel = 1;
-            while (currentTutorEmail && currentTutorShare >= 0.01) {
-                targets.push({ role: "tutor", recipientEmail: currentTutorEmail, shareAmount: round2(currentTutorShare), level: tutorLevel });
-                if (currentTutorEmail === fallbackPayoutEmail) break;
-                const tutorData = await getUserByEmail(currentTutorEmail);
-                currentTutorEmail = String(tutorData?.tutorEmail || fallbackPayoutEmail).trim().toLowerCase();
-                currentTutorShare = currentTutorShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
-                tutorLevel++;
-            }
-
-            const { agentEmail, courseDevEmail, courseDevUplineEmail } = await resolveOrderRoleEmails({ itemValue, order, initialTutor });
-            if (agentEmail && Number(policy.agentRate || 0) > 0) {
-                let currentAgentEmail = agentEmail;
-                let currentAgentShare = lineAmount * Number(policy.agentRate || 0);
-                let agentLevel = 1;
-                while (currentAgentEmail && currentAgentShare >= 0.01) {
-                    targets.push({ role: "agent", recipientEmail: currentAgentEmail, shareAmount: round2(currentAgentShare), level: agentLevel });
-                    const agentData = await getUserByEmail(currentAgentEmail);
-                    const nextAgent = String(agentData?.agentEmail || "").trim().toLowerCase();
-                    if (!nextAgent || nextAgent === currentAgentEmail) break;
-                    currentAgentEmail = nextAgent;
-                    currentAgentShare = currentAgentShare * Number(policy.agentUplineRate || 0);
-                    agentLevel++;
+            await collectRevenueShareChainTargets({
+                targets,
+                role: "tutor",
+                initialEmail: initialTutor,
+                initialShare: lineAmount * Number(policy.tutorRate || DEFAULT_REVENUE_SHARE_POLICY.tutorRate),
+                uplineRate: policy.tutorUplineRate || DEFAULT_REVENUE_SHARE_POLICY.tutorUplineRate,
+                stopEmail: fallbackPayoutEmail,
+                getNextEmail: async (currentEmail) => {
+                    const tutorData = await getUserByEmail(currentEmail);
+                    return normalizeEmail(tutorData?.tutorEmail || fallbackPayoutEmail);
                 }
+            });
+
+            const { agentEmail, courseDevEmail, courseDevUplineEmail } = await resolveRevenueShareRoleEmails({
+                itemValue,
+                order,
+                initialTutor,
+                getUserByEmail
+            });
+            if (agentEmail && Number(policy.agentRate || 0) > 0) {
+                await collectRevenueShareChainTargets({
+                    targets,
+                    role: "agent",
+                    initialEmail: agentEmail,
+                    initialShare: lineAmount * Number(policy.agentRate || 0),
+                    uplineRate: policy.agentUplineRate || 0,
+                    getNextEmail: async (currentEmail) => {
+                        const agentData = await getUserByEmail(currentEmail);
+                        return normalizeEmail(agentData?.agentEmail || "");
+                    }
+                });
             }
 
             if (courseDevEmail && Number(policy.courseDevRate || 0) > 0) {
-                let currentCourseDevEmail = courseDevEmail;
-                let currentCourseDevShare = lineAmount * Number(policy.courseDevRate || 0);
-                let courseDevLevel = 1;
-                let nextCourseDevEmail = courseDevUplineEmail;
-                while (currentCourseDevEmail && currentCourseDevShare >= 0.01) {
-                    targets.push({
-                        role: "courseDev",
-                        recipientEmail: currentCourseDevEmail,
-                        shareAmount: round2(currentCourseDevShare),
-                        level: courseDevLevel
-                    });
-                    if (!nextCourseDevEmail || nextCourseDevEmail === currentCourseDevEmail) break;
-                    currentCourseDevEmail = nextCourseDevEmail;
-                    currentCourseDevShare = currentCourseDevShare * Number(policy.courseDevUplineRate || 0);
-                    courseDevLevel++;
-                    const cdData = await getUserByEmail(currentCourseDevEmail);
-                    nextCourseDevEmail = String(cdData?.courseDevEmail || cdData?.tutorEmail || "").trim().toLowerCase();
-                }
+                await collectRevenueShareChainTargets({
+                    targets,
+                    role: "courseDev",
+                    initialEmail: courseDevEmail,
+                    initialShare: lineAmount * Number(policy.courseDevRate || 0),
+                    initialNextEmail: courseDevUplineEmail,
+                    uplineRate: policy.courseDevUplineRate || 0,
+                    getNextEmail: async (currentEmail) => {
+                        const cdData = await getUserByEmail(currentEmail);
+                        return normalizeEmail(cdData?.courseDevEmail || cdData?.tutorEmail || "");
+                    }
+                });
             }
             return targets;
         };
@@ -5264,21 +4901,12 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                 const itemPrice = parseFloat(itemValue?.price || 0) || 0;
                 const lineAmount = itemPrice * quantity;
                 const itemReferralLink = itemValue?.referralLink || itemValue?.promoCode || null;
-                const effectivePolicyId = String(order.policyId || "").trim() || fallbackPolicy.policyId;
-                const policy = await loadPolicyById(effectivePolicyId);
+                const effectivePolicyId = normalizeText(order.policyId || "") || DEFAULT_REVENUE_SHARE_POLICY.policyId;
+                const policy = await loadRevenueSharePolicy({ db, policyCache, policyId: effectivePolicyId });
 
                 if (lineAmount <= 0) continue;
 
-                const policySnapshot = {
-                    policyId: policy.policyId,
-                    policyName: policy.policyName,
-                    tutorRate: Number(policy.tutorRate || 0),
-                    tutorUplineRate: Number(policy.tutorUplineRate || 0),
-                    agentRate: Number(policy.agentRate || 0),
-                    agentUplineRate: Number(policy.agentUplineRate || 0),
-                    courseDevRate: Number(policy.courseDevRate || 0),
-                    courseDevUplineRate: Number(policy.courseDevUplineRate || 0)
-                };
+                const policySnapshot = buildRevenueSharePolicySnapshot(policy);
                 const shareTargets = await collectShareTargets({
                     order,
                     orderId,
@@ -5295,17 +4923,16 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                 const creditStartPeriod = order?.paidAt?.toDate ? ymFromDate(order.paidAt.toDate()) : targetPeriod;
 
                 for (const target of shareTargets) {
-                    const recipientEmail = String(target.recipientEmail || "").trim().toLowerCase() || fallbackPayoutEmail;
-                    const totalCredit = round2(target.shareAmount);
+                    const recipientEmail = normalizeEmail(target.recipientEmail || "") || fallbackPayoutEmail;
+                    const totalCredit = round2Amount(target.shareAmount);
                     if (totalCredit < 0.01) continue;
                     const creditSeed = `${orderId}|${itemKey}|${target.role}|${target.level}|${recipientEmail}`;
                     const creditId = crypto.createHash("sha256").update(creditSeed).digest("hex").slice(0, 40);
                     const creditRef = db.collection("revenue_share_credits").doc(creditId);
                     const existingCredit = await creditRef.get();
                     if (!existingCredit.exists) {
-                        const monthlyInstallment = round2(totalCredit / validityMonths);
-                        const remainingCredit = round2(totalCredit);
-                        const creditDoc = {
+                        const monthlyInstallment = round2Amount(totalCredit / validityMonths);
+                        const creditDoc = buildRevenueShareCreditRecord({
                             creditId,
                             orderId,
                             orderItemId: itemKey,
@@ -5318,16 +4945,11 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                             policySnapshot,
                             orderAmount: lineAmount,
                             totalCredit,
-                            paidCredit: 0,
-                            remainingCredit,
                             validityMonths,
-                            monthlyInstallment: monthlyInstallment > 0 ? monthlyInstallment : remainingCredit,
-                            startPeriod: creditStartPeriod,
-                            nextPayoutPeriod: creditStartPeriod,
-                            status: "active",
-                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        };
+                            monthlyInstallment,
+                            creditStartPeriod,
+                            now: admin.firestore.FieldValue.serverTimestamp()
+                        });
                         await creditRef.set(creditDoc, { merge: true });
                         creditTrail.push({ creditId, ...creditDoc });
                     }
@@ -5342,50 +4964,38 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 
         for (const creditDoc of creditsSnapshot.docs) {
             const credit = creditDoc.data() || {};
-            const recipientEmail = String(credit.recipientEmail || "").trim().toLowerCase();
+            const recipientEmail = normalizeEmail(credit.recipientEmail || "");
             if (!recipientEmail) continue;
             const nextPayoutPeriod = String(credit.nextPayoutPeriod || credit.startPeriod || "");
-            const remainingCredit = round2(credit.remainingCredit || 0);
+            const remainingCredit = round2Amount(credit.remainingCredit || 0);
             if (!nextPayoutPeriod || remainingCredit < 0.01) continue;
             if (!ymLTE(nextPayoutPeriod, targetPeriod)) continue;
 
             const recipientUser = await getUserByEmail(recipientEmail);
             const payoutAccount = getPayoutAccountFromUser(recipientUser);
-            const monthlyInstallment = round2(credit.monthlyInstallment || 0);
+            const monthlyInstallment = round2Amount(credit.monthlyInstallment || 0);
             const plannedPay = Math.min(remainingCredit, monthlyInstallment > 0 ? monthlyInstallment : remainingCredit);
-            const paidAmount = payoutAccount ? round2(plannedPay) : 0;
-            const blockedAmount = payoutAccount ? 0 : round2(plannedPay);
+            const paidAmount = payoutAccount ? round2Amount(plannedPay) : 0;
+            const blockedAmount = payoutAccount ? 0 : round2Amount(plannedPay);
 
             const idempotencySeed = `${targetPeriod}|${creditDoc.id}|payout`;
             const idempotencyKey = crypto.createHash("sha256").update(idempotencySeed).digest("hex").slice(0, 40);
             const payoutRef = db.collection("profit_ledger").doc(idempotencyKey);
-            const payoutRow = {
+            const payoutRow = buildRevenueSharePayoutRow({
                 idempotencyKey,
-                role: credit.role || "tutor",
-                tutorEmail: recipientEmail,
+                credit: { ...credit, creditId: creditDoc.id },
                 recipientEmail,
-                studentUid: credit.studentUid || "",
-                orderId: credit.orderId || "",
-                orderItemId: credit.orderItemId || "",
-                orderAmount: round2(credit.orderAmount || 0),
-                shareAmount: paidAmount,
-                plannedShareAmount: round2(plannedPay),
-                blockedShareAmount: blockedAmount,
-                level: Number(credit.level || 1),
-                referralLink: credit.referralLink || null,
-                policyId: credit.policyId || fallbackPolicy.policyId,
-                policySnapshot: credit.policySnapshot || null,
-                creditId: creditDoc.id,
-                payoutStatus: payoutAccount ? "scheduled" : "missing_payout_account",
+                paidAmount,
+                plannedPay,
+                blockedAmount,
                 payoutAccountPresent: Boolean(payoutAccount),
-                calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                period: targetPeriod
-            };
+                targetPeriod
+            });
             await payoutRef.set(payoutRow, { merge: true });
             auditTrail.push(payoutRow);
 
-            const newPaid = round2((credit.paidCredit || 0) + paidAmount);
-            const newRemaining = round2((credit.remainingCredit || 0) - paidAmount);
+            const newPaid = round2Amount((credit.paidCredit || 0) + paidAmount);
+            const newRemaining = round2Amount((credit.remainingCredit || 0) - paidAmount);
             const isCompleted = newRemaining < 0.01;
             const nextPeriod = payoutAccount && !isCompleted ? addMonthsYm(nextPayoutPeriod, 1) : nextPayoutPeriod;
             await creditDoc.ref.set({
@@ -5402,19 +5012,12 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
         const allCredits = await db.collection("revenue_share_credits").get();
         for (const cDoc of allCredits.docs) {
             const c = cDoc.data() || {};
-            const email = String(c.recipientEmail || "").trim().toLowerCase();
+            const email = normalizeEmail(c.recipientEmail || "");
             if (!email) continue;
-            const acc = balanceAgg.get(email) || {
-                recipientEmail: email,
-                totalCredit: 0,
-                totalPaid: 0,
-                remainingBalance: 0,
-                activeCredits: 0,
-                pendingAccountCredits: 0
-            };
-            acc.totalCredit = round2(acc.totalCredit + Number(c.totalCredit || 0));
-            acc.totalPaid = round2(acc.totalPaid + Number(c.paidCredit || 0));
-            acc.remainingBalance = round2(acc.remainingBalance + Number(c.remainingCredit || 0));
+            const acc = balanceAgg.get(email) || buildRevenueShareBalanceRecord({ recipientEmail: email });
+            acc.totalCredit = round2Amount(acc.totalCredit + Number(c.totalCredit || 0));
+            acc.totalPaid = round2Amount(acc.totalPaid + Number(c.paidCredit || 0));
+            acc.remainingBalance = round2Amount(acc.remainingBalance + Number(c.remainingCredit || 0));
             if (String(c.status || "") === "active") acc.activeCredits += 1;
             if (String(c.status || "") === "pending_account") acc.pendingAccountCredits += 1;
             balanceAgg.set(email, acc);
@@ -5443,15 +5046,13 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 exports.markOrderShipped = onCall(async (request) => {
     const { orderId } = request.data;
     const uid = request.auth?.uid;
-    if (!uid) throw new HttpsError('unauthenticated', '請先登入');
-    if (!orderId) throw new HttpsError('invalid-argument', '缺少訂單編號');
+    assertAuthenticated(request.auth, '請先登入');
+    assertRequiredValue(orderId, '缺少訂單編號');
 
     const db = admin.firestore();
     try {
         const userDoc = await db.collection('users').doc(uid).get();
-        if (userDoc.data()?.role !== 'admin') {
-            throw new HttpsError('permission-denied', '只有管理員可以標記出貨');
-        }
+        assertAdminRole(userDoc.data()?.role, '只有管理員可以標記出貨');
 
         await db.collection('orders').doc(orderId).update({
             fulfillmentStatus: 'SHIPPED',
@@ -5490,10 +5091,11 @@ exports.markOrderShipped = onCall(async (request) => {
  */
 exports.bindTutorToUnit = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(auth);
 
     const { unitId, courseId, referralLink } = data;
-    if (!unitId || !referralLink) throw new HttpsError('invalid-argument', '缺少必要參數');
+    assertRequiredValue(unitId, '缺少必要參數');
+    assertRequiredValue(referralLink, '缺少必要參數');
 
     const db = admin.firestore();
     const uid = auth.uid;
@@ -5501,12 +5103,11 @@ exports.bindTutorToUnit = onCall(async (request) => {
     try {
         // 1. Verify Payment
         const lessons = await getLessons();
-        const access = await resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons);
-        if (!access.authorized) throw new HttpsError('permission-denied', '尚未取得此單元之付款授權。');
+        const access = await resolveSubmissionAccessOrThrow(db, uid, courseId, unitId, lessons);
 
         // 2. Verify Link
         const normalizedLink = normalizeGitHubUrl(referralLink);
-        const linkId = Buffer.from(normalizedLink).toString('base64');
+        const linkId = buildReferralLinkDocId(normalizedLink);
         const linkDoc = await db.collection('referral_links').doc(linkId).get();
 
         if (!linkDoc.exists) throw new HttpsError('not-found', '查無此作業連結對應的導師。');
@@ -5515,14 +5116,14 @@ exports.bindTutorToUnit = onCall(async (request) => {
         const tutorEmail = lData.tutorEmail;
 
         // 3. Verify Tutor Qualification
-        const tutorUserSnap = await db.collection('users').where('email', '==', tutorEmail).limit(1).get();
-        if (tutorUserSnap.empty) throw new HttpsError('not-found', '對應的導師帳號已被移除。');
-        
-        const tutorData = tutorUserSnap.docs[0].data();
+        const tutorUserDoc = await findUserDocByEmail(db, tutorEmail);
+        if (!tutorUserDoc) throw new HttpsError('not-found', '對應的導師帳號已被移除。');
+
+        const tutorData = tutorUserDoc.data() || {};
         const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
         const effectiveCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons) || courseId;
 
-        const config = getEffectiveTutorConfig(canonicalUnitId, tutorData.tutorConfigs || {});
+        const config = getUserTutorConfig(tutorData, canonicalUnitId);
         if (!config || config.authorized !== true) {
              throw new HttpsError('permission-denied', '此導師尚未取得該單元的指導認證。');
         }
@@ -5566,14 +5167,12 @@ exports.bindTutorToUnit = onCall(async (request) => {
  */
 exports.bindTutorByPromotionCode = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(auth);
 
-    const unitIdRaw = String(data?.unitId || '').trim();
-    const courseIdRaw = String(data?.courseId || '').trim();
-    const promoCodeRaw = String(data?.promotionCode || '').trim();
-    if (!unitIdRaw) {
-        throw new HttpsError('invalid-argument', '缺少必要參數（unitId）');
-    }
+    const unitIdRaw = normalizeText(data?.unitId || '');
+    const courseIdRaw = normalizeText(data?.courseId || '');
+    const promoCodeRaw = normalizeText(data?.promotionCode || '');
+    assertRequiredValue(unitIdRaw, '缺少必要參數（unitId）');
 
     const db = admin.firestore();
     const uid = auth.uid;
@@ -5586,10 +5185,7 @@ exports.bindTutorByPromotionCode = onCall(async (request) => {
 
         // Admin tutor-mode debugging/support flow should not be blocked by student payment gate.
         if (requesterRole !== 'admin') {
-            const access = await resolveStudentAssignmentAccess(db, uid, effectiveCourseId, canonicalUnitId, lessons);
-            if (!access.authorized) {
-                throw new HttpsError('permission-denied', '尚未取得此單元之付款授權。');
-            }
+            await resolveSubmissionAccessOrThrow(db, uid, effectiveCourseId, canonicalUnitId, lessons);
         }
 
         const DEFAULT_TUTOR_EMAIL = 'rover.k.chen@gmail.com';
@@ -5597,39 +5193,36 @@ exports.bindTutorByPromotionCode = onCall(async (request) => {
         const promotionCode = normalizedInput.toUpperCase();
         const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedInput);
         let tutorSnap;
+        let tutorDoc = null;
         let resolvedPromotionCode = promotionCode;
 
         if (!normalizedInput) {
-            tutorSnap = await db.collection('users')
-                .where('email', '==', DEFAULT_TUTOR_EMAIL)
-                .limit(1)
-                .get();
+            tutorDoc = await findUserDocByEmail(db, DEFAULT_TUTOR_EMAIL);
         } else if (looksLikeEmail) {
-            tutorSnap = await db.collection('users')
-                .where('email', '==', normalizedInput.toLowerCase())
-                .limit(1)
-                .get();
+            tutorDoc = await findUserDocByEmail(db, normalizedInput);
         } else if (promotionCode) {
             tutorSnap = await db.collection('users')
                 .where('promotionCode', '==', promotionCode)
                 .limit(1)
                 .get();
         }
-        if (tutorSnap.empty) {
+        if (!tutorDoc && (!tutorSnap || tutorSnap.empty)) {
             if (!normalizedInput) {
                 throw new HttpsError('not-found', '系統預設導師不存在。');
             }
             throw new HttpsError('not-found', looksLikeEmail ? '查無此 Tutor email 對應的導師。' : '查無此 Promotion code 對應的導師。');
         }
 
-        const tutorDoc = tutorSnap.docs[0];
+        if (!tutorDoc) {
+            tutorDoc = tutorSnap.docs[0];
+        }
         const tutorData = tutorDoc.data() || {};
-        const tutorEmail = String(tutorData.email || '').trim();
+        const tutorEmail = normalizeText(tutorData.email || '');
         if (!tutorEmail) {
             throw new HttpsError('failed-precondition', '該導師資料不完整（缺少 email）。');
         }
 
-        const cfg = getEffectiveTutorConfig(canonicalUnitId, tutorData.tutorConfigs || {});
+        const cfg = getUserTutorConfig(tutorData, canonicalUnitId);
         if (!cfg || cfg.authorized !== true) {
             throw new HttpsError('permission-denied', '此導師尚未取得該單元授權。');
         }
@@ -5693,14 +5286,12 @@ exports.bindTutorByPromotionCode = onCall(async (request) => {
 // 1. Submit Blocker (Student)
 exports.submitStudentBlocker = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) {
-        throw new HttpsError('unauthenticated', '請先登入');
-    }
+    assertAuthenticated(auth, '請先登入');
 
     const { assignmentId, blockerType, blockerNote } = data;
-    if (!assignmentId || !blockerType || !blockerNote) {
-        throw new HttpsError('invalid-argument', '缺少必要參數');
-    }
+    assertRequiredValue(assignmentId, '缺少必要參數');
+    assertRequiredValue(blockerType, '缺少必要參數');
+    assertRequiredValue(blockerNote, '缺少必要參數');
 
     const userId = auth.uid;
     const db = admin.firestore();
@@ -5721,17 +5312,16 @@ exports.submitStudentBlocker = onCall(async (request) => {
         };
 
         const historyEntry = {
-            timestamp: new Date().toISOString(),
+            timestamp: nowIsoTimestamp(),
             action: 'BLOCKER_REPORTED',
             content: `Student reported blocker: [${blockerType}] ${blockerNote}`
         };
 
-        await docRef.update({
+        await addAssignmentHistoryEntry(docRef, {
             learningState: 'blocked',
             latestBlocker: blockerEntry,
-            updatedAt: now,
-            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
-        });
+            updatedAt: now
+        }, historyEntry);
 
         return { success: true, message: '已成功標記卡點' };
     } catch (e) {
@@ -5744,14 +5334,11 @@ exports.submitStudentBlocker = onCall(async (request) => {
 // 2. Submit Attempt Summary (Student)
 exports.submitAttemptSummary = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) {
-        throw new HttpsError('unauthenticated', '請先登入');
-    }
+    assertAuthenticated(auth, '請先登入');
 
     const { assignmentId, attemptSummary } = data;
-    if (!assignmentId || !attemptSummary) {
-        throw new HttpsError('invalid-argument', '缺少必要參數');
-    }
+    assertRequiredValue(assignmentId, '缺少必要參數');
+    assertRequiredValue(attemptSummary, '缺少必要參數');
 
     const userId = auth.uid;
     const db = admin.firestore();
@@ -5766,16 +5353,15 @@ exports.submitAttemptSummary = onCall(async (request) => {
 
         const now = admin.firestore.Timestamp.now();
         const historyEntry = {
-            timestamp: new Date().toISOString(),
+            timestamp: nowIsoTimestamp(),
             action: 'ATTEMPT_LOGGED',
             content: `Student logged attempt: ${attemptSummary}`
         };
 
-        await docRef.update({
+        await addAssignmentHistoryEntry(docRef, {
             attemptSummary: attemptSummary,
-            updatedAt: now,
-            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
-        });
+            updatedAt: now
+        }, historyEntry);
 
         return { success: true, message: '嘗試紀錄提交成功！' };
     } catch (e) {
@@ -5788,14 +5374,10 @@ exports.submitAttemptSummary = onCall(async (request) => {
 // 3. Resolve Blocker (Student or Tutor)
 exports.resolveStudentBlocker = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) {
-        throw new HttpsError('unauthenticated', '請先登入');
-    }
+    assertAuthenticated(auth, '請先登入');
 
     const { assignmentId, studentUid } = data;
-    if (!assignmentId) {
-        throw new HttpsError('invalid-argument', '缺少必要參數');
-    }
+    assertRequiredValue(assignmentId, '缺少必要參數');
 
     const db = admin.firestore();
     const targetUid = studentUid || auth.uid;
@@ -5826,17 +5408,16 @@ exports.resolveStudentBlocker = onCall(async (request) => {
 
         const now = admin.firestore.Timestamp.now();
         const historyEntry = {
-            timestamp: new Date().toISOString(),
+            timestamp: nowIsoTimestamp(),
             action: 'BLOCKER_RESOLVED',
             content: `Blocker marked as resolved by ${studentUid ? 'Tutor' : 'Student'}`
         };
 
-        await docRef.update({
+        await addAssignmentHistoryEntry(docRef, {
             learningState: 'in_progress',
             latestBlocker: null,
-            updatedAt: now,
-            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
-        });
+            updatedAt: now
+        }, historyEntry);
 
         return { success: true, message: '已成功解決卡點！' };
     } catch (e) {
@@ -5849,14 +5430,13 @@ exports.resolveStudentBlocker = onCall(async (request) => {
 // 4. Submit Tutor Coaching Log (Tutor/Admin)
 exports.submitTutorCoachingLog = onCall(async (request) => {
     const { data, auth } = request;
-    if (!auth) {
-        throw new HttpsError('unauthenticated', '請先登入');
-    }
+    assertAuthenticated(auth, '請先登入');
 
     const { assignmentId, studentUid, hintLevel, blockerType, coachNote, nextAction } = data;
-    if (!assignmentId || !studentUid || hintLevel === undefined || !coachNote) {
-        throw new HttpsError('invalid-argument', '缺少必要參數');
-    }
+    assertRequiredValue(assignmentId, '缺少必要參數');
+    assertRequiredValue(studentUid, '缺少必要參數');
+    assertRequiredValue(hintLevel !== undefined, '缺少必要參數');
+    assertRequiredValue(coachNote, '缺少必要參數');
 
     const tutorEmail = auth.token.email;
     const db = admin.firestore();
@@ -5875,9 +5455,7 @@ exports.submitTutorCoachingLog = onCall(async (request) => {
         const isRequesterAdmin = reqUserData.role === 'admin';
         const isAssignedTutor = assignmentData.assignedTutorEmail === tutorEmail;
 
-        if (!isRequesterAdmin && !isAssignedTutor) {
-            throw new HttpsError('permission-denied', '您並非指派給此學生的導師，無法提交指導紀錄。');
-        }
+        assertAdminOrAssignedTutor(isRequesterAdmin, isAssignedTutor);
 
         const now = admin.firestore.Timestamp.now();
 
@@ -5895,35 +5473,26 @@ exports.submitTutorCoachingLog = onCall(async (request) => {
 
         // 2. Update the assignment doc
         const historyEntry = {
-            timestamp: new Date().toISOString(),
+            timestamp: nowIsoTimestamp(),
             action: 'TUTOR_COACHED',
             content: `Tutor logged coaching note (Hint Level: L${hintLevel}). Next action: ${nextAction || 'None'}`
         };
 
-        await docRef.update({
+        await addAssignmentHistoryEntry(docRef, {
             learningState: 'coaching',
             hintLevelUsed: Number(hintLevel),
             nextAction: nextAction || '',
-            updatedAt: now,
-            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
-        });
+            updatedAt: now
+        }, historyEntry);
 
         // 3. Update active interventions
-        const interventionsSnap = await db.collection('assignment_interventions')
-            .where('assignmentId', '==', assignmentId)
-            .where('studentUid', '==', studentUid)
-            .where('status', 'in', ['open', 'in_progress'])
-            .get();
-
-        const batch = db.batch();
-        interventionsSnap.forEach(interventionDoc => {
-            batch.update(interventionDoc.ref, {
-                status: 'in_progress',
-                ownerTutorEmail: tutorEmail,
-                updatedAt: now
-            });
+        await updateActiveAssignmentInterventions(db, {
+            assignmentId,
+            studentUid,
+            status: 'in_progress',
+            updatedAt: now,
+            ownerTutorEmail: tutorEmail
         });
-        await batch.commit();
 
         return { success: true, message: '指導紀錄已提交' };
     } catch (e) {
@@ -5941,7 +5510,7 @@ exports.submitTutorCoachingLog = onCall(async (request) => {
  *       01-unit-vscode-setup -> common-vscode-setup
  */
 function normalizeTemplateRepoName(id) {
-    const v = String(id || '').trim();
+    const v = normalizeText(id || '');
     if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
     if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
     if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
@@ -5970,18 +5539,14 @@ function templateRepoCandidates(id) {
  */
 exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async (request) => {
     const { data, auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(auth);
 
-    const unitIdRaw = String(data?.unitId || '').trim();
-    const courseIdRaw = String(data?.courseId || '').trim();
-    const githubUsername = String(data?.githubUsername || '').trim(); // Student's GitHub username
+    const unitIdRaw = normalizeText(data?.unitId || '');
+    const courseIdRaw = normalizeText(data?.courseId || '');
+    const githubUsername = normalizeText(data?.githubUsername || ''); // Student's GitHub username
 
-    if (!unitIdRaw) {
-        throw new HttpsError('invalid-argument', '缺少必要參數（unitId）');
-    }
-    if (!githubUsername) {
-        throw new HttpsError('invalid-argument', '缺少必要參數（githubUsername）');
-    }
+    assertRequiredValue(unitIdRaw, '缺少必要參數（unitId）');
+    assertRequiredValue(githubUsername, '缺少必要參數（githubUsername）');
 
     const db = admin.firestore();
     const uid = auth.uid;
@@ -5998,10 +5563,7 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
 
         const tutorMode = data?.tutorMode === true;
         // 1. 驗證學員課程權限
-        const access = await resolveStudentAssignmentAccess(db, uid, effectiveCourseId, canonicalUnitId, lessons, tutorMode);
-        if (!access.authorized) {
-            throw new HttpsError('permission-denied', '尚未取得此單元之付款授權。');
-        }
+        const access = await resolveSubmissionAccessOrThrow(db, uid, effectiveCourseId, canonicalUnitId, lessons, tutorMode);
 
         // 2. 檢查是否已經建立過此作業的 Repo
         const normalizedUnitId = canonicalUnitId.replace('.html', '');
@@ -6027,12 +5589,12 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
                 .where('email', '==', tutorEmail.toLowerCase())
                 .limit(1)
                 .get();
-            if (!tutorSnap.empty) {
-                const tutorData = tutorSnap.docs[0].data();
-                const config = tutorData.tutorConfigs?.[canonicalUnitId];
-                if (config) {
-                    if (config.githubOrg) {
-                        targetOrg = config.githubOrg;
+        if (!tutorSnap.empty) {
+            const tutorData = tutorSnap.docs[0].data();
+            const config = getUserTutorConfig(tutorData, canonicalUnitId);
+            if (config) {
+                if (config.githubOrg) {
+                    targetOrg = config.githubOrg;
                     }
                     if (config.templateRepo) {
                         templateRepo = config.templateRepo;
@@ -6137,9 +5699,9 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
 
         // 6. 記錄與更新 Firestore
         const now = admin.firestore.FieldValue.serverTimestamp();
-        const assignmentPayload = {
-            userId: uid,
-            userEmail: auth.token.email || '',
+        const assignmentPayload = buildNativeRepositoryAssignmentRecord({
+            uid,
+            email: auth.token.email || '',
             courseId: effectiveCourseId,
             unitId: canonicalUnitId,
             assignmentTitle: data.assignmentTitle || canonicalUnitId,
@@ -6147,11 +5709,9 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
             repositoryUrl: studentRepo.html_url,
             repositoryName: newRepoName,
             feedbackPullRequestUrl: feedbackPR.html_url,
-            createdVia: 'native-api',
-            currentStatus: 'started',
             assignedTutorEmail: tutorEmail || '',
-            updatedAt: now
-        };
+            now
+        });
 
         if (assignmentDoc.exists) {
             await db.collection('assignments').doc(assignmentDocId).update(assignmentPayload);
@@ -6176,7 +5736,7 @@ exports.createStudentRepository = onCall({ secrets: [GITHUB_API_TOKEN] }, async 
  */
 exports.testGithubToken = onCall({ secrets: [GITHUB_API_TOKEN] }, async (request) => {
     const { data, auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    assertAuthenticated(auth);
     
     // Verify user is admin
     const db = admin.firestore();
@@ -6197,7 +5757,7 @@ exports.testGithubToken = onCall({ secrets: [GITHUB_API_TOKEN] }, async (request
             .get();
         if (!tutorSnap.empty) {
             const tutorData = tutorSnap.docs[0].data();
-            const config = tutorData.tutorConfigs?.[unitId];
+            const config = getUserTutorConfig(tutorData, unitId);
             if (config) {
                 customToken = config.githubToken || null;
                 customOrg = config.githubOrg || null;

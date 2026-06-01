@@ -50,6 +50,39 @@
 - `scripts/check_classroom_solution_leak.sh`
 - `scripts/translate_courses.py`
 
+## 已移除
+
+以下腳本已確認不再需要，並已從 repo 移除：
+
+- `scripts/delete_bridge_repos.py`
+- `scripts/generate_all_graders.py`
+- `scripts/merge_classroom_templates.py`
+- `scripts/update_student_workflows.py`
+
+## 可先搬入 archive
+
+以下腳本目前仍被文件提到，但已經不在主 runtime 或 active workflow 中，適合先搬到 `archive/`，之後再視情況決定是否刪除：
+
+- `scripts/sync_classroom_repos.sh`
+- `scripts/sync_classroom_bridge_repos.sh`
+- `scripts/bootstrap_classroom_repo_autograde.sh`
+- `scripts/generate_and_distribute_autograde_token.sh`
+- `scripts/standardize_classroom_readme_autograde.sh`
+- `scripts/sync_check_assignment_from_template.sh`
+- `scripts/rewrite_template_org_in_csv.sh`
+- `scripts/prune_bridge_repo_contents.sh`
+- `scripts/remove_bridge_readme_title_prefix.sh`
+- `scripts/remove_bridge_tutor_guide.sh`
+- `scripts/merge_classroom_workflows.sh`
+- `scripts/sync_bridge_readme_from_assignment_guide.py`
+- `scripts/enrich_guides.py`
+- `scripts/enrich_html5_basics.py`
+- `scripts/migrate_tutor_guides.py`
+- `scripts/normalize_bridge_readme_tone.sh`
+- `scripts/revert_readme_autograde_section.sh`
+- `scripts/setup_autograde_repo_mapping.sh`
+- `scripts/translate_courses.py`
+
 ## 模板資產，非執行檔
 
 以下兩個檔案不是可執行腳本，而是模板內容資產：

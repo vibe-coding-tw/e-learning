@@ -256,6 +256,9 @@
 | `enabled` | boolean | 是否啟用。 |
 | `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
 
+補充說明：
+- `functions/index.js` 的 `calculateMonthlySharing` 會先以共用 loader 讀取 policy，再產生 `policySnapshot`；文件中的欄位定義與資料契約不變。
+
 ---
 
 ## 6.2 `revenue_share_credits` 集合
@@ -326,6 +329,7 @@
 補充說明：
 - `unitId` 現行規格應為 canonical unit page URL，例如 `tw-common-developer-identity.html`。
 - 2026-05-28 已完成歷史 `referral_links.unitId` 清理；8 筆 legacy unit 已轉為 canonical unit，另 1 筆 malformed referral index（`url = "authorized"`）已刪除。
+- `functions/index.js` 目前透過共用 helper 產生 referral link doc id 與 normalised URL；這是內部實作細節，不影響集合 schema。
 
 ---
 
@@ -408,3 +412,6 @@
 | `status` | string | `open`, `in_progress`, `resolved`。 |
 | `ownerTutorEmail` | string | 負責導師。 |
 | `createdAt` / `resolvedAt` | timestamp | 建立與完成時間。 |
+
+補充說明：
+- `functions/index.js` 目前把 `assignment_interventions` 的 active 查詢與批次更新收斂到共用 helper；集合欄位與狀態定義維持不變。

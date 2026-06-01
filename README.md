@@ -31,6 +31,8 @@
 | `i18n-helper.js` | UI locale 偵測 |
 | `footer-component.js` | 全站 footer 注入 |
 
+> `public/js/*.js` 以「無 hash 的 source 檔」作為唯一編輯來源；帶 hash 的同名檔案是 fingerprint 產物，應由 `node scripts/fingerprint-static-assets.js` 自動更新，不要手動維護。
+
 ### 後端 (`functions/`)
 - **平台**：Cloud Functions (Node.js 22)，部署於 `asia-east1`，`minInstances: 0`
 
@@ -100,6 +102,9 @@ firebase deploy --only hosting --project e-learning-942f7
 | [AGENT.md](AGENT.md) | Agent 規則、權限模型、開發 SOP（**唯一權威規範來源**） |
 | [docs/database.md](docs/database.md) | Firestore 集合結構與欄位說明 |
 | [docs/email-notifications.md](docs/email-notifications.md) | Email 通知觸發條件與規格 |
+| [docs/index-helper-inventory.md](docs/index-helper-inventory.md) | `functions/index.js` / `functions/emailService.js` helper 清單 |
+| [docs/legacy-and-backlog.md](docs/legacy-and-backlog.md) | Legacy 收斂與系統 backlog 總表 |
+| [docs/order-normalization-plan.md](docs/order-normalization-plan.md) | 訂單 / referral normalization 依賴注入拆分計畫 |
 | [docs/recursive-sharing.md](docs/recursive-sharing.md) | 多層級分潤公式與對帳流程 |
 | [docs/logistics-mvp.md](docs/logistics-mvp.md) | 硬體訂單履約流程與 Admin Logistics 規格 |
 | [docs/tutor-management-mvp.md](docs/tutor-management-mvp.md) | 導師申請、審核與授權流程 |

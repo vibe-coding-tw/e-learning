@@ -1,5 +1,5 @@
 # Recursive Sharing Spec
-**Version**: 2026.05.26.V2  
+**Version**: 2026.06.01.V3  
 **Objective**: Define how multi-level referral sharing is computed, persisted, and audited.
 
 ## 1. Business Rule
@@ -114,3 +114,8 @@ See also: `docs/database.md` section `profit_ledger`.
 4. 建議先跑回填腳本建立初始鏈條：
    - `node functions/scripts/backfill_course_dev_upline.js --dry-run`
    - `node functions/scripts/backfill_course_dev_upline.js --apply`
+
+## 10. Implementation Notes
+- `functions/index.js` 的 `calculateMonthlySharing` 現在改為呼叫共用 helper 組裝分潤鏈、載入策略與快照，但公式、冪等鍵與月結行為不變。
+- 目前共用的內部 helper 包含政策載入、鏈條展開、角色 email 正規化，以及 `policySnapshot` 組裝；這些都屬於實作細節，不影響 `profit_ledger` / `revenue_share_*` 的資料契約。
+- `courseDev` 的上線來源仍維持 `users.courseDevEmail -> users.tutorEmail` 的 fallback 規則，僅是將判斷集中到單一流程處理。

@@ -12,6 +12,8 @@ This document consolidates:
 
 The goal is to keep one source of truth for the next-stage platform changes.
 
+> Historical cleanup and runtime backlog items that overlap with this plan now live in `docs/legacy-and-backlog.md`.
+
 ---
 
 ## 2. Course Architecture

@@ -8,8 +8,8 @@
 - `test/`、`.github/workflows/`、範例程式與附件模板（驗收與教學支援）
 
 系統對應：
-- `Dashboard > Assignments`：顯示 `README.md`
-- `Dashboard > Settings`：導師區優先讀取 `tutor-guide.md`
+- `Dashboard > Assignments`：直接讀取課程頁隱藏區塊 `<section id="assignment-guide">`
+- `Dashboard > Settings`：直接讀取課程頁隱藏區塊 `<section id="tutor-guide">`
 
 ## 角色
 - `Student (user)`: 提出閱讀卡點、提交需求不清、驗收標準模糊等問題。
@@ -18,7 +18,7 @@
 
 ## 建議工作流
 1. 開 Issue（使用 `README 改進提案` 模板）
-2. 在對應課程 repository 建立 PR（可同時修改 README、tutor guide、測試/範例）
+2. 在對應課程 repository 建立 PR（可同時修改 README、tutor guide、`assignment-guide` / `tutor-guide` 區塊、測試/範例）
 3. 依 PR template 完成一致性檢查
 4. 至少 1 位 Tutor + 1 位 Admin Review 後 merge
 5. merge 後在課堂公告或群組同步「本次單元 repo 改動重點」
@@ -30,7 +30,7 @@
 flowchart TD
     A["Student / Tutor / Admin 發現問題"] --> B["建立 Issue（Unit Repo 改進提案）"]
     B --> C["指派負責人與優先級"]
-    C --> D["建立 PR（README / tutor-guide / tests/workflows）"]
+    C --> D["建立 PR（README / assignment-guide / tutor-guide / tests/workflows）"]
     D --> E["CI / Autograde / 文件自檢"]
     E --> F{"審查通過？"}
     F -- "否" --> G["回到 PR 修正"]
@@ -58,9 +58,9 @@ flowchart TD
   3. 影響新手理解成本的問題
 
 ## 完成定義 (Definition of Done)
-- README / tutor-guide / 測試或 workflow 的必要更新已合併到 `main`
+- README / assignment-guide / tutor-guide / 測試或 workflow 的必要更新已合併到 `main`
 - PR checklist 全部勾選完成
-- 至少一位 Tutor 驗證「新手可依 README 完成提交，導師可依 tutor-guide 有效介入」
+- 至少一位 Tutor 驗證「新手可依 assignment-guide 完成提交，導師可依 tutor-guide 有效介入」
 - 公告已同步（課堂或社群）
 
 ## 變更治理
@@ -74,8 +74,8 @@ flowchart TD
 ```mermaid
 flowchart LR
     A["Unit Repo 改動提案"] --> B{"改動類型"}
-    B --> C["README.md<br/>學生任務與提交規範"]
-    B --> D["tutor-guide.md<br/>導師引導與介入策略"]
+    B --> C["README.md / assignment-guide<br/>學生任務與提交規範"]
+    B --> D["tutor-guide.md / tutor-guide<br/>導師引導與介入策略"]
     B --> E["tests/ + .github/workflows/<br/>驗收與自動評分一致性"]
     B --> F["系統層變更<br/>Firestore / Dashboard / Webhook / 權限"]
 

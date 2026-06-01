@@ -1,5 +1,5 @@
 # Email Notifications Spec
-**Version**: 2026.05.13.V1  
+**Version**: 2026.06.01.V2  
 **Objective**: Define all production email notifications, their triggers, recipients, and operational expectations.
 
 ## 1. Scope
@@ -35,6 +35,20 @@ It is the source of truth for:
 | Tutor recommendation candidate | `recommendTutorForUnit` success | Candidate student | `sendTutorRecommendationCandidateEmail` | `/dashboard.html?unitId=...&tab=assignments&action=submitTutorInvite&applicationId=...` |
 | Autograde failure alert | `ingestGithubAutograde` validation/runtime failure | Admin | `sendAutogradeFailureAlertEmail` | `/dashboard.html?tab=tutors`（Tutor Management） |
 | Order activation failure alert | `paymentNotify` success but activation validation fails | Admin | `sendAutogradeFailureAlertEmail` | `/dashboard.html?tab=overview` |
+
+## 2.1 Implementation Notes
+The notification matrix above is the contract. The current implementation in `functions/emailService.js` uses shared template helpers to keep those messages consistent:
+- `renderCtaButton`
+- `renderActionButton`
+- `renderCalloutPanel`
+- `renderReminderBlock`
+- `renderInfoCard`
+- `buildAutogradeInfoRows`
+- `buildCourseUnitInfoRows`
+- `buildApplicationInfoRows`
+- `buildSingleInfoRow`
+
+These helpers are implementation details only. They do not change the delivery matrix, recipients, or deep-link expectations listed in section 2.
 
 ## 3. Key Operational Rules
 1. Links in email must be generated via `APP_BASE_URL` and include tab/unit context whenever possible.
