@@ -108,6 +108,29 @@ window.__vibeSwitchLocale = async function (locale) {
             }
         }
     } catch (_) {}
+
+    try {
+        const url = new URL(window.location.href);
+        if (url.pathname.endsWith('learning-path.html')) {
+            const pathParam = url.searchParams.get('path');
+            if (pathParam) {
+                let newPathParam = pathParam;
+                if (locale === 'en' && pathParam.toLowerCase().startsWith('tw-')) {
+                    newPathParam = 'en-' + pathParam.slice(3);
+                } else if (locale.startsWith('zh') && pathParam.toLowerCase().startsWith('en-')) {
+                    newPathParam = 'tw-' + pathParam.slice(3);
+                }
+                if (newPathParam !== pathParam) {
+                    url.searchParams.set('path', newPathParam);
+                    window.location.href = url.toString();
+                    return;
+                }
+            }
+        }
+    } catch (err) {
+        console.warn('[NavComp] Switch locale path rewrite failed:', err);
+    }
+
     window.location.reload();
 };
 
