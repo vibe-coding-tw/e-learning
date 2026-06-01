@@ -630,41 +630,22 @@ function getCourseGuideConfig(courseId) {
     return dashboardData?.courseGuideIndex?.[courseId] || {};
 }
 
-function getEmbeddedGuideByUnit(unitId, guideType = 'assignment') {
-    if (!unitId || !dashboardData?.courseGuideIndex) return "";
-    const candidates = getEquivalentUnitIds(unitId);
-
-    const pickFromConfig = (cfg) => {
-        if (!cfg) return "";
-        const guideData = robustExtractGuideSegments(cfg.tutorGuide, cfg.assignmentGuide);
-        if (guideType === 'tutor') {
-            for (const cid of candidates) {
-                const hit = guideData?.segments?.[cid];
-                if (typeof hit === 'string' && hit.trim()) return hit;
-            }
-            return "";
-        }
-        for (const cid of candidates) {
-            const hit = guideData?.assignmentGuides?.[cid];
-            if (typeof hit === 'string' && hit.trim()) return hit;
-        }
-        return "";
+async function fetchGuideSectionFromUnitPage(filterUnitId, sectionId) {
+    if (!filterUnitId || !sectionId) return "";
+    const extractSection = (html, targetSectionId) => {
+        const m = html.match(new RegExp(`<section\\b[^>]*id=["']${targetSectionId}["'][^>]*>([\\s\\S]*?)<\\/section>`, 'i'));
+        return m && m[1] ? m[1].trim() : '';
     };
-
-    // 1) prioritize current course mapping
-    const currentCourseId = findParentCourseIdByUnit(unitId);
-    if (currentCourseId) {
-        const primary = pickFromConfig(getCourseGuideConfig(currentCourseId));
-        if (primary) return primary;
+    try {
+        const unitUrl = `${window.location.origin}/${filterUnitId}`;
+        const resp = await fetch(unitUrl, { cache: 'no-store' });
+        if (!resp.ok) return "";
+        const html = await resp.text();
+        return extractSection(html, sectionId);
+    } catch (e) {
+        console.warn(`[GuideRefresh] direct unit html fetch failed for #${sectionId}:`, e);
+        return "";
     }
-
-    // 2) global fallback across all course guide configs
-    for (const cfg of Object.values(dashboardData.courseGuideIndex || {})) {
-        const hit = pickFromConfig(cfg);
-        if (hit) return hit;
-    }
-
-    return "";
 }
 
 function hasQualifiedTutorAccessForUnit(fileName, courseId, email) {
@@ -1707,8 +1688,8 @@ async function vibeRefreshReadmeContent(filterUnitId, targetKinds = ['settings',
     selected.forEach(({ kind, el }) => {
         el.classList.remove('hidden');
         const loadingText = kind === 'settings'
-            ? '正在抓取導師指南 (tutor-guide.md)...'
-            : '正在抓取任務說明 (README.md)...';
+            ? '正在讀取導師指南 (tutor-guide)...'
+            : '正在讀取課程頁內容...';
         el.innerHTML = `
             <div class="flex items-center gap-3 text-slate-400 italic">
                 <span class="animate-pulse">⏳</span> ${loadingText}
@@ -1717,54 +1698,15 @@ async function vibeRefreshReadmeContent(filterUnitId, targetKinds = ['settings',
     });
 
     try {
-        const repoName = normalizeCanonicalRepoSlug(filterUnitId);
-        const legacyRepoName = legacyRepoSlugFromCanonical(repoName);
-        const GITHUB_ORG = 'vibe-coding-template';
-        const embeddedAssignmentGuide = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
-        const embeddedTutorGuide = getEmbeddedGuideByUnit(filterUnitId, 'tutor');
-        const extractSection = (html, sectionId) => {
-            const m = html.match(new RegExp(`<section\\b[^>]*id=["']${sectionId}["'][^>]*>([\\s\\S]*?)<\\/section>`, 'i'));
-            return m && m[1] ? m[1].trim() : '';
-        };
-        let fetchedUnitHtml = null;
-        let fetchedUnitHtmlLoaded = false;
-        const ensureUnitHtml = async () => {
-            if (fetchedUnitHtmlLoaded) return fetchedUnitHtml;
-            fetchedUnitHtmlLoaded = true;
-            try {
-                const unitUrl = `${window.location.origin}/${filterUnitId}`;
-                const resp = await fetch(unitUrl, { cache: 'no-store' });
-                if (resp.ok) fetchedUnitHtml = await resp.text();
-            } catch (e) {
-                console.warn('[GuideRefresh] direct unit html fetch failed:', e);
-            }
-            return fetchedUnitHtml;
-        };
-
         for (const { kind, el: placeholder } of selected) {
             const isSettingsTab = kind === 'settings';
             let markdownHtml = null;
 
             if (isSettingsTab) {
-                // Settings tutor-guide is now sourced only from the course page hidden section.
-                const unitHtml = await ensureUnitHtml();
-                const directTutorGuide = unitHtml ? extractSection(unitHtml, 'tutor-guide') : '';
+                const directTutorGuide = await fetchGuideSectionFromUnitPage(filterUnitId, 'tutor-guide');
                 if (directTutorGuide) {
                     markdownHtml = directTutorGuide;
                     console.log(`[V17.3] SettingsTab using direct tutor-guide section for unit: ${filterUnitId}`);
-                }
-            } else {
-                // [V17.1] ASSIGNMENT TAB: prefer assignment-guide from private_courses, fallback to README.md
-                if (embeddedAssignmentGuide) {
-                    markdownHtml = embeddedAssignmentGuide;
-                    console.log(`[V17.1] AssignmentTab using embedded assignment-guide for unit: ${filterUnitId}`);
-                } else {
-                    const result = await loadMarkdownFromRepoWithFallback(GITHUB_ORG, [repoName, legacyRepoName]);
-                    const readmeUrl = result.readmeUrl || `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
-                    console.log(`[V17.1] AssignmentTab fallback to README: ${readmeUrl}`);
-                    
-                    placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在抓取任務說明 (README.md)...</div>`;
-                    markdownHtml = result.markdown;
                 }
             }
 
@@ -1800,50 +1742,14 @@ async function renderAssignmentsGuideMain(filterUnitId) {
         return;
     }
 
-    const extractSection = (html, sectionId) => {
-        const m = html.match(new RegExp(`<section\\b[^>]*id=["']${sectionId}["'][^>]*>([\\s\\S]*?)<\\/section>`, 'i'));
-        return m && m[1] ? m[1].trim() : '';
-    };
-
-    // Priority 1: Directly from unit page hidden section (#assignment-guide)
-    try {
-        const unitUrl = `${window.location.origin}/${filterUnitId}`;
-        const resp = await fetch(unitUrl, { cache: 'no-store' });
-        if (resp.ok) {
-            const html = await resp.text();
-            const extracted = extractSection(html, 'assignment-guide');
-            if (extracted) {
-                placeholder.innerHTML = extracted;
-                normalizeGuideHeadingStyles(placeholder);
-                placeholder.classList.remove('hidden');
-                return;
-            }
-        }
-    } catch (e) {
-        console.warn('[AssignmentsGuide] direct unit section fetch failed:', e);
-    }
-
-    // Priority 2: backend aggregated guide from getDashboardData
-    const embeddedAssignmentGuide = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
-    if (embeddedAssignmentGuide) {
-        placeholder.innerHTML = embeddedAssignmentGuide;
-        normalizeGuideHeadingStyles(placeholder);
-        placeholder.classList.remove('hidden');
-        return;
-    }
-
-    // Priority 3: template repo README fallback
-    const repoName = normalizeCanonicalRepoSlug(filterUnitId);
-    const legacyRepoName = legacyRepoSlugFromCanonical(repoName);
     placeholder.classList.remove('hidden');
-    placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在抓取任務說明 (README.md)...</div>`;
-    const result = await loadMarkdownFromRepoWithFallback('vibe-coding-template', [repoName, legacyRepoName]);
-    const markdownHtml = result.markdown;
-    if (markdownHtml && !markdownHtml.includes('無法讀取')) {
-        placeholder.innerHTML = markdownHtml;
+    placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在讀取作業指南 (assignment-guide)...</div>`;
+    const extracted = await fetchGuideSectionFromUnitPage(filterUnitId, 'assignment-guide');
+    if (extracted) {
+        placeholder.innerHTML = extracted;
         normalizeGuideHeadingStyles(placeholder);
     } else {
-        placeholder.innerHTML = `<div class="text-red-500 text-sm">⚠️ 無法載入 assignment-guide / README</div>`;
+        placeholder.innerHTML = `<div class="text-red-500 text-sm">⚠️ 無法載入 assignment-guide</div>`;
     }
 }
 

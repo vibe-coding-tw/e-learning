@@ -74,13 +74,18 @@ graph TD
 - **Context Locking**: Tutors are authorized on a **per-unit** basis, ensuring they only manage content they are qualified for.
 - **Traceability**: All recommendations are linked to the recommending tutor's UID for audit purposes.
 
-## 6. Related Specs
+## 6. Implementation Notes
+- `functions/index.js` 目前已將 `tutorConfigs` 的讀寫收斂到共用 helper，包含 dashboard 彙整、授權寫入與 legacy snapshot 同步；但資料契約仍維持 `users.tutorConfigs[unitId].authorized = true`。
+- `users.tutorApplications` 仍保留作為 legacy-compatible snapshot；現行的 source of truth 仍是 `tutor_applications`。
+- `getDashboardData`、`decideTutorApplication`、`recommendTutorForUnit` 與 `submitTutorRecommendationInviteLink` 的外部行為不變，文件仍以現有流程與通知規格為準。
+
+## 7. Related Specs
 - `docs/email-notifications.md` (notification matrix and runbook)
 - `docs/classroom-bridge-sync-workflow.md` (template -> bridge sync SOP，歷史備查)
 - `docs/template-org-migration-runbook.md` (source/publish layer policy，歷史備查)
 - `docs/admin-invite-binding-tool.md` (admin binding lookup，歷史備查)
 
-## 7. Tutor Binding via Promotion Code (Updated 2026-05-20)
+## 8. Tutor Binding via Promotion Code (Updated 2026-05-20)
 - 綁定入口為作業頁（Assignment modal），由學生確認或輸入 Tutor 的 `Promotion code`。
 - 購物車流程不再輸入推薦連結或 Promotion code。
 - **點擊觸發機制**：學生點擊作業卡下方的「前往教室寫作業」按鈕後，會先彈出確認/綁定視窗（`assignment-link-modal`），以便隨時進行導師確認或異動。
