@@ -1963,8 +1963,9 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
         if (access.authorized) {
             // [V13.0.8] Generate token for serveCourse
             const expiry = Date.now() + 30 * 60 * 1000; // 30 mins
-            const scopePart = fileName || pageId || "UNDEFINED";
-            const raw = `${pageId || "UNDEFINED"}|${scopePart}|${expiry}`;
+            const normalizedPageId = normalizeCourseVariantKey(pageId || fileName || "UNDEFINED") || "UNDEFINED";
+            const normalizedScopePart = normalizeCourseVariantKey(fileName || pageId || "UNDEFINED") || normalizedPageId;
+            const raw = `${normalizedPageId}|${normalizedScopePart}|${expiry}`;
             const signature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
             const token = `${raw}|${signature}`;
 
@@ -1999,6 +2000,22 @@ const normalizeCourseFile = (value = '') => {
     if (!value) return value;
     const filePart = String(value).split('/').pop().split('?')[0];
     return filePart;
+};
+
+const normalizeCourseVariantKey = (value = '') => {
+    const filePart = normalizeCourseFile(value);
+    if (!filePart) return '';
+    const bare = String(filePart)
+        .replace(/\.html$/i, '')
+        .replace(/^(?:tw|en)-/i, '')
+        .toLowerCase();
+
+    if (/^start-\d{2}-unit-/i.test(bare)) return bare.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+    if (/^basic-\d{2}-unit-/i.test(bare)) return bare.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
+    if (/^(?:adv|advanced)-\d{2}-unit-/i.test(bare)) return bare.replace(/^(?:adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
+    if (/^\d{2}-unit-/i.test(bare)) return bare.replace(/^\d{2}-unit-/i, 'common-');
+    if (/^prepare-\d+-(.+)$/i.test(bare)) return bare.replace(/^prepare-\d+-/, 'common-');
+    return bare;
 };
 
 async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig, locales) {
@@ -2078,7 +2095,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         return fetchExternalCourseContentHelper(candidateFileName, runtimeConfig, locales);
     };
 
-    const normalizeLooseKey = (value = "") => normalizeCourseFile(String(value || "")).replace(/\.html$/i, '').toLowerCase();
+    const normalizeLooseKey = (value = "") => normalizeCourseVariantKey(value);
     const buildAuthorizedFileCandidates = (course = {}) => {
         const candidates = new Set();
         const addCandidate = (value = "") => {
@@ -2181,7 +2198,10 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
             console.log(`[serveCourse] Early Normalization (Conditional): ${fileName} -> ${normalizedFileName}`);
         }
 
+        const normalizedFileVariantKey = normalizeCourseVariantKey(normalizedFileName);
         const normalizedScopePart = normalizeCourseFile(scopePart);
+        const normalizedScopeVariantKey = normalizeCourseVariantKey(normalizedScopePart);
+        const normalizedPageVariantKey = normalizeCourseVariantKey(pageId || '');
 
         // B. Validate Expiry
         if (Date.now() > expiry) {
@@ -2192,7 +2212,9 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         let isAuthorizedScope = (
             scopePart === fileName ||
             normalizedScopePart === normalizedFileName ||
-            normalizeCourseFile(scopePart) === normalizeCourseFile(fileName)
+            normalizeCourseFile(scopePart) === normalizeCourseFile(fileName) ||
+            normalizedScopeVariantKey === normalizedFileVariantKey ||
+            normalizedPageVariantKey === normalizedFileVariantKey
         );
         let debugInfo = "None";
         let lessons = [];
