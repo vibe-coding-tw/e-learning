@@ -579,26 +579,31 @@
         const displayKey = String(lesson.courseKey || lesson.courseId || "");
         const hardwareId = String(lesson.courseId || "").toLowerCase();
         const imageUrl = pickImage(lesson);
-        const summary = String(lesson.summary || lesson.description || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations"));
-        const contentList = toList(lesson.coreContent).slice(0, 4);
+        const summary = String(
+          isEn ? (lesson.summaryEn || lesson.summary || lesson.descriptionEn || lesson.description)
+               : (lesson.summary || lesson.description)
+          || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations")
+        );
+        const displayTitle = String((isEn ? (lesson.titleEn || lesson.title) : lesson.title) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit"));
+        const contentList = toList(isEn ? (lesson.coreContentEn || lesson.coreContent) : lesson.coreContent).slice(0, 4);
         const listHtml = contentList.length
           ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
           : `<p class="text-sm text-slate-500">${summary}</p>`;
         const objectPos = hardwareId === "car-intro" ? "50% 50%" : (hardwareId === "car-advanced" ? "50% 28%" : "50% 50%");
         const objectScale = hardwareId === "car-advanced" ? "scale(1.08)" : (hardwareId === "car-intro" ? "scale(1.02)" : "scale(1)");
         const imageHtml = imageUrl
-          ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-white mb-3 h-56"><img src="${imageUrl}" alt="${lesson.title || "hardware"}" class="w-full h-full object-cover" style="object-position:${objectPos}; transform:${objectScale};"></div>`
+          ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-white mb-3 h-56"><img src="${imageUrl}" alt="${displayTitle}" class="w-full h-full object-cover" style="object-position:${objectPos}; transform:${objectScale};"></div>`
           : "";
         return `
           <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
                data-course-id="${lesson.courseId || ""}"
                data-auth-page-id="${unitFile || lesson.courseId || ""}"
-               data-course-name="${lesson.title || ""}"
+               data-course-name="${displayTitle}"
                data-course-price="${price}"
                data-is-physical="true"
                data-classroom-url="${entryUrl}">
             <div class="min-w-0 text-xs text-slate-500 mb-2 truncate">${displayKey}</div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">${lesson.title || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit")}</h3>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">${displayTitle}</h3>
             ${imageHtml}
             <div class="text-sm text-slate-700 mb-4">${listHtml}</div>
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
@@ -621,13 +626,18 @@
         uiLocale
       ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
       const specsHtml = specsRows.map((spec) => {
+        const isEn = uiLocale === 'en';
+        const displayTitle = String(isEn ? (spec.titleEn || spec.title) : spec.title || "");
         const specImg = pickImage(spec);
-        const specSummary = String(spec.summary || spec.description || "");
-        const specContentList = toList(spec.coreContent);
+        const specSummary = String(
+          isEn ? (spec.summaryEn || spec.summary || spec.descriptionEn || spec.description)
+               : (spec.summary || spec.description || "")
+        );
+        const specContentList = toList(isEn ? (spec.coreContentEn || spec.coreContent) : spec.coreContent);
         return `
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            ${specImg ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${specImg}" alt="${spec.title}" class="w-full h-40 object-cover"></div>` : ""}
-            <h3 class="text-xl font-bold text-slate-800 mb-2">${spec.title || ""}</h3>
+            ${specImg ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${specImg}" alt="${displayTitle}" class="w-full h-40 object-cover"></div>` : ""}
+            <h3 class="text-xl font-bold text-slate-800 mb-2">${displayTitle}</h3>
             <p class="text-sm text-slate-600 mb-3">${specSummary}</p>
             <ul class="list-disc pl-5 space-y-1 text-sm text-slate-700">${specContentList.map((x) => `<li>${x}</li>`).join("")}</ul>
           </div>
