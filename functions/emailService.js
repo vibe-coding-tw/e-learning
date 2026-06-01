@@ -35,6 +35,62 @@ async function resolveUserLocale(email) {
 }
 
 /**
+ * Resolves Course Name and Unit Name dynamically from Firestore metadata_lessons.
+ * @param {string} unitId - The unit ID or filename (e.g., 'tw-common-vscode-setup.html')
+ * @param {string} locale - User's locale ('zh-TW' or 'en')
+ * @returns {Promise<{courseName: string, unitName: string}>}
+ */
+async function resolveCourseAndUnitMeta(unitId, locale = 'zh-TW') {
+    const defaultMeta = { courseName: '', unitName: '' };
+    if (!unitId) return defaultMeta;
+
+    const filename = String(unitId).trim().replace(/^\//, '').split('/').pop() || '';
+    const cleanUnitId = filename.replace('.html', '').toLowerCase();
+
+    try {
+        const db = admin.firestore();
+        const snap = await db.collection("metadata_lessons").get();
+        let matchedLesson = null;
+        let unitIndex = -1;
+
+        snap.forEach(doc => {
+            const data = doc.data();
+            const units = Array.isArray(data.courseUnits) ? data.courseUnits : [];
+            const index = units.findIndex(u => {
+                const cleanU = String(u).replace('.html', '').replace(/^(?:tw|en)-/, '').toLowerCase();
+                const cleanReq = cleanUnitId.replace(/^(?:tw|en)-/, '').toLowerCase();
+                return cleanU === cleanReq;
+            });
+            if (index !== -1) {
+                matchedLesson = data;
+                unitIndex = index;
+            }
+        });
+
+        if (matchedLesson) {
+            const isEn = String(locale).toLowerCase().startsWith('en');
+            const courseName = isEn
+                ? (matchedLesson.titleEn || matchedLesson.title || '')
+                : (matchedLesson.title || '');
+            
+            let unitName = '';
+            if (Array.isArray(matchedLesson.courseUnitTitles) && matchedLesson.courseUnitTitles[unitIndex]) {
+                unitName = matchedLesson.courseUnitTitles[unitIndex];
+            } else {
+                unitName = filename.replace('.html', '');
+            }
+
+            return { courseName, unitName };
+        }
+    } catch (e) {
+        console.warn("[EmailService] resolveCourseAndUnitMeta failed:", e);
+    }
+
+    return { courseName: '', unitName: filename.replace('.html', '') };
+}
+
+/**
+
  * Standard Premium Email Wrapper to ensure responsiveness and brand consistency.
  */
 function getEmailHtmlWrapper(title, content, footer = 'Vibe Coding 團隊') {
@@ -403,8 +459,11 @@ async function sendTutorAuthorizationEmail(email, unitName, unitId, assignmentUr
  * @param {string} assignmentTitle - Title of the assignment
  * @param {string} assignmentUrl - Link to the assignment or dashboard
  */
-async function sendAssignmentNotification(tutorEmail, studentName, assignmentTitle, assignmentUrl) {
+async function sendAssignmentNotification(tutorEmail, studentName, assignmentTitle, assignmentUrl, unitId = "") {
     const targetUrl = assignmentUrl || appUrl('/dashboard.html?tab=assignments');
+    const locale = await resolveUserLocale(tutorEmail);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: tutorEmail,
@@ -415,8 +474,10 @@ async function sendAssignmentNotification(tutorEmail, studentName, assignmentTit
                 <p>老師您好,</p>
                 <p>學生 <strong>${studentName}</strong> 剛剛繳交了作業，待您進行批閱：</p>
                 <div style="background-color: #f8fafc; padding: 25px; border-radius: 10px; margin: 25px 0; border: 1px solid #e2e8f0;">
-                    <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">作業名稱</strong><br><strong>${assignmentTitle}</strong></p>
-                    <p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">繳交時間</strong><br>${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</p>
+                    ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">${locale === 'en' ? 'Course Name' : '課程名稱'}</strong><br><strong>${courseName}</strong></p>` : ''}
+                    ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">${locale === 'en' ? 'Unit Name' : '單元名稱'}</strong><br><strong>${unitName}</strong></p>` : ''}
+                    <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">${locale === 'en' ? 'Assignment Name' : '作業名稱'}</strong><br><strong>${assignmentTitle}</strong></p>
+                    <p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">${locale === 'en' ? 'Submission Time' : '繳交時間'}</strong><br>${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</p>
                 </div>
                 
                 <div style="background-color: #fefce8; border-left: 4px solid #facc15; padding: 15px; margin: 25px 0; border-radius: 4px;">
@@ -453,8 +514,9 @@ async function sendAssignmentNotification(tutorEmail, studentName, assignmentTit
  * @param {number} grade - Grade received
  * @param {string} feedback - Tutor's feedback
  */
-async function sendGradingNotification(email, studentName, assignmentTitle, grade, feedback, dashboardUrl = appUrl('/dashboard.html?tab=assignments')) {
+async function sendGradingNotification(email, studentName, assignmentTitle, grade, feedback, dashboardUrl = appUrl('/dashboard.html?tab=assignments'), unitId = "") {
     const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
     
     let subject, title, textHtml, footer;
     if (locale === 'en') {
@@ -462,10 +524,13 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
         title = 'Assignment Graded';
         textHtml = `
             <p>Hi ${studentName},</p>
-            <p>Your tutor has graded and reviewed your assignment <strong>${assignmentTitle}</strong>. Come check out your feedback and learning milestones!</p>
+            <p>Your tutor has graded and reviewed your assignment. Come check out your feedback and learning milestones!</p>
             
-            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
-                <p style="margin: 0 0 15px 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">Grade Received</strong><br><span style="font-size: 32px; color: #10b981; font-weight: 800;">${grade}</span></p>
+            <div style="background-color: #f8fafc; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Course Name</strong><br><strong>${courseName}</strong></p>` : ''}
+                ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Unit Name</strong><br><strong>${unitName}</strong></p>` : ''}
+                <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Assignment Title</strong><br><strong>${assignmentTitle}</strong></p>
+                <p style="margin: 0 0 15px 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">Grade Received</strong><br><span style="font-size: 32px; color: #10b981; font-weight: 800;">${grade}</span></p>
                 <p style="margin: 0; background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #dcfce7;"><strong style="color: #166534; font-size: 12px; text-transform: uppercase;">Tutor Comments:</strong><br><span style="color: #1e293b;">${feedback || 'Well done! Keep up the good work.'}</span></p>
             </div>
 
@@ -489,9 +554,12 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
         title = '作業已完成評閱！';
         textHtml = `
             <p>Hi ${studentName},</p>
-            <p>老師已經看過您繳交的 <strong>${assignmentTitle}</strong> 並給予了回饋，快來看看您的學習成果吧！</p>
+            <p>老師已經看過您繳交的作業並給予了回饋，快來看看您的學習成果吧！</p>
             
-            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
+            <div style="background-color: #f8fafc; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">課程名稱</strong><br><strong>${courseName}</strong></p>` : ''}
+                ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">單元名稱</strong><br><strong>${unitName}</strong></p>` : ''}
+                <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">作業名稱</strong><br><strong>${assignmentTitle}</strong></p>
                 <p style="margin: 0 0 15px 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">獲得評分</strong><br><span style="font-size: 32px; color: #10b981; font-weight: 800;">${grade}</span></p>
                 <p style="margin: 0; background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #dcfce7;"><strong style="color: #166534; font-size: 12px; text-transform: uppercase;">老師的話：</strong><br><span style="color: #1e293b;">${feedback || '做得好！繼續加油。'}</span></p>
             </div>
@@ -534,18 +602,23 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
 async function sendStudentLinkedToTutorEmail(email, studentName, unitId, tutorEmail) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
     const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments`) : appUrl('/dashboard.html');
+    
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
-        subject: `[課程通知] 您的單元 "${unitId}" 已指派指導老師`,
+        subject: `[課程通知] 您的單元 "${unitName || cleanUnitId}" 已指派指導老師`,
         html: getEmailHtmlWrapper(
             '專屬老師已指派！',
             `
                 <p>Hi ${studentName},</p>
-                <p>我們已為您的課程單元 <strong>${unitId}</strong> 指派了專屬指導老師，協助您更精準地掌握技能：</p>
-                <div style="background-color: #f0f9ff; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #e0f2fe; text-align: center;">
-                    <p style="margin: 0 0 5px 0; color: #0369a1; font-size: 13px; text-transform: uppercase;">您的指導老師</p>
-                    <p style="margin: 0; font-size: 18px; font-weight: bold; color: #0ea5e9;">${tutorEmail}</p>
+                <p>我們已為您的課程單元指派了專屬指導老師，協助您更精準地掌握技能：</p>
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                    ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">課程名稱</strong><br><strong>${courseName}</strong></p>` : ''}
+                    ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">單元名稱</strong><br><strong>${unitName}</strong></p>` : ''}
+                    <p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">指導老師 Email</strong><br><span style="font-family: monospace; font-size: 15px; color: #0ea5e9; font-weight: bold;">${tutorEmail}</span></p>
                 </div>
                 <p>在學習過程中若有任何疑問，或完成作業後需要批改，老師都會全程協助您。鼓勵您主動與老師保持聯繫，祝您學習愉快！</p>
                 ${renderNextSteps('現在可以先做這三件事：', [
@@ -575,15 +648,24 @@ async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
     const dashboardUrl = cleanUnitId
         ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments&tutorMode=1`)
         : appUrl('/dashboard.html?tab=assignments&tutorMode=1');
+    
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
-        subject: `[教學任務] 新學生 ${studentName} 已指派給您 (${unitId})`,
+        subject: `[教學任務] 新學生 ${studentName} 已指派給您 (${unitName || cleanUnitId})`,
         html: getEmailHtmlWrapper(
             '新的教學任務',
             `
                 <p>老師您好，</p>
-                <p>系統已將學生 <strong>${studentName}</strong> 指派給您，進行單元 <strong>${unitId}</strong> 的課程指導。</p>
+                <p>系統已將學生 <strong>${studentName}</strong> 指派給您，進行單元課程指導：</p>
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                    ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">課程名稱</strong><br><strong>${courseName}</strong></p>` : ''}
+                    ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">單元名稱</strong><br><strong>${unitName}</strong></p>` : ''}
+                    <p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">學生姓名</strong><br><strong>${studentName}</strong></p>
+                </div>
                 <div style="background-color: #fffbeb; border-left: 4px solid #fbbf24; padding: 20px; margin: 25px 0; border-radius: 8px;">
                     <p style="margin: 0; font-weight: bold; color: #92400e; font-size: 14px; text-transform: uppercase;">💡 教務提醒</p>
                     <p style="margin: 10px 0 0 0; font-size: 14px; color: #92400e;">請隨時關注這位學生的學習進度與作業繳交狀況，並透過積極的正向回饋建立良好的教學互動關係。學生的成長是我們最大的成就！</p>
@@ -613,6 +695,10 @@ async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
 async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
     const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=tutors`) : appUrl('/dashboard.html?tab=tutors');
+    
+    const locale = await resolveUserLocale(adminEmail);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
     const mailOptions = {
         from: '"Vibe Coding System" <info@vibe-coding.tw>',
         to: adminEmail,
@@ -621,9 +707,11 @@ async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
             '收到新的合格導師申請',
             `
                 <p>管理員您好，</p>
-                <p>使用者 <strong>${userEmail}</strong> 提交了針對單元 <strong>${unitId}</strong> 的合格導師資格申請，待您進行審核。</p>
-                <div style="background-color: #fff7ed; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #ffedd5; text-align: center;">
-                    <p style="margin: 0; font-size: 14px; font-weight: bold; color: #ea580c;">申請人：${userEmail}</p>
+                <p>使用者 <strong>${userEmail}</strong> 提交了合格導師資格申請，待您進行審核：</p>
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                    ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">申請課程</strong><br><strong>${courseName}</strong></p>` : ''}
+                    ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">申請單元</strong><br><strong>${unitName}</strong></p>` : ''}
+                    <p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">申請人 Email</strong><br><strong>${userEmail}</strong></p>
                 </div>
                 ${renderNextSteps('建議審核流程：', [
                     '先確認申請單元與作業紀錄是否完整。',
@@ -649,11 +737,16 @@ async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
  */
 async function sendApplicationResultEmail(email, unitId, status, message = "") {
     const isApproved = status === 'approved';
-    const subject = isApproved ? `[申請通過] 恭喜您成為 "${unitId}" 的合格導師` : `[申請結果] 您的 "${unitId}" 合格導師申請未通過`;
-    const titleColor = isApproved ? '#2ECC71' : '#E74C3C';
-    const resultText = isApproved ? '恭喜！您的申請已獲批准。' : '很遺憾，您的申請目前未獲批准。';
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
     const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments`) : appUrl('/dashboard.html');
+    
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
+    const subject = isApproved 
+        ? `[申請通過] 恭喜您成為 "${unitName || cleanUnitId}" 的合格導師` 
+        : `[申請結果] 您的 "${unitName || cleanUnitId}" 合格導師申請未通過`;
+    const titleColor = isApproved ? '#2ECC71' : '#E74C3C';
 
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
@@ -663,9 +756,11 @@ async function sendApplicationResultEmail(email, unitId, status, message = "") {
             isApproved ? '合格導師申請通過！' : '合格導師申請結果通知',
             `
                 <p>Hi,</p>
-                <p>關於您對單元 <strong>${unitId}</strong> 的合格導師進階權限申請，管理員已完成審查。</p>
+                <p>關於您合格導師進階權限申請，管理員已完成審查：</p>
                 
                 <div style="background-color: #f8fafc; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                    ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">申請課程</strong><br><strong>${courseName}</strong></p>` : ''}
+                    ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">申請單元</strong><br><strong>${unitName}</strong></p>` : ''}
                     <p style="margin: 0 0 15px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">審核狀態</strong><br><span style="font-size: 20px; color: ${titleColor}; font-weight: 800;">${isApproved ? '已通過 (Approved)' : '未通過 (Rejected)'}</span></p>
                     ${message ? `<p style="margin: 15px 0 0 0; background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">管理員回覆：</strong><br><span style="color: #1e293b;">${message}</span></p>` : ''}
                 </div>
@@ -828,9 +923,10 @@ async function sendAdminShipmentReminder(adminEmail, pendingList) {
 /**
  * Send auto-grade result to student.
  */
-async function sendAutogradeResultToStudent(email, studentName, assignmentTitle, score, maxScore, dashboardUrl, runUrl = "") {
+async function sendAutogradeResultToStudent(email, studentName, assignmentTitle, score, maxScore, dashboardUrl, runUrl = "", unitId = "") {
     if (!email) return;
     const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
     const scoreText = Number.isFinite(maxScore) ? `${score}/${maxScore}` : `${score}`;
     const targetUrl = dashboardUrl || appUrl('/dashboard.html?tab=assignments');
     
@@ -841,9 +937,12 @@ async function sendAutogradeResultToStudent(email, studentName, assignmentTitle,
         const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub Execution Logs: <a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">View Autograding Flow</a></p>` : '';
         textHtml = `
             <p>Hi ${studentName || 'Developer'},</p>
-            <p>Your assignment <strong>${assignmentTitle}</strong> has finished automatic evaluation. The latest results have been synced:</p>
-            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
-                <p style="margin: 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">Latest Score</strong><br><span style="font-size: 34px; color: #10b981; font-weight: 800;">${scoreText}</span></p>
+            <p>Your assignment has finished automatic evaluation. The latest results have been synced:</p>
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Course Name</strong><br><strong>${courseName}</strong></p>` : ''}
+                ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Unit Name</strong><br><strong>${unitName}</strong></p>` : ''}
+                <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Assignment Title</strong><br><strong>${assignmentTitle}</strong></p>
+                <p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Latest Score</strong><br><span style="font-size: 24px; color: #10b981; font-weight: bold;">${scoreText}</span></p>
             </div>
             ${renderNextSteps('Recommended next steps:', [
                 'Check your dashboard to verify the updated score and assignment status.',
@@ -862,9 +961,12 @@ async function sendAutogradeResultToStudent(email, studentName, assignmentTitle,
         const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub 執行紀錄：<a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">查看自動評分流程</a></p>` : '';
         textHtml = `
             <p>Hi ${studentName || '同學'},</p>
-            <p>您的作業 <strong>${assignmentTitle}</strong> 已完成自動評分，最新分數如下：</p>
-            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dcfce7;">
-                <p style="margin: 0;"><strong style="color: #166534; font-size: 13px; text-transform: uppercase;">最新分數</strong><br><span style="font-size: 34px; color: #10b981; font-weight: 800;">${scoreText}</span></p>
+            <p>您的作業已完成自動評分，最新分數如下：</p>
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">課程名稱</strong><br><strong>${courseName}</strong></p>` : ''}
+                ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">單元名稱</strong><br><strong>${unitName}</strong></p>` : ''}
+                <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">作業名稱</strong><br><strong>${assignmentTitle}</strong></p>
+                <p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">最新分數</strong><br><span style="font-size: 24px; color: #10b981; font-weight: bold;">${scoreText}</span></p>
             </div>
             ${renderNextSteps('接下來建議：', [
                 '先到儀表板確認本次分數與作業狀態。',
@@ -896,11 +998,14 @@ async function sendAutogradeResultToStudent(email, studentName, assignmentTitle,
 /**
  * Send auto-grade result to assigned tutor.
  */
-async function sendAutogradeResultToTutor(email, studentName, assignmentTitle, score, maxScore, dashboardUrl, runUrl = "") {
+async function sendAutogradeResultToTutor(email, studentName, assignmentTitle, score, maxScore, dashboardUrl, runUrl = "", unitId = "") {
     if (!email) return;
     const scoreText = Number.isFinite(maxScore) ? `${score}/${maxScore}` : `${score}`;
     const targetUrl = dashboardUrl || appUrl('/dashboard.html?tab=assignments');
     const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub 執行紀錄：<a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">查看自動評分流程</a></p>` : '';
+
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
 
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
@@ -910,9 +1015,12 @@ async function sendAutogradeResultToTutor(email, studentName, assignmentTitle, s
             '學生作業自動評分已更新',
             `
                 <p>老師您好，</p>
-                <p>學生 <strong>${studentName || '未提供姓名'}</strong> 的作業 <strong>${assignmentTitle}</strong> 已完成自動評分。</p>
-                <div style="background-color: #eff6ff; border-radius: 12px; padding: 25px; margin: 25px 0; border: 1px solid #dbeafe;">
-                    <p style="margin: 0;"><strong style="color: #1d4ed8; font-size: 13px; text-transform: uppercase;">最新分數</strong><br><span style="font-size: 30px; color: #2563eb; font-weight: 800;">${scoreText}</span></p>
+                <p>學生 <strong>${studentName || '未提供姓名'}</strong> 的作業已完成自動評分：</p>
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                    ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">課程名稱</strong><br><strong>${courseName}</strong></p>` : ''}
+                    ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">單元名稱</strong><br><strong>${unitName}</strong></p>` : ''}
+                    <p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">作業名稱</strong><br><strong>${assignmentTitle}</strong></p>
+                    <p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">最新分數</strong><br><span style="font-size: 24px; color: #2563eb; font-weight: bold;">${scoreText}</span></p>
                 </div>
                 ${renderNextSteps('建議後續教學動作：', [
                     '若分數未達標，優先指出 1-2 個最關鍵修正點。',
@@ -989,17 +1097,24 @@ async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderE
         ? `${appUrl(dashboardPath)}&action=submitTutorInvite&applicationId=${encodeURIComponent(applicationId)}`
         : appUrl(dashboardPath);
 
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
-        subject: `[資格通知] 您已被推薦申請單元 "${unitId}" 合格導師`,
+        subject: `[資格通知] 您已被推薦申請單元 "${unitName || cleanUnitId}" 合格導師`,
         html: getEmailHtmlWrapper(
             '您已被推薦為合格導師候選',
             `
                 <p>您好，恭喜您！</p>
-                <p>您已被推薦申請單元 <strong>${unitId}</strong> 的合格導師資格。</p>
+                <p>您已被推薦申請合格導師資格：</p>
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
+                    ${courseName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">推薦課程</strong><br><strong>${courseName}</strong></p>` : ''}
+                    ${unitName ? `<p style="margin: 0 0 10px 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">推薦單元</strong><br><strong>${unitName}</strong></p>` : ''}
+                    ${recommenderEmail ? `<p style="margin: 0;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">推薦者 Email</strong><br><strong>${recommenderEmail}</strong></p>` : ''}
+                </div>
                 <p><strong>下一步：</strong>請先填寫您接下來要使用的 GitHub Classroom 邀請連結，系統才會正式通知管理員審核。</p>
-                ${recommenderEmail ? `<p>推薦者：<strong>${recommenderEmail}</strong></p>` : ''}
                 ${renderNextSteps('建議您現在先做：', [
                     '點擊下方按鈕，進入 Dashboard 填寫 GitHub Classroom 邀請連結。',
                     '確認連結可正常開啟，避免管理端審核後無法使用。',
@@ -1080,5 +1195,6 @@ module.exports = {
     sendAutogradeResultToTutor,
     sendOrderShippedEmail,
     sendTutorRecommendationCandidateEmail,
-    sendAutogradeFailureAlertEmail
+    sendAutogradeFailureAlertEmail,
+    resolveCourseAndUnitMeta
 };

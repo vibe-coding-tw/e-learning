@@ -14,68 +14,22 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const GitHubAPIHelper = require('./github-api-helper');
-
-
-function buildI18nFilenameCandidates(candidateFileName, locale = "") {
-    const fileName = String(candidateFileName || "").trim();
-    if (!fileName) return [];
-
-    const normalizedLocale = String(locale || "").toLowerCase();
-    const regionPrefix = normalizedLocale.startsWith("zh") ? "tw" : normalizedLocale.startsWith("en") ? "en" : "";
-    const deduped = new Set([fileName]);
-
-    if (!regionPrefix || !fileName.endsWith(".html")) {
-        return Array.from(deduped);
-    }
-
-    const addCandidate = (value) => {
-        if (value) deduped.add(value);
-    };
-
-    const stripHtml = fileName.replace(/\.html$/i, "");
-    const makeRenamed = (prefix, stem) => `${prefix}-${stem}.html`;
-
-    // 1. Old prefix patterns with sequential numbers
-    let match = stripHtml.match(/^start-\d+-unit-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-starter`, match[1]));
-
-    match = stripHtml.match(/^basic-\d+-unit-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-basic`, match[1]));
-
-    match = stripHtml.match(/^(?:adv|advanced)-\d+-unit-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-advanced`, match[1]));
-
-    match = stripHtml.match(/^\d+-unit-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-common`, match[1]));
-
-    // 2. New prefix patterns (prepare/tw/en)
-    match = stripHtml.match(/^prepare-\d+-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-common`, match[1]));
-
-    match = stripHtml.match(/^(?:tw|en)-common-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-common`, match[1]));
-
-    match = stripHtml.match(/^(?:tw|en)-car-starter-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-starter`, match[1]));
-
-    match = stripHtml.match(/^(?:tw|en)-car-basic-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-basic`, match[1]));
-
-    match = stripHtml.match(/^(?:tw|en)-car-advanced-(.+)$/i);
-    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-advanced`, match[1]));
-
-    return Array.from(deduped);
-}
-
-/**
- * [V12.0.9] HELPER: Compare two unit IDs with fallback for .html suffix
- */
-function unitIdsMatch(idA, idB) {
-    if (!idA || !idB) return false;
-    const cleanA = idA.toString().replace('.html', '').toLowerCase();
-    const cleanB = idB.toString().replace('.html', '').toLowerCase();
-    return cleanA === cleanB;
-}
+const {
+    buildI18nFilenameCandidates,
+    normalizeLegacyId,
+    unitIdsMatch
+} = require('./lib/id-utils');
+const {
+    getContentRuntimeConfig,
+    getLegacyMasterMapping,
+    peekLegacyMasterMapping
+} = require('./lib/runtime-state');
+const {
+    ensureGithubOrgMembership,
+    extractHiddenSectionContent,
+    resolveAssignmentDocRefByUserAndUnit,
+    upsertGithubActionsVariable
+} = require('./lib/github-utils');
 const {
     sendWelcomeEmail, sendPaymentSuccessEmail, sendTrialExpiringEmail, sendCourseExpiringEmail,
     sendAssignmentNotification, sendTutorAuthorizationEmail, sendGradingNotification,
@@ -90,9 +44,14 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-function normalizeLegacyId(value) {
-    return value;
-}
+(async () => {
+    try {
+        await getLegacyMasterMapping(db);
+        console.log("[Initialization] Legacy master mapping cache pre-loaded");
+    } catch (err) {
+        console.warn("[Initialization] Failed to pre-load legacy master mapping:", err.message);
+    }
+})();
 
 // ==========================================
 // Firebase Functions V2 全域設定
@@ -101,10 +60,9 @@ setGlobalOptions({
     region: "asia-east1",
     maxInstances: 10,
     minInstances: 0,
-    memory: 256,
+    memory: 128,
     concurrency: 80 // V2 feature: multiple requests per instance
 });
-
 
 // ==========================================
 // 從 .env 讀取環境變數
@@ -120,87 +78,6 @@ const GITHUB_CLASSROOM_ORG = process.env.GITHUB_CLASSROOM_ORG || "vibe-coding-cl
 const GITHUB_ORG_ADMIN_TOKEN = process.env.GITHUB_ORG_ADMIN_TOKEN || "";
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 const GITHUB_API_TOKEN = defineSecret("GITHUB_API_TOKEN");
-
-const CONTENT_RUNTIME_CACHE = {
-    config: null,
-    expiresAt: 0
-};
-const CONTENT_FILE_CACHE = new Map();
-
-// Exact mappings of legacy master pages to canonical unit IDs
-const LEGACY_MASTER_TO_CANONICAL = {
-    '03-unit-github-classroom.html': 'tw-common-github-classroom.html',
-    '01-master-getting-started.html': 'tw-common-developer-identity.html',
-    '02-master-ai-agents.html': 'tw-common-agent-mode.html',
-    '03-master-wifi-motor.html': 'tw-common-github-classroom.html',
-    'adv-01-master-s3-cam.html': 'adv-01-unit-jpeg-quality.html',
-    'adv-02-master-video.html': 'adv-02-unit-bandwidth-fps.html',
-    'adv-03-master-ble-advanced.html': 'adv-03-unit-ble-mtu.html',
-    'adv-04-master-sensors.html': 'adv-04-unit-filter-algorithms.html',
-    'adv-05-master-cv.html': 'adv-05-unit-centroid-error.html',
-    'adv-06-master-cv-advanced.html': 'adv-06-unit-centroid-algorithm.html',
-    'adv-07-master-ui-framework.html': 'adv-07-unit-chart-canvas.html',
-    'adv-08-master-image-processing.html': 'adv-08-unit-color-spaces.html',
-    'adv-09-master-ai-recognition.html': 'adv-09-unit-cnn-audio.html',
-    'adv-10-master-diff-drive.html': 'adv-10-unit-api-design.html',
-    'adv-11-master-photoelectric.html': 'adv-11-unit-hardware-interrupts.html',
-    'adv-12-master-pid.html': 'adv-12-unit-code-logic.html',
-    'adv-13-master-robustness.html': 'adv-13-unit-robustness.html',
-    'adv-14-master-debugging-art.html': 'adv-14-unit-debugging-art.html',
-    'adv-15-master-architecture.html': 'adv-15-unit-ble-async.html',
-    'basic-01-master-environment.html': 'basic-01-unit-drivers-ports.html',
-    'basic-02-master-ota-architecture.html': 'basic-02-unit-ota-principles.html',
-    'basic-03-master-io-mapping.html': 'basic-03-unit-adc-resolution.html',
-    'basic-04-master-pwm-control.html': 'basic-04-unit-h-bridge.html',
-    'basic-05-master-ble-gatt.html': 'basic-05-unit-advertising-connection.html',
-    'basic-06-master-http-web.html': 'basic-06-unit-cors-security.html',
-    'basic-07-master-wifi-modes.html': 'basic-07-unit-async-webserver.html',
-    'basic-08-master-joystick-math.html': 'basic-08-unit-joystick-mapping.html',
-    'basic-09-master-multitasking.html': 'basic-09-unit-hardware-timer.html',
-    'basic-10-master-fsm.html': 'basic-10-unit-fsm.html',
-    'start-01-master-web-app.html': 'start-01-unit-flexbox-layout.html',
-    'start-02-master-web-ble.html': 'start-02-unit-ble-async.html',
-    'start-03-master-remote-control.html': 'start-03-unit-control-panel.html',
-    'start-04-master-touch-events.html': 'start-04-unit-long-press.html',
-    'start-05-master-joystick-lab.html': 'start-05-unit-canvas-joystick.html'
-};
-
-async function getContentRuntimeConfig() {
-    if (Date.now() < CONTENT_RUNTIME_CACHE.expiresAt && CONTENT_RUNTIME_CACHE.config) {
-        return CONTENT_RUNTIME_CACHE.config;
-    }
-    const defaults = {
-        enabled: true,
-        repoOwner: "vibe-coding-tw",
-        repoName: "content-repo",
-        contentVersion: "main",
-        defaultLocale: "zh-TW",
-        fallbackEnabled: true,
-        cacheTtlSec: 300
-    };
-    try {
-        const snap = await db.collection("metadata_settings").doc("content_runtime").get();
-        if (snap.exists) {
-            const data = snap.data() || {};
-            CONTENT_RUNTIME_CACHE.config = {
-                enabled: data.enabled === true,
-                repoOwner: String(data.repoOwner || defaults.repoOwner).trim(),
-                repoName: String(data.repoName || defaults.repoName).trim(),
-                contentVersion: String(data.contentVersion || defaults.contentVersion).trim() || "main",
-                defaultLocale: String(data.defaultLocale || defaults.defaultLocale).trim() || "zh-TW",
-                fallbackEnabled: data.fallbackEnabled !== false,
-                cacheTtlSec: Math.max(30, Number(data.cacheTtlSec || defaults.cacheTtlSec))
-            };
-        } else {
-            CONTENT_RUNTIME_CACHE.config = defaults;
-        }
-    } catch (err) {
-        console.warn("[content-runtime] failed to load config, fallback to defaults:", err.message || err);
-        CONTENT_RUNTIME_CACHE.config = defaults;
-    }
-    CONTENT_RUNTIME_CACHE.expiresAt = Date.now() + 60 * 1000;
-    return CONTENT_RUNTIME_CACHE.config;
-}
 
 const REGION = "asia-east1";
 // 為了避免專案 ID 寫死，我們也可以動態抓取，或者您保留原本寫死的字串
@@ -246,175 +123,6 @@ function getCurrentTime() {
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     const date = new Date(utc + (3600000 * offset));
     return `${date.getFullYear()}/${('0' + (date.getMonth() + 1)).slice(-2)}/${('0' + date.getDate()).slice(-2)} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}:${('0' + date.getSeconds()).slice(-2)}`;
-}
-
-async function githubApiRequest(pathname, options = {}) {
-    if (!GITHUB_ORG_ADMIN_TOKEN) {
-        throw new Error("GITHUB_ORG_ADMIN_TOKEN is missing");
-    }
-    const url = `https://api.github.com${pathname}`;
-    const headers = {
-        "Authorization": `Bearer ${GITHUB_ORG_ADMIN_TOKEN}`,
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        ...(options.headers || {})
-    };
-    const resp = await fetch(url, { ...options, headers });
-    let body = null;
-    try {
-        body = await resp.json();
-    } catch (_) {
-        body = null;
-    }
-    return { ok: resp.ok, status: resp.status, body };
-}
-
-async function upsertGithubActionsVariable({ owner, repo, name, value }) {
-    if (!owner || !repo || !name) return { ok: false, reason: "missing_params" };
-    if (!GITHUB_ORG_ADMIN_TOKEN) return { ok: false, reason: "missing_token" };
-
-    const body = { name, value: String(value ?? "") };
-    const resp = await githubApiRequest(
-        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables/${encodeURIComponent(name)}`,
-        {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ value: body.value })
-        }
-    );
-    if (resp.ok) return { ok: true, action: "updated" };
-    if (resp.status === 404) {
-        const createResp = await githubApiRequest(
-            `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            }
-        );
-        if (createResp.ok) return { ok: true, action: "created" };
-        return { ok: false, status: createResp.status, body: createResp.body };
-    }
-    return { ok: false, status: resp.status, body: resp.body };
-}
-
-async function resolveGithubLoginFromFirebaseUid(firebaseUid) {
-    const userRecord = await admin.auth().getUser(firebaseUid);
-    const provider = (userRecord.providerData || []).find(p => p.providerId === "github.com");
-    if (!provider || !provider.uid) {
-        return { githubProviderUid: null, githubLogin: null };
-    }
-
-    const providerUid = String(provider.uid);
-    const userResp = await githubApiRequest(`/user/${encodeURIComponent(providerUid)}`);
-    if (!userResp.ok || !userResp.body || !userResp.body.login) {
-        return { githubProviderUid: providerUid, githubLogin: null };
-    }
-    return { githubProviderUid: providerUid, githubLogin: String(userResp.body.login) };
-}
-
-async function ensureGithubOrgMembership({ firebaseUid, org = GITHUB_CLASSROOM_ORG }) {
-    const { githubProviderUid, githubLogin } = await resolveGithubLoginFromFirebaseUid(firebaseUid);
-    if (!githubProviderUid || !githubLogin) {
-        return { ok: false, state: "missing_github_identity", githubLogin: null, inviteSent: false, org };
-    }
-
-    const membershipResp = await githubApiRequest(`/orgs/${encodeURIComponent(org)}/memberships/${encodeURIComponent(githubLogin)}`);
-    if (membershipResp.ok && membershipResp.body) {
-        const state = String(membershipResp.body.state || "").toLowerCase();
-        if (state === "active") {
-            return { ok: true, state: "active", githubLogin, inviteSent: false, org };
-        }
-        if (state === "pending") {
-            return { ok: false, state: "pending", githubLogin, inviteSent: false, org };
-        }
-    }
-
-    // If not found / not active, attempt to invite
-    let inviteSent = false;
-    let inviteId = null;
-    const inviteResp = await githubApiRequest(`/orgs/${encodeURIComponent(org)}/invitations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invitee_id: Number(githubProviderUid), role: "direct_member" })
-    });
-    if (inviteResp.ok && inviteResp.body) {
-        inviteSent = true;
-        inviteId = inviteResp.body.id || null;
-    }
-
-    return {
-        ok: false,
-        state: inviteSent ? "invited" : "not_member",
-        githubLogin,
-        inviteSent,
-        inviteId,
-        org
-    };
-}
-
-function extractHiddenSectionContent(html, sectionId) {
-    if (!html || !sectionId) return "";
-
-    const openTagRegex = new RegExp(`<section\\b[^>]*\\bid=["']${sectionId}["'][^>]*>`, 'i');
-    const openMatch = openTagRegex.exec(html);
-    if (!openMatch) return "";
-
-    const sectionStart = openMatch.index;
-    const tagContentStart = sectionStart + openMatch[0].length;
-    
-    let depth = 1;
-    const sectionTagRegex = /<\/?section\b[^>]*>/gi;
-    sectionTagRegex.lastIndex = tagContentStart; 
-
-    let match;
-    while ((match = sectionTagRegex.exec(html)) !== null) {
-        const tag = match[0];
-        if (!tag.startsWith('</')) {
-            depth++;
-        } else {
-            depth--;
-            if (depth === 0) {
-                return html.slice(tagContentStart, match.index).trim();
-            }
-        }
-    }
-
-    return "";
-}
-
-async function resolveAssignmentDocRefByUserAndUnit(db, userId, assignmentIdOrUnitId) {
-    const raw = String(assignmentIdOrUnitId || "").trim();
-    if (!raw) return null;
-
-    const normalized = raw.replace(/\.html$/i, '');
-    const exactDocId = `${userId}_${normalized}`;
-    const exactRef = db.collection('assignments').doc(exactDocId);
-    const exactDoc = await exactRef.get();
-    if (exactDoc.exists) return exactRef;
-
-    const unitCandidates = new Set([raw, normalized, `${normalized}.html`]);
-    const baseQuery = db.collection('assignments').where('userId', '==', userId);
-    const snapshot = await baseQuery.limit(200).get();
-    if (snapshot.empty) return null;
-
-    const matched = snapshot.docs.filter((d) => {
-        const row = d.data() || {};
-        const aid = String(row.assignmentId || '').trim();
-        const uid = String(row.unitId || '').trim();
-        const aidNorm = aid.replace(/\.html$/i, '');
-        const uidNorm = uid.replace(/\.html$/i, '');
-        return unitCandidates.has(aid) || unitCandidates.has(aidNorm) ||
-            unitCandidates.has(uid) || unitCandidates.has(uidNorm);
-    });
-
-    if (matched.length === 0) return null;
-    matched.sort((a, b) => {
-        const aTs = (a.data().updatedAt?.toMillis?.() || a.data().submittedAt?.toMillis?.() || 0);
-        const bTs = (b.data().updatedAt?.toMillis?.() || b.data().submittedAt?.toMillis?.() || 0);
-        return bTs - aTs;
-    });
-    return matched[0].ref;
 }
 
 // ==========================================
@@ -1168,12 +876,16 @@ function cleanUnitId(unitId) {
 }
 
 function mapLegacyMasterToCanonical(value = '') {
-    return LEGACY_MASTER_TO_CANONICAL[value] || value;
+    // Use cached mapping if available; fallback to value if not
+    const mapping = peekLegacyMasterMapping();
+    return mapping[value] || value;
 }
 
 function isLegacyMasterPage(value = '') {
     const normalized = String(value || '').split('/').pop().split('?')[0].trim();
-    return normalized.includes('-master-') && Object.prototype.hasOwnProperty.call(LEGACY_MASTER_TO_CANONICAL, normalized);
+    if (!normalized.includes('-master-')) return false;
+    const mapping = peekLegacyMasterMapping();
+    return Object.prototype.hasOwnProperty.call(mapping, normalized);
 }
 
 function resolveCanonicalUnitId(unitId, lessons = [], options = {}) {
@@ -1563,6 +1275,15 @@ function hasActiveOrderForCourse(ordersSnapshot, courseId, lessons = []) {
         
         if (!matched) return;
 
+        // [V14.0] Use toMillis() method for consistent expiry date comparison per AGENT.md Rule 7
+        if (data.expiryDate?.toMillis) {
+            if (data.expiryDate.toMillis() > Date.now()) {
+                hasCourse = true;
+            }
+            return;
+        }
+
+        // Fallback for legacy Date objects (backward compatibility)
         if (data.expiryDate?.toDate) {
             const expiry = data.expiryDate.toDate().getTime();
             if (now < expiry) hasCourse = true;
@@ -2191,7 +1912,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
 
         // C. Normalize target filename
         let normalizedFileName = normalizeCourseFile(fileName);
-        const runtimeConfig = await getContentRuntimeConfig();
+        const runtimeConfig = await getContentRuntimeConfig(db);
 
         if (fileName.match(/^0[1-5]-/) && !fileName.includes('-master-')) {
             normalizedFileName = 'start-' + fileName;
@@ -2856,7 +2577,12 @@ exports.precheckGithubClassroomAccess = onCall(async (request) => {
     }
 
     try {
-        const result = await ensureGithubOrgMembership({ firebaseUid: auth.uid, org: GITHUB_CLASSROOM_ORG });
+        const result = await ensureGithubOrgMembership({
+            admin,
+            token: GITHUB_ORG_ADMIN_TOKEN,
+            firebaseUid: auth.uid,
+            org: GITHUB_CLASSROOM_ORG
+        });
         return {
             success: result.ok === true,
             precheckEnabled: true,
@@ -3543,7 +3269,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
         }
 
-        const runtimeConfig = requestedGuideCourseIds.length ? await getContentRuntimeConfig() : { enabled: false };
+        const runtimeConfig = requestedGuideCourseIds.length ? await getContentRuntimeConfig(db) : { enabled: false };
         const preferredLocales = [];
         if (data.locale) preferredLocales.push(data.locale);
         if (userData.locale && !preferredLocales.includes(userData.locale)) preferredLocales.push(userData.locale);
@@ -4308,7 +4034,12 @@ exports.submitAssignment = onCall(async (request) => {
         const submissionUrl = String(url || "").trim();
         const isClassroomInvite = /classroom\.github\.com\/a\//i.test(submissionUrl);
         if (currentStatus === "submitted" && isClassroomInvite && GITHUB_ORG_ADMIN_TOKEN) {
-            const membership = await ensureGithubOrgMembership({ firebaseUid: userId, org: GITHUB_CLASSROOM_ORG });
+            const membership = await ensureGithubOrgMembership({
+                admin,
+                token: GITHUB_ORG_ADMIN_TOKEN,
+                firebaseUid: userId,
+                org: GITHUB_CLASSROOM_ORG
+            });
             if (!membership.ok) {
                 const base = '尚未完成 GitHub Classroom 組織授權。請先到 https://github.com/settings/organizations 接受邀請後重試。';
                 const detail = membership.state === "missing_github_identity"
@@ -4379,7 +4110,7 @@ exports.submitAssignment = onCall(async (request) => {
 
         if (currentStatus === 'submitted' && assignedTutorEmail) {
             const dashboardUrl = `https://vibe-coding.tw/dashboard.html?courseId=${encodeURIComponent(access.effectiveCourseId)}&unitId=${encodeURIComponent(access.canonicalUnitId)}&tab=assignments`;
-            await sendAssignmentNotification(assignedTutorEmail, userName, assignmentData.assignmentTitle, dashboardUrl);
+            await sendAssignmentNotification(assignedTutorEmail, userName, assignmentData.assignmentTitle, dashboardUrl, unitId);
         }
 
         return { success: true, message: currentStatus === 'started' ? "紀錄已更新" : "作業繳交成功！" };
@@ -4688,19 +4419,19 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
                 const backfillUnitKey = normalizeTemplateRepoName(backfillUnitId);
                 
                 if (backfillUserId && backfillUnitId) {
-                    const upsertUserRes = await upsertGithubActionsVariable({
+                    const upsertUserRes = await upsertGithubActionsVariable(GITHUB_ORG_ADMIN_TOKEN, {
                         owner,
                         repo,
                         name: "VC_USER_ID",
                         value: String(backfillUserId)
                     });
-                    const upsertUnitRes = await upsertGithubActionsVariable({
+                    const upsertUnitRes = await upsertGithubActionsVariable(GITHUB_ORG_ADMIN_TOKEN, {
                         owner,
                         repo,
                         name: "VC_UNIT_ID",
                         value: String(backfillUnitId)
                     });
-                    const upsertUnitKeyRes = backfillUnitKey ? await upsertGithubActionsVariable({
+                    const upsertUnitKeyRes = backfillUnitKey ? await upsertGithubActionsVariable(GITHUB_ORG_ADMIN_TOKEN, {
                         owner,
                         repo,
                         name: "VC_UNIT_KEY",
@@ -4733,6 +4464,7 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
             const studentName = assignmentData.userName || assignmentData.studentName || '';
             const tutorEmail = assignmentData.assignedTutorEmail || '';
 
+            const resolvedUnitId = assignmentData.unitId || (resolvedDocId && resolvedDocId.includes('_') ? resolvedDocId.split('_').pop() : '');
             await sendAutogradeResultToStudent(
                 studentEmail,
                 studentName,
@@ -4740,7 +4472,8 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
                 score,
                 Number.isFinite(maxScore) ? maxScore : null,
                 dashboardUrl,
-                autoGrade.runUrl || ''
+                autoGrade.runUrl || '',
+                resolvedUnitId
             );
 
             await sendAutogradeResultToTutor(
@@ -4750,7 +4483,8 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
                 score,
                 Number.isFinite(maxScore) ? maxScore : null,
                 dashboardUrl,
-                autoGrade.runUrl || ''
+                autoGrade.runUrl || '',
+                resolvedUnitId
             );
         } catch (notifyErr) {
             console.error("[ingestGithubAutograde] Notification send failed:", notifyErr);
