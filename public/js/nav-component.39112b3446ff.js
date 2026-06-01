@@ -38,7 +38,7 @@ async function startGoogleLogin() {
         alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。");
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v2";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v3";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
