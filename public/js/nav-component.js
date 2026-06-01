@@ -50,12 +50,12 @@ const DEFAULT_LEARNING_PATHS = [
 
 function getDefaultLearningPaths(uiLocale = "zh-TW") {
     const isZh = isZhLocale(uiLocale);
-    // 注意：不論語系，一律連到 tw-* 路徑（Firestore 課程資料皆為 tw-*），只有標籤文字切換語系
+    const prefix = isZh ? "tw-" : "en-";
     return [
-        { key: "tw-common", href: "learning-path.html?path=tw-common", icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
-        { key: "tw-car-starter", href: "learning-path.html?path=tw-car-starter", icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Unit" },
-        { key: "tw-car-basic", href: "learning-path.html?path=tw-car-basic", icon: "fa-code", label: isZh ? "基礎課程" : "Basic Unit" },
-        { key: "tw-car-advanced", href: "learning-path.html?path=tw-car-advanced", icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Unit" }
+        { key: prefix + "common", href: `learning-path.html?path=${prefix}common`, icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
+        { key: prefix + "car-starter", href: `learning-path.html?path=${prefix}car-starter`, icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Unit" },
+        { key: prefix + "car-basic", href: `learning-path.html?path=${prefix}car-basic`, icon: "fa-code", label: isZh ? "基礎課程" : "Basic Unit" },
+        { key: prefix + "car-advanced", href: `learning-path.html?path=${prefix}car-advanced`, icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Unit" }
     ];
 }
 
@@ -181,8 +181,15 @@ function resolveCategoryFromLesson(lesson = {}) {
 }
 
 function getCategoryHref(categoryKey = "") {
-    const key = encodeURIComponent(String(categoryKey || "").toLowerCase());
-    return `learning-path.html?path=${key}`;
+    let key = String(categoryKey || "").toLowerCase();
+    const uiLocale = detectUiLocale();
+    if (uiLocale === 'en' && key.startsWith('tw-')) {
+        key = 'en-' + key.slice(3);
+    } else if (uiLocale.startsWith('zh') && key.startsWith('en-')) {
+        key = 'tw-' + key.slice(3);
+    }
+    const encoded = encodeURIComponent(key);
+    return `learning-path.html?path=${encoded}`;
 }
 
 function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
@@ -841,10 +848,12 @@ function normalizeCourseTopNavBrandLink() {
         if (href && href !== '#' && href !== './#') return;
 
         let target = '/';
-        if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) target = '/learning-path.html?path=tw-car-starter';
-        else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) target = '/learning-path.html?path=tw-car-basic';
-        else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) target = '/learning-path.html?path=tw-car-advanced';
-        else if (file.startsWith('prepare-') || file.startsWith('tw-common-')) target = '/learning-path.html?path=tw-common';
+        const isEn = file.startsWith('en-');
+        const prefix = isEn ? 'en-' : 'tw-';
+        if (file.startsWith('start-') || file.startsWith('tw-car-starter-') || file.startsWith('en-car-starter-')) target = `/learning-path.html?path=${prefix}car-starter`;
+        else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-') || file.startsWith('en-car-basic-')) target = `/learning-path.html?path=${prefix}car-basic`;
+        else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-') || file.startsWith('en-car-advanced-')) target = `/learning-path.html?path=${prefix}car-advanced`;
+        else if (file.startsWith('prepare-') || file.startsWith('tw-common-') || file.startsWith('en-common-')) target = `/learning-path.html?path=${prefix}common`;
         brand.setAttribute('href', target);
         brand.setAttribute('target', '_top');
     } catch (e) {

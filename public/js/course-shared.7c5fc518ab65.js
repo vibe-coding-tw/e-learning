@@ -398,9 +398,10 @@ function normalizeCourseTopNav() {
         brandLink.setAttribute('href', isEnMode ? '/index.html?lang=en' : '/index.html');
         brandLink.setAttribute('target', '_top');
 
-        // 入門課程 top-nav 整合：注入第三段課程名稱 (nav-course-name)
+        // 入門與準備課程 top-nav 整合：注入第三段課程名稱 (nav-course-name)
         const isStarter = file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file);
-        if (isStarter) {
+        const isPrepare = file.startsWith('prepare-') || /^(?:tw|en)-common-/i.test(file);
+        if (isStarter || isPrepare) {
             let navCourseNameSpan = document.getElementById('nav-course-name');
             if (!navCourseNameSpan) {
                 const divider = document.createElement('div');
@@ -419,28 +420,50 @@ function normalizeCourseTopNav() {
                 const moduleTitle = moduleTitleEl.textContent.trim();
                 let courseNum = '';
                 
-                const startMatch = file.match(/^start-(\d{2})-unit-/i);
-                if (startMatch) {
-                    courseNum = startMatch[1];
-                } else {
-                    const lookup = {
-                        'html5-basics': '01', 'flexbox-layout': '01', 'ui-ux-standards': '01',
-                        'ble-security': '02', 'ble-async': '02', 'typed-arrays': '02',
-                        'control-panel': '03', 'data-json': '03', 'flow-logic': '03',
-                        'touch-basics': '04', 'long-press': '04', 'prevent-default': '04',
-                        'touch-vs-mouse': '05', 'canvas-joystick': '05', 'joystick-math': '05'
-                    };
-                    const suffixMatch = file.match(/^(?:tw|en)-car-starter-(.+)\.html$/i);
-                    if (suffixMatch && lookup[suffixMatch[1]]) {
-                        courseNum = lookup[suffixMatch[1]];
+                if (isStarter) {
+                    const startMatch = file.match(/^start-(\d{2})-unit-/i);
+                    if (startMatch) {
+                        courseNum = startMatch[1];
+                    } else {
+                        const lookup = {
+                            'html5-basics': '01', 'flexbox-layout': '01', 'ui-ux-standards': '01',
+                            'ble-security': '02', 'ble-async': '02', 'typed-arrays': '02',
+                            'control-panel': '03', 'data-json': '03', 'flow-logic': '03',
+                            'touch-basics': '04', 'long-press': '04', 'prevent-default': '04',
+                            'touch-vs-mouse': '05', 'canvas-joystick': '05', 'joystick-math': '05'
+                        };
+                        const suffixMatch = file.match(/^(?:tw|en)-car-starter-(.+)\.html$/i);
+                        if (suffixMatch && lookup[suffixMatch[1]]) {
+                            courseNum = lookup[suffixMatch[1]];
+                        }
                     }
-                }
-                
-                if (courseNum) {
-                    const prefix = isEnMode ? `Starter ${courseNum}: ` : `入門 ${courseNum}：`;
-                    navCourseNameSpan.textContent = prefix + moduleTitle;
-                } else {
-                    navCourseNameSpan.textContent = moduleTitle;
+                    if (courseNum) {
+                        const prefix = isEnMode ? `Starter ${courseNum}: ` : `入門 ${courseNum}：`;
+                        navCourseNameSpan.textContent = prefix + moduleTitle;
+                    } else {
+                        navCourseNameSpan.textContent = moduleTitle;
+                    }
+                } else if (isPrepare) {
+                    const prepMatch = file.match(/^prepare-(\d{2})-unit-/i);
+                    if (prepMatch) {
+                        courseNum = prepMatch[1];
+                    } else {
+                        const lookup = {
+                            'developer-identity': '01', 'vscode-online': '02', 'vscode-setup': '03',
+                            'agent-mode': '04', 'vibe-coding': '05', 'web-agents': '06',
+                            'github-classroom': '07', 'wifi-setup': '08', 'motor-ramping': '09'
+                        };
+                        const suffixMatch = file.match(/^(?:tw|en)-common-(.+)\.html$/i);
+                        if (suffixMatch && lookup[suffixMatch[1]]) {
+                            courseNum = lookup[suffixMatch[1]];
+                        }
+                    }
+                    if (courseNum) {
+                        const prefix = isEnMode ? `Preparation ${courseNum}: ` : `準備 ${courseNum}：`;
+                        navCourseNameSpan.textContent = prefix + moduleTitle;
+                    } else {
+                        navCourseNameSpan.textContent = moduleTitle;
+                    }
                 }
             }
         }
