@@ -61,6 +61,16 @@ function getDefaultLearningPaths(uiLocale = "zh-TW") {
 
 function detectUiLocale() {
     try {
+        const params = new URLSearchParams(window.location.search);
+        const path = params.get('path');
+        if (path) {
+            const cleanPath = String(path).trim().toLowerCase();
+            if (cleanPath.startsWith('en-')) return 'en';
+            if (cleanPath.startsWith('tw-')) return 'zh-TW';
+        }
+    } catch (_) {}
+
+    try {
         const stored = localStorage.getItem('vibe_user_locale');
         if (stored) {
             const clean = String(stored).trim().toLowerCase();
