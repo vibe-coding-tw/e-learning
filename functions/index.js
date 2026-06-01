@@ -2086,7 +2086,9 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
             if (normalized) candidates.add(normalizeLooseKey(normalized));
         };
 
-        const locales = resolvePreferredLocales();
+        // 為了確保不論使用者當前的語系（Locale）為何，都能在有授權時存取該單元的所有語系版本，
+        // 授權的候選檔案名稱列表（authorizedCandidates）必須同時包含 zh-TW 與 en 的翻譯候選檔案。
+        const locales = Array.from(new Set([...resolvePreferredLocales(), "zh-TW", "en"]));
         const addLegacyAndI18n = (value = "") => {
             const normalized = normalizeCourseFile(value);
             if (!normalized) return;

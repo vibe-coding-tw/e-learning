@@ -144,6 +144,12 @@
       const v = String(raw || "").trim().toLowerCase();
       return v || "common";
     }
+    function normalizeCanonicalCourseKey(value = "") {
+      return String(value || "")
+        .trim()
+        .replace(/\.html$/i, "")
+        .replace(/^(?:tw|en)-/i, "");
+    }
     function categoryFromLesson(lesson = {}) {
       const locale = normalizeLocaleCode(lesson.locale || "");
       const level = normalizeLevel(lesson.level || lesson.category || "");
@@ -343,6 +349,79 @@
       return [];
     }
 
+    function hasHanText(value = "") {
+      return /[\u3400-\u4DBF\u4E00-\u9FFF]/.test(String(value || ""));
+    }
+
+    function lessonTextBlob(lesson = {}) {
+      const values = [
+        lesson.title,
+        lesson.titleEn,
+        lesson.summary,
+        lesson.summaryEn,
+        lesson.description,
+        lesson.descriptionEn,
+        lesson.lessonLabel,
+        lesson.lessonLabelEn,
+        lesson.tagText,
+        ...(Array.isArray(lesson.coreContent) ? lesson.coreContent : []),
+        ...(Array.isArray(lesson.coreContentEn) ? lesson.coreContentEn : [])
+      ];
+      return values.map((value) => String(value || "")).join(" ").trim();
+    }
+
+    function lessonVariantScore(lesson = {}, uiLocale = "zh-TW") {
+      const blob = lessonTextBlob(lesson);
+      const rawLocale = String(lesson.locale || "").trim().toLowerCase();
+      const explicitLocale = rawLocale ? normalizeLocaleCode(rawLocale) : "";
+      const isZh = uiLocale.startsWith("zh");
+      const hasHan = hasHanText(blob);
+      const hasLatin = /[A-Za-z]/.test(blob);
+      let score = 0;
+
+      if (Number.isFinite(Number(lesson.orderWeight))) {
+        score -= Number(lesson.orderWeight) / 1000;
+      }
+      if (isZh) {
+        if (explicitLocale === "tw") score += 100;
+        else if (explicitLocale === "en") score -= 50;
+        if (hasHan) score += 20;
+        if (hasLatin && !hasHan) score -= 5;
+      } else {
+        if (explicitLocale === "en") score += 100;
+        else if (explicitLocale === "tw") score -= 50;
+        if (hasLatin && !hasHan) score += 20;
+        if (hasHan) score -= 5;
+      }
+      return score;
+    }
+
+    function lessonRenderKey(lesson = {}) {
+      return normalizeCanonicalCourseKey(
+        lesson.courseKey ||
+        lesson.productId ||
+        lesson.courseId ||
+        lesson.entryUnitId ||
+        lesson.contentRef ||
+        lesson.id ||
+        ""
+      );
+    }
+
+    function dedupeLessonsForRender(items = [], uiLocale = "zh-TW") {
+      const groups = new Map();
+      (Array.isArray(items) ? items : []).forEach((lesson) => {
+        const key = lessonRenderKey(lesson);
+        if (!key) return;
+        const bucket = groups.get(key) || [];
+        bucket.push(lesson);
+        groups.set(key, bucket);
+      });
+      return [...groups.values()]
+        .map((bucket) => bucket.slice().sort((a, b) => lessonVariantScore(b, uiLocale) - lessonVariantScore(a, uiLocale))[0])
+        .filter(Boolean);
+    }
+
     function pickImage(lesson = {}) {
       return (
         lesson.cardImageUrl ||
@@ -403,15 +482,21 @@
         targetPathKey = pathKey.replace(/^en-/, "tw-");
       }
 
-      let rows = catalogCourses
+      let rows = dedupeLessonsForRender(
+        catalogCourses
         .filter((x) => categoryFromLesson(x) === targetPathKey)
-        .filter((x) => !shouldHideCourse(x));
-      let hardwareRows = lessons.filter(
+        .filter((x) => !shouldHideCourse(x)),
+        uiLocale
+      ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
+      let hardwareRows = dedupeLessonsForRender(
+        lessons.filter(
         (x) => x?.isPhysical === true &&
                x?.hiddenFromCatalog !== true &&
                Array.isArray(x?.learningPaths) &&
                x.learningPaths.includes(targetPathKey)
-      );
+        ),
+        uiLocale
+      ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
       if (!rows.length && !hardwareRows.length && pathKey !== "tw-common") {
         container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">${t.emptyCategory}</p>`;
         return;
@@ -522,11 +607,15 @@
         `;
       }).join("");
 
-      const specsRows = lessons.filter(
-        (x) => x?.metadataType === "spec" &&
-               Array.isArray(x?.learningPaths) &&
-               x.learningPaths.includes(targetPathKey)
-      );
+      const specsRows = dedupeLessonsForRender(
+        lessons.filter((x) => {
+          if (x?.metadataType !== "spec") return false;
+          const paths = Array.isArray(x?.learningPaths) ? x.learningPaths.map(String).filter(Boolean) : [];
+          if (paths.includes(targetPathKey)) return true;
+          return !paths.length && String(x?.category || "").toLowerCase() === "prepare" && /^(tw|en)-common$/.test(targetPathKey);
+        }),
+        uiLocale
+      ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
       const specsHtml = specsRows.map((spec) => {
         const specImg = pickImage(spec);
         const specSummary = String(spec.summary || spec.description || "");
