@@ -11,6 +11,54 @@ class GitHubAPIHelper {
         this.octokit = new Octokit({ auth: token });
     }
 
+    _parseTemplateRepo(templateRepo) {
+        let templateOwner = 'vibe-coding-classroom';
+        let templateName = templateRepo;
+        if (templateRepo.includes('/')) {
+            const parts = templateRepo.split('/');
+            templateOwner = parts[0];
+            templateName = parts[1];
+        }
+        return { templateOwner, templateName };
+    }
+
+    async _getExistingRepo(orgName, newRepoName) {
+        const existingRepo = await this.octokit.repos.get({
+            owner: orgName,
+            repo: newRepoName
+        });
+        return existingRepo.data;
+    }
+
+    async _getExistingRef(orgName, repoName, ref) {
+        const existingRef = await this.octokit.git.getRef({
+            owner: orgName,
+            repo: repoName,
+            ref: ref.replace('refs/', '')
+        });
+        return existingRef.data;
+    }
+
+    async _listOpenPullRequests(orgName, repoName, head, base) {
+        const prs = await this.octokit.pulls.list({
+            owner: orgName,
+            repo: repoName,
+            head: `${orgName}:${head}`,
+            base: base,
+            state: 'open'
+        });
+        return prs.data;
+    }
+
+    _isConflict(error, status, messageFragment) {
+        return error?.status === status && String(error?.message || '').includes(messageFragment);
+    }
+
+    _logAndThrow(logMessage, error, thrownMessagePrefix) {
+        console.error(`${logMessage}:`, error);
+        throw new Error(`${thrownMessagePrefix}: ${error.message}`);
+    }
+
     /**
      * Create a new repository from a template repository
      * @param {string} orgName - The organization to create the repository under
@@ -21,13 +69,7 @@ class GitHubAPIHelper {
      */
     async createRepoFromTemplate(orgName, templateRepo, newRepoName, isPrivate = true) {
         try {
-            let templateOwner = 'vibe-coding-classroom';
-            let templateName = templateRepo;
-            if (templateRepo.includes('/')) {
-                const parts = templateRepo.split('/');
-                templateOwner = parts[0];
-                templateName = parts[1];
-            }
+            const { templateOwner, templateName } = this._parseTemplateRepo(templateRepo);
 
             const response = await this.octokit.repos.createUsingTemplate({
                 template_owner: templateOwner,
@@ -38,20 +80,15 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
-            if (error.status === 422 && error.message.includes("Name already exists on this account")) {
+            if (this._isConflict(error, 422, "Name already exists on this account")) {
                 console.log(`[GitHubAPIHelper] Repository ${orgName}/${newRepoName} already exists on GitHub. Retrieving details...`);
                 try {
-                    const existingRepo = await this.octokit.repos.get({
-                        owner: orgName,
-                        repo: newRepoName
-                    });
-                    return existingRepo.data;
+                    return await this._getExistingRepo(orgName, newRepoName);
                 } catch (getErr) {
                     console.error("Failed to retrieve existing repository details:", getErr);
                 }
             }
-            console.error(`Error generating repo ${newRepoName} from template ${templateRepo}:`, error);
-            throw new Error(`Failed to generate repository: ${error.message}`);
+            this._logAndThrow(`Error generating repo ${newRepoName} from template ${templateRepo}`, error, "Failed to generate repository");
         }
     }
 
@@ -73,8 +110,7 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
-            console.error(`Error adding collaborator ${username} to ${orgName}/${repoName}:`, error);
-            throw new Error(`Failed to add collaborator: ${error.message}`);
+            this._logAndThrow(`Error adding collaborator ${username} to ${orgName}/${repoName}`, error, "Failed to add collaborator");
         }
     }
 
@@ -93,8 +129,7 @@ class GitHubAPIHelper {
                 username: username
             });
         } catch (error) {
-            console.error(`Error removing collaborator ${username} from ${orgName}/${repoName}:`, error);
-            throw new Error(`Failed to remove collaborator: ${error.message}`);
+            this._logAndThrow(`Error removing collaborator ${username} from ${orgName}/${repoName}`, error, "Failed to remove collaborator");
         }
     }
 
@@ -114,8 +149,7 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
-            console.error(`Error fetching ref ${ref} for ${orgName}/${repoName}:`, error);
-            throw new Error(`Failed to get git reference: ${error.message}`);
+            this._logAndThrow(`Error fetching ref ${ref} for ${orgName}/${repoName}`, error, "Failed to get git reference");
         }
     }
 
@@ -137,21 +171,15 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
-            if (error.status === 422 && error.message.includes("Reference already exists")) {
+            if (this._isConflict(error, 422, "Reference already exists")) {
                 console.log(`[GitHubAPIHelper] Reference ${ref} already exists on ${orgName}/${repoName}. Retrieving existing ref...`);
                 try {
-                    const existingRef = await this.octokit.git.getRef({
-                        owner: orgName,
-                        repo: repoName,
-                        ref: ref.replace('refs/', '')
-                    });
-                    return existingRef.data;
+                    return await this._getExistingRef(orgName, repoName, ref);
                 } catch (getErr) {
                     console.error("Failed to retrieve existing ref details:", getErr);
                 }
             }
-            console.error(`Error creating ref ${ref} on ${orgName}/${repoName}:`, error);
-            throw new Error(`Failed to create git reference: ${error.message}`);
+            this._logAndThrow(`Error creating ref ${ref} on ${orgName}/${repoName}`, error, "Failed to create git reference");
         }
     }
 
@@ -177,25 +205,18 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
-            if (error.status === 422 && error.message.includes("A pull request already exists")) {
+            if (this._isConflict(error, 422, "A pull request already exists")) {
                 console.log(`[GitHubAPIHelper] Pull request for ${head}->${base} already exists on ${orgName}/${repoName}. Retrieving existing PRs...`);
                 try {
-                    const prs = await this.octokit.pulls.list({
-                        owner: orgName,
-                        repo: repoName,
-                        head: `${orgName}:${head}`,
-                        base: base,
-                        state: 'open'
-                    });
-                    if (prs.data.length > 0) {
-                        return prs.data[0];
+                    const prs = await this._listOpenPullRequests(orgName, repoName, head, base);
+                    if (prs.length > 0) {
+                        return prs[0];
                     }
                 } catch (getErr) {
                     console.error("Failed to retrieve existing PR details:", getErr);
                 }
             }
-            console.error(`Error creating PR ${title} on ${orgName}/${repoName}:`, error);
-            throw new Error(`Failed to create pull request: ${error.message}`);
+            this._logAndThrow(`Error creating PR ${title} on ${orgName}/${repoName}`, error, "Failed to create pull request");
         }
     }
 
@@ -215,8 +236,7 @@ class GitHubAPIHelper {
             });
             return response.data;
         } catch (error) {
-            console.error(`Error fetching commit ${sha} for ${orgName}/${repoName}:`, error);
-            throw new Error(`Failed to get commit details: ${error.message}`);
+            this._logAndThrow(`Error fetching commit ${sha} for ${orgName}/${repoName}`, error, "Failed to get commit details");
         }
     }
 
@@ -246,8 +266,7 @@ class GitHubAPIHelper {
                 console.log(`[GitHubAPIHelper] File ${path} already exists or conflict on ${orgName}/${repoName}. Skipping...`);
                 return null;
             }
-            console.error(`Error creating file ${path} on ${orgName}/${repoName}:`, error);
-            throw new Error(`Failed to create file: ${error.message}`);
+            this._logAndThrow(`Error creating file ${path} on ${orgName}/${repoName}`, error, "Failed to create file");
         }
     }
 }

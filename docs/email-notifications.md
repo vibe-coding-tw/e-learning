@@ -1,4 +1,4 @@
-# Email Notifications Spec
+# Email 通知規格
 **Version**: 2026.06.01.V2  
 **Objective**: Define all production email notifications, their triggers, recipients, and operational expectations.
 
@@ -32,7 +32,7 @@ It is the source of truth for:
 | Autograde result (student) | `ingestGithubAutograde` success | Student | `sendAutogradeResultToStudent` | `/dashboard.html?unitId=...&tab=assignments` |
 | Autograde result (tutor) | `ingestGithubAutograde` success | Assigned tutor | `sendAutogradeResultToTutor` | `/dashboard.html?unitId=...&tab=assignments` |
 | Order shipped | Distributor / partner marks order as shipped | Student | `sendOrderShippedEmail` | `/dashboard.html?tab=overview` |
-| Tutor recommendation candidate | `recommendTutorForUnit` success | Candidate student | `sendTutorRecommendationCandidateEmail` | `/dashboard.html?unitId=...&tab=assignments&action=submitTutorInvite&applicationId=...` |
+| Tutor recommendation candidate | `recommendTutorForUnit` success | Candidate student | `sendTutorRecommendationCandidateEmail` | `/dashboard.html?unitId=...&tab=assignments&action=submitTutorAssignmentLink&applicationId=...` |
 | Autograde failure alert | `ingestGithubAutograde` validation/runtime failure | Admin | `sendAutogradeFailureAlertEmail` | `/dashboard.html?tab=tutors`（Tutor Management） |
 | Order activation failure alert | `paymentNotify` success but activation validation fails | Admin | `sendAutogradeFailureAlertEmail` | `/dashboard.html?tab=overview` |
 

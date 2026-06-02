@@ -14,6 +14,30 @@ const functions = getFunctions(app, 'asia-east1');
 connectFirebaseEmulators({ auth, db, functions });
 const vibeFetchLessons = httpsCallable(functions, 'getLessonsMetadata');
 const PUBLIC_SITE_URL = 'https://vibe-coding.tw';
+const {
+    normalizeDashboardLooseKey,
+    getLessonLookupKeys,
+    getCanonicalLessonIdentity,
+    resolveLessonByAnyKey,
+    getEquivalentUnitIds,
+    resolveCanonicalUnitId,
+    findParentCourseIdByUnit,
+    getPreferredUnitId,
+    normalizeTutorAdminUnitId,
+    normalizeTutorIdentifier
+} = window.dashboardLookupUtils || {};
+const { normalizeCanonicalRepoSlug, legacyRepoSlugFromCanonical } = window.repoSlugUtils || {};
+
+window.normalizeDashboardLooseKey = window.normalizeDashboardLooseKey || normalizeDashboardLooseKey;
+window.getLessonLookupKeys = window.getLessonLookupKeys || getLessonLookupKeys;
+window.getCanonicalLessonIdentity = window.getCanonicalLessonIdentity || getCanonicalLessonIdentity;
+window.resolveLessonByAnyKey = window.resolveLessonByAnyKey || resolveLessonByAnyKey;
+window.getEquivalentUnitIds = window.getEquivalentUnitIds || getEquivalentUnitIds;
+window.resolveCanonicalUnitId = window.resolveCanonicalUnitId || resolveCanonicalUnitId;
+window.findParentCourseIdByUnit = window.findParentCourseIdByUnit || findParentCourseIdByUnit;
+window.getPreferredUnitId = window.getPreferredUnitId || getPreferredUnitId;
+window.normalizeTutorAdminUnitId = window.normalizeTutorAdminUnitId || normalizeTutorAdminUnitId;
+window.normalizeTutorIdentifier = window.normalizeTutorIdentifier || normalizeTutorIdentifier;
 
 /**
  * Standard Email Normalizer
@@ -21,6 +45,61 @@ const PUBLIC_SITE_URL = 'https://vibe-coding.tw';
 function normalizeEmail(email) {
     if (!email) return "";
     return String(email).trim().toLowerCase();
+}
+
+function normalizeAssignmentLinkUrl(raw = '') {
+    return String(raw || '').trim();
+}
+
+function isValidAssignmentLinkUrl(url = '') {
+    const value = String(url || '').trim();
+    if (!value) return false;
+    try {
+        const parsed = new URL(value);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (_) {
+        return false;
+    }
+}
+
+function normalizeAssignmentInviteUrl(raw = '') {
+    return normalizeAssignmentLinkUrl(raw);
+}
+
+function isValidAssignmentInviteUrl(url = '') {
+    return isValidAssignmentLinkUrl(url);
+}
+
+function isLikelyAssignmentLink(url = '') {
+    const s = String(url || '').toLowerCase();
+    return s.includes('classroom.github.com') || s.includes('github.com/classroom');
+}
+
+function getAssignmentUrlMapForUnit(urlMaps, unitId) {
+    if (!urlMaps || typeof urlMaps !== 'object' || Array.isArray(urlMaps)) return null;
+
+    const candidateIds = [
+        unitId,
+        ...(typeof getEquivalentUnitIds === 'function' ? getEquivalentUnitIds(unitId || '') : [])
+    ].filter(Boolean);
+
+    for (const candidateId of candidateIds) {
+        const candidateMap = urlMaps[candidateId];
+        if (!candidateMap) continue;
+        if (typeof candidateMap === 'string') return { default: candidateMap };
+        if (typeof candidateMap === 'object' && !Array.isArray(candidateMap)) return candidateMap;
+    }
+
+    if (typeof urlMaps.default === 'string') return { default: urlMaps.default };
+    if (typeof urlMaps.default === 'object' && !Array.isArray(urlMaps.default)) return urlMaps.default;
+    if (Object.values(urlMaps).some(value => typeof value === 'string')) return urlMaps;
+    return null;
+}
+
+function getAssignmentUrlForTutor(urlMaps, unitId, email) {
+    const unitMap = getAssignmentUrlMapForUnit(urlMaps, unitId);
+    if (!unitMap) return '';
+    return unitMap[email] || unitMap.default || Object.values(unitMap).find(value => typeof value === 'string' && value.trim()) || '';
 }
 
 function normalizeGuideTitleText(text = '') {
@@ -115,30 +194,6 @@ let currentDashboardPermissions = {
     canViewSettings: false
 };
 
-function normalizeDashboardLooseKey(value = "") {
-    return String(value || "").split('/').pop().split('?')[0].replace(/\.html$/i, '').toLowerCase();
-}
-
-function normalizeCanonicalRepoSlug(value = "") {
-    const v = String(value || "").split('/').pop().split('?')[0].trim().replace(/\.html$/i, '');
-    if (!v) return '';
-    if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
-    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
-    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
-    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
-    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
-    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'common-');
-    return v;
-}
-
-function legacyRepoSlugFromCanonical(value = "") {
-    const canonical = normalizeCanonicalRepoSlug(value);
-    if (!canonical) return '';
-    if (/^common-/i.test(canonical)) return `tw-${canonical}`;
-    if (/^car-(starter|basic|advanced)-/i.test(canonical)) return `tw-${canonical}`;
-    return canonical;
-}
-
 async function loadMarkdownFromRepoWithFallback(org, candidateSlugs) {
     const candidates = [...new Set((Array.isArray(candidateSlugs) ? candidateSlugs : [candidateSlugs]).filter(Boolean))];
     for (const repo of candidates) {
@@ -153,60 +208,6 @@ async function loadMarkdownFromRepoWithFallback(org, candidateSlugs) {
         }
     }
     return { markdown: '', repo: '', readmeUrl: '' };
-}
-
-function getLessonLookupKeys(lesson = {}) {
-    const keys = new Set();
-    const add = (value) => {
-        if (!value) return;
-        const raw = String(value).trim();
-        if (!raw) return;
-        keys.add(raw);
-        keys.add(raw.replace(/\.html$/i, ''));
-        keys.add(normalizeDashboardLooseKey(raw));
-    };
-
-    add(lesson.id);
-    add(lesson.courseId);
-    add(lesson.courseKey);
-    add(lesson.entryUnitId);
-    add(lesson.classroomUrl);
-    add(lesson.productId);
-    add(lesson.sku);
-    if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);
-    if (Array.isArray(lesson.legacyProductIds)) lesson.legacyProductIds.forEach(add);
-    if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
-    if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
-    return keys;
-}
-
-function getCanonicalLessonIdentity(lesson = {}) {
-    const metadataType = String(lesson.metadataType || '').toLowerCase();
-    if (lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product') {
-        return String(
-            lesson.productId ||
-            lesson.courseKey ||
-            lesson.courseId ||
-            lesson.id ||
-            ''
-        ).trim();
-    }
-    return String(
-        lesson.courseKey ||
-        lesson.courseId ||
-        lesson.productId ||
-        lesson.id ||
-        ''
-    ).trim();
-}
-
-function resolveLessonByAnyKey(key) {
-    if (!key) return null;
-    const cleanKey = normalizeDashboardLooseKey(key);
-    return (allLessons || []).find((lesson) => {
-        const keys = getLessonLookupKeys(lesson);
-        return keys.has(cleanKey) || keys.has(key);
-    }) || null;
 }
 
 // [NEW] Admin Super Mode state
@@ -499,11 +500,11 @@ function resolveCourseIdFromUrlParam(paramId) {
     const direct = allLessons.find(l => l.courseId === paramId);
     if (direct) return paramId;
 
-    // 2. Fuzzy match (Classroom URL contains param)
-    const fuzzy = allLessons.find(l => l.classroomUrl && l.classroomUrl.includes(paramId));
-    if (fuzzy) {
-        console.log(`Resolved URL value '${paramId}' to Course ID '${fuzzy.courseId}'`);
-        return fuzzy.courseId;
+    // 2. Fuzzy match (作業連結 contains param)
+    const legacyAssignmentMatch = allLessons.find(l => l.classroomUrl && l.classroomUrl.includes(paramId)); // legacy assignment link fallback
+    if (legacyAssignmentMatch) {
+        console.log(`Resolved URL value '${paramId}' to Course ID '${legacyAssignmentMatch.courseId}'`);
+        return legacyAssignmentMatch.courseId;
     }
 
     return paramId;
@@ -516,79 +517,14 @@ window.unitIdsMatch = window.unitIdsMatch || function(id1, id2) {
     return clean(id1) === clean(id2);
 };
 
-window.getEquivalentUnitIds = window.getEquivalentUnitIds || function(unitId) {
-    if (!unitId) return [];
-    const normalized = unitId.toLowerCase().trim();
-    const base = normalized.replace('.html', '').replace(/^(?:tw-(?:common|car-(?:starter|basic|advanced))-|start-|basic-|adv-|advanced-|prepare-)?(?:\d{2}-)?(?:unit-|lesson-|master-)?/i, '');
-    
-    // Return a list of variants to help with lookup/matching
-    return [
-        normalized,
-        base,
-        `${base}.html`,
-        `01-unit-${base}.html`,
-        `start-${base}`,
-        `start-${base}.html`
-    ];
-};
-
-window.resolveCanonicalUnitId = window.resolveCanonicalUnitId || function(unitId) {
-    const candidates = getEquivalentUnitIds(unitId);
-    if (candidates.length === 0) return '';
-
-    for (const candidate of candidates) {
-        if (dashboardData?.unitToDocId?.[candidate]) return candidate;
-        if ((allLessons || []).some(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(candidate))) return candidate;
-    }
-
-    // Robust fallback using unitIdsMatch across all courseUnits
-    for (const l of (allLessons || [])) {
-        if (l.courseUnits) {
-            const matched = l.courseUnits.find(u => unitIdsMatch(u, unitId));
-            if (matched) return matched;
-        }
-    }
-
-    return candidates.find(id => id.endsWith('.html')) || candidates[0];
-}
-
-function findParentCourseIdByUnit(unitId) {
-    const candidates = getEquivalentUnitIds(unitId);
-    const lesson = (allLessons || []).find(l =>
-        Array.isArray(l.courseUnits) && l.courseUnits.some(courseUnit => candidates.includes(courseUnit))
-    );
-    return getCanonicalLessonIdentity(lesson) || null;
-}
-
-function getPreferredUnitId(unitId, courseUnits = [], extraKeys = []) {
-    const candidates = getEquivalentUnitIds(unitId);
-    return courseUnits.find(unit => candidates.includes(unit)) ||
-        extraKeys.find(key => candidates.includes(key)) ||
-        candidates.find(id => id.endsWith('.html')) ||
-        unitId;
-}
-
 function isRenderableUnitFile(fileName) {
     return typeof fileName === 'string' && fileName.endsWith('.html');
-}
-
-function normalizeTutorAdminUnitId(unitId) {
-    const raw = String(unitId || '').trim();
-    if (!raw) return raw;
-    if (raw === '02-unit-classroom-workflow.html') return '03-unit-github-classroom.html';
-    if (raw.startsWith('04-')) return raw.replace(/^04-/, '02-');
-    return raw;
 }
 
 function shouldHideTutorAdminUnit(unitId) {
     const normalized = normalizeTutorAdminUnitId(unitId);
     return normalized === '02-unit-vibe-coding-intro.html' ||
         normalized === '02-unit-teacher-matrix.html';
-}
-
-function normalizeTutorIdentifier(value) {
-    if (!value || typeof value !== 'string') return '';
-    return value.replace(/_DOT_/g, '.').trim();
 }
 
 function getCurrentDashboardContext() {
@@ -622,7 +558,8 @@ function getUnitTutorConfig(fileName) {
         courseId: findParentCourseIdByUnit(fileName),
         authorizedTutors: [],
         tutorDetails: {},
-        githubClassroomUrls: {}
+        assignmentUrlMap: {},
+        assignmentUrls: {}
     };
 }
 
@@ -1439,16 +1376,14 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
     const useMasterBypass = (myRole === 'admin' && adminTutorMode);
 
     if (useMasterBypass || isAuthorizedTutor) {
-        const inviteLink = getUnitTutorConfig(unitId).githubClassroomUrls || null;
+        const unitTutorConfig = getUnitTutorConfig(unitId);
+        const assignmentUrlMap = unitTutorConfig.assignmentUrlMap || unitTutorConfig.assignmentUrls || null;
 
-        if (inviteLink) {
-            let finalUrl = inviteLink;
-            if (typeof inviteLink === 'object') {
-                finalUrl = inviteLink[myEmail] || inviteLink.default || Object.values(inviteLink)[0];
-            }
+        if (assignmentUrlMap) {
+            const finalUrl = getAssignmentUrlForTutor(assignmentUrlMap, unitId, myEmail);
             if (finalUrl) {
-                if (isLikelyGitHubClassroomLink(finalUrl) && !isValidGitHubClassroomInviteUrl(normalizeGitHubClassroomInviteUrl(finalUrl))) {
-                    alert("此單元設定的 Classroom 連結格式不正確，請到課程設定修正為 https://classroom.github.com/a/xxxxx");
+                if (isLikelyAssignmentLink(finalUrl) && !isValidAssignmentInviteUrl(normalizeAssignmentInviteUrl(finalUrl))) {
+                    alert("此單元設定的作業連結格式不正確，請到課程設定修正。");
                     return;
                 }
                 window.open(finalUrl, '_blank');
@@ -1456,7 +1391,7 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
             }
         }
 
-        alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
+        alert("此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。");
         return;
     }
 
@@ -1481,16 +1416,17 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
                 return;
             }
 
-            if (access.classroomUrl) {
-                if (isLikelyGitHubClassroomLink(access.classroomUrl) && !isValidGitHubClassroomInviteUrl(normalizeGitHubClassroomInviteUrl(access.classroomUrl))) {
-                    alert("此單元設定的 Classroom 連結格式不正確，請通知管理員/老師修正。");
+            const assignmentUrl = access.classroomUrl;
+            if (assignmentUrl) {
+                if (isLikelyAssignmentLink(assignmentUrl) && !isValidAssignmentInviteUrl(normalizeAssignmentInviteUrl(assignmentUrl))) {
+                    alert("此單元設定的作業連結格式不正確，請通知管理員/老師修正。");
                     return;
                 }
-                window.open(access.classroomUrl, '_blank');
+                window.open(assignmentUrl, '_blank');
                 return;
             }
 
-            alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
+            alert("此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。");
         } catch (error) {
             console.error('[Dashboard] Failed to resolve assignment link:', error);
             alert("暫時無法取得作業入口，請稍後再試。");
@@ -2330,7 +2266,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                     const unitDocConfig = getUnitTutorConfig(unitFile);
 
                     const unitTutorsArr = Array.isArray(unitDocConfig.authorizedTutors) ? unitDocConfig.authorizedTutors : [];
-                    const configEmails = Object.keys(unitDocConfig.githubClassroomUrls || {})
+                    const configEmails = Object.keys(unitDocConfig.assignmentUrlMap || unitDocConfig.assignmentUrls || {})
                         .map(normalizeTutorIdentifier)
                         .filter(Boolean);
                     const tutorDetailsEmails = Object.values(unitDocConfig.tutorDetails || {})
@@ -2363,7 +2299,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                             <tr class="bg-orange-50/50 text-orange-700 border-b border-orange-100 uppercase tracking-tighter font-black">
                                                 <th class="py-2.5 px-4">姓名 / Name</th>
                                                 <th class="py-2.5 px-4">Email</th>
-                                                <th class="py-2.5 px-4">Classroom 邀請連結</th>
+                                                <th class="py-2.5 px-4">作業連結</th>
                                                 <th class="py-2.5 px-4">合格時間 / Qualified At</th>
                                                 <th class="py-2.5 px-4 text-right">操作</th>
                                             </tr>
@@ -2371,18 +2307,17 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                         <tbody class="divide-y divide-orange-50">
                                             ${unitTutors.length > 0
                                 ? unitTutors.map(email => {
-                                    const details = unitDocConfig.tutorDetails?.[email] || {};
-                                    const displayEmail = email.includes('@') ? email : (details.email || email);
-                                    const name = details.name || displayEmail.split('@')[0];
-                                    const unitUrls = unitDocConfig.githubClassroomUrls || {};
-                                    const inviteUrlRaw =
-                                        unitUrls[displayEmail] ||
-                                        unitUrls[email] ||
-                                        details.assignmentUrl ||
-                                        details.githubClassroomUrl ||
-                                        unitUrls.default ||
+                    const details = unitDocConfig.tutorDetails?.[email] || {};
+                    const displayEmail = email.includes('@') ? email : (details.email || email);
+                    const name = details.name || displayEmail.split('@')[0];
+                    const assignmentUrlMap = getAssignmentUrlMapForUnit(unitDocConfig.assignmentUrlMap || unitDocConfig.assignmentUrls || {}, unitFile) || {};
+                    const assignmentUrlRaw =
+                        details.assignmentUrl ||
+                        assignmentUrlMap[displayEmail] ||
+                        assignmentUrlMap[email] ||
+                                        assignmentUrlMap.default ||
                                         '';
-                                    const inviteUrl = typeof inviteUrlRaw === 'string' ? inviteUrlRaw.trim() : '';
+                                    const assignmentUrl = typeof assignmentUrlRaw === 'string' ? assignmentUrlRaw.trim() : '';
                                     const time = details.qualifiedAt
                                         ? new Date(details.qualifiedAt).toLocaleString('zh-TW', { hour12: false })
                                         : '—';
@@ -2392,8 +2327,8 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                                 <td class="py-2.5 px-4 font-bold text-gray-800">${escapeHtml(name)}</td>
                                                 <td class="py-2.5 px-4 font-mono text-gray-500">${escapeHtml(displayEmail)}</td>
                                                 <td class="py-2.5 px-4 font-mono text-[10px]">
-                                                    ${inviteUrl
-                                                        ? `<a href="${escapeHtml(inviteUrl)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline break-all">${escapeHtml(inviteUrl)}</a>`
+                                                    ${assignmentUrl
+                                                        ? `<a href="${escapeHtml(assignmentUrl)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline break-all">${escapeHtml(assignmentUrl)}</a>`
                                                         : '<span class="text-gray-300 italic">尚未設定</span>'
                                                     }
                                                 </td>
@@ -2989,7 +2924,7 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
 
             setTutorRecommendationState({
                 visible: true,
-                message: '已送出推薦通知，待學生先填寫 Classroom 邀請連結後才會送審給管理員。',
+                message: '已送出推薦通知，待學生先填寫作業連結後才會送審給管理員。',
                 messageClass: 'text-green-700',
                 buttonLabel: '已送出推薦',
                 buttonDisabled: true
@@ -3015,10 +2950,10 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
                     buttonLabel: '已具資格',
                     buttonDisabled: true
                 });
-            } else if (msg.includes('waiting for classroom invite link')) {
+            } else if (msg.includes('waiting for assignment link')) {
                 setTutorRecommendationState({
                     visible: true,
-                    message: '此學生已收到推薦，等待他先提交 Classroom 邀請連結。',
+                    message: '此學生已收到推薦，等待他先提交作業連結。',
                     messageClass: 'text-orange-700',
                     buttonLabel: '等待學生提交連結',
                     buttonDisabled: true
@@ -3048,7 +2983,7 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
     const applicationId = urlParams.get('applicationId');
-    if (action !== 'submitTutorInvite' || !applicationId) return;
+    if (!['submitTutorInvite', 'submitTutorAssignmentLink'].includes(action) || !applicationId) return;
     if (!auth.currentUser) return;
 
     const myApps = dashboardData?.myApplications || {};
@@ -3056,11 +2991,11 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
     if (!appEntry) return;
     if (appEntry.status !== 'awaiting_candidate_link') return;
 
-    const inviteUrlRaw = window.prompt('請貼上此單元的 GitHub Classroom 邀請連結（classroom.github.com/a/...）：', '');
-    if (!inviteUrlRaw || !inviteUrlRaw.trim()) return;
-    const inviteUrl = normalizeGitHubClassroomInviteUrl(inviteUrlRaw);
-    if (!isValidGitHubClassroomInviteUrl(inviteUrl)) {
-        alert('連結格式錯誤。請使用 GitHub Classroom 邀請連結格式：https://classroom.github.com/a/xxxxx');
+    const assignmentUrlRaw = window.prompt('請貼上此單元的作業連結：', '');
+    if (!assignmentUrlRaw || !assignmentUrlRaw.trim()) return;
+    const assignmentUrl = normalizeAssignmentLinkUrl(assignmentUrlRaw);
+    if (!isValidAssignmentLinkUrl(assignmentUrl)) {
+        alert('連結格式錯誤。請使用有效的作業連結（http/https）。');
         return;
     }
 
@@ -3068,10 +3003,10 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
         const submitLink = httpsCallable(functions, 'submitTutorRecommendationInviteLink');
         await submitLink({
             applicationId,
-            classroomInviteUrl: inviteUrl
+            assignmentLink: assignmentUrl
         });
 
-        vibeShowToast('已送出 Classroom 邀請連結，管理員已收到審核通知。', 'success');
+        vibeShowToast('已送出作業連結，管理員已收到審核通知。', 'success');
         urlParams.delete('action');
         urlParams.delete('applicationId');
         const cleanedQuery = urlParams.toString();
@@ -3083,25 +3018,6 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
         alert(`送出失敗：${error.message || '請稍後再試'}`);
     }
 };
-
-function normalizeGitHubClassroomInviteUrl(raw = '') {
-    try {
-        const url = new URL(String(raw).trim());
-        if (url.hostname !== 'classroom.github.com') return String(raw).trim();
-        return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
-    } catch (_) {
-        return String(raw).trim();
-    }
-}
-
-function isValidGitHubClassroomInviteUrl(url = '') {
-    return /^https:\/\/classroom\.github\.com\/a\/[A-Za-z0-9_-]+\/?$/.test(String(url).trim());
-}
-
-function isLikelyGitHubClassroomLink(url = '') {
-    const s = String(url || '').toLowerCase();
-    return s.includes('classroom.github.com') || s.includes('github.com/classroom');
-}
 
 // Utils
 window.escapeHtml = window.escapeHtml || function(text) {
@@ -3213,7 +3129,7 @@ window.findCourseId = window.findCourseId || function(key) {
     // 2. Exact match in lessonsMap (keys are courseIds)
     if (lessonsMap[key]) return key;
 
-    // 3. Match against courseId/courseKey/entryUnitId/courseUnits/classroomUrl
+    // 3. Match against courseId/courseKey/entryUnitId/courseUnits/legacy assignment link
     for (const l of allLessons) {
         const candidateKeys = getLessonLookupKeys(l);
         if (candidateKeys.has(cleanKey)) {
@@ -3479,14 +3395,14 @@ window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(
                             <div class="flex items-center gap-3 mb-1">
                                 <div class="text-[10px] text-blue-400 font-black uppercase tracking-widest">作業派發方式</div>
                                 <select onchange="toggleAssignmentMethod(this)" class="assignment-method-select px-3 py-1 text-xs border border-gray-200 rounded-xl outline-none bg-gray-50/50 transition-all font-sans font-bold text-gray-700">
-                                    <option value="classroom" ${!isNative ? 'selected' : ''}>GitHub Classroom 連結</option>
+                                    <option value="assignment" ${!isNative ? 'selected' : ''}>作業連結</option>
                                     <option value="native" ${isNative ? 'selected' : ''}>自建原生 API</option>
                                 </select>
                             </div>
 
-                            <!-- Classroom URL Container -->
-                            <div class="method-classroom-container flex gap-2 ${isNative ? 'hidden' : ''}">
-                                <input type="url" placeholder="GitHub Classroom 邀請連結 (e.g. https://classroom.github.com/a/...)" value="${escapeHtml(details.githubClassroomUrl || '')}" 
+                            <!-- Legacy/Generic URL Container -->
+                            <div class="method-assignment-container flex gap-2 ${isNative ? 'hidden' : ''}">
+                                <input type="url" placeholder="作業連結 (e.g. https://github.com/...)" value="${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl || '')}"
                                     class="assignment-url-input flex-grow px-4 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
                                 <button onclick="saveAllSettings(this)"
                                     class="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 btn-save-individual">
@@ -3519,9 +3435,9 @@ window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(
                                         儲存 🔗
                                     </button>
                                 </div>
-                                ${details.githubClassroomUrl ? `
+                                ${(details.assignmentUrl || details.legacyAssignmentUrl) ? `
                                 <div class="text-[10px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 mt-1">
-                                    <span>🔗 <b>原有 Classroom 連結：</b><a href="${escapeHtml(details.githubClassroomUrl)}" target="_blank" class="text-blue-600 hover:underline font-mono">${escapeHtml(details.githubClassroomUrl)}</a></span>
+                                    <span>🔗 <b>原有作業連結：</b><a href="${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl)}" target="_blank" class="text-blue-600 hover:underline font-mono">${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl)}</a></span>
                                 </div>
                                 ` : ''}
                             </div>
@@ -3555,13 +3471,13 @@ window.toggleAssignmentMethod = function(select) {
     const card = select.closest('.unit-config-card');
     if (!card) return;
     const method = select.value;
-    const classroomContainer = card.querySelector('.method-classroom-container');
+    const assignmentContainer = card.querySelector('.method-assignment-container');
     const nativeContainer = card.querySelector('.method-native-container');
     if (method === 'native') {
-        classroomContainer.classList.add('hidden');
+        assignmentContainer.classList.add('hidden');
         nativeContainer.classList.remove('hidden');
     } else {
-        classroomContainer.classList.remove('hidden');
+        assignmentContainer.classList.remove('hidden');
         nativeContainer.classList.add('hidden');
     }
 };
@@ -3590,37 +3506,39 @@ window.saveAllSettings = async function (clickedBtn = null) {
         if (!tutorConfigsByCourse[cid]) tutorConfigsByCourse[cid] = {};
 
         const selectMethod = card.querySelector('.assignment-method-select');
-        const method = selectMethod ? selectMethod.value : 'classroom';
+        const method = selectMethod ? selectMethod.value : 'assignment';
 
         card.querySelectorAll('.assignment-link-row').forEach(row => {
             const tid = row.querySelector('.assignment-id-input').value.trim();
             if (!tid) return;
 
-            if (method === 'classroom') {
+            if (method === 'assignment') {
                 const rawUrl = row.querySelector('.assignment-url-input')?.value?.trim() || '';
-                const url = normalizeGitHubClassroomInviteUrl(rawUrl);
-                if (url) {
-                    if (!isValidGitHubClassroomInviteUrl(url)) {
-                        invalidEntry = { unit: fname, tutor: tid, url };
-                        return;
-                    }
-                    configsByCourse[cid][fname] = { [tid]: url };
-                    tutorConfigsByCourse[cid][fname] = {
-                        email: tid,
-                        githubClassroomUrl: url,
-                        githubOrg: '',
-                        templateRepo: '',
-                        githubToken: ''
-                    };
-                } else {
-                    configsByCourse[cid][fname] = { [tid]: '' };
-                    tutorConfigsByCourse[cid][fname] = {
-                        email: tid,
-                        githubClassroomUrl: '',
-                        githubOrg: '',
-                        templateRepo: '',
-                        githubToken: ''
-                    };
+                const url = normalizeAssignmentLinkUrl(rawUrl);
+                    if (url) {
+                        if (!isValidAssignmentLinkUrl(url)) {
+                            invalidEntry = { unit: fname, tutor: tid, url };
+                            return;
+                        }
+                        configsByCourse[cid][fname] = { [tid]: url };
+                        tutorConfigsByCourse[cid][fname] = {
+                            email: tid,
+                            assignmentUrl: url,
+                            legacyAssignmentUrl: url,
+                            githubOrg: '',
+                            templateRepo: '',
+                            githubToken: ''
+                        };
+                    } else {
+                        configsByCourse[cid][fname] = { [tid]: '' };
+                        tutorConfigsByCourse[cid][fname] = {
+                            email: tid,
+                            assignmentUrl: '',
+                            legacyAssignmentUrl: '',
+                            githubOrg: '',
+                            templateRepo: '',
+                            githubToken: ''
+                        };
                 }
             } else {
                 // native
@@ -3635,7 +3553,8 @@ window.saveAllSettings = async function (clickedBtn = null) {
 
                 tutorConfigsByCourse[cid][fname] = {
                     email: tid,
-                    githubClassroomUrl: '',
+                    assignmentUrl: '',
+                    legacyAssignmentUrl: '',
                     githubOrg: org,
                     templateRepo: template,
                     githubToken: tokenVal
@@ -3647,7 +3566,7 @@ window.saveAllSettings = async function (clickedBtn = null) {
     });
 
     if (invalidEntry) {
-        alert(`連結格式錯誤\n單元：${invalidEntry.unit}\nTutor：${invalidEntry.tutor}\n請使用：https://classroom.github.com/a/xxxxx`);
+        alert(`連結格式錯誤\n單元：${invalidEntry.unit}\nTutor：${invalidEntry.tutor}\n請使用有效的作業連結`);
         btns.forEach(btn => {
             btn.disabled = false;
             btn.textContent = originalTexts.get(btn) || "儲存變更";
@@ -3666,7 +3585,8 @@ window.saveAllSettings = async function (clickedBtn = null) {
             promises.push(saveTutorConfigs({
                 courseId: cid,
                 configs: {
-                    githubClassroomUrls: configsByCourse[cid] || {},
+                    assignmentUrlMap: configsByCourse[cid] || {},
+                    assignmentUrls: configsByCourse[cid] || {},
                     tutorConfigs: tutorConfigsByCourse[cid] || {}
                 }
             }));
@@ -3785,7 +3705,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
                     <div class="font-mono text-indigo-700 text-sm">${escapeHtml(data.myPromotionCode || '尚未生成')}</div>
                 </div>
                 <div>
-                    <div class="text-[10px] uppercase tracking-wider text-gray-400">GitHub Classroom Invite Link</div>
+                    <div class="text-[10px] uppercase tracking-wider text-gray-400">作業連結</div>
                     <div class="text-orange-500 text-sm font-bold">尚未配置作業連結</div>
                     <div class="text-[10px] text-gray-400">請聯繫管理員獲取該單元授權</div>
                 </div>
@@ -3799,7 +3719,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
                     <div class="font-mono text-indigo-700 text-sm break-all">${escapeHtml(data.myPromotionCode || '尚未生成')}</div>
                 </div>
                 <div>
-                    <div class="text-[10px] uppercase tracking-wider text-gray-400">GitHub Classroom Invite Link</div>
+                    <div class="text-[10px] uppercase tracking-wider text-gray-400">作業連結</div>
                     <a href="${escapeHtml(data.myReferralLink)}" target="_blank" rel="noopener noreferrer" class="font-mono text-blue-600 text-xs break-all hover:underline">${escapeHtml(data.myReferralLink)}</a>
                 </div>
             </div>
@@ -3819,8 +3739,8 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
             <div class="space-y-6">
                 <!-- Header -->
                 <div class="border-b border-slate-100 pb-4">
-                    <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Invite Tools</p>
-                    <h3 class="text-2xl font-black text-gray-900 mt-2">招生邀請工具包</h3>
+                    <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Registration Tools</p>
+                    <h3 class="text-2xl font-black text-gray-900 mt-2">招生工具包</h3>
                     <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
                 </div>
 
@@ -3831,7 +3751,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
                     <div class="lg:w-[320px] w-full flex flex-col gap-6 flex-shrink-0">
                         <!-- QR Code -->
                         <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center">
-                            <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Promo invite QR code" class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                            <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Referral QR code" class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                             <p class="text-[10px] text-gray-400 mt-4 text-center break-all font-mono max-w-full">${escapeHtml(inviteKit.inviteUrl)}</p>
                         </div>
 
@@ -3856,7 +3776,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
                     <div class="flex-grow w-full">
                         <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden h-full flex flex-col">
                             <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
-                                <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Invite Notice</p>
+                                <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Registration Notice</p>
                                 <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
                                 <p class="text-sm text-slate-500 mt-1 font-medium">複製下方文案並貼給學生，能提供最完整的報名指引。</p>
                             </div>
@@ -3964,7 +3884,7 @@ ${inviteUrl}
 
 若您使用手機，也可以直接掃描我提供的 QR Code。
 
-完成付款後，系統會立即開通課程，並自動建立您與授課老師的輔導關係，之後作業批改與 GitHub Classroom assignment 也會依此關係運作。
+完成付款後，系統會立即開通課程，並自動建立您與授課老師的輔導關係，之後作業批改與作業連結也會依此關係運作。
 
 如有任何問題，歡迎直接回覆我。
 
@@ -4029,50 +3949,6 @@ window.handleDecideApplication = async function (applicationId, status) {
     }
 
 };
-
-window.adminFindInviteBinding = async function () {
-    try {
-        const inviteCodeOrUrlRaw = window.prompt('請輸入 GitHub Classroom 邀請連結（或 invite code）', '');
-        if (!inviteCodeOrUrlRaw || !inviteCodeOrUrlRaw.trim()) return;
-        const user = auth?.currentUser;
-        if (!user) {
-            throw new Error('請先登入 admin 帳號後再查詢');
-        }
-        const idToken = await user.getIdToken();
-        const resp = await fetch('https://asia-east1-e-learning-942f7.cloudfunctions.net/findClassroomInviteBindingHttp', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`
-            },
-            body: JSON.stringify({ inviteCodeOrUrl: inviteCodeOrUrlRaw.trim() })
-        });
-        const payload = await resp.json();
-        if (!resp.ok) {
-            throw new Error(payload?.error || `HTTP ${resp.status}`);
-        }
-        const matches = Array.isArray(payload.matches) ? payload.matches : [];
-
-        if (matches.length === 0) {
-            alert(`查無綁定\\n${payload.normalizedInvite || inviteCodeOrUrlRaw}`);
-            return;
-        }
-
-        const lines = matches.map((m, idx) =>
-            `${idx + 1}. courseId=${m.courseId || '-'} | unitKey=${m.unitKey || '-'} | title=${m.title || '-'}`
-        );
-        alert(
-            `查到 ${matches.length} 筆綁定\\n` +
-            `${payload.normalizedInvite || inviteCodeOrUrlRaw}\\n\\n` +
-            lines.join('\\n')
-        );
-        console.log('[adminFindInviteBinding] result:', payload);
-    } catch (error) {
-        console.error('[adminFindInviteBinding] failed:', error);
-        alert(`查詢失敗：${error?.message || error}`);
-    }
-};
-
 
 // [CLEANUP] Deprecated legacy status renderers removed.
 

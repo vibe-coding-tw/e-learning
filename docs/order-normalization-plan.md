@@ -5,7 +5,7 @@
 
 ## 1. Current State
 
-目前 `normalizeOrderItems` 這條線仍在 `functions/index.js`，原因是它依賴多個 course / lesson / canonical lookup helper：
+目前 `normalizeOrderItems` 這條線已移到 `functions/lib/order-utils.js`，但它仍依賴由 `functions/index.js` 提供的 course / lesson / canonical lookup helper：
 
 - `resolveLessonForOrderItem`
 - `findLessonByCourseRef`
@@ -33,7 +33,7 @@
 ## 3. 建議拆法
 
 ### 3.1 先抽純資料 helper
-優先搬進 `functions/lib/order-utils.js` 的候選：
+已搬進 `functions/lib/order-utils.js` 的候選：
 
 - `normalizeOrderItems`
 - `extractReferralAssignmentsFromOrder`
@@ -76,6 +76,6 @@
 
 - `functions/index.js` 不再定義上述五個 order normalization helper
 - `functions/lib/order-utils.js` 成為唯一實作來源
+- `functions/index.js` 只提供 resolver / dependency injection
 - `node --check functions/index.js` 與 `node --check functions/lib/order-utils.js` 皆通過
 - `docs/index-helper-inventory.md` 已更新
-

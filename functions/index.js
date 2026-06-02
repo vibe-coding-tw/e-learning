@@ -68,10 +68,12 @@ const {
     fallbackNameFromEmail,
     generatePromotionCode,
     getEffectiveTutorConfig,
+    getPreferredAssignmentUrl,
     getUserTutorConfig,
     indexAuthorizedTutorConfigForDashboard,
     queryTutorApplications,
     resolveNameFromUserData,
+    resolveAssignmentUrlMaps,
     upsertTutorApplicationLegacyEntry,
     upsertTutorConfigForUser,
 } = require('./lib/tutor-utils');
@@ -82,11 +84,20 @@ const {
     buildShippingAddress,
     buildShippingContact,
     buildStudentOrderRecord,
+    collectPurchasedUnitIds,
+    extractReferralAssignmentsFromOrder,
+    hasActiveOrderForCourse,
     getPhysicalUnitIdSet,
     isPhysicalOrderItem,
+    itemContainsUnit,
     normalizeGitHubUrl,
-    normalizeLogisticsData
+    normalizeLogisticsData,
+    normalizeOrderItems
 } = require('./lib/order-utils');
+const {
+    resolveCartPrice,
+    resolveLessonPrice
+} = require('./lib/pricing-utils');
 
 admin.initializeApp({
     projectId: "e-learning-942f7"
@@ -378,6 +389,33 @@ function normalizeText(value = "") {
     return String(value || "").trim();
 }
 
+function normalizeAssignmentLinkUrl(value = "") {
+    return normalizeText(value);
+}
+
+function isValidAssignmentLinkUrl(value = "") {
+    const normalized = normalizeText(value);
+    if (!normalized) return false;
+    try {
+        const parsed = new URL(normalized);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (_) {
+        return false;
+    }
+}
+
+function getTutorAssignmentUrlFromConfig(cfg = {}, course = null, canonicalUnitId = '', tutorEmail = '', lessons = []) {
+    const directUrl = normalizeText(cfg.assignmentUrl || cfg.legacyAssignmentUrl || cfg.githubClassroomUrl || '');
+    if (directUrl) return directUrl;
+
+    const courseAssignmentMap = course?.assignmentUrlMap?.[canonicalUnitId] || course?.assignmentUrls?.[canonicalUnitId];
+    if (courseAssignmentMap) {
+        return resolveAssignmentUrlForTutor(courseAssignmentMap, tutorEmail) || '';
+    }
+
+    return '';
+}
+
 async function findUserDocByEmail(db, email = "") {
     const normalized = normalizeEmail(email);
     if (!normalized) return null;
@@ -438,7 +476,6 @@ exports.initiatePayment = onRequest(async (req, res) => {
 
         const requestData = req.body.data || req.body || {};
         const {
-            amount,
             returnUrl,
             cartDetails,
             logistics,
@@ -463,7 +500,6 @@ exports.initiatePayment = onRequest(async (req, res) => {
             }
         }
 
-        const finalAmount = parseInt(amount, 10) || 100;
         const orderNumber = `VIBE${Date.now()}`;
         const tradeDate = getCurrentTime();
 
@@ -472,7 +508,8 @@ exports.initiatePayment = onRequest(async (req, res) => {
             cartDetails || {},
             referralLink || promoCode,
             referredTutorEmail || referralTutor,
-            lessons
+            lessons,
+            orderNormalizationResolvers
         );
 
         // [NEW] Prevent duplicate course purchase if original course has not expired
@@ -520,6 +557,40 @@ exports.initiatePayment = onRequest(async (req, res) => {
         }
 
         const isStripe = (gateway === 'STRIPE' || locale === 'en');
+        const settlementLocale = isStripe ? 'en' : 'zh-TW';
+        const expectedCurrency = isStripe ? 'USD' : 'TWD';
+        const pricingAwareItems = {};
+        let settlementAmount = 0;
+        let hasPhysical = false;
+
+        for (const itemKey of Object.keys(normalizedItems)) {
+            const lesson = resolveLessonForOrderItem(itemKey, lessons);
+            const qty = Number(normalizedItems[itemKey].quantity || 1);
+            const sourcePrice = lesson
+                ? resolveLessonPrice(lesson, settlementLocale)
+                : resolveCartPrice(normalizedItems[itemKey], settlementLocale);
+            const itemAmount = Number(sourcePrice.amount || 0);
+            const itemCurrency = String(sourcePrice.currency || '').toUpperCase();
+
+            if (!itemCurrency || itemCurrency !== expectedCurrency) {
+                throw new Error(`商品「${normalizedItems[itemKey].name || itemKey}」的幣別設定不正確，請先在 Firestore 補齊 ${expectedCurrency} 價格。`);
+            }
+
+            const isPhysicalItem = lesson ? lesson.isPhysical === true : normalizedItems[itemKey].isPhysical === true;
+            if (isPhysicalItem) hasPhysical = true;
+
+            const normalizedItem = {
+                ...normalizedItems[itemKey],
+                price: itemAmount,
+                currency: itemCurrency,
+                price_currency: itemCurrency
+            };
+            if (itemCurrency === 'USD') normalizedItem.price_usd = itemAmount;
+            if (itemCurrency === 'TWD') normalizedItem.price_twd = itemAmount;
+            pricingAwareItems[itemKey] = normalizedItem;
+            settlementAmount += itemAmount * qty;
+        }
+        const shippingFeeAmount = hasPhysical ? (isStripe ? 15 : 450) : 0;
 
         if (isStripe) {
             const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -531,32 +602,8 @@ exports.initiatePayment = onRequest(async (req, res) => {
                 });
             }
             const stripe = require('stripe')(stripeKey);
-
-            let usdAmount = 0;
-            let hasPhysical = false;
-
-            for (const itemKey of Object.keys(normalizedItems)) {
-                const lesson = resolveLessonForOrderItem(itemKey, lessons);
-                const qty = normalizedItems[itemKey].quantity || 1;
-                let priceUsd = 0;
-
-                if (lesson) {
-                    if (lesson.isPhysical) {
-                        hasPhysical = true;
-                    }
-                    priceUsd = Number(lesson.price_usd) || Math.ceil((Number(lesson.price) || 0) / 30);
-                } else {
-                    const itemPrice = Number(normalizedItems[itemKey].price) || 0;
-                    priceUsd = Math.ceil(itemPrice / 30);
-                }
-
-                normalizedItems[itemKey].price_usd = priceUsd;
-                usdAmount += priceUsd * qty;
-            }
-
-            let shippingFeeUsd = 0;
-            if (hasPhysical) {
-                shippingFeeUsd = 15; // 固定海外運費 15 美元
+            let shippingFeeUsd = shippingFeeAmount;
+            if (shippingFeeUsd > 0) {
                 if (!logisticsPayload) {
                     logisticsPayload = {};
                 }
@@ -564,7 +611,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
                 logisticsPayload.isInternational = true;
             }
 
-            const finalAmountUsd = usdAmount + shippingFeeUsd;
+            const finalAmountUsd = settlementAmount + shippingFeeUsd;
 
             // 建立訂單內容記錄 (Firestore)
             await admin.firestore().collection("orders").doc(orderNumber).set({
@@ -572,7 +619,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
                 amount: finalAmountUsd, // USD amount
                 status: "PENDING",
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                items: normalizedItems,
+                items: pricingAwareItems,
                 logistics: logisticsPayload || null,
                 orderNumber: orderNumber,
                 gateway: "STRIPE",
@@ -581,15 +628,15 @@ exports.initiatePayment = onRequest(async (req, res) => {
             });
 
             const lineItems = [];
-            for (const itemKey of Object.keys(normalizedItems)) {
-                const item = normalizedItems[itemKey];
+            for (const itemKey of Object.keys(pricingAwareItems)) {
+                const item = pricingAwareItems[itemKey];
                 lineItems.push({
                     price_data: {
                         currency: 'usd',
                         product_data: {
                             name: item.name || 'Vibe Coding Course',
                         },
-                        unit_amount: Math.round(item.price_usd * 100), // cents
+                        unit_amount: Math.round(Number(item.price || 0) * 100), // cents
                     },
                     quantity: item.quantity || 1,
                 });
@@ -646,10 +693,10 @@ exports.initiatePayment = onRequest(async (req, res) => {
         // 建立訂單內容記錄 (Firestore)
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: uid,
-            amount: finalAmount,
+            amount: settlementAmount + shippingFeeAmount,
             status: "PENDING",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            items: normalizedItems,
+            items: pricingAwareItems,
             logistics: logisticsPayload || null,
             orderNumber: orderNumber
         });
@@ -678,7 +725,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
             MerchantTradeNo: orderNumber,
             MerchantTradeDate: tradeDate,
             PaymentType: 'aio',
-            TotalAmount: finalAmount,
+            TotalAmount: settlementAmount + shippingFeeAmount,
             TradeDesc: 'VibeCodingCourse',
             ItemName: itemNameStr,
             ReturnURL: serverUrl,
@@ -903,7 +950,7 @@ async function activateOrderPermissionsAndNotify(orderId) {
 
         // 4. 自動指派導師與分潤綁定
         if (orderData.uid && orderData.uid !== 'GUEST') {
-            const referralAssignments = extractReferralAssignmentsFromOrder(orderData.items || {}, lessons);
+            const referralAssignments = extractReferralAssignmentsFromOrder(orderData.items || {}, lessons, orderNormalizationResolvers);
 
             for (const assignment of referralAssignments) {
                 const linkId = buildReferralLinkDocId(assignment.referralLink);
@@ -1116,7 +1163,7 @@ async function getLessons() {
             cachedLessons = cachedLessons.map(d => {
                 delete d.updatedAt;
                 delete d.orderWeight;
-                return d;
+                return withAssignmentUrlAliases(d);
             });
             
             lastFetchTime = Date.now();
@@ -1130,6 +1177,24 @@ async function getLessons() {
     }
 
     return cachedLessons || [];
+}
+
+function withAssignmentUrlAliases(lesson = {}) {
+    const currentUrlMap = lesson && typeof lesson.assignmentUrlMap === 'object' && lesson.assignmentUrlMap !== null
+        ? lesson.assignmentUrlMap
+        : null;
+    const currentUrls = lesson && typeof lesson.assignmentUrls === 'object' && lesson.assignmentUrls !== null
+        ? lesson.assignmentUrls
+        : null;
+
+    const assignmentUrlMap = currentUrlMap || null;
+    const assignmentUrls = currentUrls || currentUrlMap || null;
+
+    return {
+        ...lesson,
+        ...(assignmentUrlMap ? { assignmentUrlMap } : {}),
+        ...(assignmentUrls ? { assignmentUrls } : {})
+    };
 }
 
 function cleanUnitId(unitId) {
@@ -1236,18 +1301,19 @@ function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
                 unitIdsMatch(normalizedUnit, normalizedPageIdNoHtml);
         });
 
-        const classroomUnitMatch = !!(l.classroomUrl && (
-            unitIdsMatch(normalizeCourseFile(l.classroomUrl), normalizedFileName) ||
-            unitIdsMatch(normalizeCourseFile(l.classroomUrl), normalizedFileNameNoHtml) ||
-            unitIdsMatch(normalizeCourseFile(l.classroomUrl), normalizedPageId) ||
-            unitIdsMatch(normalizeCourseFile(l.classroomUrl), normalizedPageIdNoHtml)
+        const legacyLessonUrl = l.classroomUrl;
+        const assignmentUnitMatch = !!(legacyLessonUrl && (
+            unitIdsMatch(normalizeCourseFile(legacyLessonUrl), normalizedFileName) ||
+            unitIdsMatch(normalizeCourseFile(legacyLessonUrl), normalizedFileNameNoHtml) ||
+            unitIdsMatch(normalizeCourseFile(legacyLessonUrl), normalizedPageId) ||
+            unitIdsMatch(normalizeCourseFile(legacyLessonUrl), normalizedPageIdNoHtml)
         ));
 
         return unitIdsMatch(lessonCourseId, pageId) ||
             unitIdsMatch(lessonCourseId, normalizedPageId) ||
             unitIdsMatch(lessonCourseIdNoHtml, normalizedPageIdNoHtml) ||
             unitMatch ||
-            classroomUnitMatch;
+            assignmentUnitMatch;
     }) || null;
 }
 
@@ -1284,7 +1350,8 @@ function getLessonLookupKeys(lesson = {}) {
     add(normalizeCanonicalCourseKey(lesson.courseKey));
     add(normalizeCanonicalCourseKey(lesson.contentRef));
     add(lesson.entryUnitId);
-    add(lesson.classroomUrl);
+    const legacyLessonUrl = lesson.classroomUrl;
+    add(legacyLessonUrl);
     add(lesson.productId);
     add(lesson.sku);
 
@@ -1332,108 +1399,15 @@ function resolveLessonForOrderItem(itemKey = '', lessons = []) {
     }) || findCourseByPageOrUnit(itemKey, itemKey, lessons);
 }
 
-function collectPurchasedUnitIds(items = {}, lessons = []) {
-    const purchasedUnits = new Set();
-
-    Object.keys(items || {}).forEach(itemKey => {
-        const lesson = resolveLessonForOrderItem(itemKey, lessons);
-        if (lesson) {
-            (lesson.courseUnits || []).forEach(unitId => purchasedUnits.add(resolveCanonicalUnitId(unitId, lessons)));
-            return;
-        }
-
-        const canonicalUnitId = resolveCanonicalUnitId(itemKey, lessons);
-        if (canonicalUnitId) purchasedUnits.add(canonicalUnitId);
-    });
-
-    return Array.from(purchasedUnits);
-}
-
-function findMatchingOrderItemIdForReferral(items = {}, referralTargetId = '', lessons = []) {
-    if (!referralTargetId) return null;
-
-    if (items[referralTargetId]) return referralTargetId;
-
-    const canonicalReferralUnitId = resolveCanonicalUnitId(referralTargetId, lessons);
-    if (items[canonicalReferralUnitId]) return canonicalReferralUnitId;
-
-    const parentCourseId = findParentCourseIdByUnit(canonicalReferralUnitId, lessons);
-    if (parentCourseId && items[parentCourseId]) return parentCourseId;
-
-    return Object.keys(items || {}).find(itemKey => {
-        if (itemKey === referralTargetId || itemKey === canonicalReferralUnitId) return true;
-        const lesson = findLessonByCourseRef(itemKey, lessons);
-        return !!(lesson && Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(canonicalReferralUnitId));
-    }) || null;
-}
-
-function normalizeOrderItems(cartDetails = {}, referralLink = '', referredTutorEmail = '', lessons = []) {
-    const items = JSON.parse(JSON.stringify(cartDetails || {}));
-    const normalizedReferralLink = referralLink && referralLink.trim()
-        ? normalizeText(referralLink)
-        : null;
-    const normalizedReferredTutorEmail = referredTutorEmail && referredTutorEmail.trim()
-        ? normalizeText(referredTutorEmail)
-        : 'info@vibe-coding.tw';
-
-    Object.entries(items).forEach(([itemKey, itemValue]) => {
-        if (!itemValue || typeof itemValue !== 'object') items[itemKey] = {};
-        const itemReferralLink = itemValue?.referralLink || itemValue?.promoCode || null;
-        const itemReferredTutorEmail = itemValue?.referredTutorEmail || itemValue?.referralTutor || 'info@vibe-coding.tw';
-        const itemReferredTutorName = itemValue?.referredTutorName || itemValue?.referralTutorName || null;
-
-        items[itemKey].referralLink = itemReferralLink ? normalizeText(itemReferralLink) : null;
-        items[itemKey].referredTutorEmail = itemReferredTutorEmail ? normalizeText(itemReferredTutorEmail) : 'info@vibe-coding.tw';
-        items[itemKey].referredTutorName = itemReferredTutorName ? normalizeText(itemReferredTutorName) : null;
-    });
-
-    if (normalizedReferralLink) {
-        const targetItemId = findMatchingOrderItemIdForReferral(items, normalizedReferralLink, lessons);
-        if (targetItemId && items[targetItemId]) {
-            items[targetItemId].referralLink = normalizedReferralLink;
-            items[targetItemId].referredTutorEmail = normalizedReferredTutorEmail;
-        }
-    }
-
-    return items;
-}
-
-function extractReferralAssignmentsFromOrder(orderItems = {}, lessons = []) {
-    const assignments = [];
-
-    Object.entries(orderItems || {}).forEach(([itemKey, itemValue]) => {
-        const itemReferralLink = itemValue?.referralLink || itemValue?.promoCode || null;
-        const itemTutor = itemValue?.referredTutorEmail || itemValue?.referralTutor || null;
-        if (!itemReferralLink) return;
-
-        const lesson = findLessonByCourseRef(itemKey, lessons);
-        const purchasedUnits = lesson
-            ? (lesson.courseUnits || []).map(unitId => resolveCanonicalUnitId(unitId, lessons))
-            : [resolveCanonicalUnitId(itemKey, lessons)];
-
-        assignments.push({
-            itemKey,
-            referralLink: normalizeText(itemReferralLink),
-            referredTutorEmail: itemTutor ? normalizeText(itemTutor) : null,
-            purchasedUnits
-        });
-    });
-
-    return assignments;
-}
-
-function itemContainsUnit(itemKey = '', lessons = [], targetUnitId = '') {
-    if (!itemKey || !targetUnitId) return false;
-    const canonicalTargetUnitId = resolveCanonicalUnitId(targetUnitId, lessons);
-    const lesson = resolveLessonForOrderItem(itemKey, lessons);
-    if (lesson && Array.isArray(lesson.courseUnits)) {
-        return lesson.courseUnits
-            .map(unitId => resolveCanonicalUnitId(unitId, lessons))
-            .includes(canonicalTargetUnitId);
-    }
-    const canonicalItemKey = resolveCanonicalUnitId(itemKey, lessons);
-    return canonicalItemKey === canonicalTargetUnitId;
-}
+const orderNormalizationResolvers = {
+    resolveLessonForOrderItem,
+    resolveCanonicalUnitId,
+    findLessonByCourseRef,
+    findParentCourseIdByUnit,
+    normalizeText,
+    cleanUnitId,
+    getLessonLookupKeys
+};
 
 async function backfillTutorReferralForPaidOrders(db, {
     uid,
@@ -1465,7 +1439,7 @@ async function backfillTutorReferralForPaidOrders(db, {
         let hasOrderChange = false;
 
         for (const [itemKey, itemValue] of Object.entries(items)) {
-            if (!itemContainsUnit(itemKey, lessons, unitId)) continue;
+            if (!itemContainsUnit(itemKey, lessons, unitId, orderNormalizationResolvers)) continue;
             if (!itemValue || typeof itemValue !== 'object') continue;
 
             itemValue.referredTutorEmail = normalizedTutorEmail;
@@ -1494,61 +1468,7 @@ async function backfillTutorReferralForPaidOrders(db, {
     return { updatedOrders, updatedItems };
 }
 
-function hasActiveOrderForCourse(ordersSnapshot, courseId, lessons = []) {
-    let hasCourse = false;
-    const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
-
-    ordersSnapshot.forEach(doc => {
-        const data = doc.data();
-        const items = data.items || {};
-        
-        // 1. Direct match check
-        let matched = !!items[courseId];
-        
-        // 2. Compatibility check: if direct lookup fails, verify if any purchased item matches/contains courseId
-        if (!matched && lessons.length > 0) {
-            for (const itemKey of Object.keys(items)) {
-                if (itemContainsUnit(itemKey, lessons, courseId)) {
-                    matched = true;
-                    break;
-                }
-            }
-        }
-        
-        if (!matched) return;
-
-        // [V14.0] Use toMillis() method for consistent expiry date comparison per AGENT.md Rule 7
-        if (data.expiryDate?.toMillis) {
-            if (data.expiryDate.toMillis() > Date.now()) {
-                hasCourse = true;
-            }
-            return;
-        }
-
-        // Fallback for legacy Date objects (backward compatibility)
-        if (data.expiryDate?.toDate) {
-            const expiry = data.expiryDate.toDate().getTime();
-            if (now < expiry) hasCourse = true;
-            return;
-        }
-
-        let orderDate = null;
-        if (data.paymentDate) {
-            orderDate = new Date(data.paymentDate).getTime();
-        } else if (data.createdAt?.toDate) {
-            orderDate = data.createdAt.toDate().getTime();
-        }
-
-        if (orderDate && (now - orderDate < ONE_YEAR_MS)) {
-            hasCourse = true;
-        }
-    });
-
-    return hasCourse;
-}
-
-function resolveClassroomUrlForTutor(urlConfig, tutorEmail) {
+function resolveAssignmentUrlForTutor(urlConfig, tutorEmail) {
     if (!urlConfig) return null;
     if (typeof urlConfig === 'string') return urlConfig;
     if (typeof urlConfig !== 'object') return null;
@@ -1745,8 +1665,16 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         }
 
         // FREE COURSE (NT$ 0) (Digital Only)
-        const lessonPrice = course ? course.price : (findLessonByCourseRef(effectiveCourseId, lessons)?.price || 9999);
-        const isFreeCourse = !!(course && parseInt(lessonPrice) === 0);
+        const lessonPrice = course
+            ? Math.max(
+                Number(resolveLessonPrice(course, "zh-TW").amount || 0),
+                Number(resolveLessonPrice(course, "en").amount || 0)
+              )
+            : Math.max(
+                Number(resolveLessonPrice(findLessonByCourseRef(effectiveCourseId, lessons) || {}, "zh-TW").amount || 0),
+                Number(resolveLessonPrice(findLessonByCourseRef(effectiveCourseId, lessons) || {}, "en").amount || 0)
+              ) || 9999;
+        const isFreeCourse = !!(course && parseInt(lessonPrice, 10) === 0);
         if (isFreeCourse) {
             return { authorized: true, accessMode: 'free_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
         }
@@ -2040,7 +1968,8 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         };
 
         addLegacyAndI18n(course.entryUnitId || "");
-        addLegacyAndI18n(course.classroomUrl || "");
+        const legacyLessonUrl = course.classroomUrl || "";
+        addLegacyAndI18n(legacyLessonUrl);
         addLegacyAndI18n(course.contentRef || "");
 
         (Array.isArray(course.courseUnits) ? course.courseUnits : []).forEach(unitId => addLegacyAndI18n(unitId));
@@ -2419,7 +2348,8 @@ const saveTutorConfigsHandler = onCall(async (request) => {
     const userRef = admin.firestore().collection('users').doc(uid);
     const userDoc = await userRef.get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-    const unitIds = Object.keys(configs.githubClassroomUrls || {});
+    const effectiveAssignmentUrlMaps = resolveAssignmentUrlMaps(configs) || {};
+    const unitIds = Object.keys(effectiveAssignmentUrlMaps || {});
     const canManageAllUnits = role === 'admin';
     const canManageRequestedUnits = unitIds.every(unitId => hasQualifiedTutorStatus(userData, unitId));
 
@@ -2439,11 +2369,11 @@ const saveTutorConfigsHandler = onCall(async (request) => {
         try {
             const db = admin.firestore();
             
-            // --- PHASE 1: Propagate githubClassroomUrls and Authorizations to User Documents ---
-            if (configs.githubClassroomUrls) {
-                console.log(`[saveTutorConfigs] Syncing GitHub Classroom URLs to user documents for ${courseId}...`);
+            // --- PHASE 1: Propagate assignmentUrl maps and Authorizations to User Documents ---
+            if (unitIds.length > 0) {
+                console.log(`[saveTutorConfigs] Syncing assignment URLs to user documents for ${courseId}...`);
                 
-                for (const [unitId, tutorsMap] of Object.entries(configs.githubClassroomUrls)) {
+                for (const [unitId, tutorsMap] of Object.entries(effectiveAssignmentUrlMaps)) {
                     for (const [tEmail, url] of Object.entries(tutorsMap)) {
                         try {
                             const userRecord = await admin.auth().getUserByEmail(tEmail);
@@ -2451,7 +2381,7 @@ const saveTutorConfigsHandler = onCall(async (request) => {
 
                             await upsertTutorConfigForUser(db, tutorUid, unitId, buildTutorConfigEntry({
                                 email: tEmail,
-                                githubClassroomUrl: url
+                                assignmentUrl: url
                             }), {
                                 syncReferralUrl: url,
                                 syncReferralLinkFn: syncReferralLink
@@ -2473,15 +2403,16 @@ const saveTutorConfigsHandler = onCall(async (request) => {
                     try {
                         const userRecord = await admin.auth().getUserByEmail(tEmail.toLowerCase());
                         const tutorUid = userRecord.uid;
+                        const preferredAssignmentUrl = getPreferredAssignmentUrl(configObj);
 
                         await upsertTutorConfigForUser(db, tutorUid, unitId, buildTutorConfigEntry({
                             email: tEmail.toLowerCase(),
-                            githubClassroomUrl: configObj.githubClassroomUrl,
+                            assignmentUrl: preferredAssignmentUrl,
                             githubOrg: configObj.githubOrg,
                             templateRepo: configObj.templateRepo,
                             githubToken: configObj.githubToken
                         }), {
-                            syncReferralUrl: configObj.githubClassroomUrl || null,
+                            syncReferralUrl: preferredAssignmentUrl || null,
                             syncReferralLinkFn: syncReferralLink
                         });
                         
@@ -2511,7 +2442,8 @@ const getTutorConfigsHandler = onCall(async (request) => {
             
             const authorizedTutors = [];
             const tutorDetails = {};
-            const githubClassroomUrls = { [courseId]: {} };
+            const assignmentUrlMap = { [courseId]: {} };
+            const assignmentUrls = { [courseId]: {} };
 
             tutorsSnap.forEach(tDoc => {
                 const tData = tDoc.data();
@@ -2522,8 +2454,10 @@ const getTutorConfigsHandler = onCall(async (request) => {
                 if (config && config.authorized === true) {
                     authorizedTutors.push(config.email);
                     tutorDetails[config.email] = config;
-                    if (config.githubClassroomUrl) {
-                        githubClassroomUrls[courseId][config.email] = config.githubClassroomUrl;
+                    const assignmentUrl = getPreferredAssignmentUrl(config);
+                    if (assignmentUrl) {
+                        assignmentUrlMap[courseId][config.email] = assignmentUrl;
+                        assignmentUrls[courseId][config.email] = assignmentUrl;
                     }
                 }
             });
@@ -2532,7 +2466,8 @@ const getTutorConfigsHandler = onCall(async (request) => {
                 [courseId]: {
                     authorizedTutors,
                     tutorDetails,
-                    githubClassroomUrls
+                    assignmentUrlMap,
+                    assignmentUrls
                 } 
             };
         } else {
@@ -2546,12 +2481,19 @@ const getTutorConfigsHandler = onCall(async (request) => {
                 for (const [uId, config] of Object.entries(tutorConfigs)) {
                     if (!config.authorized) continue;
                     if (!allConfigs[uId]) {
-                        allConfigs[uId] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: { [uId]: {} } };
+                        allConfigs[uId] = {
+                            authorizedTutors: [],
+                            tutorDetails: {},
+                            assignmentUrlMap: { [uId]: {} },
+                            assignmentUrls: { [uId]: {} }
+                        };
                     }
                     allConfigs[uId].authorizedTutors.push(config.email);
                     allConfigs[uId].tutorDetails[config.email] = config;
-                    if (config.githubClassroomUrl) {
-                        allConfigs[uId].githubClassroomUrls[uId][config.email] = config.githubClassroomUrl;
+                    const assignmentUrl = getPreferredAssignmentUrl(config);
+                    if (assignmentUrl) {
+                        allConfigs[uId].assignmentUrlMap[uId][config.email] = assignmentUrl;
+                        allConfigs[uId].assignmentUrls[uId][config.email] = assignmentUrl;
                     }
                 }
             });
@@ -2591,8 +2533,8 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
         };
     }
 
-    // [V12.0.4] Fetch Tutor-specific classroom URL from the Tutor's User document
-    let classroomUrl = null;
+    // [V12.0.4] Fetch Tutor-specific assignment URL from the Tutor's User document
+    let assignmentUrl = null;
     let createdVia = 'classroom';
     let repositoryUrl = null;
     let feedbackPullRequestUrl = null;
@@ -2603,15 +2545,15 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
             const tutorDoc = await db.collection('users').doc(tutorRecord.uid).get();
             const tutorData = tutorDoc.exists ? tutorDoc.data() : {};
             const unitConfig = (tutorData.tutorConfigs || {})[canonicalUnitId] || {};
-            classroomUrl = unitConfig.githubClassroomUrl || null;
+            assignmentUrl = getTutorAssignmentUrlFromConfig(unitConfig, null, canonicalUnitId, assignedTutorEmail) || null;
             if (unitConfig.githubOrg) {
                 createdVia = 'native-api';
             }
             
             // Fallback to course-level if not unit-level (optional, depending on structure)
-            if (!classroomUrl && effectiveCourseId) {
+            if (!assignmentUrl && effectiveCourseId) {
                 const courseConfig = (tutorData.tutorConfigs || {})[effectiveCourseId] || {};
-                classroomUrl = courseConfig.githubClassroomUrl || null;
+                assignmentUrl = getTutorAssignmentUrlFromConfig(courseConfig, null, canonicalUnitId, assignedTutorEmail) || null;
                 if (courseConfig.githubOrg) {
                     createdVia = 'native-api';
                 }
@@ -2622,11 +2564,9 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
     }
 
     // Secondary Fallback: Check metadata_lessons (lessons) for default URLs
-    if (!classroomUrl) {
+    if (!assignmentUrl) {
         const course = findLessonByCourseRef(effectiveCourseId, lessons);
-        if (course?.githubClassroomUrls?.[canonicalUnitId]) {
-            classroomUrl = resolveClassroomUrlForTutor(course.githubClassroomUrls[canonicalUnitId], assignedTutorEmail);
-        }
+        assignmentUrl = getTutorAssignmentUrlFromConfig({}, course, canonicalUnitId, assignedTutorEmail, lessons) || null;
     }
 
     // [V17.0.1] Personalized Repository Check: If student already started, prioritize their personal repo
@@ -2655,10 +2595,10 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
             } else {
                 const existingUrl = aData.assignmentUrl || aData.url;
                 // Only prioritize if it's a real GitHub repo (not a classroom invitation link with /a/)
-                if (existingUrl && existingUrl.includes('github.com/') && !existingUrl.includes('classroom.github.com/a/')) {
-                    personalRepoUrl = existingUrl;
-                    console.log(`[resolveAssignmentAccess] Found personal repo for student: ${personalRepoUrl}`);
-                }
+        if (existingUrl && existingUrl.includes('github.com/') && !existingUrl.includes('classroom.github.com/a/')) {
+            personalRepoUrl = existingUrl;
+            console.log(`[resolveAssignmentAccess] Found personal repo for student: ${personalRepoUrl}`);
+        }
             }
             assignmentDetails = {
                 learningState: aData.learningState || 'in_progress',
@@ -2685,10 +2625,12 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
         console.warn(`[resolveAssignmentAccess] Failed to fetch student ${auth.uid} githubUsername:`, studentErr.message);
     }
 
+    const resolvedAssignmentUrl = personalRepoUrl || assignmentUrl || null;
+
     return {
         authorized: true,
         accessMode,
-        classroomUrl: personalRepoUrl || classroomUrl || null,
+        classroomUrl: resolvedAssignmentUrl,
         assignedTutorEmail: assignedTutorEmail || null,
         assignedPromotionCode: assignedPromotionCode || null,
         canonicalUnitId,
@@ -2700,59 +2642,6 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
         repositoryUrl: repositoryUrl || personalRepoUrl || null,
         feedbackPullRequestUrl
     };
-});
-
-exports.precheckGithubClassroomAccess = onCall(async (request) => {
-    const { auth, data } = request;
-    assertAuthenticated(auth);
-
-    if (!GITHUB_ORG_ADMIN_TOKEN) {
-        return {
-            success: false,
-            precheckEnabled: false,
-            state: "disabled",
-            message: "GitHub precheck is not configured."
-        };
-    }
-
-    const classroomUrl = normalizeText(data?.classroomUrl || "");
-    const isClassroom = /classroom\.github\.com\/a\//i.test(classroomUrl);
-    if (!isClassroom) {
-        return {
-            success: true,
-            precheckEnabled: true,
-            state: "skipped",
-            message: "Not a GitHub Classroom invite URL."
-        };
-    }
-
-    try {
-        const result = await ensureGithubOrgMembership({
-            admin,
-            token: GITHUB_ORG_ADMIN_TOKEN,
-            firebaseUid: auth.uid,
-            org: GITHUB_CLASSROOM_ORG
-        });
-        return {
-            success: result.ok === true,
-            precheckEnabled: true,
-            state: result.state,
-            org: result.org,
-            githubLogin: result.githubLogin || null,
-            inviteSent: result.inviteSent === true,
-            inviteId: result.inviteId || null,
-            settingsUrl: "https://github.com/settings/organizations"
-        };
-    } catch (error) {
-        console.error("[precheckGithubClassroomAccess] failed:", error);
-        return {
-            success: false,
-            precheckEnabled: true,
-            state: "error",
-            message: error.message || "precheck failed",
-            settingsUrl: "https://github.com/settings/organizations"
-        };
-    }
 });
 
 // 7.3 授權課程老師 (Admin Only)
@@ -2988,10 +2877,10 @@ exports.recommendTutorForUnit = onCall(async (request) => {
         limit: 1
     });
 
-    if (!existingPending.empty) {
+        if (!existingPending.empty) {
         const existingStatus = (existingPending.docs[0].data() || {}).status;
         if (existingStatus === 'awaiting_candidate_link') {
-            throw new HttpsError('already-exists', 'Student already has a pending recommendation waiting for classroom invite link.');
+            throw new HttpsError('already-exists', 'Student already has a pending recommendation waiting for the student to submit the assignment link.');
         }
         throw new HttpsError('already-exists', 'Student already has a pending application for this unit.');
     }
@@ -3006,6 +2895,7 @@ exports.recommendTutorForUnit = onCall(async (request) => {
         recommendedByEmail: auth.token.email || '',
         recommendedFromAssignmentId: assignmentId,
         recommendedAt: admin.firestore.FieldValue.serverTimestamp(),
+        candidateAssignmentLink: '',
         candidateClassroomInviteUrl: '',
         candidateLinkSubmittedAt: null,
         appliedAt: null
@@ -3022,13 +2912,14 @@ exports.submitTutorRecommendationInviteLink = onCall(async (request) => {
     const auth = request.auth;
     assertAuthenticated(auth, 'User must be logged in.');
 
-    const { applicationId, classroomInviteUrl } = data;
-    assertRequiredValue(applicationId, 'Missing applicationId or classroomInviteUrl');
-    assertRequiredValue(classroomInviteUrl, 'Missing applicationId or classroomInviteUrl');
+    const { applicationId, assignmentLink, classroomInviteUrl: legacyInviteUrl } = data;
+    const candidateAssignmentLink = assignmentLink || legacyInviteUrl || '';
+    assertRequiredValue(applicationId, 'Missing applicationId or assignmentLink');
+    assertRequiredValue(candidateAssignmentLink, 'Missing applicationId or assignmentLink');
 
-    const normalizedInvite = normalizeGitHubUrl(normalizeText(classroomInviteUrl));
-    if (!normalizedInvite.includes('classroom.github.com/a/')) {
-        throw new HttpsError('invalid-argument', 'Classroom invite link must be a valid GitHub Classroom invitation URL.');
+    const normalizedAssignmentLink = normalizeAssignmentLinkUrl(candidateAssignmentLink);
+    if (!isValidAssignmentLinkUrl(normalizedAssignmentLink)) {
+        throw new HttpsError('invalid-argument', '作業連結格式不正確，請提供有效的 http/https 連結。');
     }
 
     const db = admin.firestore();
@@ -3043,7 +2934,8 @@ exports.submitTutorRecommendationInviteLink = onCall(async (request) => {
     assertTutorApplicationState(appData, { source: 'tutor_recommendation', status: 'awaiting_candidate_link' });
 
     await appRef.update({
-        candidateClassroomInviteUrl: normalizedInvite,
+        candidateAssignmentLink: normalizedAssignmentLink,
+        candidateClassroomInviteUrl: normalizedAssignmentLink,
         candidateLinkSubmittedAt: admin.firestore.FieldValue.serverTimestamp(),
         status: 'pending',
         appliedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -3093,13 +2985,12 @@ exports.decideTutorApplication = onCall(async (request) => {
         const tutorData = buildTutorConfigEntry({
             email: userEmail,
             name: tutorName,
-            qualifiedAt: nowIsoTimestamp(),
-            githubClassroomUrl: "authorized" // Initial placeholder
+            qualifiedAt: nowIsoTimestamp()
         });
 
         updateData[new admin.firestore.FieldPath('tutorConfigs', canonicalUnitId)] = tutorData;
 
-        // No code generation: the tutor's GitHub Classroom assignment link is now the only referral medium.
+        // No code generation: the tutor's assignment link is now the only referral medium.
     }
 
     await appRef.update({
@@ -3271,8 +3162,9 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                 const isAuthorized = isTutorModeAdmin || (Array.isArray(cfg.authorizedTutors) && cfg.authorizedTutors.includes(email));
                 const mappedId = docId;
 
-                if (cfg.githubClassroomUrls) {
-                    Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
+                const cfgAssignmentUrlMaps = cfg.assignmentUrlMap || cfg.assignmentUrls || null;
+                if (cfgAssignmentUrlMaps) {
+                    Object.keys(cfgAssignmentUrlMaps).forEach(unitId => {
                         const equivalentUnits = new Set([unitId, resolveCanonicalUnitId(unitId, lessons)]);
                         const parentCourse = findCourseByUnitId(unitId, lessons);
                         (Array.isArray(parentCourse?.courseUnits) ? parentCourse.courseUnits : []).forEach((candidateUnit) => {
@@ -3360,13 +3252,14 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             if (course) {
                 try {
                     const entryUnitId = normalizeCourseFile(course.entryUnitId || '');
-                    const classroomFile = normalizeCourseFile(course.classroomUrl || '');
+                    const legacyLessonUrl = course.classroomUrl || '';
+                    const assignmentFile = normalizeCourseFile(legacyLessonUrl);
                     const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
 
                     const relatedFiles = Array.from(new Set([
                         entryUnitId,
                         ...units,
-                        (classroomFile && classroomFile.endsWith('.html')) ? classroomFile : ''
+                        (assignmentFile && assignmentFile.endsWith('.html')) ? assignmentFile : ''
                     ].filter(Boolean)));
                     let aggregatedGuides = {};
 
@@ -3509,7 +3402,8 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                     // [V15.5] Robust field lookup via getEffectiveTutorConfig (Handles nested dots)
                     const unitConfig = getEffectiveTutorConfig(canonicalId, myTutorConfigs);
                     if (unitConfig && unitConfig.authorized) {
-                        result.myReferralLink = unitConfig.githubClassroomUrl || unitConfig.assignmentUrl || null;
+                        const unitCourse = findLessonByCourseRef(canonicalId, lessons);
+                        result.myReferralLink = getTutorAssignmentUrlFromConfig(unitConfig, unitCourse, canonicalId, email, lessons) || null;
                     }
                 }
 
@@ -3946,8 +3840,8 @@ exports.submitAssignment = onCall(async (request) => {
         const assignedTutorEmail = access.assignedTutorEmail || null;
 
         const submissionUrl = normalizeText(url || "");
-        const isClassroomInvite = /classroom\.github\.com\/a\//i.test(submissionUrl);
-        if (currentStatus === "submitted" && isClassroomInvite && GITHUB_ORG_ADMIN_TOKEN) {
+        const isAssignmentInvite = /classroom\.github\.com\/a\//i.test(submissionUrl);
+        if (currentStatus === "submitted" && isAssignmentInvite && GITHUB_ORG_ADMIN_TOKEN) {
             const membership = await ensureGithubOrgMembership({
                 admin,
                 token: GITHUB_ORG_ADMIN_TOKEN,
@@ -3955,7 +3849,7 @@ exports.submitAssignment = onCall(async (request) => {
                 org: GITHUB_CLASSROOM_ORG
             });
             if (!membership.ok) {
-                const base = '尚未完成 GitHub Classroom 組織授權。請先到 https://github.com/settings/organizations 接受邀請後重試。';
+                const base = '尚未完成 GitHub 組織授權。請先到 https://github.com/settings/organizations 接受邀請後重試。';
                 const detail = membership.state === "missing_github_identity"
                     ? '（目前帳號尚未綁定 GitHub 登入）'
                     : membership.state === "invited"
@@ -4441,7 +4335,10 @@ exports.remindAdminPendingAssignments = onSchedule({
             if (!unitId) return false;
             const course = unitToCourse.get(String(unitId));
             if (!course) return false;
-            const price = Number(course.price || 0);
+            const price = Math.max(
+                Number(resolveLessonPrice(course, "zh-TW").amount || 0),
+                Number(resolveLessonPrice(course, "en").amount || 0)
+            );
             return price > 0 && course.isPhysical !== true;
         };
 
@@ -4452,7 +4349,7 @@ exports.remindAdminPendingAssignments = onSchedule({
         ordersSnapshot.forEach(doc => {
             const data = doc.data();
             if (data.uid && data.items) {
-                const purchasedUnits = collectPurchasedUnitIds(data.items, lessons);
+                const purchasedUnits = collectPurchasedUnitIds(data.items, lessons, orderNormalizationResolvers);
                 purchasedUnits.forEach(unitId => {
                     // Only keep paid, non-physical course units that need tutor assignment.
                     if (!unitRequiresTutorAssignment(unitId)) return;
@@ -4654,7 +4551,7 @@ const verifyReferralLinkHandler = onCall(async (request) => {
             };
         }
 
-        return { success: false, message: '目前僅支援以 GitHub Classroom 連結作為推薦識別，請輸入老師提供的作業連結。' };
+        return { success: false, message: '目前僅支援以作業連結作為推薦識別，請輸入老師提供的連結。' };
     } catch (e) {
         console.error(`[Referral] Error: ${e.message}`);
         throw new HttpsError('internal', e.message);
@@ -4662,105 +4559,6 @@ const verifyReferralLinkHandler = onCall(async (request) => {
 });
 exports.verifyReferralLink = verifyReferralLinkHandler;
 exports.verifyPromoCode = verifyReferralLinkHandler;
-
-function normalizeClassroomInvite(value = '') {
-    const s = normalizeText(value || '');
-    if (!s) return '';
-    try {
-        const url = new URL(s);
-        if (url.hostname !== 'classroom.github.com') return s;
-        return `${url.origin}${url.pathname}`.replace(/\/+$/, '').toLowerCase();
-    } catch (_) {
-        const token = s.replace(/^https?:\/\/classroom\.github\.com\/a\//i, '').replace(/\/+$/, '');
-        return token ? `https://classroom.github.com/a/${token}`.toLowerCase() : '';
-    }
-}
-
-function extractInviteCandidates(cfg) {
-    if (!cfg) return [];
-    if (typeof cfg === 'string') return [normalizeClassroomInvite(cfg)].filter(Boolean);
-    if (typeof cfg === 'object') {
-        return Object.values(cfg)
-            .filter(v => typeof v === 'string' && v.trim())
-            .map(v => normalizeClassroomInvite(v))
-            .filter(Boolean);
-    }
-    return [];
-}
-
-async function lookupClassroomInviteBinding(inputRaw) {
-    const normalizedInvite = normalizeClassroomInvite(inputRaw);
-    if (!normalizedInvite.includes('classroom.github.com/a/')) {
-        throw new HttpsError('invalid-argument', '請輸入 GitHub Classroom 邀請連結或 invite code。');
-    }
-
-    const lessons = await getLessons();
-    const matches = [];
-    for (const lesson of lessons) {
-        const urlMap = lesson?.githubClassroomUrls || {};
-        for (const [unitKey, cfg] of Object.entries(urlMap)) {
-            const candidates = extractInviteCandidates(cfg);
-            if (!candidates.includes(normalizedInvite)) continue;
-            matches.push({
-                lessonDocId: lesson.id || null,
-                courseId: getCanonicalLessonIdentity(lesson) || null,
-                title: lesson.title || null,
-                unitKey,
-                courseUnits: Array.isArray(lesson.courseUnits) ? lesson.courseUnits : []
-            });
-        }
-    }
-    return { success: true, normalizedInvite, totalMatches: matches.length, matches };
-}
-
-// 11.1-b Admin 工具：查詢 GitHub Classroom 邀請連結目前綁定在哪些單元
-exports.findClassroomInviteBinding = onCall(async (request) => {
-    const auth = request.auth;
-    assertAuthenticated(auth, 'User must be logged in.');
-    const requesterRole = await getRole(auth.uid);
-    assertAdminRole(requesterRole, 'Only admins can query invite bindings.');
-
-    const inputRaw = String(
-        request.data?.inviteCodeOrUrl ||
-        request.data?.inviteUrl ||
-        request.data?.inviteCode ||
-        ''
-    ).trim();
-    assertRequiredValue(inputRaw, '缺少 inviteCodeOrUrl');
-    return lookupClassroomInviteBinding(inputRaw);
-});
-
-exports.findClassroomInviteBindingHttp = onRequest(async (req, res) => {
-    res.set('Access-Control-Allow-Origin', 'https://vibe-coding.tw');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') return res.status(204).send('');
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-    try {
-        const authHeader = req.headers.authorization || '';
-        if (!authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Missing bearer token' });
-        const idToken = authHeader.substring(7);
-        const decoded = await admin.auth().verifyIdToken(idToken);
-        const requesterRole = await getRole(decoded.uid);
-        if (requesterRole !== 'admin') return res.status(403).json({ error: 'Only admins can query invite bindings.' });
-
-        const inputRaw = String(
-            req.body?.inviteCodeOrUrl ||
-            req.body?.inviteUrl ||
-            req.body?.inviteCode ||
-            req.body?.data?.inviteCodeOrUrl ||
-            ''
-        ).trim();
-        if (!inputRaw) return res.status(400).json({ error: '缺少 inviteCodeOrUrl' });
-
-        const result = await lookupClassroomInviteBinding(inputRaw);
-        return res.json(result);
-    } catch (error) {
-        console.error('[findClassroomInviteBindingHttp] failed:', error);
-        return res.status(500).json({ error: error.message || 'internal error' });
-    }
-});
 
 // 11.2 每月計算分潤 (Scheduled Job - 1st of each month)
 exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
@@ -5227,19 +5025,11 @@ exports.bindTutorByPromotionCode = onCall(async (request) => {
             throw new HttpsError('permission-denied', '此導師尚未取得該單元授權。');
         }
 
-        // 嘗試從導師自身的 tutorConfigs 取得 GitHub Classroom 連結
-        let assignmentUrl = (cfg.assignmentUrl || cfg.githubClassroomUrl || '').trim();
-
-        // 若導師自身設定無 URL，退回查詢 metadata_lessons 課程層級設定
-        if (!assignmentUrl) {
-            const course = findLessonByCourseRef(effectiveCourseId, lessons);
-            if (course?.githubClassroomUrls?.[canonicalUnitId]) {
-                assignmentUrl = resolveClassroomUrlForTutor(course.githubClassroomUrls[canonicalUnitId], tutorEmail) || '';
-            }
-        }
+        const course = findLessonByCourseRef(effectiveCourseId, lessons);
+        const assignmentUrl = getTutorAssignmentUrlFromConfig(cfg, course, canonicalUnitId, tutorEmail, lessons);
 
         if (!assignmentUrl) {
-            throw new HttpsError('failed-precondition', '此導師尚未設定該單元 GitHub Classroom 連結，請通知管理員設定。');
+            throw new HttpsError('failed-precondition', '此導師尚未設定該單元作業連結，請通知管理員設定。');
         }
 
         const tutorRef = db.collection('users').doc(tutorDoc.id);

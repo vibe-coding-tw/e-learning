@@ -81,7 +81,8 @@
   - 系統將導師資料寫入 `users.unitAssignments[unitId]` 與 `users.unitAssignmentMeta[unitId]`。
   - 後端會自動調用 `backfillTutorReferralForPaidOrders` 回填歷史已付款訂單的 `referredTutorEmail` 與 `referralLink` 欄位，確保該訂單交易與導師正確關聯。
 - **分潤計算**：每月 1 號的 `calculateMonthlySharing` 排程工作會讀取已成功付款並回填導師之訂單項目，依據對應的 `revenue_share_policies` 計算並分發利潤明細至 `revenue_share_credits`。
-- **導師推廣連結**：歷史 `verifyReferralLink` 仍支援解析 GitHub Classroom 連結並綁定，但在購物車前台已顯示忽略提示。導師推廣請優先引導學員在作業視窗中直接輸入 Promotion code。
+- **導師推廣連結**：歷史 `verifyReferralLink` 仍支援解析舊的作業邀請連結並綁定，但在購物車前台已顯示忽略提示。導師推廣請優先引導學員在作業視窗中直接輸入 Promotion code。
+- **作業連結遷移原則**：內部命名與新流程一律維持 `assignment` / `legacyAssignmentUrl`，舊的 `classroom*` / `githubClassroom*` 僅作相容層、歷史資料與 API 契約回傳欄位使用；除非已確認所有 consumer 完成切換，否則不得直接移除 legacy fallback。
 - **ID 歸一化**：在進行任何導師單元設定、鏈結解析與訂單回填比對時，必須對 `unitId` 執行 ID 歸一化（如移除 `.html` 後綴）。
 
 ---
@@ -136,4 +137,4 @@ git commit -m "docs: update README"
 
 > 本文件是本專案 AI agent 的正式工作手冊，任何其他 agent 或訓練資料若要引用專案規則，請一律參考 `AGENT.md`。
 > 
-> 最後更新：2026-05-31
+> 最後更新：2026-06-02

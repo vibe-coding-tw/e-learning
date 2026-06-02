@@ -127,6 +127,26 @@ function getUserTutorConfig(userData = {}, unitId) {
     return getEffectiveTutorConfig(unitId, userData.tutorConfigs || {});
 }
 
+function getPreferredAssignmentUrl(config = {}) {
+    return normalizeText(config.assignmentUrl || config.legacyAssignmentUrl || config.githubClassroomUrl || "");
+}
+
+function resolveAssignmentUrlMaps(configs = {}) {
+    const candidates = [
+        configs.assignmentUrlMap,
+        configs.assignmentUrls,
+        configs.githubClassroomUrls
+    ];
+
+    for (const candidate of candidates) {
+        if (candidate && typeof candidate === 'object' && Object.keys(candidate).length > 0) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
 function buildTutorConfigEntry({
     email = "",
     name = "",
@@ -134,7 +154,7 @@ function buildTutorConfigEntry({
     qualifiedAt = null,
     updatedAt = new Date().toISOString(),
     assignmentUrl = "",
-    githubClassroomUrl = "",
+    legacyAssignmentUrl = "",
     githubOrg = "",
     githubToken = "",
     templateRepo = ""
@@ -146,7 +166,7 @@ function buildTutorConfigEntry({
         qualifiedAt,
         updatedAt,
         assignmentUrl,
-        githubClassroomUrl,
+        legacyAssignmentUrl,
         githubOrg,
         githubToken,
         templateRepo
@@ -202,24 +222,35 @@ function indexAuthorizedTutorConfigForDashboard({
         email,
         name: resolveNameFromUserData(uData, email, ""),
         qualifiedAt: normalizedConfig.updatedAt || normalizedConfig.qualifiedAt,
-        githubClassroomUrl: normalizedConfig.githubClassroomUrl || "",
+        assignmentUrl: getPreferredAssignmentUrl(normalizedConfig),
+        legacyAssignmentUrl: normalizedConfig.githubClassroomUrl || "",
         githubOrg: normalizedConfig.githubOrg || "",
         templateRepo: normalizedConfig.templateRepo || "",
         githubToken: normalizedConfig.githubToken || ""
     };
 
     if (!synthesizedConfigs[cid]) {
-        synthesizedConfigs[cid] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: {} };
+        synthesizedConfigs[cid] = {
+            authorizedTutors: [],
+            tutorDetails: {},
+            assignmentUrlMap: {},
+            assignmentUrls: {}
+        };
     }
-    if (!synthesizedConfigs[cid].githubClassroomUrls[normalizedUnitId]) {
-        synthesizedConfigs[cid].githubClassroomUrls[normalizedUnitId] = {};
+    if (!synthesizedConfigs[cid].assignmentUrlMap[normalizedUnitId]) {
+        synthesizedConfigs[cid].assignmentUrlMap[normalizedUnitId] = {};
+    }
+    if (!synthesizedConfigs[cid].assignmentUrls[normalizedUnitId]) {
+        synthesizedConfigs[cid].assignmentUrls[normalizedUnitId] = {};
     }
     if (!synthesizedConfigs[cid].authorizedTutors.includes(email)) {
         synthesizedConfigs[cid].authorizedTutors.push(email);
     }
     synthesizedConfigs[cid].tutorDetails[email] = tutorSummary;
-    if (normalizedConfig.githubClassroomUrl) {
-        synthesizedConfigs[cid].githubClassroomUrls[normalizedUnitId][email] = normalizedConfig.githubClassroomUrl;
+    const assignmentUrl = getPreferredAssignmentUrl(normalizedConfig);
+    if (assignmentUrl) {
+        synthesizedConfigs[cid].assignmentUrlMap[normalizedUnitId][email] = assignmentUrl;
+        synthesizedConfigs[cid].assignmentUrls[normalizedUnitId][email] = assignmentUrl;
     }
 
     if (normalizedUnitId.endsWith('.html')) {
@@ -228,16 +259,19 @@ function indexAuthorizedTutorConfigForDashboard({
                 courseId: cid,
                 authorizedTutors: [],
                 tutorDetails: {},
-                githubClassroomUrls: {}
+                assignmentUrlMap: {},
+                assignmentUrls: {}
             };
         }
         if (!unitTutorConfigs[normalizedUnitId].authorizedTutors.includes(email)) {
             unitTutorConfigs[normalizedUnitId].authorizedTutors.push(email);
         }
         unitTutorConfigs[normalizedUnitId].tutorDetails[email] = tutorSummary;
-        if (normalizedConfig.githubClassroomUrl) {
-            unitTutorConfigs[normalizedUnitId].githubClassroomUrls[normalizedUnitId] = unitTutorConfigs[normalizedUnitId].githubClassroomUrls[normalizedUnitId] || {};
-            unitTutorConfigs[normalizedUnitId].githubClassroomUrls[normalizedUnitId][email] = normalizedConfig.githubClassroomUrl;
+        if (assignmentUrl) {
+            unitTutorConfigs[normalizedUnitId].assignmentUrlMap[normalizedUnitId] = unitTutorConfigs[normalizedUnitId].assignmentUrlMap[normalizedUnitId] || {};
+            unitTutorConfigs[normalizedUnitId].assignmentUrls[normalizedUnitId] = unitTutorConfigs[normalizedUnitId].assignmentUrls[normalizedUnitId] || {};
+            unitTutorConfigs[normalizedUnitId].assignmentUrlMap[normalizedUnitId][email] = assignmentUrl;
+            unitTutorConfigs[normalizedUnitId].assignmentUrls[normalizedUnitId][email] = assignmentUrl;
         }
     }
 
@@ -256,11 +290,13 @@ module.exports = {
     generatePromotionCode,
     getEffectiveTutorConfig,
     getUserTutorConfig,
+    getPreferredAssignmentUrl,
     indexAuthorizedTutorConfigForDashboard,
     normalizeEmail,
     normalizeText,
     queryTutorApplications,
     resolveNameFromUserData,
+    resolveAssignmentUrlMaps,
     upsertTutorApplicationLegacyEntry,
     upsertTutorConfigForUser
 };

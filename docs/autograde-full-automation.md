@@ -15,7 +15,7 @@ Make repo grading write back to Vibe Coding automatically with no manual input f
   - **TutorMode 特例**：Tutor 測試單元時，前端不會寫入 `status=started` 的 assignments 文件，以避免干擾付費授權邏輯及產生測試噪音。
 
 ## Actions 額度受限之本地/沙盒評分機制 (Local Sandbox Grader)
-當學生的 Classroom 組織面臨 Actions 額度耗盡或付費逾期等限制，無法在 GitHub 上觸發 Actions 時，管理員可使用本地/沙盒評分腳本進行批次更新與回寫：
+當學生所屬的作業倉組織面臨 Actions 額度耗盡或付費逾期等限制，無法在 GitHub 上觸發 Actions 時，管理員可使用本地/沙盒評分腳本進行批次更新與回寫：
 - **批次評分腳本**：[`grade_all_students.js`](file:///Users/roverchen/.gemini/antigravity/brain/baad103e-f43a-454f-ade1-5e28f917cf42/scratch/grade_all_students.js)。
 - **運作原理**：
   1. 呼叫 Firebase Secret API 提取 `GITHUB_API_TOKEN`，以便動態且安全地 clone 私有的學生作業倉庫。

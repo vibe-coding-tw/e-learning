@@ -13,12 +13,12 @@ Target: Friends & Family / Angel investors
 - Students lose momentum due to delayed, unclear feedback.
 
 ## Slide 3 - Solution
-- Unified workflow: course access -> tutor assignment -> classroom repo -> autograde -> dashboard feedback.
+- Unified workflow: course access -> tutor assignment -> assignment repo -> autograde -> dashboard feedback.
 - Production modules: payment, logistics, referral-sharing, notification, tutor operations.
 
 ## Slide 4 - Product Snapshot (What already works)
 - Firestore-centered authorization model.
-- GitHub Classroom + autograde score sync to platform.
+- Native assignment repo + autograde score sync to platform.
 - Tutor promo code assignment and unit-level binding.
 - Shipment management and notification workflows.
 
@@ -55,4 +55,3 @@ Target: Friends & Family / Angel investors
 - Round: F/Angel
 - Use of funds: product, growth experiments, content ops, hiring.
 - Target milestones to unlock Seed/Pre-A.
-
