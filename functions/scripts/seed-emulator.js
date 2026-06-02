@@ -38,6 +38,48 @@ function resolveCanonicalCourseId(course) {
   return rawCourseId || entryUnitId;
 }
 
+function normalizeLegacyPrice(value) {
+  const amount = Number(value || 0);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function deriveUsdFromTwd(twdAmount) {
+  const numeric = normalizeLegacyPrice(twdAmount);
+  if (numeric <= 0) return 0;
+  return Math.max(1, Math.round(numeric / 30));
+}
+
+function attachLocalizedPricing(course) {
+  const twAmount = normalizeLegacyPrice(course.price);
+  const usdAmount = deriveUsdFromTwd(twAmount);
+  return {
+    ...course,
+    pricing: {
+      tw: { amount: twAmount, currency: 'TWD' },
+      en: { amount: usdAmount, currency: 'USD' },
+    },
+    prices: {
+      tw: twAmount,
+      en: usdAmount,
+    },
+    priceByLocale: {
+      'zh-TW': { amount: twAmount, currency: 'TWD' },
+      en: { amount: usdAmount, currency: 'USD' },
+    },
+    priceByRegion: {
+      tw: { amount: twAmount, currency: 'TWD' },
+      en: { amount: usdAmount, currency: 'USD' },
+    },
+    priceMap: {
+      tw: { amount: twAmount, currency: 'TWD' },
+      en: { amount: usdAmount, currency: 'USD' },
+    },
+    price_twd: twAmount,
+    price_usd: usdAmount,
+    currency: 'TWD',
+  };
+}
+
 function withEntryMetadata(course) {
   if (course.metadataType === 'spec') {
     return {
@@ -571,6 +613,56 @@ const courses = [
     orderWeight: 502,
     isPhysical: false,
   },
+  {
+    id: 'esp32-c3',
+    courseId: 'esp32-c3',
+    productId: 'esp32-c3',
+    courseKey: 'product-esp32-c3',
+    title: 'ESP32-C3 開發板',
+    titleEn: 'ESP32-C3 Board',
+    summary: '適合課前準備與無人車入門實作。',
+    summaryEn: 'Suitable for preparation and starter car exercises.',
+    lessonLabel: '硬體卡 01',
+    lessonLabelEn: 'Hardware Card 01',
+    icon: '🔌',
+    tagText: '硬體',
+    duration: '硬體',
+    price: 0,
+    category: 'prepare',
+    learningPaths: ['tw-common', 'en-common'],
+    coreContent: ['ESP32-C3 開發板', 'USB-C 連線', 'WiFi 與藍牙基本支援'],
+    coreContentEn: ['ESP32-C3 board', 'USB-C connection', 'Basic WiFi and Bluetooth support'],
+    orderWeight: 503,
+    isPhysical: true,
+    metadataType: 'product',
+    hiddenFromCatalog: false,
+    isDeprecated: false,
+  },
+  {
+    id: 'esp32-s3',
+    courseId: 'esp32-s3',
+    productId: 'esp32-s3',
+    courseKey: 'product-esp32-s3',
+    title: 'ESP32-S3 開發板',
+    titleEn: 'ESP32-S3 Board',
+    summary: '適合進階無人車與影像應用實作。',
+    summaryEn: 'Suitable for advanced car and vision projects.',
+    lessonLabel: '硬體卡 02',
+    lessonLabelEn: 'Hardware Card 02',
+    icon: '🧠',
+    tagText: '硬體',
+    duration: '硬體',
+    price: 0,
+    category: 'prepare',
+    learningPaths: ['tw-common', 'en-common'],
+    coreContent: ['ESP32-S3 開發板', '更高效能的運算與影像支援', '適合進階專題'],
+    coreContentEn: ['ESP32-S3 board', 'Higher-performance computing and vision support', 'Great for advanced projects'],
+    orderWeight: 504,
+    isPhysical: true,
+    metadataType: 'product',
+    hiddenFromCatalog: false,
+    isDeprecated: false,
+  },
 ];
 
 const TEST_USER_UID = 'ZONzbNOyljRgSA11qKgnT4nJFRnv';
@@ -579,7 +671,7 @@ const TEST_USER_EMAIL = 'chen.yuiliang@gmail.com';
 async function seed() {
   console.log('🌱 開始寫入種子資料到本地 Firestore 模擬器...\n');
 
-  const normalizedCourses = courses.map(withEntryMetadata);
+  const normalizedCourses = courses.map((course) => attachLocalizedPricing(withEntryMetadata(course)));
 
   for (const data of normalizedCourses) {
     const { id, ...payload } = data;
@@ -649,7 +741,14 @@ async function seed() {
 
   const items = {};
   for (const c of paidCourses) {
-    items[c.courseId] = { title: c.title, price: c.price };
+    items[c.courseId] = {
+      title: c.title,
+      price: c.price,
+      currency: 'TWD',
+      price_currency: 'TWD',
+      price_twd: c.price,
+      price_usd: deriveUsdFromTwd(c.price),
+    };
   }
 
   await db.collection('orders').doc('seed-order-all-paid').set({

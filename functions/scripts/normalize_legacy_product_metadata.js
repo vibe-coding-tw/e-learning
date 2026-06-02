@@ -64,6 +64,30 @@ const TARGETS = [
       isPhysical: true,
       isDeprecated: false,
       hiddenFromCatalog: false,
+      pricing: {
+        tw: { amount: 0, currency: "TWD" },
+        en: { amount: 0, currency: "USD" },
+      },
+      prices: {
+        tw: 0,
+        en: 0,
+      },
+      priceByLocale: {
+        "zh-TW": { amount: 0, currency: "TWD" },
+        en: { amount: 0, currency: "USD" },
+      },
+      priceByRegion: {
+        tw: { amount: 0, currency: "TWD" },
+        en: { amount: 0, currency: "USD" },
+      },
+      priceMap: {
+        tw: { amount: 0, currency: "TWD" },
+        en: { amount: 0, currency: "USD" },
+      },
+      price_twd: 0,
+      price_usd: 0,
+      currency: "TWD",
+      learningPaths: ["tw-common", "en-common"],
       normalizationNote: "Physical product metadata for prepare page hardware card.",
     },
   },
@@ -77,6 +101,30 @@ const TARGETS = [
       isPhysical: true,
       isDeprecated: false,
       hiddenFromCatalog: false,
+      pricing: {
+        tw: { amount: 0, currency: "TWD" },
+        en: { amount: 0, currency: "USD" },
+      },
+      prices: {
+        tw: 0,
+        en: 0,
+      },
+      priceByLocale: {
+        "zh-TW": { amount: 0, currency: "TWD" },
+        en: { amount: 0, currency: "USD" },
+      },
+      priceByRegion: {
+        tw: { amount: 0, currency: "TWD" },
+        en: { amount: 0, currency: "USD" },
+      },
+      priceMap: {
+        tw: { amount: 0, currency: "TWD" },
+        en: { amount: 0, currency: "USD" },
+      },
+      price_twd: 0,
+      price_usd: 0,
+      currency: "TWD",
+      learningPaths: ["tw-common", "en-common"],
       normalizationNote: "Physical product metadata for prepare page hardware card.",
     },
   },
@@ -129,4 +177,3 @@ main().catch((err) => {
   console.error("[ERROR]", err.message || err);
   process.exit(1);
 });
-

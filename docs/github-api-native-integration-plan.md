@@ -1,10 +1,10 @@
 # GitHub API 原生整合計劃
 
-> GitHub Classroom 已停用；本文件為現行作業派發架構的規劃與歷史演進說明，active path 以平台原生 Repo 派發為準。
+> 舊作業邀請流程已停用；本文件為現行作業派發架構的規劃與歷史演進說明，active path 以平台原生 Repo 派發為準。
 
 ## 概述
 
-本計劃旨在將作業派發、權限管理與自動評分直接整合到 Vibe Coding 平台。通過自建派發、自動評分、權限管理等功能，實現對舊 Classroom 流程的完全替代，並提供更高度的客製化與安全控制。
+本計劃旨在將作業派發、權限管理與自動評分直接整合到 Vibe Coding 平台。通過自建派發、自動評分、權限管理等功能，實現對舊作業邀請流程的完全替代，並提供更高度的客製化與安全控制。
 
 **目標效果**：
 - 學生一鍵領取作業，無需進入組織 Pending 流程
@@ -19,15 +19,15 @@
 
 ### 1.1 現狀分析
 
-**GitHub Classroom（歷史）在 Vibe Coding 中的作用**：
+**舊作業邀請流程（歷史）在 Vibe Coding 中的作用**：
 - 建立學生作業 Repo（Template Repo → Student Repo）
 - 發送邀請連結與權限管理
 - 觸發自動評分 Workflow（GitHub Actions）
 - 提供 Feedback Pull Request 機制
 
 **問題點**：
-- Classroom 依賴組織成員邀請，學生有時卡在 Pending
-- Classroom API 功能有限，難以客製化
+- 舊流程依賴組織成員邀請，學生有時卡在 Pending
+- 舊流程 API 功能有限，難以客製化
 - 無法與 Vibe Coding 的導師分潤、推薦連結等機制深度整合
 
 ### 1.2 新架構目標
@@ -476,7 +476,7 @@ async function createSyncPR(orgName, studentRepoName, templateRepoName) {
 
 ### 4.3 第三階段：前端按鈕與流程改造 (Frontend Integration)
 4. **改造「寫作業」按鈕互動流程**：
-   - 當學生點擊「前往作業」時，不再直接導向 GitHub Classroom 的邀請連結，而是：
+   - 當學生點擊「前往作業」時，不再直接導向舊作業邀請連結，而是：
      1. 呼叫 Cloud Function `createStudentRepository`。
      2. 前端按鈕狀態變更為「正在為您建立專屬倉庫... (Loading)」。
      3. 背景呼叫 GitHub API 完成創庫、加人、開 Feedback PR。
@@ -496,16 +496,16 @@ async function createSyncPR(orgName, studentRepoName, templateRepoName) {
    - 觀察創庫成功率、Actions 回傳分數的延遲度，以及 Feedback PR 的討論體驗是否流暢。
 
 ### 4.6 第六階段：數據與學生遷移策略 (Migration)
-7. **漸進式切換與停用 GitHub Classroom**：
+7. **漸進式切換與停用舊作業邀請流程**：
    - **第一步：新學生/新班級預設使用平台原生系統**
-     - 新班級不再發放 GitHub Classroom 的邀請連結，全部走平台原生按鈕。
+     - 新班級不再發放舊作業邀請連結，全部走平台原生按鈕。
    - **第二步：既有班級保留歷史相容**
      - 歷史資料與舊連結保留最小相容層，避免影響已存在的學習紀錄。
-   - **第三步：封存歷史 Classroom 流程**
-     - 將舊 Classroom 相關資料與倉庫歸檔，保留必要的查核與轉址，不再作為主流程。
+   - **第三步：封存歷史作業邀請流程**
+     - 將舊作業邀請相關資料與倉庫歸檔，保留必要的查核與轉址，不再作為主流程。
 
 ### 4.7 回檔與容災計劃
-- 保留所有歷史 Classroom Repo 的 Git Mirror（僅供查核）。
+- 保留所有歷史作業倉 Repo 的 Git Mirror（僅供查核）。
 - 確保當 GitHub API 發生 Rate Limit 或異常時，允許自動切換回平台原生備援模式，保障教學連續性。
 
 ---

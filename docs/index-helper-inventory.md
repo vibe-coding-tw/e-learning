@@ -45,13 +45,13 @@
 - `normalizeLocale(locale)` - 課程語系標準化。
 - `normalizeCourseFile(value)` - 課程檔名標準化。
 - `normalizeCourseVariantKey(value)` - 課程 variant key 標準化。
-- `normalizeClassroomInvite(value)` - Classroom invite 正規化。
 - `normalizeTemplateRepoName(id)` - template repo 名稱正規化。
 - `legacyTemplateRepoNameFromCanonical(id)` - canonical -> legacy template repo 轉換。
 
 ### 1.2 Dashboard / Students / Orders
 這組 order / logistics helper 已拆到 `functions/lib/order-utils.js`，`functions/index.js` 只保留呼叫點與 orchestration。
-`normalizeOrderItems`、`extractReferralAssignmentsFromOrder`、`collectPurchasedUnitIds`、`findMatchingOrderItemIdForReferral`、`itemContainsUnit` 目前仍留在 `functions/index.js`，因為它們高度依賴 lesson graph 與 canonical unit 解析；下一步會依 [`docs/order-normalization-plan.md`](order-normalization-plan.md) 的拆分方案處理。
+`normalizeOrderItems`、`extractReferralAssignmentsFromOrder`、`collectPurchasedUnitIds`、`findMatchingOrderItemIdForReferral`、`itemContainsUnit` 已移到 `functions/lib/order-utils.js`，但它們仍依賴由 `functions/index.js` 提供的 lesson / canonical resolvers；下一步會依 [`docs/order-normalization-plan.md`](order-normalization-plan.md) 的拆分方案把依賴邊界收緊。
+`hasActiveOrderForCourse` 也已移到 `functions/lib/order-utils.js`，用來統一課程訂單有效性判斷。
 - `getPhysicalUnitIdSet(lessons)` - 取得實體課程 unitId 集合。
 - `isPhysicalOrderItem(itemId, itemData, physicalUnitIds)` - 判斷訂單項目是否為實體商品。
 - `buildShippingContact(logistics)` - 組裝收件人聯絡資料。
@@ -77,7 +77,6 @@
 - `assertAdminOrAssignedTutor(isRequesterAdmin, isAssignedTutor, message)` - 管理員或指派導師檢查。
 - `assertTutorApplicationState(appData, { source, status })` - tutor application 狀態檢查。
 - `isAssignmentAuthorized(...)` - 作業授權檢查。
-- `hasActiveOrderForCourse(ordersSnapshot, courseId, lessons)` - 是否存在有效課程訂單。
 - `hasQualifiedTutorStatus(userData, unitId)` - 是否具備單元授權 tutor 資格。
 - `isTutorFullyQualifiedForCourse(userData, courseId, lessons)` - 是否具備課程層級 tutor 資格。
 
@@ -87,6 +86,7 @@
 - `getEffectiveTutorConfig(unitId, tutorConfigs)` - 取得單元有效 tutor config。
 - `getUserTutorConfig(userData, unitId)` - 讀取使用者的單元 tutor config。
 - `buildTutorConfigEntry(...)` - 建立 tutor config entry。
+- `getTutorAssignmentUrlFromConfig(cfg, course, canonicalUnitId, tutorEmail, lessons)` - 統一 tutor assignment URL 讀取與 fallback。
 - `upsertTutorConfigForUser(...)` - 寫回 user 的 tutorConfigs。
 - `indexAuthorizedTutorConfigForDashboard(...)` - dashboard 用 tutor config 彙整。
 - `buildTutorApplicationLegacyEntry(...)` - legacy `users.tutorApplications` snapshot。
@@ -124,7 +124,8 @@
 
 ### 1.7 Referral / Lesson / Canonicalization
 其中 `buildReferralLinkDocId(url)` 與 `normalizeGitHubUrl(url)` 已拆到 `functions/lib/order-utils.js`，此處只作為跨模組引用索引。
-其中與訂單 / referral 綁定相關的 `normalizeOrderItems`、`extractReferralAssignmentsFromOrder`、`collectPurchasedUnitIds`、`findMatchingOrderItemIdForReferral`、`itemContainsUnit` 仍在 `functions/index.js`，等待依賴注入拆分。
+其中與訂單 / referral 綁定相關的 `normalizeOrderItems`、`extractReferralAssignmentsFromOrder`、`collectPurchasedUnitIds`、`findMatchingOrderItemIdForReferral`、`itemContainsUnit` 已拆到 `functions/lib/order-utils.js`，下列清單作為跨模組索引。
+其中 `hasActiveOrderForCourse` 也已拆到 `functions/lib/order-utils.js`。
 - `cleanUnitId(unitId)` - unitId 清理。
 - `mapLegacyMasterToCanonical(value)` - legacy master -> canonical 映射。
 - `isLegacyMasterPage(value)` - legacy master page 判斷。

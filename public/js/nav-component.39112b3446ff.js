@@ -38,26 +38,124 @@ async function startGoogleLogin() {
         alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。");
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v3";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v4";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
-    { key: "tw-common", href: "learning-path.html?path=tw-common", icon: "fa-book-open", label: "課前準備" },
-    { key: "tw-car-starter", href: "learning-path.html?path=tw-car-starter", icon: "fa-rocket", label: "入門課程" },
-    { key: "tw-car-basic", href: "learning-path.html?path=tw-car-basic", icon: "fa-code", label: "基礎課程" },
-    { key: "tw-car-advanced", href: "learning-path.html?path=tw-car-advanced", icon: "fa-microchip", label: "進階課程" }
+    { key: "common", href: "learning-path.html?path=common", icon: "fa-book-open", label: "課前準備" },
+    { key: "car-starter", href: "learning-path.html?path=car-starter", icon: "fa-rocket", label: "入門課程" },
+    { key: "car-basic", href: "learning-path.html?path=car-basic", icon: "fa-code", label: "基礎課程" },
+    { key: "car-advanced", href: "learning-path.html?path=car-advanced", icon: "fa-microchip", label: "進階課程" }
 ];
+
+const REPO_UTILS = window.repoSlugUtils || {};
+const normalizeCanonicalLearningPathKey = REPO_UTILS.normalizeCanonicalLearningPathKey || function (value = "") {
+    const v = String(value || "").trim().toLowerCase().split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
+    if (!v) return "";
+    if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
+    if (/^(?:tw|en)-common$/i.test(v)) return "common";
+    if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+    if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
+    if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
+    if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
+    if (/^\d{2}-unit-/i.test(v)) return "common";
+    if (/^prepare-\d+/i.test(v)) return "common";
+    return v;
+};
+const legacyLearningPathKeyFromCanonical = REPO_UTILS.legacyLearningPathKeyFromCanonical || function (value = "", locale = "zh-TW") {
+    const canonical = normalizeCanonicalLearningPathKey(value);
+    if (!canonical) return "";
+    const prefix = String(locale || "").toLowerCase().startsWith("en") ? "en" : "tw";
+    return `${prefix}-${canonical}`;
+};
+const pathKeyCandidatesFromValue = REPO_UTILS.learningPathKeyCandidatesFromValue || function (value = "", locale = "") {
+    const canonical = normalizeCanonicalLearningPathKey(value);
+    return [...new Set([String(value || "").trim(), canonical, legacyLearningPathKeyFromCanonical(canonical, "zh-TW"), legacyLearningPathKeyFromCanonical(canonical, "en"), locale ? legacyLearningPathKeyFromCanonical(value, locale) : ""].filter(Boolean))];
+};
+
+function canonicalLearningPathHref(pathKey = "") {
+    const canonical = normalizeCanonicalLearningPathKey(pathKey);
+    return `learning-path.html?path=${encodeURIComponent(canonical || 'common')}`;
+}
 
 function getDefaultLearningPaths(uiLocale = "zh-TW") {
     const isZh = isZhLocale(uiLocale);
-    const prefix = isZh ? "tw-" : "en-";
     return [
-        { key: prefix + "common", href: `learning-path.html?path=${prefix}common`, icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
-        { key: prefix + "car-starter", href: `learning-path.html?path=${prefix}car-starter`, icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Unit" },
-        { key: prefix + "car-basic", href: `learning-path.html?path=${prefix}car-basic`, icon: "fa-code", label: isZh ? "基礎課程" : "Basic Unit" },
-        { key: prefix + "car-advanced", href: `learning-path.html?path=${prefix}car-advanced`, icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Unit" }
+        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
+        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Unit" },
+        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: isZh ? "基礎課程" : "Basic Unit" },
+        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Unit" }
     ];
 }
+
+const LOCALIZED_SITE_PAGES = {
+    students: {
+        zh: { href: "/tw/students.html", label: "課程購買與使用指南" },
+        en: { href: "/en/students.html", label: "Student Guide" },
+    },
+    tutors: {
+        zh: { href: "/tw/tutors.html", label: "專業導師與合作洽談" },
+        en: { href: "/en/tutors.html", label: "Tutor Guide" },
+    },
+};
+
+const LOCALIZED_PAGE_EXISTS_CACHE = new Map();
+
+function localeBucket(locale = "") {
+    return isZhLocale(locale) ? "zh" : "en";
+}
+
+function resolveLocalizedSitePageMeta(pageKey = "", locale = "zh-TW") {
+    const page = LOCALIZED_SITE_PAGES[pageKey];
+    if (!page) return null;
+    const bucket = localeBucket(locale);
+    return page[bucket] || page.en || page.zh || null;
+}
+
+function probePageExists(path = "") {
+    const normalized = String(path || "").trim();
+    if (!normalized) return Promise.resolve(false);
+    const url = new URL(normalized, window.location.origin).toString();
+    if (LOCALIZED_PAGE_EXISTS_CACHE.has(url)) return LOCALIZED_PAGE_EXISTS_CACHE.get(url);
+    const probe = fetch(url, { method: "HEAD", cache: "no-store" }).then((resp) => resp.ok).catch(() => false);
+    LOCALIZED_PAGE_EXISTS_CACHE.set(url, probe);
+    return probe;
+}
+
+async function resolveLocalizedSitePage(pageKey = "", locale = "zh-TW") {
+    const page = LOCALIZED_SITE_PAGES[pageKey];
+    if (!page) return null;
+    const preferredBucket = localeBucket(locale);
+    const fallbackBucket = preferredBucket === "zh" ? "en" : "zh";
+    const preferred = page[preferredBucket] || page.en || page.zh || null;
+    const fallback = page[fallbackBucket] || page.en || page.zh || null;
+    if (preferred && await probePageExists(preferred.href)) return { ...preferred, locale: preferredBucket };
+    if (fallback && await probePageExists(fallback.href)) return { ...fallback, locale: fallbackBucket };
+    return preferred ? { ...preferred, locale: preferredBucket } : fallback ? { ...fallback, locale: fallbackBucket } : null;
+}
+
+async function hydrateLocalizedSitePages(rootNode, locale = "zh-TW") {
+    const scope = rootNode && typeof rootNode.querySelectorAll === "function" ? rootNode : document;
+    const elements = scope.querySelectorAll("[data-localized-page]");
+    if (!elements.length) return;
+    const pageKeys = Array.from(new Set(Array.from(elements).map((el) => el.getAttribute("data-localized-page")).filter(Boolean)));
+    const resolved = {};
+    await Promise.all(pageKeys.map(async (pageKey) => {
+        resolved[pageKey] = await resolveLocalizedSitePage(pageKey, locale);
+    }));
+    elements.forEach((el) => {
+        const pageKey = el.getAttribute("data-localized-page");
+        const meta = resolved[pageKey] || resolveLocalizedSitePageMeta(pageKey, locale);
+        if (!meta) return;
+        if (el.tagName === "A") el.setAttribute("href", meta.href);
+        const labelNode = el.querySelector("[data-localized-label]");
+        if (labelNode) labelNode.textContent = meta.label;
+    });
+}
+
+window.__vibeResolveLocalizedSitePageMeta = resolveLocalizedSitePageMeta;
+window.__vibeResolveLocalizedSitePage = resolveLocalizedSitePage;
+window.__vibeHydrateLocalizedSitePages = hydrateLocalizedSitePages;
 
 function detectUiLocale() {
     try {
@@ -114,17 +212,38 @@ window.__vibeSwitchLocale = async function (locale) {
         if (url.pathname.endsWith('learning-path.html')) {
             const pathParam = url.searchParams.get('path');
             if (pathParam) {
-                let newPathParam = pathParam;
-                if (locale === 'en' && pathParam.toLowerCase().startsWith('tw-')) {
-                    newPathParam = 'en-' + pathParam.slice(3);
-                } else if (locale.startsWith('zh') && pathParam.toLowerCase().startsWith('en-')) {
-                    newPathParam = 'tw-' + pathParam.slice(3);
-                }
-                if (newPathParam !== pathParam) {
-                    url.searchParams.set('path', newPathParam);
+                const canonicalPath = normalizeCanonicalLearningPathKey(pathParam) || pathParam;
+                if (canonicalPath !== pathParam) {
+                    url.searchParams.set('path', canonicalPath);
                     window.location.href = url.toString();
                     return;
                 }
+            }
+        }
+
+        const currentFile = (url.pathname.split('/').pop() || '').toLowerCase();
+        const currentIsEnSection = url.pathname.includes('/en/');
+        const currentIsTwSection = url.pathname.includes('/tw/');
+        const currentIsLegacyRoot = !currentIsEnSection && !currentIsTwSection;
+        const localeIsEn = String(locale || '').toLowerCase().startsWith('en');
+        const localeIsZh = String(locale || '').toLowerCase().startsWith('zh');
+
+        const supportsLocaleMirror = new Set(['students.html', 'tutors.html']);
+        if (supportsLocaleMirror.has(currentFile)) {
+            if (localeIsEn && !currentIsEnSection) {
+                url.pathname = `/en/${currentFile}`;
+                window.location.href = url.toString();
+                return;
+            }
+            if (localeIsZh && !currentIsTwSection) {
+                url.pathname = `/tw/${currentFile}`;
+                window.location.href = url.toString();
+                return;
+            }
+            if (currentIsLegacyRoot) {
+                url.pathname = localeIsEn ? `/en/${currentFile}` : `/tw/${currentFile}`;
+                window.location.href = url.toString();
+                return;
             }
         }
     } catch (err) {
@@ -141,12 +260,10 @@ function isZhLocale(locale) {
 function resolveCategoryFromFilename(filename = "") {
     const file = String(filename || "").toLowerCase();
     if (!file) return null;
-    if (file.startsWith("prepare-") || file.startsWith("tw-common-")) return "tw-common";
-    if (file.startsWith("start-") || file.startsWith("tw-car-starter-")) return "tw-car-starter";
-    if (file.startsWith("basic-") || file.startsWith("tw-car-basic-")) return "tw-car-basic";
-    if (file.startsWith("adv-") || file.startsWith("advanced-") || file.startsWith("tw-car-advanced-")) return "tw-car-advanced";
-    const m = file.match(/^([a-z]{2})-([a-z0-9]+)-(starter|basic|advanced|common)-/i);
-    if (m) return `${m[1]}-${m[2]}-${m[3]}`.toLowerCase();
+    if (file.startsWith("prepare-") || file.startsWith("common-") || file.startsWith("tw-common-") || file.startsWith("en-common-")) return "common";
+    if (file.startsWith("start-") || file.startsWith("car-starter-") || file.startsWith("tw-car-starter-") || file.startsWith("en-car-starter-")) return "car-starter";
+    if (file.startsWith("basic-") || file.startsWith("car-basic-") || file.startsWith("tw-car-basic-") || file.startsWith("en-car-basic-")) return "car-basic";
+    if (file.startsWith("adv-") || file.startsWith("advanced-") || file.startsWith("car-advanced-") || file.startsWith("tw-car-advanced-") || file.startsWith("en-car-advanced-")) return "car-advanced";
     return null;
 }
 
@@ -172,24 +289,16 @@ function normalizeTrack(raw = "") {
 }
 
 function resolveCategoryFromLesson(lesson = {}) {
-    const locale = normalizeLocaleCode(lesson.locale || "");
     const level = normalizeLevel(lesson.level || "");
     const track = normalizeTrack(lesson.track || "");
-    if (level === "common") return `${locale}-common`;
-    if (track === "common") return `${locale}-${level}`;
-    return `${locale}-${track}-${level}`;
+    if (level === "common") return "common";
+    if (track && track !== "common") return `${track}-${level}`;
+    return `car-${level}`;
 }
 
 function getCategoryHref(categoryKey = "") {
-    let key = String(categoryKey || "").toLowerCase();
-    const uiLocale = detectUiLocale();
-    if (uiLocale === 'en' && key.startsWith('tw-')) {
-        key = 'en-' + key.slice(3);
-    } else if (uiLocale.startsWith('zh') && key.startsWith('en-')) {
-        key = 'tw-' + key.slice(3);
-    }
-    const encoded = encodeURIComponent(key);
-    return `learning-path.html?path=${encoded}`;
+    const canonical = normalizeCanonicalLearningPathKey(categoryKey);
+    return canonicalLearningPathHref(canonical || categoryKey || "common");
 }
 
 function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
@@ -242,33 +351,14 @@ function pickLessonCategoryLabel(lesson = {}, uiLocale = "zh-TW") {
 }
 
 function sortCategoryKeys(keys = [], uiLocale = "zh-TW") {
-    const uiLang = isZhLocale(uiLocale) ? "tw" : "en";
-    const levelRank = { common: 0, starter: 1, basic: 2, advanced: 3 };
-    const trackRank = { common: 0, car: 1, drone: 2, robot: 3 };
+    const levelRank = { common: 0, "car-starter": 1, "car-basic": 2, "car-advanced": 3 };
     return [...keys].sort((a, b) => {
-        const pa = String(a).split("-");
-        const pb = String(b).split("-");
-        const la = pa[0] || "";
-        const lb = pb[0] || "";
-        const ta = pa.length >= 3 ? pa[1] : "common";
-        const tb = pb.length >= 3 ? pb[1] : "common";
-        const va = pa.length >= 3 ? pa[2] : (pa[1] || "common");
-        const vb = pb.length >= 3 ? pb[2] : (pb[1] || "common");
-
-        const langA = la === uiLang ? 0 : 1;
-        const langB = lb === uiLang ? 0 : 1;
-        if (langA !== langB) return langA - langB;
-        if (la !== lb) return la.localeCompare(lb);
-
-        const trA = (ta in trackRank) ? trackRank[ta] : 99;
-        const trB = (tb in trackRank) ? trackRank[tb] : 99;
-        if (trA !== trB) return trA - trB;
-        if (ta !== tb) return ta.localeCompare(tb);
-
-        const lvA = (va in levelRank) ? levelRank[va] : 99;
-        const lvB = (vb in levelRank) ? levelRank[vb] : 99;
-        if (lvA !== lvB) return lvA - lvB;
-        return va.localeCompare(vb);
+        const canonicalA = normalizeCanonicalLearningPathKey(a);
+        const canonicalB = normalizeCanonicalLearningPathKey(b);
+        const ra = (canonicalA in levelRank) ? levelRank[canonicalA] : 99;
+        const rb = (canonicalB in levelRank) ? levelRank[canonicalB] : 99;
+        if (ra !== rb) return ra - rb;
+        return canonicalA.localeCompare(canonicalB);
     });
 }
 
@@ -317,8 +407,12 @@ const CATEGORY_TRANSLATIONS = {
 function getCategoryLabel(key, uiLocale) {
     const locale = isZhLocale(uiLocale) ? "zh-TW" : "en";
     const dict = CATEGORY_TRANSLATIONS[locale];
+    const canonical = normalizeCanonicalLearningPathKey(key);
+    const legacy = legacyLearningPathKeyFromCanonical(canonical || key, uiLocale);
+    if (dict && dict[legacy]) return dict[legacy];
+    if (dict && dict[canonical]) return dict[canonical];
     if (dict && dict[key]) return dict[key];
-    return categoryLabelFromParts(key, uiLocale);
+    return categoryLabelFromParts(canonical || key, uiLocale);
 }
 
 function getLearningPathsFromCache(uiLocale) {
@@ -390,7 +484,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
                 key = resolveCategoryFromFilename(filename);
             }
             if (key) {
-                // 不論語系，一律保留 tw-* 路徑 key（Firestore 課程皆以 tw-* 存儲）
+                // 不論語系，一律保留 canonical 路徑 key
                 // 英文版的 label 由 getCategoryLabel/CATEGORY_TRANSLATIONS 決定，不透過 key 前綴
                 keys.add(key);
                 if (!labels.has(key)) {
@@ -496,10 +590,11 @@ window.renderNav = function (rootPath = '.', options = {}) {
 
     const resolve = (path) => {
         if (path.startsWith('http')) return path;
-        let targetPath = path;
-        if (!isZh && (path === 'students.html' || path === 'tutors.html')) {
-            targetPath = 'en/' + path;
+        if (path === 'students.html' || path === 'tutors.html') {
+            const meta = resolveLocalizedSitePageMeta(path.replace('.html', ''), uiLocale);
+            return meta ? meta.href : `/${isZh ? 'tw' : 'en'}/${path}`;
         }
+        const targetPath = path;
         return `${rootPath}/${targetPath}`.replace('./http', 'http').replace('//', '/');
     };
 
@@ -551,10 +646,10 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                 ${isZh ? '支援與合作' : 'Support & Collab'} <svg class="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             <div class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-3 w-64 mt-0 border border-slate-100 left-0 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <a href="${resolve('students.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
+                                <a href="${resolve('students.html')}" data-localized-page="students" class="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
                                     <i class="fa-solid fa-graduation-cap text-xs opacity-40"></i> ${isZh ? '課程購買與使用指南' : 'Student Guide'}
                                 </a>
-                                <a href="${resolve('tutors.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
+                                <a href="${resolve('tutors.html')}" data-localized-page="tutors" class="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
                                     <i class="fa-solid fa-handshake text-xs opacity-40"></i> ${isZh ? '專業導師與合作洽談' : 'Tutor Guide'}
                                 </a>
                                 <div class="my-2 border-t border-slate-50"></div>
@@ -646,16 +741,16 @@ window.renderNav = function (rootPath = '.', options = {}) {
                 <div class="space-y-3 pb-4">
                     <span class="text-[11px] font-bold text-cyan-500 uppercase tracking-[0.2em] px-1">${isZh ? '支援與合作' : 'Support & Collab'}</span>
                     <div class="flex flex-col gap-2">
-                        <a href="${resolve('students.html')}" class="flex items-center justify-between py-3.5 px-5 bg-cyan-50/50 border border-cyan-100 rounded-2xl hover:bg-cyan-100 hover:text-cyan-700 transition-all">
+                        <a href="${resolve('students.html')}" data-localized-page="students" class="flex items-center justify-between py-3.5 px-5 bg-cyan-50/50 border border-cyan-100 rounded-2xl hover:bg-cyan-100 hover:text-cyan-700 transition-all">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-graduation-cap text-cyan-600"></i>
-                                <span class="text-sm font-bold text-cyan-900">${isZh ? '課程購買與使用指南' : 'Student Guide'}</span>
+                                <span class="text-sm font-bold text-cyan-900" data-localized-label="students">${isZh ? '課程購買與使用指南' : 'Student Guide'}</span>
                             </div>
                         </a>
-                        <a href="${resolve('tutors.html')}" class="flex items-center justify-between py-3.5 px-5 bg-indigo-50/30 border border-indigo-100/50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all">
+                        <a href="${resolve('tutors.html')}" data-localized-page="tutors" class="flex items-center justify-between py-3.5 px-5 bg-indigo-50/30 border border-indigo-100/50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-handshake text-indigo-600"></i>
-                                <span class="text-sm font-bold text-indigo-900">${isZh ? '專業導師與合作洽談' : 'Tutor Guide'}</span>
+                                <span class="text-sm font-bold text-indigo-900" data-localized-label="tutors">${isZh ? '專業導師與合作洽談' : 'Tutor Guide'}</span>
                             </div>
                         </a>
                         <a href="${resolve('examples/index.html')}" class="flex items-center justify-between py-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 hover:text-slate-700 transition-all">
@@ -676,6 +771,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
         placeholder.style.position = 'relative';
         placeholder.style.zIndex = '999999';
         placeholder.innerHTML = navHTML;
+        void hydrateLocalizedSitePages(placeholder, uiLocale);
     } else {
         const existingNav = document.getElementById('main-nav') || document.querySelector('nav');
         if (existingNav) { 
@@ -683,6 +779,8 @@ window.renderNav = function (rootPath = '.', options = {}) {
         }
         else { document.body.insertAdjacentHTML('afterbegin', navHTML); }
     }
+
+    void hydrateLocalizedSitePages(document, uiLocale);
 
     setTimeout(() => {
         const currentPath = window.location.pathname;
@@ -848,12 +946,10 @@ function normalizeCourseTopNavBrandLink() {
         if (href && href !== '#' && href !== './#') return;
 
         let target = '/';
-        const isEn = file.startsWith('en-');
-        const prefix = isEn ? 'en-' : 'tw-';
-        if (file.startsWith('start-') || file.startsWith('tw-car-starter-') || file.startsWith('en-car-starter-')) target = `/learning-path.html?path=${prefix}car-starter`;
-        else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-') || file.startsWith('en-car-basic-')) target = `/learning-path.html?path=${prefix}car-basic`;
-        else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-') || file.startsWith('en-car-advanced-')) target = `/learning-path.html?path=${prefix}car-advanced`;
-        else if (file.startsWith('prepare-') || file.startsWith('tw-common-') || file.startsWith('en-common-')) target = `/learning-path.html?path=${prefix}common`;
+        if (file.startsWith('start-') || file.startsWith('tw-car-starter-') || file.startsWith('en-car-starter-') || file.startsWith('car-starter-')) target = canonicalLearningPathHref('car-starter');
+        else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-') || file.startsWith('en-car-basic-') || file.startsWith('car-basic-')) target = canonicalLearningPathHref('car-basic');
+        else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-') || file.startsWith('en-car-advanced-') || file.startsWith('car-advanced-')) target = canonicalLearningPathHref('car-advanced');
+        else if (file.startsWith('prepare-') || file.startsWith('tw-common-') || file.startsWith('en-common-') || file.startsWith('common-')) target = canonicalLearningPathHref('common');
         brand.setAttribute('href', target);
         brand.setAttribute('target', '_top');
     } catch (e) {

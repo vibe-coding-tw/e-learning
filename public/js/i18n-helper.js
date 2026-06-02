@@ -138,11 +138,11 @@
             "prefill_invite_referral_ignored": "（已忽略推薦碼/連結參數，綁定導師請在作業頁輸入 Promotion code）",
             "referral_verification_loading": "驗證中...",
             "referral_btn_apply": "套用連結",
-            "referral_unchanged": "未變更綁定：可先留白，或輸入有效 GitHub 專屬作業連結再套用。",
-            "referral_url_invalid": "連結格式錯誤，請使用 GitHub 專屬作業連結：https://classroom.github.com/a/xxxxx",
-            "referral_item_not_in_cart": "此老師作業連結對應的課程/單元不在目前購物車中",
-            "referral_item_mismatch": "此老師作業連結不屬於目前這個課程項目",
-            "referral_applied_success": "✅ 已套用老師作業連結：{name}",
+            "referral_unchanged": "未變更綁定：可先留白，或輸入老師提供的作業連結再套用。",
+            "referral_url_invalid": "連結格式錯誤，請使用老師提供的作業連結。",
+            "referral_item_not_in_cart": "此作業連結對應的課程/單元不在目前購物車中",
+            "referral_item_mismatch": "此作業連結不屬於目前這個課程項目",
+            "referral_applied_success": "✅ 已套用作業連結：{name}",
 
             // payment-return.html
             "pay_success_header": "付款成功！",
@@ -185,10 +185,10 @@
             "dash_no_orders": "尚無付款訂單紀錄。",
             "dash_no_assignments": "目前沒有已指派的作業。請先到「學習路徑」加入並開啟您的第一堂課程！",
             "dash_tutor_invite_binding_title": "🔗 導師與學員 Promotion code 綁定工具",
-            "dash_tutor_invite_binding_desc": "在下方欄位輸入導師提供的專屬 Promotion code（或 GitHub 作業邀請連結），即可完成師生綁定。之後每次 PUSH 作業時，導師將可提供精準的線上 Code Review 指引。",
+            "dash_tutor_invite_binding_desc": "在下方欄位輸入導師提供的專屬 Promotion code（或作業連結），即可完成師生綁定。之後每次 PUSH 作業時，導師將可提供精準的線上 Code Review 指引。",
             "dash_tutor_invite_btn_bind": "進行綁定",
             "dash_tutor_invite_btn_binding": "驗證中...",
-            "dash_tutor_invite_input_placeholder": "輸入導師 Promotion code 或 GitHub 作業連結...",
+            "dash_tutor_invite_input_placeholder": "輸入導師 Promotion code 或作業連結...",
             "dash_tutor_invite_status_empty": "未變更綁定。如需綁定，請輸入代碼後點擊綁定。",
 
             // Extra Dashboard Labels (Student/Tutor View)
@@ -341,11 +341,11 @@
             "prefill_invite_referral_ignored": "（Ignored referral code parameters. Enter Promotion code on the assignment page to bind a tutor.）",
             "referral_verification_loading": "Verifying...",
             "referral_btn_apply": "Apply Link",
-            "referral_unchanged": "Unchanged. Leave blank, or enter a valid GitHub classroom invite link to apply.",
-            "referral_url_invalid": "Invalid format. Please use a GitHub classroom invite link: https://classroom.github.com/a/xxxxx",
-            "referral_item_not_in_cart": "The unit associated with this tutor invite link is not in your cart.",
-            "referral_item_mismatch": "This tutor invite link does not match the current unit item.",
-            "referral_applied_success": "✅ Applied tutor invite link: {name}",
+            "referral_unchanged": "Unchanged. Leave blank, or enter a tutor-provided assignment link to apply.",
+            "referral_url_invalid": "Invalid format. Please use a tutor-provided assignment link.",
+            "referral_item_not_in_cart": "The unit associated with this assignment link is not in your cart.",
+            "referral_item_mismatch": "This assignment link does not match the current unit item.",
+            "referral_applied_success": "✅ Applied assignment link: {name}",
 
             // payment-return.html
             "pay_success_header": "Payment Successful!",
@@ -388,10 +388,10 @@
             "dash_no_orders": "No orders found.",
             "dash_no_assignments": "No assigned tasks yet. Go to the \"Learning Path\" to enroll and start your first unit!",
             "dash_tutor_invite_binding_title": "🔗 Tutor & Student Promotion Code Binder",
-            "dash_tutor_invite_binding_desc": "Enter the Promotion code (or GitHub Classroom invite link) provided by your tutor below to complete binding. Once bound, your tutor will be able to review your code and write comments on GitHub for every push.",
+            "dash_tutor_invite_binding_desc": "Enter the Promotion code (or assignment link) provided by your tutor below to complete binding. Once bound, your tutor will be able to review your code and write comments on GitHub for every push.",
             "dash_tutor_invite_btn_bind": "Bind Code",
             "dash_tutor_invite_btn_binding": "Binding...",
-            "dash_tutor_invite_input_placeholder": "Enter tutor code or classroom invite link...",
+            "dash_tutor_invite_input_placeholder": "Enter tutor code or assignment link...",
             "dash_tutor_invite_status_empty": "Unbound. Enter a code and click bind to proceed.",
             
             // Extra Dashboard Labels (Student/Tutor View)

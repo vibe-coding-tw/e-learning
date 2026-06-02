@@ -9,6 +9,39 @@ if (window.__courseSharedLoaded) {
     console.log("[CourseShared] Already loaded, skipping.");
 } else {
 window.__courseSharedLoaded = true;
+const { normalizeRouteLooseKey: normalizeRouteLooseKeyFromDashboardLookup } = window.dashboardLookupUtils || {};
+const normalizeLooseKey = normalizeRouteLooseKeyFromDashboardLookup || ((value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase());
+const REPO_UTILS = window.repoSlugUtils || {};
+const normalizeCanonicalLearningPathKey = REPO_UTILS.normalizeCanonicalLearningPathKey || function (value = "") {
+    const v = String(value || "").trim().toLowerCase().split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
+    if (!v) return '';
+    if (v === 'common' || v === 'car-starter' || v === 'car-basic' || v === 'car-advanced') return v;
+    if (/^(?:tw|en)-common$/i.test(v)) return 'common';
+    if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, '');
+    if (/^start-\d{2}-unit-/i.test(v)) return 'car-starter';
+    if (/^basic-\d{2}-unit-/i.test(v)) return 'car-basic';
+    if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return 'car-advanced';
+    if (/^\d{2}-unit-/i.test(v)) return 'common';
+    if (/^prepare-\d+/i.test(v)) return 'common';
+    return v;
+};
+const normalizeCanonicalUnitFilenameForRoute = REPO_UTILS.normalizeCanonicalRepoSlug || function (file = '') {
+    const v = String(file || '').split('/').pop().split('?')[0].trim();
+    if (!v) return '';
+    if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
+    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
+    if (/^en-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^en-/i, '');
+    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
+    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
+    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'common-');
+    if (/^prepare-\d+-(.+)$/i.test(v)) return v.replace(/^prepare-\d+-/i, 'common-');
+    return v;
+};
+function canonicalLearningPathHref(pathKey = "") {
+    const canonical = normalizeCanonicalLearningPathKey(pathKey);
+    return `/learning-path.html?path=${encodeURIComponent(canonical || 'common')}`;
+}
 
 // Initializer
 function init() {
@@ -157,40 +190,7 @@ function ensureUnitTabsTheme() {
 }
 
 function normalizeUnitFilenameForRoute(file = '') {
-    const v = String(file || '').split('/').pop().split('?')[0].trim();
-    if (!v) return '';
-    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v;
-    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'tw-car-starter-');
-    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'tw-car-basic-');
-    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'tw-car-advanced-');
-    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'tw-common-');
-    return v;
-}
-
-function normalizeCanonicalRepoSlug(value = '') {
-    const v = String(value || '').split('/').pop().split('?')[0].trim().replace(/\.html$/i, '');
-    if (!v) return '';
-    if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
-    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
-    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
-    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
-    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
-    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'common-');
-    return v;
-}
-
-function legacyRepoSlugFromCanonical(value = '') {
-    const canonical = normalizeCanonicalRepoSlug(value);
-    if (!canonical) return '';
-    if (/^common-/i.test(canonical)) return `tw-${canonical}`;
-    if (/^car-(starter|basic|advanced)-/i.test(canonical)) return `tw-${canonical}`;
-    return canonical;
-}
-
-function repoSlugCandidatesFromValue(value = '') {
-    const canonical = normalizeCanonicalRepoSlug(value);
-    const legacy = legacyRepoSlugFromCanonical(canonical);
-    return [...new Set([canonical, legacy].filter(Boolean))];
+    return normalizeCanonicalUnitFilenameForRoute(file);
 }
 
 function formatUnitTabTitle(unitFile = '', fallbackIndex = 0) {
@@ -207,6 +207,25 @@ function formatUnitTabTitle(unitFile = '', fallbackIndex = 0) {
         .map(part => part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1))
         .join(' ');
     return `${fallbackIndex + 1} ${title || `Unit ${fallbackIndex + 1}`}`;
+}
+
+function normalizeAssignmentInviteUrl(raw = '') {
+    try {
+        const url = new URL(String(raw).trim());
+        if (url.hostname !== 'classroom.github.com') return String(raw).trim();
+        return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
+    } catch (_) {
+        return String(raw).trim();
+    }
+}
+
+function isValidAssignmentInviteUrl(url = '') {
+    return /^https:\/\/classroom\.github\.com\/a\/[A-Za-z0-9_-]+\/?$/.test(String(url).trim());
+}
+
+function isLikelyAssignmentLink(url = '') {
+    const s = String(url || '').toLowerCase();
+    return s.includes('classroom.github.com') || s.includes('github.com/classroom');
 }
 
 function buildUnitAuthUrl(unitFile = '') {
@@ -228,7 +247,6 @@ async function ensureDynamicUnitTabsFromFirestore() {
         }
         if (!Array.isArray(globalLessonsData) || globalLessonsData.length === 0) return;
 
-        const normalizeLooseKey = (value = '') => String(value || '').split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
         const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(fileName));
         const matchedCourse = globalLessonsData.find((course) => {
             const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
@@ -342,10 +360,9 @@ function normalizeCourseTopNav() {
 
             const urlParams = new URLSearchParams(window.location.search);
             const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
-            const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
-            const pathPrefix = isEn ? 'en-' : 'tw-';
+            const storedLocale = String(localStorage.getItem('vibe_user_locale') || '').trim().toLowerCase();
+            const isEn = queryLang.trim().toLowerCase().startsWith('en') || storedLocale.startsWith('en') || file.startsWith('en-');
             const langQuery = isEn ? '&lang=en' : '';
-            const homeLangQuery = isEn ? '?lang=en' : '';
 
             const translate = (key, defaultText) => {
                 if (typeof window.t === 'function') {
@@ -367,22 +384,22 @@ function normalizeCourseTopNav() {
 
             if (isStarter) {
                 navLabel.textContent = translate('starter_title', '入門課程');
-                navLabel.setAttribute('href', `/learning-path.html?path=${pathPrefix}car-starter${langQuery}`);
+                navLabel.setAttribute('href', `${canonicalLearningPathHref('car-starter')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
             else if (isBasic) {
                 navLabel.textContent = translate('basic_title', '基礎課程');
-                navLabel.setAttribute('href', `/learning-path.html?path=${pathPrefix}car-basic${langQuery}`);
+                navLabel.setAttribute('href', `${canonicalLearningPathHref('car-basic')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
             else if (isAdvanced) {
                 navLabel.textContent = translate('advanced_title', '進階課程');
-                navLabel.setAttribute('href', `/learning-path.html?path=${pathPrefix}car-advanced${langQuery}`);
+                navLabel.setAttribute('href', `${canonicalLearningPathHref('car-advanced')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
             else if (isPrepare) {
                 navLabel.textContent = translate('prepare_title', '準備課程');
-                navLabel.setAttribute('href', `/learning-path.html?path=${pathPrefix}common${langQuery}`);
+                navLabel.setAttribute('href', `${canonicalLearningPathHref('common')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
         }
@@ -432,7 +449,7 @@ function normalizeCourseTopNav() {
                             'touch-basics': '04', 'long-press': '04', 'prevent-default': '04',
                             'touch-vs-mouse': '05', 'canvas-joystick': '05', 'joystick-math': '05'
                         };
-                        const suffixMatch = file.match(/^(?:tw|en)-car-starter-(.+)\.html$/i);
+                        const suffixMatch = file.match(/^(?:tw|en-)?car-starter-(.+)\.html$/i);
                         if (suffixMatch && lookup[suffixMatch[1]]) {
                             courseNum = lookup[suffixMatch[1]];
                         }
@@ -453,7 +470,7 @@ function normalizeCourseTopNav() {
                             'agent-mode': '04', 'vibe-coding': '05', 'web-agents': '06',
                             'github-classroom': '07', 'wifi-setup': '08', 'motor-ramping': '09'
                         };
-                        const suffixMatch = file.match(/^(?:tw|en)-common-(.+)\.html$/i);
+                        const suffixMatch = file.match(/^(?:tw|en-)?common-(.+)\.html$/i);
                         if (suffixMatch && lookup[suffixMatch[1]]) {
                             courseNum = lookup[suffixMatch[1]];
                         }
@@ -470,7 +487,7 @@ function normalizeCourseTopNav() {
 
         // 課程單元右上角加入語言選項 (Language Switcher)
         if (!document.getElementById('course-lang-select-container')) {
-            const isEnMode = (new URLSearchParams(window.location.search).get('lang') || '').toLowerCase().startsWith('en') || file.startsWith('en-');
+            const isEnMode = (new URLSearchParams(window.location.search).get('lang') || '').toLowerCase().startsWith('en') || String(localStorage.getItem('vibe_user_locale') || '').trim().toLowerCase().startsWith('en') || file.startsWith('en-');
             
             const container = document.createElement('div');
             container.id = 'course-lang-select-container';
@@ -494,48 +511,7 @@ function normalizeCourseTopNav() {
                 } catch (_) {}
                 
                 const currentFile = window.location.pathname.split('/').pop() || '';
-                let targetFile = currentFile;
-                
-                if (newLocale === 'en') {
-                    if (currentFile.startsWith('tw-')) {
-                        targetFile = currentFile.replace(/^tw-/, 'en-');
-                    } else if (currentFile.startsWith('start-')) {
-                        const lookup = {
-                            'start-01-unit-html5-basics.html': 'en-car-starter-html5-basics.html',
-                            'start-01-unit-flexbox-layout.html': 'en-car-starter-flexbox-layout.html',
-                            'start-01-unit-ui-ux-standards.html': 'en-car-starter-ui-ux-standards.html',
-                            'start-02-unit-ble-security.html': 'en-car-starter-ble-security.html',
-                            'start-02-unit-ble-async.html': 'en-car-starter-ble-async.html',
-                            'start-02-unit-typed-arrays.html': 'en-car-starter-typed-arrays.html',
-                            'start-03-unit-control-panel.html': 'en-car-starter-control-panel.html',
-                            'start-03-unit-data-json.html': 'en-car-starter-data-json.html',
-                            'start-03-unit-flow-logic.html': 'en-car-starter-flow-logic.html',
-                            'start-04-unit-touch-basics.html': 'en-car-starter-touch-basics.html',
-                            'start-04-unit-long-press.html': 'en-car-starter-long-press.html',
-                            'start-04-unit-prevent-default.html': 'en-car-starter-prevent-default.html',
-                            'start-05-unit-touch-vs-mouse.html': 'en-car-starter-touch-vs-mouse.html',
-                            'start-05-unit-canvas-joystick.html': 'en-car-starter-canvas-joystick.html',
-                            'start-05-unit-joystick-math.html': 'en-car-starter-joystick-math.html'
-                        };
-                        targetFile = lookup[currentFile] || currentFile.replace(/^start-/, 'en-');
-                    } else if (currentFile.match(/^\d{2}-unit-/)) {
-                        targetFile = currentFile.replace(/^\d{2}-unit-/, 'en-common-');
-                    } else if (currentFile.match(/^prepare-/)) {
-                        targetFile = currentFile.replace(/^prepare-/, 'en-common-');
-                    }
-                } else {
-                    if (targetFile.startsWith('en-car-starter-')) {
-                        targetFile = targetFile.replace(/^en-car-starter-/, 'tw-car-starter-');
-                    } else if (targetFile.startsWith('en-car-basic-')) {
-                        targetFile = targetFile.replace(/^en-car-basic-/, 'tw-car-basic-');
-                    } else if (targetFile.startsWith('en-car-advanced-')) {
-                        targetFile = targetFile.replace(/^en-car-advanced-/, 'tw-car-advanced-');
-                    } else if (targetFile.startsWith('en-common-')) {
-                        targetFile = targetFile.replace(/^en-common-/, 'tw-common-');
-                    } else if (targetFile.startsWith('en-')) {
-                        targetFile = targetFile.replace(/^en-/, 'tw-');
-                    }
-                }
+                const targetFile = normalizeCanonicalUnitFilenameForRoute(currentFile);
                 
                 const urlParams = new URLSearchParams(window.location.search);
                 urlParams.set('lang', newLocale === 'en' ? 'en' : 'zh-TW');
@@ -586,7 +562,7 @@ function hideGlobalNavOnCoursePage() {
         const path = window.location.pathname || '';
         const file = (path.split('/').pop() || '').toLowerCase();
         const isCourseRoute = path.startsWith('/courses/');
-        const isPrepareUnit = /^(?:prepare-\d+|tw-common)-.*\.html$/.test(file);
+        const isPrepareUnit = /^(?:prepare-\d+|(?:tw|en-)?common-|common-).*\.html$/.test(file);
         if (!isCourseRoute && !isPrepareUnit) return;
         if (document.getElementById('course-hide-main-nav-style')) return;
 
@@ -663,9 +639,9 @@ function upgradeLegacyStartUnitToMsLayout() {
         const topNav = document.createElement('nav');
         topNav.className = 'ms-topnav';
         topNav.innerHTML = `
-            <a href="/learning-path.html?path=tw-car-starter" target="_top" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
+            <a href="${canonicalLearningPathHref('car-starter')}" target="_top" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
             <div class="divider"></div>
-            <a href="/learning-path.html?path=tw-car-starter" target="_top" class="nav-label nav-label-link">入門課程</a>
+            <a href="${canonicalLearningPathHref('car-starter')}" target="_top" class="nav-label nav-label-link">入門課程</a>
         `;
 
         const layout = document.createElement('div');
@@ -1115,7 +1091,6 @@ async function toggleUnitTabsVisibility() {
 
         const tabWrapper = tabs.closest('.relative.z-40') || tabs.parentElement?.parentElement;
         const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        const normalizeLooseKey = (value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
         const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(fileName));
 
         if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
@@ -1928,17 +1903,6 @@ async function initFirebaseFeatures() {
             }
         };
 
-        window.firebasePrecheckGithubClassroomAccess = async (classroomUrl) => {
-            try {
-                const precheck = httpsCallable(functions, 'precheckGithubClassroomAccess');
-                const result = await precheck({ classroomUrl });
-                return result.data || null;
-            } catch (e) {
-                console.error("Failed to precheck GitHub Classroom access:", e);
-                return null;
-            }
-        };
-
         // --- Student Interaction Hub MVP ---
 
         function escapeHtml(str) {
@@ -1953,30 +1917,42 @@ async function initFirebaseFeatures() {
 
         const findCourseIdByUnit = async (fileName) => {
             let globalLessonsData = window.globalLessonsData;
-            if (!globalLessonsData || globalLessonsData.length === 0) {
-                try {
-                    const getLessonsFunc = httpsCallable(functions, 'getLessonsMetadata');
-                    const result = await getLessonsFunc();
-                    if (result.data && result.data.lessons) {
+        if (!globalLessonsData || globalLessonsData.length === 0) {
+            try {
+                const getLessonsFunc = httpsCallable(functions, 'getLessonsMetadata');
+                const result = await getLessonsFunc();
+                if (result.data && result.data.lessons) {
                         globalLessonsData = result.data.lessons;
                         window.globalLessonsData = globalLessonsData;
                     }
                 } catch (e) {
                     console.error("Failed to load global lessons data:", e);
-                }
             }
-            if (globalLessonsData) {
-                for (const course of globalLessonsData) {
-                    if (course.githubClassroomUrls && course.githubClassroomUrls[fileName]) {
+        }
+        if (globalLessonsData) {
+            for (const course of globalLessonsData) {
+                    const candidateKeys = new Set([
+                        fileName,
+                        normalizeLooseKey(fileName)
+                    ]);
+                    const assignmentUrlMaps = [course.assignmentUrlMap, course.assignmentUrls];
+                    const hasAssignmentUrl = assignmentUrlMaps.some(urlMaps => {
+                        if (!urlMaps || typeof urlMaps !== 'object') return false;
+                        for (const candidateKey of candidateKeys) {
+                            if (urlMaps[candidateKey]) return true;
+                        }
+                        return false;
+                    });
+                    if (hasAssignmentUrl) {
                         return course.courseId;
                     }
-                }
             }
+        }
             // Fallback prefix check
-            if (fileName.startsWith('adv-') || fileName.startsWith('tw-car-advanced-')) return 'advanced';
-            if (fileName.startsWith('basic-') || fileName.startsWith('tw-car-basic-')) return 'basic';
-            if (fileName.startsWith('start-') || fileName.startsWith('tw-car-starter-')) return 'started';
-            if (fileName.match(/^[0-9]/) || fileName.startsWith('prepare-') || fileName.startsWith('tw-common-')) return 'prepare';
+            if (fileName.startsWith('adv-') || fileName.startsWith('advanced-') || fileName.startsWith('car-advanced-')) return 'advanced';
+            if (fileName.startsWith('basic-') || fileName.startsWith('car-basic-')) return 'basic';
+            if (fileName.startsWith('start-') || fileName.startsWith('car-starter-')) return 'started';
+            if (fileName.match(/^[0-9]/) || fileName.startsWith('prepare-') || fileName.startsWith('common-')) return 'prepare';
             return 'basic';
         };
 
@@ -2618,7 +2594,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
                 ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(accessMode);
             const skipTutorPrompt = !!options?.skipTutorPrompt;
 
-            // [V20] 已授權的使用者，點擊「前往 Classroom 寫作業」時先顯示導師確認對話框
+            // [V20] 已授權的使用者，點擊「前往作業入口」時先顯示導師確認對話框
             // 除非 skipTutorPrompt === true（綁定成功後自動觸發的重試流程）
             if (isAuthorized && !skipTutorPrompt) {
                 document.getElementById('link-course-id').value = courseId;
@@ -2665,32 +2641,13 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
 /**
  * Helper to pick the right URL based on tutor map
  */
-function resolveClassroomUrl(urlConfig) {
+function resolveAssignmentUrl(urlConfig) {
     if (typeof urlConfig === 'string') return urlConfig;
     if (typeof urlConfig === 'object') {
         // Fallback to default or first key
         return urlConfig.default || Object.values(urlConfig)[0];
     }
     return null;
-}
-
-function normalizeGitHubClassroomInviteUrl(raw = '') {
-    try {
-        const url = new URL(String(raw).trim());
-        if (url.hostname !== 'classroom.github.com') return String(raw).trim();
-        return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
-    } catch (_) {
-        return String(raw).trim();
-    }
-}
-
-function isValidGitHubClassroomInviteUrl(url = '') {
-    return /^https:\/\/classroom\.github\.com\/a\/[A-Za-z0-9_-]+\/?$/.test(String(url).trim());
-}
-
-function isLikelyGitHubClassroomLink(url = '') {
-    const s = String(url || '').toLowerCase();
-    return s.includes('classroom.github.com') || s.includes('github.com/classroom');
 }
 
 function isAdminTutorModeActive() {
@@ -2703,10 +2660,10 @@ function isAdminTutorModeActive() {
 
 function buildSubmitFailureMessage(rawMessage = '', submitUrl = '') {
     const message = String(rawMessage || '').trim();
-    const isClassroomSubmission = isLikelyGitHubClassroomLink(submitUrl);
+    const isAssignmentSubmission = isLikelyAssignmentLink(submitUrl);
     const maybeOrgInviteIssue =
         /付款授權|payment|repository access issue|no longer have access|no access|invitation|組織邀請|organization/i.test(message);
-    if (isClassroomSubmission && maybeOrgInviteIssue) {
+    if (isAssignmentSubmission && maybeOrgInviteIssue) {
         return `繳交失敗：${message || '尚未完成授權'}\n\n請先完成以下步驟後再提交：\n1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n2. 接受待處理的作業 Repository 邀請 (Collaborator Invitation)\n3. 回到本頁重新提交`;
     }
     return `繳交失敗: ${message || 'Unknown error'}`;
@@ -2740,26 +2697,6 @@ window.submitAssignmentAction = async function () {
     try {
         if (typeof window.firebaseSubmitAssignment !== 'function') {
             throw new Error("Firebase SDK not initialized yet.");
-        }
-
-        if (isLikelyGitHubClassroomLink(url) && typeof window.firebasePrecheckGithubClassroomAccess === 'function') {
-            const precheck = await window.firebasePrecheckGithubClassroomAccess(url);
-            const badStates = new Set(['pending', 'invited', 'not_member', 'missing_github_identity']);
-            if (precheck && precheck.precheckEnabled && badStates.has(String(precheck.state || ''))) {
-                const suffix = precheck.state === 'invited'
-                    ? '\n（系統已自動補發邀請）'
-                    : precheck.state === 'missing_github_identity'
-                        ? '\n（目前帳號尚未綁定 GitHub 登入）'
-                        : '';
-                alert(
-                    `請先接受作業 Repository 的協作者邀請再提交。\n` +
-                    `1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n` +
-                    `2. 接受待處理的作業邀請\n` +
-                    `3. 回到本頁重新提交` +
-                    suffix
-                );
-                return;
-            }
         }
 
         const result = await window.firebaseSubmitAssignment({
@@ -2871,16 +2808,17 @@ async function findCourseIdByUnit(fileName) {
             globalLessonsData = await vibeFetchLessons();
         }
 
-        const normalizeLooseKey = (value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
         const targetKey = normalizeLooseKey(fileName);
         
         if (globalLessonsData && Array.isArray(globalLessonsData)) {
             const course = globalLessonsData.find(c => {
-                const candidateKeys = new Set([
+        const candidateKeys = new Set([
                     normalizeLooseKey(c.courseId),
                     normalizeLooseKey(c.courseKey),
                     normalizeLooseKey(c.entryUnitId),
-                    normalizeLooseKey(c.classroomUrl),
+                    normalizeLooseKey(c.assignmentUrlMap ? Object.keys(c.assignmentUrlMap)[0] || '' : ''),
+                    normalizeLooseKey(c.assignmentUrls ? Object.keys(c.assignmentUrls)[0] || '' : ''),
+                    normalizeLooseKey(c.classroomUrl || ''),
                     normalizeLooseKey(c.contentRef)
                 ].filter(Boolean));
 

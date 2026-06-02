@@ -12,7 +12,7 @@
 | `name` / `displayName` | string | 顯示名稱。 |
 | `photoURL` | string | 頭像連結。 |
 | `role` | string | 系統角色：僅 `admin` 或 `user`。 |
-| `tutorConfigs` | map | Tutor 單元授權狀態。Key 為 unitId，常見欄位：`authorized`, `assignmentUrl`, `courseId`, `updatedAt`。`assignmentUrl` 現行代表作業派發連結；歷史 Classroom URL 僅作相容。 |
+| `tutorConfigs` | map | Tutor 單元授權狀態。Key 為 unitId，常見欄位：`authorized`, `assignmentUrl`, `courseId`, `updatedAt`。`assignmentUrl` 現行代表作業派發連結；歷史舊作業邀請 URL 僅作相容。若要正式遷移欄位命名，請參考 [`docs/assignment-url-migration-plan.md`](assignment-url-migration-plan.md)。 |
 | `tutorApplications` | array | 該使用者申請紀錄快照（部分流程使用）。 |
 | `hasPendingApplication` | boolean | 是否有待審導師申請。 |
 | `unitAssignments` | map | 學生單元指派導師。Key = unitId，Value = tutorEmail。 |
@@ -162,11 +162,11 @@
 | `unitId` | string | 單元 ID。 |
 | `assignmentTitle` | string | 作業標題。 |
 | `assignmentId` | string | 作業識別碼（常與 `userId` 組合成文件 id）。 |
-| `assignmentUrl` | string | 學生提交 / 作業派發連結（GitHub / Demo；歷史 Classroom URL 僅作相容）。 |
+| `assignmentUrl` | string | 學生提交 / 作業派發連結（GitHub / Demo；歷史舊作業邀請 URL 僅作相容）。若未來要將舊欄位正式遷移，請依 `assignment-url-migration-plan.md` 先做 dual read/write。 |
 | `repositoryUrl` | string | 自建作業 GitHub 倉庫連結（API 創庫）。 |
 | `repositoryName` | string | 自建作業 GitHub 倉庫名稱。 |
 | `feedbackPullRequestUrl` | string | 學生作業 Feedback Pull Request 連結。 |
-| `createdVia` | string | 建立來源種類：`native-api` 或 `legacy-classroom`。 |
+| `createdVia` | string | 建立來源種類：`native-api` 或 `legacy-classroom`（舊作業邀請流程）。 |
 | `studentNote` | string | 學生備註。 |
 | `assignedTutorEmail` | string | 該作業對應導師。 |
 | `currentStatus` | string | `started` / `submitted` / `graded`。 |
@@ -202,7 +202,7 @@
 | `recommendedByEmail` | string | 推薦老師 Email。 |
 | `recommendedFromAssignmentId` | string | 由哪筆 assignment 推薦而來。 |
 | `recommendedAt` | timestamp | 推薦建立時間（推薦流程）。 |
-| `candidateClassroomInviteUrl` | string | 候選學生提交的作業綁定資訊（歷史欄位，僅供舊流程相容）。 |
+| `candidateClassroomInviteUrl` | string | 候選學生提交的作業綁定資訊（歷史欄位，僅供舊流程相容）。若後續改名，建議遷移為 `candidateAssignmentUrl`。 |
 | `candidateLinkSubmittedAt` | timestamp | 候選學生完成連結提交時間。 |
 | `appliedAt` | timestamp | 申請時間。 |
 | `adminMessage` | string | 管理員審核回覆。 |
@@ -316,7 +316,7 @@
 ---
 
 ## 8. `referral_links` 集合
-儲存導師推薦/綁定用連結索引（含歷史 Classroom 相容資料）。
+儲存導師推薦/綁定用連結索引（含歷史舊作業邀請相容資料）。
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |

@@ -21,6 +21,48 @@ function normalizeCanonicalCourseKey(value = '') {
     .replace(/^(?:tw|en)-/i, '');
 }
 
+function normalizeLegacyPrice(value) {
+  const amount = Number(value || 0);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function deriveUsdFromTwd(twdAmount) {
+  const numeric = normalizeLegacyPrice(twdAmount);
+  if (numeric <= 0) return 0;
+  return Math.max(1, Math.round(numeric / 30));
+}
+
+function attachLocalizedPricing(course) {
+  const twAmount = normalizeLegacyPrice(course.price);
+  const usdAmount = deriveUsdFromTwd(twAmount);
+  return {
+    ...course,
+    pricing: {
+      tw: { amount: twAmount, currency: 'TWD' },
+      en: { amount: usdAmount, currency: 'USD' },
+    },
+    prices: {
+      tw: twAmount,
+      en: usdAmount,
+    },
+    priceByLocale: {
+      'zh-TW': { amount: twAmount, currency: 'TWD' },
+      en: { amount: usdAmount, currency: 'USD' },
+    },
+    priceByRegion: {
+      tw: { amount: twAmount, currency: 'TWD' },
+      en: { amount: usdAmount, currency: 'USD' },
+    },
+    priceMap: {
+      tw: { amount: twAmount, currency: 'TWD' },
+      en: { amount: usdAmount, currency: 'USD' },
+    },
+    price_twd: twAmount,
+    price_usd: usdAmount,
+    currency: 'TWD',
+  };
+}
+
 const prepareCourses = [
   {
     id: 'tw-common-developer-identity',
@@ -203,7 +245,8 @@ async function run() {
   const isApply = process.argv.includes("--apply");
   console.log(`🚀 Update Prepare Lessons (Firestore Production) - Mode: ${isApply ? "APPLY" : "DRY RUN"}`);
 
-  const processed = prepareCourses.map(withEntryMetadata);
+  const processed = prepareCourses.map((course) => attachLocalizedPricing(withEntryMetadata(course)));
+  const processedSpecs = prepareSpecs.map((spec) => attachLocalizedPricing(spec));
 
   if (isApply) {
     // 1. Write the 9 cards
@@ -218,7 +261,7 @@ async function run() {
     console.log(`  🗑️ Deleted legacy card 'tw-common-wifi-motor'`);
 
     // 3. Write the specs
-    for (const spec of prepareSpecs) {
+    for (const spec of processedSpecs) {
       const { id, ...payload } = spec;
       await db.collection("metadata_lessons").doc(id).set(payload);
       console.log(`  ✅ Written spec: ${id}`);
@@ -228,7 +271,7 @@ async function run() {
       console.log(`  [DRY RUN] Will write card: ${docData.id}`);
     }
     console.log(`  [DRY RUN] Will delete legacy card 'tw-common-wifi-motor'`);
-    for (const spec of prepareSpecs) {
+    for (const spec of processedSpecs) {
       console.log(`  [DRY RUN] Will write spec: ${spec.id}`);
     }
   }

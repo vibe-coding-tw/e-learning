@@ -16,6 +16,11 @@ function buildI18nFilenameCandidates(candidateFileName, locale = "") {
 
     const stripHtml = fileName.replace(/\.html$/i, "");
     const makeRenamed = (prefix, stem) => `${prefix}-${stem}.html`;
+    const hasLegacyLanguagePrefix = /^(?:tw|en)-/i.test(stripHtml);
+
+    if (!hasLegacyLanguagePrefix) {
+        addCandidate(makeRenamed(regionPrefix, stripHtml));
+    }
 
     let match = stripHtml.match(/^start-\d+-unit-(.+)$/i);
     if (match) addCandidate(makeRenamed(`${regionPrefix}-car-starter`, match[1]));

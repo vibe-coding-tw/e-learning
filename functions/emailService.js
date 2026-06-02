@@ -597,7 +597,7 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
  * @param {string} email - Tutor's email address
  * @param {string} unitName - Name of the unit
  * @param {string} unitId - The course unit ID
- * @param {string} assignmentUrl - The GitHub Classroom assignment URL
+ * @param {string} assignmentUrl - The assignment URL
  */
 async function sendTutorAuthorizationEmail(email, unitName, unitId, assignmentUrl) {
     const cleanUnitId = normalizeUnitId(unitId);
@@ -607,19 +607,19 @@ async function sendTutorAuthorizationEmail(email, unitName, unitId, assignmentUr
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `Vibe Coding 課程單元授權通知: ${unitName}`,
-        text: `恭喜您成為 Vibe Coding 授權導師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n您的專屬招生連結 (GitHub Classroom) 為：\n${assignmentUrl || '尚未配置'}\n\n學生點擊此連結報名時，系統將自動計算您的分潤。\n\n請前往導師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
+        text: `恭喜您成為 Vibe Coding 授權導師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n您的專屬作業連結為：\n${assignmentUrl || '尚未配置'}\n\n學生點擊此連結報名時，系統將自動計算您的分潤。\n\n請前往導師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
         html: getEmailHtmlWrapper(
             '授權導師資格通知',
             `
                 <p>Hi,</p>
                 <p>恭喜您！您已獲得課程單元 <strong>${unitName}</strong> 的管理授權。現在可以存取導師資源、管理學生作業並獲得推廣分潤權益。</p>
-                ${renderInfoCard(buildSingleInfoRow('您的專屬招生連結 (GitHub Classroom)', '', {
+                ${renderInfoCard(buildSingleInfoRow('您的專屬作業連結', '', {
                     html: `<span style="font-family: monospace; word-break: break-all; color: #1e293b;"><a href="${escapeHtml(assignmentUrl || '#')}" style="color: #4f46e5; text-decoration: none;">${escapeHtml(assignmentUrl || '尚未配置連結')}</a></span>`
                 }), { padding: '25px', border: '1px solid #d0e7ff' })}
 
                 ${renderNextSteps('下一步建議：', [
                     '登入導師儀表板獲取推廣專屬 QR Code',
-                    '分享上述 GitHub Classroom 連結給您的學生',
+                    '分享上述作業連結給您的學生',
                     '在「分潤」分頁即時追蹤您的成交成效'
                 ])}
 
@@ -1280,7 +1280,7 @@ async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderE
     const cleanUnitId = normalizeUnitId(unitId);
     const dashboardPath = cleanUnitId ? `/dashboard.html?unitId=${encodeURIComponent(cleanUnitId)}&tab=assignments` : '/dashboard.html?tab=assignments';
     const dashboardUrl = applicationId
-        ? `${appUrl(dashboardPath)}&action=submitTutorInvite&applicationId=${encodeURIComponent(applicationId)}`
+        ? `${appUrl(dashboardPath)}&action=submitTutorAssignmentLink&applicationId=${encodeURIComponent(applicationId)}`
         : appUrl(dashboardPath);
 
     const locale = await resolveUserLocale(email);
@@ -1304,9 +1304,9 @@ async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderE
                     applicantLabel: '推薦者 Email',
                     applicantValue: recommenderEmail
                 }), { padding: '20px' })}
-                <p><strong>下一步：</strong>請先填寫您接下來要使用的 GitHub Classroom 邀請連結，系統才會正式通知管理員審核。</p>
+                <p><strong>下一步：</strong>請先填寫您接下來要使用的作業連結，系統才會正式通知管理員審核。</p>
                 ${renderNextSteps('建議您現在先做：', [
-                    '點擊下方按鈕，進入 Dashboard 填寫 GitHub Classroom 邀請連結。',
+                    '點擊下方按鈕，進入 Dashboard 填寫作業連結。',
                     '確認連結可正常開啟，避免管理端審核後無法使用。',
                     '送出後留意管理員審核通知信。'
                 ])}

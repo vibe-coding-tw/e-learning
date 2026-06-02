@@ -1,4 +1,4 @@
-# Tutor Management & Authorization Minimum Viable Product (MVP)
+# 導師管理與授權 MVP
 **Version**: 2026.05.13.V1
 **Objective**: Standardize the process for identifying, recommending, and authorizing qualified tutors to maintain teaching quality and platform integrity.
 
@@ -10,7 +10,7 @@ graph TD
     A[學生 Push 並產生自動評分] -->|達推薦門檻| B[導師點擊 推薦此學生]
     B -->|建立申請紀錄| C(Firestore: tutor_applications)
     C -->|status: AWAITING_CANDIDATE_LINK| C1[學生收到被推薦通知]
-    C1 -->|填寫 Tutor Promotion code| C2[submitTutorRecommendationInviteLink]
+    C1 -->|填寫 Tutor Promotion code / 作業連結| C2[submitTutorRecommendationInviteLink]
     C2 -->|status: PENDING + 通知 admin| D{管理員收到 Email}
     D -->|登入後台| E[進入 合格教師 分頁]
     E -->|查看申請資料| F{管理員審核}
@@ -38,9 +38,9 @@ graph TD
 - **Notification**:
   - Sends candidate-facing notification via `sendTutorRecommendationCandidateEmail`.
 
-### 3.2 Step 2: Candidate Link Submission (Student Action)
-- **Interface**: Candidate opens email deep link to Dashboard and submits Tutor Promotion code / binding confirmation.
-- **Function**: `submitTutorRecommendationInviteLink`.
+### 3.2 Step 2: Candidate Submission (Student Action)
+- **Interface**: Candidate opens email deep link to Dashboard and submits Tutor Promotion code / 作業連結.
+- **Function**: `submitTutorRecommendationInviteLink`（歷史函式名保留；目前 payload 主參數為 `assignmentLink`）.
 - **Action**: Updates `tutor_applications.status` from `awaiting_candidate_link` to `pending`.
 - **Notification**: Sends admin notification via `sendAdminNewApplicationEmail`.
 
@@ -60,14 +60,14 @@ graph TD
 
 ### Firestore Collections
 - `tutor_applications`: Source of truth for all tutor requests and review status.
-- `users.tutorConfigs`: Stores unit-level tutor authorizations and assignment / repo settings（歷史 Classroom URL 僅作相容欄位）。
+- `users.tutorConfigs`: Stores unit-level tutor authorizations and assignment / repo settings（歷史作業邀請 URL 僅作相容欄位）。
 - `users`: Also keeps `tutorApplications` as a legacy-compatible snapshot.
 
 ### Cloud Functions
 - `getDashboardData`: Aggregates pending applications for the admin view.
 - `decideTutorApplication`: The primary endpoint for approving or rejecting applications.
 - `recommendTutorForUnit`: Creates recommendation applications and validates auto-grade threshold.
-- `submitTutorRecommendationInviteLink`: Candidate submits promo-code binding confirmation and triggers admin notification（歷史函式名保留）。
+- `submitTutorRecommendationInviteLink`: Candidate submits promo-code binding confirmation / 作業連結 and triggers admin notification（歷史函式名保留）。
 
 ## 5. Security & Validation
 - **Role Enforcement**: Only users with `role === 'admin'` can see or execute the `handleDecideApplication` logic.
@@ -78,6 +78,7 @@ graph TD
 - `functions/index.js` 目前已將 `tutorConfigs` 的讀寫收斂到共用 helper，包含 dashboard 彙整、授權寫入與 legacy snapshot 同步；但資料契約仍維持 `users.tutorConfigs[unitId].authorized = true`。
 - `users.tutorApplications` 仍保留作為 legacy-compatible snapshot；現行的 source of truth 仍是 `tutor_applications`。
 - `getDashboardData`、`decideTutorApplication`、`recommendTutorForUnit` 與 `submitTutorRecommendationInviteLink` 的外部行為不變，文件仍以現有流程與通知規格為準。
+- `githubClassroomUrl` / `githubClassroomUrls` 仍屬相容欄位；若後續要正式改名，請先依 [`docs/assignment-url-migration-plan.md`](assignment-url-migration-plan.md) 的 dual read/write + backfill 流程進行，不要直接破壞既有資料。
 
 ## 7. Related Specs
 - `docs/email-notifications.md` (notification matrix and runbook)
@@ -88,12 +89,12 @@ graph TD
 ## 8. Tutor Binding via Promotion Code (Updated 2026-05-20)
 - 綁定入口為作業頁（Assignment modal），由學生確認或輸入 Tutor 的 `Promotion code`。
 - 購物車流程不再輸入推薦連結或 Promotion code。
-- **點擊觸發機制**：學生點擊作業卡下方的「前往教室寫作業」按鈕後，會先彈出確認/綁定視窗（`assignment-link-modal`），以便隨時進行導師確認或異動。
+- **點擊觸發機制**：學生點擊作業卡下方的「前往作業頁」按鈕後，會先彈出確認/綁定視窗（`assignment-link-modal`），以便隨時進行導師確認或異動。
 - **自動帶入代碼**：彈出視窗時，系統會自動透過 API 帶入該學生此單元目前已綁定的 `Promotion code`；如果尚未綁定，則欄位為空。
 - **留白與異動機制**：如果要異動，請輸入新導師的 Promotion code。若欄位留白並送出，系統會自動為學生指派預設導師 `rover.k.chen@gmail.com`。
 - **合格導師驗證**：若有輸入代碼，系統在儲存前會先驗證該 code 是否對應此單元的合格授權導師：
   - 依 `users.promotionCode` 找到 Tutor
   - 檢查 Tutor 在該單元 `tutorConfigs[unitId].authorized === true`
-  - 檢查該單元已配置 `assignmentUrl` / `assignmentRepoUrl`（歷史 Classroom URL 僅作相容）
+  - 檢查該單元已配置 `assignmentUrl` / `assignmentRepoUrl`（歷史作業邀請 URL 僅作相容）
   - 驗證通過後，寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`，並直接開啟對應作業 Repo；若未通過，則提示錯誤阻擋進入。
   - 舊版 `正式提交作業 (Submit for Review)` 視窗保留為手動 fallback，不再是一般學生的預設路徑。

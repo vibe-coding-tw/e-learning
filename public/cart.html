@@ -6,11 +6,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.f2b902c4dafa.js"></script>
+    <script src="./js/i18n-helper.ff82321fd0b3.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="./style.f0b432c70be1.css">
+    <link rel="stylesheet" href="./style.1b939bdb0a17.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
         h1, h2, h3, h4, h5 { font-family: 'Outfit', sans-serif; }
@@ -150,6 +150,7 @@
 
     <div id="footer-placeholder" data-root="."></div>
     <script src="./js/footer-component.592aaceeda6b.js"></script>
+    <script src="./js/pricing-utils.js"></script>
 
 
 
@@ -187,6 +188,18 @@
         const checkoutBtn = document.getElementById('checkout-btn');
         const paymentFormContainer = document.getElementById('payment-form-container');
         const cartPrefillStatus = document.getElementById('cart-prefill-status');
+        const pricingApi = window.vibePricing || {
+            resolveCartPrice(item = {}, locale = "zh-TW") {
+                const currency = String(item.currency || item.price_currency || "").toUpperCase() || (String(locale || "").startsWith("en") ? "USD" : "TWD");
+                return { amount: Number(item.price || 0), currency };
+            },
+            formatPrice(priceEntry = {}, locale = "zh-TW") {
+                const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
+                const currency = priceEntry?.currency || (String(locale || "").startsWith("en") ? "USD" : "TWD");
+                if (!amount) return String(locale || "").startsWith("en") ? "Free" : "免費";
+                return `${currency} ${amount.toLocaleString()}`;
+            }
+        };
 
         function removeFromCart(productId) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
@@ -253,14 +266,14 @@
             return null;
         }
 
-        function extractClassroomInviteCandidates(urlConfig) {
+        function extractAssignmentInviteCandidates(urlConfig) {
             const out = [];
             const seen = new Set();
 
             function walk(node) {
                 if (!node) return;
                 if (typeof node === 'string') {
-                    const normalized = normalizeClassroomInviteUrl(node);
+                    const normalized = normalizeAssignmentInviteUrl(node);
                     if (normalized && !seen.has(normalized)) {
                         seen.add(normalized);
                         out.push(normalized);
@@ -302,8 +315,8 @@
         }
 
         async function isKnownInviteForCartItem(inviteUrl, targetItemId) {
-            const normalizedInvite = normalizeClassroomInviteUrl(inviteUrl);
-            if (!isClassroomInviteUrl(normalizedInvite)) return false;
+            const normalizedInvite = normalizeAssignmentInviteUrl(inviteUrl);
+            if (!isAssignmentInviteUrl(normalizedInvite)) return false;
 
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             const targetItem = cart[targetItemId] || {};
@@ -312,10 +325,10 @@
             if (unitCandidates.length === 0) return false;
 
             for (const lesson of lessons) {
-                const urlMap = lesson?.githubClassroomUrls || {};
+                const urlMap = lesson?.assignmentUrlMap || lesson?.assignmentUrls || {};
                 for (const unitId of unitCandidates) {
                     const cfg = urlMap[unitId] || urlMap[`${unitId}.html`] || null;
-                    const candidates = extractClassroomInviteCandidates(cfg);
+                    const candidates = extractAssignmentInviteCandidates(cfg);
                     if (candidates.includes(normalizedInvite)) return true;
                 }
             }
@@ -328,7 +341,9 @@
 
             cart[productId] = {
                 name: productName,
-                price: parseInt(productPrice, 10) || 0,
+                price: Number(productPrice) || 0,
+                currency: options.currency || options.priceCurrency || '',
+                price_currency: options.currency || options.priceCurrency || '',
                 quantity: 1,
                 isPhysical: !!isPhysical,
                 unitId: options.unitId || null,
@@ -357,6 +372,8 @@
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             let total = 0;
             let hasPhysical = false;
+            let currencyMismatch = false;
+            let expectedCurrency = '';
 
             unpaidItemsContainer.innerHTML = '';
 
@@ -371,11 +388,21 @@
 
             const storedLocale = localStorage.getItem('vibe_user_locale') || '';
             const isEn = storedLocale.startsWith('en');
+            expectedCurrency = isEn ? 'USD' : 'TWD';
+            const cartTotalLabel = document.querySelector('[data-i18n="cart_total_label"]');
+            if (cartTotalLabel) {
+                cartTotalLabel.textContent = isEn
+                    ? `Total (${expectedCurrency}):`
+                    : `總金額 (${expectedCurrency}):`;
+            }
 
             for (const [id, item] of Object.entries(cart)) {
-                const price = isEn 
-                    ? (item.price_usd || Math.ceil((item.price || 0) / 30))
-                    : (parseFloat(item.price) || 0);
+                const resolvedPrice = pricingApi.resolveCartPrice(item, isEn ? 'en' : 'zh-TW');
+                const price = Number(resolvedPrice.amount || 0);
+                const itemCurrency = String(resolvedPrice.currency || '').toUpperCase();
+                if (itemCurrency && expectedCurrency && itemCurrency !== expectedCurrency) {
+                    currencyMismatch = true;
+                }
                 const quantity = parseInt(item.quantity) || 1;
                 const itemTotal = price * quantity;
                 total += itemTotal;
@@ -387,7 +414,7 @@
                 itemDiv.className = 'bg-white/50 p-6 rounded-[2rem] border border-slate-200 shadow-sm mb-4';
                 const codeLabel = window.t('cart_item_code', '產品代號: {id}').replace('{id}', id);
                 const removeLabel = window.t('cart_item_remove', '移除');
-                const currencyUnit = window.t('currency_unit', isEn ? 'USD' : '元');
+                const currencyUnit = itemCurrency || window.t('currency_unit', isEn ? 'USD' : '元');
                 itemDiv.innerHTML = `
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0 flex-1">
@@ -407,13 +434,20 @@
             if (hasPhysical) {
                 const shippingFee = isEn ? 15 : 450;
                 total += shippingFee;
-                const feeUnit = isEn ? 'USD' : '元';
+                const feeUnit = isEn ? 'USD' : 'TWD';
                 shippingFeeText = ` (含運費 ${shippingFee.toLocaleString()} ${feeUnit})`;
             }
 
-            const mainCurrencyUnit = isEn ? 'USD' : '';
-            cartTotalElement.textContent = `${total.toLocaleString()} ${mainCurrencyUnit}${shippingFeeText}`;
-            checkoutBtn.disabled = (total === 0);
+            const mainCurrencyUnit = isEn ? 'USD' : 'TWD';
+            cartTotalElement.textContent = `${mainCurrencyUnit} ${total.toLocaleString()}${shippingFeeText}`;
+            checkoutBtn.disabled = (total === 0) || currencyMismatch;
+            if (currencyMismatch) {
+                cartPrefillStatus.textContent = isEn
+                    ? 'This cart contains mixed currencies. Please keep a single region/language price set.'
+                    : '購物車包含不同幣別的商品，請改用同一地區的價格設定。';
+                cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-amber-50 border-amber-200 text-amber-700';
+                cartPrefillStatus.classList.remove('hidden');
+            }
 
             document.querySelectorAll('.remove-cart-item-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
@@ -534,12 +568,12 @@
         };
 
         // ===============================================
-        // B-2. 老師作業連結 / Referral Link 邏輯
+        // B-2. 老師作業連結 / 推薦連結邏輯
         // ===============================================
         const DEFAULT_MENTOR = 'info@vibe-coding.tw';
-        const CLASSROOM_INVITE_RE = /^https:\/\/classroom\.github\.com\/a\/[A-Za-z0-9_-]+\/?$/;
+        const ASSIGNMENT_INVITE_RE = /^https:\/\/classroom\.github\.com\/a\/[A-Za-z0-9_-]+\/?$/;
 
-        function normalizeClassroomInviteUrl(raw = '') {
+        function normalizeAssignmentInviteUrl(raw = '') {
             try {
                 const url = new URL(String(raw).trim());
                 if (url.hostname !== 'classroom.github.com') return String(raw).trim();
@@ -549,15 +583,15 @@
             }
         }
 
-        function isClassroomInviteUrl(raw = '') {
-            return CLASSROOM_INVITE_RE.test(String(raw).trim());
+        function isAssignmentInviteUrl(raw = '') {
+            return ASSIGNMENT_INVITE_RE.test(String(raw).trim());
         }
 
         async function applyReferralLink(code, options = {}) {
             const lowerCode = (code || '').toLowerCase();
             const isUrl = lowerCode.includes('github.com/classroom/') || lowerCode.includes('classroom.github.com/');
             // URLs should NOT be forced to uppercase
-            const normalizedCode = isUrl ? normalizeClassroomInviteUrl(code.trim()) : (code || '').trim().toUpperCase();
+            const normalizedCode = isUrl ? normalizeAssignmentInviteUrl(code.trim()) : (code || '').trim().toUpperCase();
 
             const {
                 silent = false,
@@ -574,16 +608,16 @@
                     inputElement.value = cart[targetItemId]?.referralLink || '';
                 }
                 if (statusElement) {
-                    statusElement.textContent = window.t('referral_unchanged', '未變更綁定：可先留白，或輸入有效 GitHub 專屬作業連結再套用。');
+                    statusElement.textContent = window.t('referral_unchanged', '未變更綁定：可先留白，或輸入有效作業連結再套用。');
                     statusElement.className = 'item-promo-status mt-2 text-sm text-slate-500';
                     statusElement.classList.remove('hidden');
                 }
                 return { success: true, message: 'unchanged' };
             }
             if (isUrl) {
-                const normalizedInvite = normalizeClassroomInviteUrl(normalizedCode);
-                if (!isClassroomInviteUrl(normalizedInvite)) {
-                    const msg = window.t('referral_url_invalid', '連結格式錯誤，請使用 GitHub 專屬作業連結：https://classroom.github.com/a/xxxxx');
+                const normalizedInvite = normalizeAssignmentInviteUrl(normalizedCode);
+                if (!isAssignmentInviteUrl(normalizedInvite)) {
+                    const msg = window.t('referral_url_invalid', '連結格式錯誤，請使用有效的作業連結。');
                     if (statusElement) {
                         statusElement.textContent = `❌ ${msg}`;
                         statusElement.className = 'item-promo-status mt-2 text-sm text-red-600';
@@ -676,7 +710,7 @@
             const unitId = params.get('unitId') || courseId;
             const rawReferral = (params.get('referralLink') || params.get('promoCode') || '').trim();
             const isUrl = rawReferral.toLowerCase().includes('github.com/classroom/') || rawReferral.toLowerCase().includes('classroom.github.com/');
-            const referralLink = isUrl ? normalizeClassroomInviteUrl(rawReferral) : rawReferral;
+            const referralLink = isUrl ? normalizeAssignmentInviteUrl(rawReferral) : rawReferral;
             const fallbackName = params.get('courseName') || courseId;
             const fallbackPrice = parseInt(params.get('coursePrice') || '0', 10) || 0;
             const fallbackPhysical = params.get('isPhysical') === 'true';
@@ -698,11 +732,20 @@
             }
 
             const productName = courseMeta?.title || courseMeta?.courseName || fallbackName;
-            const productPrice = parseInt(courseMeta?.price ?? fallbackPrice, 10) || 0;
+            const priceEntry = pricingApi.resolveCartPrice(
+                courseMeta && typeof courseMeta === 'object'
+                    ? courseMeta
+                    : { price: fallbackPrice, currency: localStorage.getItem('vibe_user_locale')?.startsWith('en') ? 'USD' : 'TWD' },
+                localStorage.getItem('vibe_user_locale')?.startsWith('en') ? 'en' : 'zh-TW'
+            );
+            const productPrice = Number(priceEntry?.amount ?? fallbackPrice) || 0;
+            const productCurrency = String(priceEntry?.currency || '').toUpperCase();
             const isPhysical = courseMeta?.isPhysical === true || fallbackPhysical;
             const itemAdded = addCartItem(courseId, productName, productPrice, isPhysical, {
                 unitId,
-                sourceUnitId: unitId
+                sourceUnitId: unitId,
+                currency: productCurrency,
+                priceCurrency: productCurrency
             });
 
             renderCartItems();
@@ -844,10 +887,19 @@
 
             // 計算結帳金額
             let calculatedTotal = 0;
+            let checkoutCurrency = isEn ? 'USD' : 'TWD';
             for (const item of Object.values(cartItems)) {
-                const price = isEn 
-                    ? (item.price_usd || Math.ceil((item.price || 0) / 30))
-                    : (parseFloat(item.price) || 0);
+                const resolvedPrice = pricingApi.resolveCartPrice(item, isEn ? 'en' : 'zh-TW');
+                const price = Number(resolvedPrice.amount || 0);
+                const itemCurrency = String(resolvedPrice.currency || '').toUpperCase();
+                if (itemCurrency && checkoutCurrency && itemCurrency !== checkoutCurrency) {
+                    alert(isEn
+                        ? 'Mixed currencies are not supported in a single checkout.'
+                        : '單筆結帳不支援混合幣別，請先整理購物車。');
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
+                    return;
+                }
                 const quantity = parseInt(item.quantity) || 1;
                 calculatedTotal += price * quantity;
             }
