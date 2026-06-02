@@ -47,23 +47,59 @@ function normalizeEmail(email) {
     return String(email).trim().toLowerCase();
 }
 
-function normalizeAssignmentInviteUrl(raw = '') {
+function normalizeAssignmentLinkUrl(raw = '') {
+    return String(raw || '').trim();
+}
+
+function isValidAssignmentLinkUrl(url = '') {
+    const value = String(url || '').trim();
+    if (!value) return false;
     try {
-        const url = new URL(String(raw).trim());
-        if (url.hostname !== 'classroom.github.com') return String(raw).trim();
-        return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
+        const parsed = new URL(value);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
     } catch (_) {
-        return String(raw).trim();
+        return false;
     }
 }
 
+function normalizeAssignmentInviteUrl(raw = '') {
+    return normalizeAssignmentLinkUrl(raw);
+}
+
 function isValidAssignmentInviteUrl(url = '') {
-    return /^https:\/\/classroom\.github\.com\/a\/[A-Za-z0-9_-]+\/?$/.test(String(url).trim());
+    return isValidAssignmentLinkUrl(url);
 }
 
 function isLikelyAssignmentLink(url = '') {
     const s = String(url || '').toLowerCase();
     return s.includes('classroom.github.com') || s.includes('github.com/classroom');
+}
+
+function getAssignmentUrlMapForUnit(urlMaps, unitId) {
+    if (!urlMaps || typeof urlMaps !== 'object' || Array.isArray(urlMaps)) return null;
+
+    const candidateIds = [
+        unitId,
+        ...(typeof getEquivalentUnitIds === 'function' ? getEquivalentUnitIds(unitId || '') : [])
+    ].filter(Boolean);
+
+    for (const candidateId of candidateIds) {
+        const candidateMap = urlMaps[candidateId];
+        if (!candidateMap) continue;
+        if (typeof candidateMap === 'string') return { default: candidateMap };
+        if (typeof candidateMap === 'object' && !Array.isArray(candidateMap)) return candidateMap;
+    }
+
+    if (typeof urlMaps.default === 'string') return { default: urlMaps.default };
+    if (typeof urlMaps.default === 'object' && !Array.isArray(urlMaps.default)) return urlMaps.default;
+    if (Object.values(urlMaps).some(value => typeof value === 'string')) return urlMaps;
+    return null;
+}
+
+function getAssignmentUrlForTutor(urlMaps, unitId, email) {
+    const unitMap = getAssignmentUrlMapForUnit(urlMaps, unitId);
+    if (!unitMap) return '';
+    return unitMap[email] || unitMap.default || Object.values(unitMap).find(value => typeof value === 'string' && value.trim()) || '';
 }
 
 function normalizeGuideTitleText(text = '') {
@@ -465,10 +501,10 @@ function resolveCourseIdFromUrlParam(paramId) {
     if (direct) return paramId;
 
     // 2. Fuzzy match (作業連結 contains param)
-    const fuzzy = allLessons.find(l => l.classroomUrl && l.classroomUrl.includes(paramId)); // legacy assignment link fallback
-    if (fuzzy) {
-        console.log(`Resolved URL value '${paramId}' to Course ID '${fuzzy.courseId}'`);
-        return fuzzy.courseId;
+    const legacyAssignmentMatch = allLessons.find(l => l.classroomUrl && l.classroomUrl.includes(paramId)); // legacy assignment link fallback
+    if (legacyAssignmentMatch) {
+        console.log(`Resolved URL value '${paramId}' to Course ID '${legacyAssignmentMatch.courseId}'`);
+        return legacyAssignmentMatch.courseId;
     }
 
     return paramId;
@@ -1344,10 +1380,7 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
         const assignmentUrlMap = unitTutorConfig.assignmentUrlMap || unitTutorConfig.assignmentUrls || null;
 
         if (assignmentUrlMap) {
-            let finalUrl = assignmentUrlMap;
-            if (typeof assignmentUrlMap === 'object') {
-                finalUrl = assignmentUrlMap[myEmail] || assignmentUrlMap.default || Object.values(assignmentUrlMap)[0];
-            }
+            const finalUrl = getAssignmentUrlForTutor(assignmentUrlMap, unitId, myEmail);
             if (finalUrl) {
                 if (isLikelyAssignmentLink(finalUrl) && !isValidAssignmentInviteUrl(normalizeAssignmentInviteUrl(finalUrl))) {
                     alert("此單元設定的作業連結格式不正確，請到課程設定修正。");
@@ -1383,12 +1416,13 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
                 return;
             }
 
-            if (access.classroomUrl) {
-                if (isLikelyAssignmentLink(access.classroomUrl) && !isValidAssignmentInviteUrl(normalizeAssignmentInviteUrl(access.classroomUrl))) {
+            const assignmentUrl = access.classroomUrl;
+            if (assignmentUrl) {
+                if (isLikelyAssignmentLink(assignmentUrl) && !isValidAssignmentInviteUrl(normalizeAssignmentInviteUrl(assignmentUrl))) {
                     alert("此單元設定的作業連結格式不正確，請通知管理員/老師修正。");
                     return;
                 }
-                window.open(access.classroomUrl, '_blank');
+                window.open(assignmentUrl, '_blank');
                 return;
             }
 
@@ -2273,14 +2307,14 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                         <tbody class="divide-y divide-orange-50">
                                             ${unitTutors.length > 0
                                 ? unitTutors.map(email => {
-                                    const details = unitDocConfig.tutorDetails?.[email] || {};
-                                    const displayEmail = email.includes('@') ? email : (details.email || email);
-                                    const name = details.name || displayEmail.split('@')[0];
-                                    const assignmentUrlMap = unitDocConfig.assignmentUrlMap || unitDocConfig.assignmentUrls || {};
-                                    const assignmentUrlRaw =
-                                        details.assignmentUrl ||
-                                        assignmentUrlMap[displayEmail] ||
-                                        assignmentUrlMap[email] ||
+                    const details = unitDocConfig.tutorDetails?.[email] || {};
+                    const displayEmail = email.includes('@') ? email : (details.email || email);
+                    const name = details.name || displayEmail.split('@')[0];
+                    const assignmentUrlMap = getAssignmentUrlMapForUnit(unitDocConfig.assignmentUrlMap || unitDocConfig.assignmentUrls || {}, unitFile) || {};
+                    const assignmentUrlRaw =
+                        details.assignmentUrl ||
+                        assignmentUrlMap[displayEmail] ||
+                        assignmentUrlMap[email] ||
                                         assignmentUrlMap.default ||
                                         '';
                                     const assignmentUrl = typeof assignmentUrlRaw === 'string' ? assignmentUrlRaw.trim() : '';
@@ -2949,7 +2983,7 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
     const applicationId = urlParams.get('applicationId');
-    if (action !== 'submitTutorInvite' || !applicationId) return;
+    if (!['submitTutorInvite', 'submitTutorAssignmentLink'].includes(action) || !applicationId) return;
     if (!auth.currentUser) return;
 
     const myApps = dashboardData?.myApplications || {};
@@ -2959,9 +2993,9 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
 
     const assignmentUrlRaw = window.prompt('請貼上此單元的作業連結：', '');
     if (!assignmentUrlRaw || !assignmentUrlRaw.trim()) return;
-    const assignmentUrl = normalizeAssignmentInviteUrl(assignmentUrlRaw);
-    if (!isValidAssignmentInviteUrl(assignmentUrl)) {
-        alert('連結格式錯誤。請使用有效的作業連結。');
+    const assignmentUrl = normalizeAssignmentLinkUrl(assignmentUrlRaw);
+    if (!isValidAssignmentLinkUrl(assignmentUrl)) {
+        alert('連結格式錯誤。請使用有效的作業連結（http/https）。');
         return;
     }
 
@@ -2969,7 +3003,7 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
         const submitLink = httpsCallable(functions, 'submitTutorRecommendationInviteLink');
         await submitLink({
             applicationId,
-            classroomInviteUrl: assignmentUrl
+            assignmentLink: assignmentUrl
         });
 
         vibeShowToast('已送出作業連結，管理員已收到審核通知。', 'success');
@@ -3480,9 +3514,9 @@ window.saveAllSettings = async function (clickedBtn = null) {
 
             if (method === 'assignment') {
                 const rawUrl = row.querySelector('.assignment-url-input')?.value?.trim() || '';
-                const url = normalizeAssignmentInviteUrl(rawUrl);
+                const url = normalizeAssignmentLinkUrl(rawUrl);
                     if (url) {
-                        if (!isValidAssignmentInviteUrl(url)) {
+                        if (!isValidAssignmentLinkUrl(url)) {
                             invalidEntry = { unit: fname, tutor: tid, url };
                             return;
                         }
@@ -3705,8 +3739,8 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
             <div class="space-y-6">
                 <!-- Header -->
                 <div class="border-b border-slate-100 pb-4">
-                    <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Invite Tools</p>
-                    <h3 class="text-2xl font-black text-gray-900 mt-2">招生邀請工具包</h3>
+                    <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Registration Tools</p>
+                    <h3 class="text-2xl font-black text-gray-900 mt-2">招生工具包</h3>
                     <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
                 </div>
 
@@ -3717,7 +3751,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
                     <div class="lg:w-[320px] w-full flex flex-col gap-6 flex-shrink-0">
                         <!-- QR Code -->
                         <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center">
-                            <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Promo invite QR code" class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                            <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Referral QR code" class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                             <p class="text-[10px] text-gray-400 mt-4 text-center break-all font-mono max-w-full">${escapeHtml(inviteKit.inviteUrl)}</p>
                         </div>
 
@@ -3742,7 +3776,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
                     <div class="flex-grow w-full">
                         <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden h-full flex flex-col">
                             <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
-                                <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Invite Notice</p>
+                                <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Registration Notice</p>
                                 <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
                                 <p class="text-sm text-slate-500 mt-1 font-medium">複製下方文案並貼給學生，能提供最完整的報名指引。</p>
                             </div>

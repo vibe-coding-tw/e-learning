@@ -75,7 +75,8 @@ const pathKeyCandidatesFromValue = REPO_UTILS.learningPathKeyCandidatesFromValue
 
 function canonicalLearningPathHref(pathKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);
-    return `learning-path.html?path=${encodeURIComponent(canonical || 'common')}`;
+    if (!canonical) return "learning-path.html?path=common";
+    return `learning-path.html?path=${encodeURIComponent(canonical)}`;
 }
 
 function getDefaultLearningPaths(uiLocale = "zh-TW") {
@@ -115,9 +116,16 @@ function resolveLocalizedSitePageMeta(pageKey = "", locale = "zh-TW") {
 function probePageExists(path = "") {
     const normalized = String(path || "").trim();
     if (!normalized) return Promise.resolve(false);
+
     const url = new URL(normalized, window.location.origin).toString();
-    if (LOCALIZED_PAGE_EXISTS_CACHE.has(url)) return LOCALIZED_PAGE_EXISTS_CACHE.get(url);
-    const probe = fetch(url, { method: "HEAD", cache: "no-store" }).then((resp) => resp.ok).catch(() => false);
+    if (LOCALIZED_PAGE_EXISTS_CACHE.has(url)) {
+        return LOCALIZED_PAGE_EXISTS_CACHE.get(url);
+    }
+
+    const probe = fetch(url, { method: "HEAD", cache: "no-store" })
+        .then((resp) => resp.ok)
+        .catch(() => false);
+
     LOCALIZED_PAGE_EXISTS_CACHE.set(url, probe);
     return probe;
 }
@@ -125,12 +133,18 @@ function probePageExists(path = "") {
 async function resolveLocalizedSitePage(pageKey = "", locale = "zh-TW") {
     const page = LOCALIZED_SITE_PAGES[pageKey];
     if (!page) return null;
+
     const preferredBucket = localeBucket(locale);
     const fallbackBucket = preferredBucket === "zh" ? "en" : "zh";
     const preferred = page[preferredBucket] || page.en || page.zh || null;
     const fallback = page[fallbackBucket] || page.en || page.zh || null;
-    if (preferred && await probePageExists(preferred.href)) return { ...preferred, locale: preferredBucket };
-    if (fallback && await probePageExists(fallback.href)) return { ...fallback, locale: fallbackBucket };
+
+    if (preferred && await probePageExists(preferred.href)) {
+        return { ...preferred, locale: preferredBucket };
+    }
+    if (fallback && await probePageExists(fallback.href)) {
+        return { ...fallback, locale: fallbackBucket };
+    }
     return preferred ? { ...preferred, locale: preferredBucket } : fallback ? { ...fallback, locale: fallbackBucket } : null;
 }
 
@@ -138,18 +152,31 @@ async function hydrateLocalizedSitePages(rootNode, locale = "zh-TW") {
     const scope = rootNode && typeof rootNode.querySelectorAll === "function" ? rootNode : document;
     const elements = scope.querySelectorAll("[data-localized-page]");
     if (!elements.length) return;
+
     const pageKeys = Array.from(new Set(Array.from(elements).map((el) => el.getAttribute("data-localized-page")).filter(Boolean)));
     const resolved = {};
     await Promise.all(pageKeys.map(async (pageKey) => {
         resolved[pageKey] = await resolveLocalizedSitePage(pageKey, locale);
     }));
+
     elements.forEach((el) => {
         const pageKey = el.getAttribute("data-localized-page");
         const meta = resolved[pageKey] || resolveLocalizedSitePageMeta(pageKey, locale);
         if (!meta) return;
-        if (el.tagName === "A") el.setAttribute("href", meta.href);
+
+        if (el.tagName === "A") {
+            el.setAttribute("href", meta.href);
+        }
+
         const labelNode = el.querySelector("[data-localized-label]");
-        if (labelNode) labelNode.textContent = meta.label;
+        if (labelNode) {
+            labelNode.textContent = meta.label;
+        } else if (el.dataset.localizedLabel !== undefined || pageKey) {
+            const textOnly = Array.from(el.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE);
+            if (textOnly.length) {
+                textOnly[textOnly.length - 1].textContent = meta.label;
+            }
+        }
     });
 }
 
