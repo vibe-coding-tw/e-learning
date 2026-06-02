@@ -13,7 +13,7 @@ const { normalizeRouteLooseKey: normalizeRouteLooseKeyFromDashboardLookup } = wi
 const normalizeLooseKey = normalizeRouteLooseKeyFromDashboardLookup || ((value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase());
 const REPO_UTILS = window.repoSlugUtils || {};
 const normalizeCanonicalLearningPathKey = REPO_UTILS.normalizeCanonicalLearningPathKey || function (value = "") {
-    const v = String(value || '').trim().toLowerCase().split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
+    const v = String(value || "").trim().toLowerCase().split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
     if (!v) return '';
     if (v === 'common' || v === 'car-starter' || v === 'car-basic' || v === 'car-advanced') return v;
     if (/^(?:tw|en)-common$/i.test(v)) return 'common';
@@ -1917,26 +1917,37 @@ async function initFirebaseFeatures() {
 
         const findCourseIdByUnit = async (fileName) => {
             let globalLessonsData = window.globalLessonsData;
-            if (!globalLessonsData || globalLessonsData.length === 0) {
-                try {
-                    const getLessonsFunc = httpsCallable(functions, 'getLessonsMetadata');
-                    const result = await getLessonsFunc();
-                    if (result.data && result.data.lessons) {
+        if (!globalLessonsData || globalLessonsData.length === 0) {
+            try {
+                const getLessonsFunc = httpsCallable(functions, 'getLessonsMetadata');
+                const result = await getLessonsFunc();
+                if (result.data && result.data.lessons) {
                         globalLessonsData = result.data.lessons;
                         window.globalLessonsData = globalLessonsData;
                     }
                 } catch (e) {
                     console.error("Failed to load global lessons data:", e);
-                }
             }
-            if (globalLessonsData) {
-                for (const course of globalLessonsData) {
-                    if ((course.assignmentUrlMap && course.assignmentUrlMap[fileName]) ||
-                        (course.assignmentUrls && course.assignmentUrls[fileName])) {
+        }
+        if (globalLessonsData) {
+            for (const course of globalLessonsData) {
+                    const candidateKeys = new Set([
+                        fileName,
+                        normalizeLooseKey(fileName)
+                    ]);
+                    const assignmentUrlMaps = [course.assignmentUrlMap, course.assignmentUrls];
+                    const hasAssignmentUrl = assignmentUrlMaps.some(urlMaps => {
+                        if (!urlMaps || typeof urlMaps !== 'object') return false;
+                        for (const candidateKey of candidateKeys) {
+                            if (urlMaps[candidateKey]) return true;
+                        }
+                        return false;
+                    });
+                    if (hasAssignmentUrl) {
                         return course.courseId;
                     }
-                }
             }
+        }
             // Fallback prefix check
             if (fileName.startsWith('adv-') || fileName.startsWith('advanced-') || fileName.startsWith('car-advanced-')) return 'advanced';
             if (fileName.startsWith('basic-') || fileName.startsWith('car-basic-')) return 'basic';
@@ -2801,11 +2812,13 @@ async function findCourseIdByUnit(fileName) {
         
         if (globalLessonsData && Array.isArray(globalLessonsData)) {
             const course = globalLessonsData.find(c => {
-                const candidateKeys = new Set([
+        const candidateKeys = new Set([
                     normalizeLooseKey(c.courseId),
                     normalizeLooseKey(c.courseKey),
                     normalizeLooseKey(c.entryUnitId),
-                    normalizeLooseKey(c.classroomUrl),
+                    normalizeLooseKey(c.assignmentUrlMap ? Object.keys(c.assignmentUrlMap)[0] || '' : ''),
+                    normalizeLooseKey(c.assignmentUrls ? Object.keys(c.assignmentUrls)[0] || '' : ''),
+                    normalizeLooseKey(c.classroomUrl || ''),
                     normalizeLooseKey(c.contentRef)
                 ].filter(Boolean));
 
