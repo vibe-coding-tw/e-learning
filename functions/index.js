@@ -4560,6 +4560,152 @@ const verifyReferralLinkHandler = onCall(async (request) => {
 exports.verifyReferralLink = verifyReferralLinkHandler;
 exports.verifyPromoCode = verifyReferralLinkHandler;
 
+function normalizeClassroomInvite(value = '') {
+    const s = String(value || '').trim();
+    if (!s) return '';
+    try {
+        const url = new URL(s);
+        if (url.hostname !== 'classroom.github.com') return s;
+        return `${url.origin}${url.pathname}`.replace(/\/+$/, '').toLowerCase();
+    } catch (_) {
+        const token = s.replace(/^https?:\/\/classroom\.github\.com\/a\//i, '').replace(/\/+$/, '');
+        return token ? `https://classroom.github.com/a/${token}`.toLowerCase() : '';
+    }
+}
+
+function extractInviteCandidates(cfg) {
+    if (!cfg) return [];
+    if (typeof cfg === 'string') return [normalizeClassroomInvite(cfg)].filter(Boolean);
+    if (typeof cfg === 'object') {
+        return Object.values(cfg)
+            .filter(v => typeof v === 'string' && v.trim())
+            .map(v => normalizeClassroomInvite(v))
+            .filter(Boolean);
+    }
+    return [];
+}
+
+async function lookupClassroomInviteBinding(inputRaw) {
+    const normalizedInvite = normalizeClassroomInvite(inputRaw);
+    if (!normalizedInvite.includes('classroom.github.com/a/')) {
+        throw new HttpsError('invalid-argument', '請輸入 GitHub Classroom 邀請連結或 invite code。');
+    }
+
+    const lessons = await getLessons();
+    const matches = [];
+    for (const lesson of lessons) {
+        const urlMap = lesson?.githubClassroomUrls || {};
+        for (const [unitKey, cfg] of Object.entries(urlMap)) {
+            const candidates = extractInviteCandidates(cfg);
+            if (!candidates.includes(normalizedInvite)) continue;
+            matches.push({
+                lessonDocId: lesson.id || null,
+                courseId: lesson.courseId || lesson.id || null,
+                title: lesson.title || null,
+                unitKey,
+                courseUnits: Array.isArray(lesson.courseUnits) ? lesson.courseUnits : []
+            });
+        }
+    }
+    return { success: true, normalizedInvite, totalMatches: matches.length, matches };
+}
+
+exports.findClassroomInviteBinding = onCall(async (request) => {
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+    const requesterRole = await getRole(auth.uid);
+    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', 'Only admins can query invite bindings.');
+
+    const inputRaw = String(
+        request.data?.inviteCodeOrUrl ||
+        request.data?.inviteUrl ||
+        request.data?.inviteCode ||
+        ''
+    ).trim();
+    if (!inputRaw) throw new HttpsError('invalid-argument', '缺少 inviteCodeOrUrl');
+    return lookupClassroomInviteBinding(inputRaw);
+});
+
+exports.findClassroomInviteBindingHttp = onRequest(async (req, res) => {
+    res.set('Access-Control-Allow-Origin', 'https://vibe-coding.tw');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.status(204).send('');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+    try {
+        const authHeader = req.headers.authorization || '';
+        if (!authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Missing bearer token' });
+        const idToken = authHeader.substring(7);
+        const decoded = await admin.auth().verifyIdToken(idToken);
+        const requesterRole = await getRole(decoded.uid);
+        if (requesterRole !== 'admin') return res.status(403).json({ error: 'Only admins can query invite bindings.' });
+
+        const inputRaw = String(
+            req.body?.inviteCodeOrUrl ||
+            req.body?.inviteUrl ||
+            req.body?.inviteCode ||
+            req.body?.data?.inviteCodeOrUrl ||
+            ''
+        ).trim();
+        if (!inputRaw) return res.status(400).json({ error: '缺少 inviteCodeOrUrl' });
+
+        const result = await lookupClassroomInviteBinding(inputRaw);
+        return res.json(result);
+    } catch (error) {
+        console.error('[findClassroomInviteBindingHttp] failed:', error);
+        return res.status(500).json({ error: error.message || 'internal error' });
+    }
+});
+
+exports.precheckGithubClassroomAccess = onCall(async (request) => {
+    const { auth, data } = request;
+    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+
+    if (!GITHUB_ORG_ADMIN_TOKEN) {
+        return {
+            success: false,
+            precheckEnabled: false,
+            state: "disabled",
+            message: "GitHub precheck is not configured."
+        };
+    }
+
+    const classroomUrl = String(data?.classroomUrl || "").trim();
+    const isClassroom = /classroom\.github\.com\/a\//i.test(classroomUrl);
+    if (!isClassroom) {
+        return {
+            success: true,
+            precheckEnabled: true,
+            state: "skipped",
+            message: "Not a GitHub Classroom invite URL."
+        };
+    }
+
+    try {
+        const result = await ensureGithubOrgMembership({ admin, token: GITHUB_ORG_ADMIN_TOKEN, firebaseUid: auth.uid, org: GITHUB_CLASSROOM_ORG });
+        return {
+            success: result.ok === true,
+            precheckEnabled: true,
+            state: result.state,
+            org: result.org,
+            githubLogin: result.githubLogin || null,
+            inviteSent: result.inviteSent === true,
+            inviteId: result.inviteId || null,
+            settingsUrl: "https://github.com/settings/organizations"
+        };
+    } catch (error) {
+        console.error("[precheckGithubClassroomAccess] failed:", error);
+        return {
+            success: false,
+            precheckEnabled: true,
+            state: "error",
+            message: error.message || "precheck failed",
+            settingsUrl: "https://github.com/settings/organizations"
+        };
+    }
+});
+
 // 11.2 每月計算分潤 (Scheduled Job - 1st of each month)
 exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
     const db = admin.firestore();
