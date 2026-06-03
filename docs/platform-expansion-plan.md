@@ -44,6 +44,14 @@ For `metadata_lessons`:
 - `displayName`
 - `i18n`
 - `contentRef`
+- `pricing`
+- `priceByLocale`
+- `priceByRegion`
+- `priceMap`
+- `prices`
+- `price_twd`
+- `price_usd`
+- `currency`
 
 ### 2.3.1 Current implementation (2026-05-27)
 
@@ -62,11 +70,29 @@ For `metadata_lessons`:
     3. `navLabelZh/En`
     4. `learningPathLabel|categoryLabel|navLabel`
   - fallback: key humanization if no label is configured.
+- Pricing is resolved from Firestore multi-region fields and is not derived by client-side FX conversion.
+  - `tw` / `zh-TW` should resolve to TWD amounts.
+  - `en` should resolve to USD amounts.
+  - Course families should keep matching pricing across course metadata, cart items, and fulfillment records.
 
 For `users`:
 
 - `locale`
 - `region`
+
+### 2.3.2 Pricing implementation status (2026-06-03)
+
+- Standard course pricing is now backfilled in Firestore:
+  - `started`: TWD 1200 / USD 40
+  - `basic`: TWD 1500 / USD 50
+  - `advanced`: TWD 1800 / USD 60
+- The canonical storage shape is:
+  - `pricing.tw` / `pricing.en`
+  - `priceByLocale.zh-TW` / `priceByLocale.en`
+  - `priceByRegion.tw` / `priceByRegion.en`
+  - `priceMap.tw` / `priceMap.en`
+  - `price_twd` / `price_usd`
+- Frontend and backend price resolvers must prefer Firestore values over local conversion logic.
 
 ### 2.4 Naming strategy
 
@@ -418,6 +444,7 @@ Reference artifacts:
 - `docs/examples/unit-contentref-mapping.csv`
 - `docs/examples/master-retirement-mapping.csv`
 - `docs/examples/metadata-lessons-migration-template.csv`
+- `docs/examples/metadata-lessons-pricing-template.csv`
 
 ### 7.5 Revenue share system
 

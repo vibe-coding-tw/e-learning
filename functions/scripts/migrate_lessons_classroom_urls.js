@@ -20,9 +20,9 @@ const db = admin.firestore();
 
 // Exact mappings of legacy master pages to canonical unit IDs
 const LEGACY_MASTER_TO_CANONICAL = {
-  '01-master-getting-started.html': 'tw-common-developer-identity.html',
-  '02-master-ai-agents.html': 'tw-common-agent-mode.html',
-  '03-master-wifi-motor.html': 'tw-common-github-classroom.html',
+  '01-master-getting-started.html': 'common-developer-identity.html',
+  '02-master-ai-agents.html': 'common-agent-mode.html',
+  '03-master-wifi-motor.html': 'common-github-classroom.html',
   'adv-01-master-s3-cam.html': 'adv-01-unit-jpeg-quality.html',
   'adv-02-master-video.html': 'adv-02-unit-bandwidth-fps.html',
   'adv-03-master-ble-advanced.html': 'adv-03-unit-ble-mtu.html',
