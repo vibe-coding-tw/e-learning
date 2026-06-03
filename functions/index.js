@@ -1905,6 +1905,87 @@ exports.purgeContentCache = onCall(async (request) => {
     return { success: true };
 });
 
+/**
+ * [User Relations Admin] 更新使用者業務關係設定（僅限 admin 角色）
+ * 接受 { targetUid, agentEmail, tutorEmail, courseDevEmail }
+ */
+exports.updateUserRelationships = onCall(async (request) => {
+    const { auth, data } = request;
+
+    // 驗證登入與 admin 角色
+    assertAuthenticated(auth);
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    assertAdminRole(userData.role);
+
+    const { targetUid, agentEmail, tutorEmail, courseDevEmail } = data || {};
+    assertRequiredValue(targetUid, 'missing-target-uid');
+
+    const updatePayload = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    if (agentEmail !== undefined) updatePayload.agentEmail = agentEmail ? normalizeEmail(agentEmail) : "";
+    if (tutorEmail !== undefined) updatePayload.tutorEmail = tutorEmail ? normalizeEmail(tutorEmail) : "";
+    if (courseDevEmail !== undefined) updatePayload.courseDevEmail = courseDevEmail ? normalizeEmail(courseDevEmail) : "";
+
+    await db.collection('users').doc(targetUid).set(updatePayload, { merge: true });
+    console.log(`[updateUserRelationships] ✅ Updated user relationships for targetUid=${targetUid} by admin=${auth.uid}`);
+
+    return { success: true };
+});
+
+/**
+ * [User Relations Admin] 查詢使用者設定與業務關係（僅限 admin 角色）
+ * 接受 { searchKey } (可以是 email 或 uid)
+ */
+exports.getUserRelationships = onCall(async (request) => {
+    const { auth, data } = request;
+
+    // 驗證登入與 admin 角色
+    assertAuthenticated(auth);
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    assertAdminRole(userData.role);
+
+    const { searchKey } = data || {};
+    if (!searchKey) {
+        throw new HttpsError('invalid-argument', 'missing-search-key');
+    }
+
+    const cleanKey = String(searchKey).trim();
+
+    // 1. Try search by UID
+    let targetDoc = await db.collection('users').doc(cleanKey).get();
+    
+    // 2. If not found by UID, try search by email
+    if (!targetDoc.exists) {
+        const emailSnap = await db.collection('users')
+            .where('email', '==', cleanKey.toLowerCase())
+            .limit(1)
+            .get();
+        if (!emailSnap.empty) {
+            targetDoc = emailSnap.docs[0];
+        }
+    }
+
+    if (!targetDoc.exists) {
+        throw new HttpsError('not-found', 'user-not-found');
+    }
+
+    const targetData = targetDoc.data() || {};
+    return {
+        uid: targetDoc.id,
+        email: targetData.email || "",
+        name: targetData.name || targetData.displayName || "",
+        role: targetData.role || "user",
+        agentEmail: targetData.agentEmail || "",
+        tutorEmail: targetData.tutorEmail || "",
+        courseDevEmail: targetData.courseDevEmail || ""
+    };
+});
+
 async function purgeContentCacheHelper(db) {
     console.log(`[purgeContentCacheHelper] Starting cache purge...`);
     const cacheSnap = await db.collection('content_cache').get();

@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Course Unit Dashboard - Vibe Coding</title>
-    <script src="./js/i18n-helper.ff82321fd0b3.js"></script>
+    <script src="./js/i18n-helper.5eae20d48a60.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -115,7 +115,7 @@
                 </button>
                 <button onclick="switchTab('settings')" id="tab-btn-settings"
                     class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_settings">
-                    課程設定 (Settings)
+                    系統設定
                 </button>
                 <button onclick="switchTab('earnings')" id="tab-btn-earnings"
                     class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
@@ -312,15 +312,12 @@
 
             <!-- TAB CONTENT: COURSE SETTINGS (Restored Wrapper) -->
             <div id="view-settings" class="tab-content hidden space-y-12 animate-fade-in">
-                <div id="business-settings-container" class="space-y-8">
-                    <div id="business-pricing-overview" class="space-y-6"></div>
-                    <div id="business-revenue-tools" class="space-y-6"></div>
-                </div>
-                <div id="system-settings-container" class="space-y-8 mt-12 hidden">
+                <!-- 1. 系統設定與全域管理 (System Settings) -->
+                <div id="system-settings-container" class="space-y-8 hidden">
                     <div class="card p-0">
                         <div class="px-6 py-6 border-b border-gray-100 bg-white rounded-t-3xl">
-                            <h3 class="text-xl font-bold text-gray-800">系統管理與全域設定 (System Administration & Global Settings)</h3>
-                            <p class="text-sm text-gray-500 mt-1">環境運行參數控制與全局快取維護</p>
+                            <h3 class="text-xl font-bold text-gray-800">系統參數與快取維護 (System Settings)</h3>
+                            <p class="text-sm text-gray-500 mt-1">環境運行參數控制與全域快取維護</p>
                         </div>
                         <div class="p-6 space-y-6">
                             <!-- GitHub Content Version Control -->
@@ -350,6 +347,68 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- 2. 經銷商、導師與開發者關係設定 (Business Relationships) -->
+                <div id="business-relationships-container" class="card p-0 hidden">
+                    <div class="px-6 py-6 border-b border-gray-100 bg-white rounded-t-3xl">
+                        <h3 class="text-xl font-bold text-gray-800">經銷商、導師與開發者關係設定 (Business Relationships)</h3>
+                        <p class="text-sm text-gray-500 mt-1">管理學員對應的代理商/經銷商、推薦導師與課程開發者關係</p>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                            <h4 class="text-md font-bold text-slate-800 mb-2">查詢使用者關係</h4>
+                            <p class="text-xs text-gray-500 mb-4">輸入使用者的 Google Email 或 Firebase UID 進行查詢，並可於查詢成功後修改其推薦及業務關係。</p>
+                            <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                                <div class="flex-grow">
+                                    <input type="text" id="sys-user-search-input" placeholder="請輸入學員的 Google Email 或 UID" class="w-full p-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <button onclick="window.searchUserRelationships()" id="btn-search-user-rel" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition duration-150 active:scale-95 text-sm whitespace-nowrap">
+                                    查詢使用者
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Search Result & Edit Form (hidden by default) -->
+                        <div id="sys-user-rel-form" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-6">
+                            <div class="border-b pb-3 flex justify-between items-center">
+                                <div>
+                                    <h4 class="text-md font-bold text-slate-800" id="sys-rel-user-name">學員姓名</h4>
+                                    <p class="text-xs text-gray-500 font-mono mt-1" id="sys-rel-user-uid">UID: </p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800" id="sys-rel-user-role">User</span>
+                            </div>
+
+                            <input type="hidden" id="sys-rel-target-uid">
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-2">經銷商電子信箱 (Agent Email)</label>
+                                    <input type="email" id="sys-rel-agent-email" placeholder="例: agent@vibe-coding.tw" class="w-full p-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-2">直屬/推薦導師電子信箱 (Tutor Email)</label>
+                                    <input type="email" id="sys-rel-tutor-email" placeholder="例: tutor@vibe-coding.tw" class="w-full p-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-2">課程開發者電子信箱 (CourseDev Email)</label>
+                                    <input type="email" id="sys-rel-coursedev-email" placeholder="例: dev@vibe-coding.tw" class="w-full p-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-4">
+                                <button onclick="window.saveUserRelationships()" id="btn-save-user-rel" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl transition duration-150 active:scale-95 text-sm">
+                                    儲存關係設定
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 業務分潤與定價策略 (Business Settings & Pricing Policy) -->
+                <div id="business-settings-container" class="space-y-8">
+                    <div id="business-pricing-overview" class="space-y-6"></div>
+                    <div id="business-revenue-tools" class="space-y-6"></div>
                 </div>
             </div>
 
@@ -521,7 +580,7 @@
 
     <script src="./js/dashboard-lookup-utils.74291754cdb9.js"></script>
     <script src="./js/repo-slug-utils.397a2f388cc7.js"></script>
-    <script type="module" src="./js/dashboard.7d2e9fe70c14.js"></script>
+    <script type="module" src="./js/dashboard.54ff4bd05e38.js"></script>
 </body>
 
 </html>

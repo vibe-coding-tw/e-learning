@@ -3407,6 +3407,12 @@ async function renderBusinessTab() {
             versionInput.value = dashboardData.contentVersion;
         }
     }
+
+    // Show relationships settings block for admins
+    const bizRelationshipsContainer = document.getElementById('business-relationships-container');
+    if (bizRelationshipsContainer) {
+        bizRelationshipsContainer.classList.remove('hidden');
+    }
 }
 
 window.updateSystemContentVersion = async function() {
@@ -3472,6 +3478,97 @@ window.purgeSystemContentCache = async function() {
         }
     } catch (err) {
         console.error("purgeSystemContentCache error:", err);
+        alert(`錯誤: ${err.message}`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+};
+
+window.searchUserRelationships = async function() {
+    const searchInput = document.getElementById('sys-user-search-input');
+    if (!searchInput) return;
+    const searchKey = searchInput.value.trim();
+    if (!searchKey) {
+        alert("請輸入學員的 Google Email 或 UID！");
+        return;
+    }
+
+    const btn = document.getElementById('btn-search-user-rel');
+    const formBlock = document.getElementById('sys-user-rel-form');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "搜尋中...";
+    }
+    if (formBlock) {
+        formBlock.classList.add('hidden');
+    }
+
+    try {
+        const getUserRelationshipsFn = firebase.functions().httpsCallable('getUserRelationships');
+        const res = await getUserRelationshipsFn({ searchKey });
+        const data = res.data;
+
+        if (data && data.uid) {
+            document.getElementById('sys-rel-target-uid').value = data.uid;
+            document.getElementById('sys-rel-user-name').textContent = data.name || "未提供姓名";
+            document.getElementById('sys-rel-user-uid').textContent = `UID: ${data.uid}`;
+            document.getElementById('sys-rel-user-role').textContent = String(data.role).toUpperCase();
+
+            document.getElementById('sys-rel-agent-email').value = data.agentEmail || "";
+            document.getElementById('sys-rel-tutor-email').value = data.tutorEmail || "";
+            document.getElementById('sys-rel-coursedev-email').value = data.courseDevEmail || "";
+
+            if (formBlock) {
+                formBlock.classList.remove('hidden');
+            }
+        } else {
+            alert("找不到對應的使用者，請確認輸入是否正確。");
+        }
+    } catch (err) {
+        console.error("searchUserRelationships error:", err);
+        alert(`搜尋失敗: ${err.message}`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "查詢使用者";
+        }
+    }
+};
+
+window.saveUserRelationships = async function() {
+    const targetUid = document.getElementById('sys-rel-target-uid').value;
+    if (!targetUid) return;
+
+    const agentEmail = document.getElementById('sys-rel-agent-email').value.trim();
+    const tutorEmail = document.getElementById('sys-rel-tutor-email').value.trim();
+    const courseDevEmail = document.getElementById('sys-rel-coursedev-email').value.trim();
+
+    const btn = document.getElementById('btn-save-user-rel');
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "儲存中...";
+    }
+
+    try {
+        const updateUserRelationshipsFn = firebase.functions().httpsCallable('updateUserRelationships');
+        const res = await updateUserRelationshipsFn({
+            targetUid,
+            agentEmail,
+            tutorEmail,
+            courseDevEmail
+        });
+
+        if (res.data && res.data.success) {
+            alert("成功儲存使用者關係設定！");
+        } else {
+            alert("儲存關係設定失敗。");
+        }
+    } catch (err) {
+        console.error("saveUserRelationships error:", err);
         alert(`錯誤: ${err.message}`);
     } finally {
         if (btn) {
