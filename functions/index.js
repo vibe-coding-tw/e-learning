@@ -188,6 +188,55 @@ function getCurrentTime() {
     return `${date.getFullYear()}/${('0' + (date.getMonth() + 1)).slice(-2)}/${('0' + date.getDate()).slice(-2)} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}:${('0' + date.getSeconds()).slice(-2)}`;
 }
 
+function normalizeClientIp(ip = '') {
+    let clean = String(ip || '').trim();
+    if (!clean) return '';
+    if (clean.startsWith('[') && clean.endsWith(']')) {
+        clean = clean.slice(1, -1);
+    }
+    if (clean.startsWith('::ffff:')) {
+        clean = clean.substring(7);
+    }
+    return clean;
+}
+
+function collectClientIpCandidates(reqLike = {}) {
+    const headers = reqLike?.headers || reqLike?.rawRequest?.headers || {};
+    const req = reqLike?.rawRequest || reqLike;
+    const candidates = [];
+    const push = (value) => {
+        const normalized = normalizeClientIp(value);
+        if (!normalized || candidates.includes(normalized)) return;
+        candidates.push(normalized);
+    };
+
+    const xForwardedFor = headers['x-forwarded-for'] || headers['X-Forwarded-For'];
+    if (xForwardedFor) {
+        String(xForwardedFor)
+            .split(',')
+            .map((ip) => ip.trim())
+            .forEach(push);
+    }
+
+    [
+        headers['cf-connecting-ip'],
+        headers['x-real-ip'],
+        headers['x-appengine-user-ip'],
+        headers['fastly-client-ip'],
+        headers['true-client-ip'],
+        headers['x-client-ip'],
+        req?.ip,
+        req?.connection?.remoteAddress,
+        req?.socket?.remoteAddress,
+    ].forEach(push);
+
+    if (candidates.length === 0) {
+        candidates.push('127.0.0.1');
+    }
+
+    return candidates;
+}
+
 function ensureStudentStatsEntry(studentStats, sid, userData = {}, options = {}) {
     const {
         accountStatus = 'free',
@@ -2133,8 +2182,7 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
             const normalizedPageId = normalizeCourseVariantKey(pageId || fileName || "UNDEFINED") || "UNDEFINED";
             const normalizedScopePart = normalizeCourseVariantKey(fileName || pageId || "UNDEFINED") || normalizedPageId;
             
-            const xForwardedFor = request.rawRequest?.headers?.['x-forwarded-for'];
-            const clientIp = xForwardedFor ? xForwardedFor.split(',')[0].trim() : request.rawRequest?.ip || '127.0.0.1';
+            const clientIp = collectClientIpCandidates(request)[0];
             
             const raw = `${normalizedPageId}|${normalizedScopePart}|${expiry}|${auth.uid}|${clientIp}`;
             const signature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
@@ -2387,14 +2435,6 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         let expectedSignature;
         let expiry;
 
-        const normalizeIp = (ip = '') => {
-            let clean = String(ip).trim();
-            if (clean.startsWith('::ffff:')) {
-                clean = clean.substring(7);
-            }
-            return clean;
-        };
-
         if (parts.length === 6) {
             [pageId, scopePart, expiryStr, uid, tokenIp, signature] = parts;
             expiry = parseInt(expiryStr);
@@ -2406,14 +2446,12 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
             }
 
             // Verify IP Address
-            const clientXff = req.headers['x-forwarded-for'];
-            const currentClientIp = clientXff ? clientXff.split(',')[0].trim() : req.ip || '127.0.0.1';
-            
-            const cleanTokenIp = normalizeIp(tokenIp);
-            const cleanClientIp = normalizeIp(currentClientIp);
+            const cleanTokenIp = normalizeClientIp(tokenIp);
+            const currentClientIps = collectClientIpCandidates(req);
+            const matchedClientIp = currentClientIps.find((ip) => normalizeClientIp(ip) === cleanTokenIp);
 
-            if (cleanTokenIp !== cleanClientIp && cleanTokenIp !== '127.0.0.1' && cleanClientIp !== '127.0.0.1') {
-                console.warn(`[serveCourse] IP Mismatch: token=${cleanTokenIp}, current=${cleanClientIp}`);
+            if (!matchedClientIp && cleanTokenIp !== '127.0.0.1' && !currentClientIps.includes('127.0.0.1')) {
+                console.warn(`[serveCourse] IP Mismatch: token=${cleanTokenIp}, currentCandidates=${currentClientIps.join(',')}`);
                 return res.status(403).send("Access Denied: Invalid client context.");
             }
         } else if (parts.length === 4) {
