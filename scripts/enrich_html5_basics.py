@@ -8,8 +8,8 @@ TEMPLATE_DIR = "/Users/roverchen/Documents/Classrooms/start-01-unit-html5-basics
 CONTENT_REPO_DIR = "/Users/roverchen/Documents/Apps/content-repo"
 
 HTML_FILES = [
-    os.path.join(CONTENT_REPO_DIR, "courses/zh-TW/tw-car-starter-html5-basics.html"),
-    os.path.join(CONTENT_REPO_DIR, "courses/en/en-car-starter-html5-basics.html")
+    os.path.join(CONTENT_REPO_DIR, "courses/zh-TW/car-starter-html5-basics.html"),
+    os.path.join(CONTENT_REPO_DIR, "courses/en/car-starter-html5-basics.html")
 ]
 
 def render_markdown(path):

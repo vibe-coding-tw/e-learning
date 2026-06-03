@@ -43,8 +43,8 @@ courses/
 
 舊命名：
 
-- `tw-common-developer-identity.html`
-- `en-common-developer-identity.html`
+- `common-developer-identity.html`
+- `common-developer-identity.html`
 
 新命名：
 

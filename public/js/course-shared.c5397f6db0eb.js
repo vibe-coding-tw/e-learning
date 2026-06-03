@@ -113,13 +113,16 @@ function ensureUnitTabsTheme() {
                 height: 36px !important;
                 white-space: nowrap !important;
                 outline: none !important;
+                position: relative !important;
             }
             .unit-tab-btn.first-tab {
                 padding-left: 14px !important;
                 clip-path: polygon(0% 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 0% 100%) !important;
             }
-            
-            /* Pending / Uncompleted state */
+            .unit-tab-btn span {
+                transition: transform 0.16s ease-in-out !important;
+                display: inline-block !important;
+            }
             .unit-tab-btn.pending {
                 background-color: #e2e8f0 !important;
                 color: #475569 !important;
@@ -128,8 +131,6 @@ function ensureUnitTabsTheme() {
                 background-color: #cbd5e1 !important;
                 color: #1e293b !important;
             }
-            
-            /* Active state */
             .unit-tab-btn.active {
                 background: linear-gradient(135deg, #0078d4, #005a9e) !important;
                 color: #ffffff !important;
@@ -138,8 +139,6 @@ function ensureUnitTabsTheme() {
             .unit-tab-btn.active:hover {
                 background: linear-gradient(135deg, #0086ed, #0066b3) !important;
             }
-            
-            /* Completed state */
             .unit-tab-btn.completed {
                 background-color: #d1fae5 !important;
                 color: #065f46 !important;
@@ -148,8 +147,6 @@ function ensureUnitTabsTheme() {
                 background-color: #a7f3d0 !important;
                 color: #047857 !important;
             }
-            
-            /* Badge styles */
             .unit-tab-btn .step-badge {
                 display: inline-flex !important;
                 align-items: center !important;
@@ -175,7 +172,6 @@ function ensureUnitTabsTheme() {
                 background-color: #059669 !important;
                 color: #ffffff !important;
             }
-            
             .ms-achievement h3 {
                 color: #ffffff !important;
             }
@@ -267,16 +263,10 @@ async function ensureDynamicUnitTabsFromFirestore() {
 
         const wrapper = document.createElement('div');
         wrapper.className = 'unit-tabs-wrapper relative z-40';
-        wrapper.style.display = 'block';
-        wrapper.style.backgroundColor = '#f8fafc';
-        wrapper.style.borderBottom = '1px solid #e2e8f0';
-        wrapper.style.padding = '16px 20px';
-        wrapper.style.overflowX = 'auto';
-        wrapper.style.whiteSpace = 'nowrap';
 
         wrapper.innerHTML = `
-            <div id="course-tabs-container" class="unit-tabs-container" style="display: block; min-width: max-content; position: relative;">
-                <div class="unit-tabs-flex" style="display: inline-flex; gap: 12px; align-items: center; position: relative; z-index: 1;"></div>
+            <div id="course-tabs-container" class="unit-tabs-container">
+                <div class="unit-tabs-flex"></div>
             </div>
         `;
         const flex = wrapper.querySelector('.unit-tabs-flex');
@@ -299,11 +289,6 @@ async function ensureDynamicUnitTabsFromFirestore() {
             }
             btn.className = classList.join(' ');
 
-            let badgeText = `${idx + 1}`;
-            if (isCompleted) {
-                badgeText = '✓';
-            }
-
             let titleText = '';
             if (matchedCourse && Array.isArray(matchedCourse.courseUnitTitles) && matchedCourse.courseUnitTitles[idx]) {
                 titleText = matchedCourse.courseUnitTitles[idx];
@@ -311,6 +296,11 @@ async function ensureDynamicUnitTabsFromFirestore() {
                 titleText = formatUnitTabTitle(unitFile, idx).replace(/^\d+\s*/, '');
             }
             titleText = sanitizeTitle(titleText);
+
+            let badgeText = `${idx + 1}`;
+            if (isCompleted) {
+                badgeText = '✓';
+            }
 
             btn.innerHTML = `
                 <span class="step-badge">${badgeText}</span>
@@ -343,7 +333,42 @@ function normalizeCourseTopNav() {
         const topNav = document.querySelector('.ms-topnav');
         if (!topNav) return;
 
-        // Normalize course bucket label to keep all units visually consistent.
+        const isStarter = file.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(file);
+        const isBasic = file.startsWith('basic-') || /^(?:tw|en|car-basic)-/i.test(file);
+        const isAdvanced = file.startsWith('adv-') || file.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(file);
+        const isPrepare = file.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(file);
+        const targetHref = isStarter
+            ? canonicalLearningPathHref('car-starter')
+            : isBasic
+                ? canonicalLearningPathHref('car-basic')
+                : isAdvanced
+                    ? canonicalLearningPathHref('car-advanced')
+                    : isPrepare
+                        ? canonicalLearningPathHref('common')
+                        : '';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
+        const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
+        const langQuery = isEn ? '&lang=en' : '';
+
+        const translate = (key, defaultText) => {
+            if (typeof window.t === 'function') {
+                const res = window.t(key);
+                if (res && res !== key) return res;
+            }
+            if (isEn) {
+                const enDict = {
+                    'starter_title': 'Starter Unit',
+                    'basic_title': 'Basic Unit',
+                    'advanced_title': 'Advanced Unit',
+                    'prepare_title': 'Preparation Unit'
+                };
+                return enDict[key] || defaultText;
+            }
+            return defaultText;
+        };
+
         let navLabel = topNav.querySelector('.nav-label');
         if (navLabel) {
             if (navLabel.tagName !== 'A') {
@@ -353,170 +378,173 @@ function normalizeCourseTopNav() {
                 navLabel.parentNode.replaceChild(link, navLabel);
                 navLabel = link;
             }
-            const isStarter = file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file);
-            const isBasic = file.startsWith('basic-') || /^(?:tw|en)-car-basic-/i.test(file);
-            const isAdvanced = file.startsWith('adv-') || /^(?:tw|en)-car-advanced-/i.test(file);
-            const isPrepare = file.startsWith('prepare-') || /^(?:tw|en)-common-/i.test(file);
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
-            const storedLocale = String(localStorage.getItem('vibe_user_locale') || '').trim().toLowerCase();
-            const isEn = queryLang.trim().toLowerCase().startsWith('en') || storedLocale.startsWith('en') || file.startsWith('en-');
-            const langQuery = isEn ? '&lang=en' : '';
-
-            const translate = (key, defaultText) => {
-                if (typeof window.t === 'function') {
-                    const res = window.t(key);
-                    if (res && res !== key) return res;
-                }
-                // 當未載入 i18n 翻譯器且處於英文模式時，回傳英文預設標題
-                if (isEn) {
-                    const enDict = {
-                        'starter_title': 'Starter Unit',
-                        'basic_title': 'Basic Unit',
-                        'advanced_title': 'Advanced Unit',
-                        'prepare_title': 'Preparation Unit'
-                    };
-                    return enDict[key] || defaultText;
-                }
-                return defaultText;
-            };
 
             if (isStarter) {
                 navLabel.textContent = translate('starter_title', '入門課程');
                 navLabel.setAttribute('href', `${canonicalLearningPathHref('car-starter')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
-            }
-            else if (isBasic) {
+            } else if (isBasic) {
                 navLabel.textContent = translate('basic_title', '基礎課程');
                 navLabel.setAttribute('href', `${canonicalLearningPathHref('car-basic')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
-            }
-            else if (isAdvanced) {
+            } else if (isAdvanced) {
                 navLabel.textContent = translate('advanced_title', '進階課程');
                 navLabel.setAttribute('href', `${canonicalLearningPathHref('car-advanced')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
-            }
-            else if (isPrepare) {
+            } else if (isPrepare) {
                 navLabel.textContent = translate('prepare_title', '準備課程');
                 navLabel.setAttribute('href', `${canonicalLearningPathHref('common')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
         }
 
-        // Fix broken brand href for unit pages (especially start pages).
         const brandLink = topNav.querySelector('.brand');
-        if (!brandLink) return;
+        if (brandLink) {
+            const isEnMode = isEn;
+            brandLink.innerHTML = '<i class="fas fa-rocket"></i> Vibe Coding';
+            brandLink.setAttribute('href', isEnMode ? '/index.html?lang=en' : '/index.html');
+            brandLink.setAttribute('target', '_top');
+        }
 
-        const isEnMode = (new URLSearchParams(window.location.search).get('lang') || '').toLowerCase().startsWith('en') || file.startsWith('en-');
+        if (targetHref) {
+            const navCourseNameId = 'nav-course-name';
+            const shouldShowCourseName = isStarter || isPrepare;
+            let navCourseNameSpan = document.getElementById(navCourseNameId);
+            if (shouldShowCourseName) {
+                if (!navCourseNameSpan) {
+                    const divider = document.createElement('div');
+                    divider.className = 'divider';
 
-        // Normalize brand text/icon style using the current production baseline.
-        brandLink.innerHTML = '<i class="fas fa-rocket"></i> Vibe Coding';
-        brandLink.setAttribute('href', isEnMode ? '/index.html?lang=en' : '/index.html');
-        brandLink.setAttribute('target', '_top');
+                    navCourseNameSpan = document.createElement('span');
+                    navCourseNameSpan.id = navCourseNameId;
+                    navCourseNameSpan.style.cssText = 'color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
 
-        // 入門與準備課程 top-nav 整合：注入第三段課程名稱 (nav-course-name)
-        const isStarter = file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file);
-        const isPrepare = file.startsWith('prepare-') || /^(?:tw|en)-common-/i.test(file);
-        if (isStarter || isPrepare) {
-            let navCourseNameSpan = document.getElementById('nav-course-name');
-            if (!navCourseNameSpan) {
-                const divider = document.createElement('div');
-                divider.className = 'divider';
-                
-                navCourseNameSpan = document.createElement('span');
-                navCourseNameSpan.id = 'nav-course-name';
-                navCourseNameSpan.style.cssText = 'color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-                
-                topNav.appendChild(divider);
-                topNav.appendChild(navCourseNameSpan);
-            }
-            
-            const moduleTitleEl = document.querySelector('.ms-sidebar-header .module-title') || document.querySelector('.module-title');
-            if (moduleTitleEl) {
-                const moduleTitle = moduleTitleEl.textContent.trim();
-                let courseNum = '';
-                
-                if (isStarter) {
-                    const startMatch = file.match(/^start-(\d{2})-unit-/i);
-                    if (startMatch) {
-                        courseNum = startMatch[1];
-                    } else {
-                        const lookup = {
-                            'html5-basics': '01', 'flexbox-layout': '01', 'ui-ux-standards': '01',
-                            'ble-security': '02', 'ble-async': '02', 'typed-arrays': '02',
-                            'control-panel': '03', 'data-json': '03', 'flow-logic': '03',
-                            'touch-basics': '04', 'long-press': '04', 'prevent-default': '04',
-                            'touch-vs-mouse': '05', 'canvas-joystick': '05', 'joystick-math': '05'
-                        };
-                        const suffixMatch = file.match(/^(?:tw|en-)?car-starter-(.+)\.html$/i);
-                        if (suffixMatch && lookup[suffixMatch[1]]) {
-                            courseNum = lookup[suffixMatch[1]];
+                    topNav.appendChild(divider);
+                    topNav.appendChild(navCourseNameSpan);
+                }
+
+                const moduleTitleEl = document.querySelector('.ms-sidebar-header .module-title') || document.querySelector('.module-title');
+                if (moduleTitleEl) {
+                    const moduleTitle = moduleTitleEl.textContent.trim();
+                    let courseNum = '';
+
+                    if (isStarter) {
+                        const startMatch = file.match(/^start-(\d{2})-unit-/i);
+                        if (startMatch) {
+                            courseNum = startMatch[1];
+                        } else {
+                            const lookup = {
+                                'html5-basics': '01', 'flexbox-layout': '01', 'ui-ux-standards': '01',
+                                'ble-security': '02', 'ble-async': '02', 'typed-arrays': '02',
+                                'control-panel': '03', 'data-json': '03', 'flow-logic': '03',
+                                'touch-basics': '04', 'long-press': '04', 'prevent-default': '04',
+                                'touch-vs-mouse': '05', 'canvas-joystick': '05', 'joystick-math': '05'
+                            };
+                            const suffixMatch = file.match(/^(?:tw|en|car-starter)-(.+)\.html$/i);
+                            if (suffixMatch && lookup[suffixMatch[1]]) {
+                                courseNum = lookup[suffixMatch[1]];
+                            }
                         }
-                    }
-                    if (courseNum) {
-                        const prefix = isEnMode ? `Starter ${courseNum}: ` : `入門 ${courseNum}：`;
-                        navCourseNameSpan.textContent = prefix + moduleTitle;
-                    } else {
-                        navCourseNameSpan.textContent = moduleTitle;
-                    }
-                } else if (isPrepare) {
-                    const prepMatch = file.match(/^prepare-(\d{2})-unit-/i);
-                    if (prepMatch) {
-                        courseNum = prepMatch[1];
-                    } else {
-                        const lookup = {
-                            'developer-identity': '01', 'vscode-online': '02', 'vscode-setup': '03',
-                            'agent-mode': '04', 'vibe-coding': '05', 'web-agents': '06',
-                            'github-classroom': '07', 'wifi-setup': '08', 'motor-ramping': '09'
-                        };
-                        const suffixMatch = file.match(/^(?:tw|en-)?common-(.+)\.html$/i);
-                        if (suffixMatch && lookup[suffixMatch[1]]) {
-                            courseNum = lookup[suffixMatch[1]];
+                        navCourseNameSpan.textContent = courseNum
+                            ? `${isEn ? `Starter ${courseNum}: ` : `入門 ${courseNum}：`}${moduleTitle}`
+                            : moduleTitle;
+                    } else if (isPrepare) {
+                        const prepMatch = file.match(/^prepare-(\d{2})-unit-/i);
+                        if (prepMatch) {
+                            courseNum = prepMatch[1];
+                        } else {
+                            const lookup = {
+                                'developer-identity': '01', 'vscode-online': '02', 'vscode-setup': '03',
+                                'agent-mode': '04', 'vibe-coding': '05', 'web-agents': '06',
+                                'github-classroom': '07', 'wifi-setup': '08', 'motor-ramping': '09'
+                            };
+                            const suffixMatch = file.match(/^(?:tw|en|common)-(.+)\.html$/i);
+                            if (suffixMatch && lookup[suffixMatch[1]]) {
+                                courseNum = lookup[suffixMatch[1]];
+                            }
                         }
-                    }
-                    if (courseNum) {
-                        const prefix = isEnMode ? `Preparation ${courseNum}: ` : `準備 ${courseNum}：`;
-                        navCourseNameSpan.textContent = prefix + moduleTitle;
-                    } else {
-                        navCourseNameSpan.textContent = moduleTitle;
+                        navCourseNameSpan.textContent = courseNum
+                            ? `${isEn ? `Preparation ${courseNum}: ` : `準備 ${courseNum}：`}${moduleTitle}`
+                            : moduleTitle;
                     }
                 }
+            } else if (navCourseNameSpan) {
+                navCourseNameSpan.remove();
+                const divider = topNav.querySelector('.divider:last-of-type');
+                if (divider) divider.remove();
             }
         }
 
-        // 課程單元右上角加入語言選項 (Language Switcher)
         if (!document.getElementById('course-lang-select-container')) {
-            const isEnMode = (new URLSearchParams(window.location.search).get('lang') || '').toLowerCase().startsWith('en') || String(localStorage.getItem('vibe_user_locale') || '').trim().toLowerCase().startsWith('en') || file.startsWith('en-');
-            
             const container = document.createElement('div');
             container.id = 'course-lang-select-container';
             container.style.cssText = 'margin-left: auto; display: flex; align-items: center; gap: 6px;';
-            
+
             container.innerHTML = `
                 <i class="fa-solid fa-globe" style="color: rgba(255,255,255,0.75); font-size: 13px;"></i>
                 <select id="course-lang-select" style="background: transparent; color: #fff; border: none; font-size: 13px; font-weight: 500; cursor: pointer; outline: none; padding: 4px 6px; border-radius: 4px;">
-                    <option value="zh-TW" ${!isEnMode ? 'selected' : ''} style="color: #333;">繁中</option>
-                    <option value="en" ${isEnMode ? 'selected' : ''} style="color: #333;">EN</option>
+                    <option value="zh-TW" ${!isEn ? 'selected' : ''} style="color: #333;">繁中</option>
+                    <option value="en" ${isEn ? 'selected' : ''} style="color: #333;">EN</option>
                 </select>
             `;
-            
+
             topNav.appendChild(container);
-            
+
             const select = container.querySelector('#course-lang-select');
             select.addEventListener('change', (e) => {
                 const newLocale = e.target.value;
                 try {
                     localStorage.setItem('vibe_user_locale', newLocale);
                 } catch (_) {}
-                
+
                 const currentFile = window.location.pathname.split('/').pop() || '';
-                const targetFile = normalizeCanonicalUnitFilenameForRoute(currentFile);
-                
+                let targetFile = currentFile;
+
+                if (newLocale === 'en') {
+                    if (currentFile.startsWith('tw-')) {
+                        targetFile = currentFile.replace(/^tw-/, 'en-');
+                    } else if (currentFile.startsWith('start-')) {
+                        const lookup = {
+                            'start-01-unit-html5-basics.html': 'car-starter-html5-basics.html',
+                            'start-01-unit-flexbox-layout.html': 'car-starter-flexbox-layout.html',
+                            'start-01-unit-ui-ux-standards.html': 'car-starter-ui-ux-standards.html',
+                            'start-02-unit-ble-security.html': 'car-starter-ble-security.html',
+                            'start-02-unit-ble-async.html': 'car-starter-ble-async.html',
+                            'start-02-unit-typed-arrays.html': 'car-starter-typed-arrays.html',
+                            'start-03-unit-control-panel.html': 'car-starter-control-panel.html',
+                            'start-03-unit-data-json.html': 'car-starter-data-json.html',
+                            'start-03-unit-flow-logic.html': 'car-starter-flow-logic.html',
+                            'start-04-unit-touch-basics.html': 'car-starter-touch-basics.html',
+                            'start-04-unit-long-press.html': 'car-starter-long-press.html',
+                            'start-04-unit-prevent-default.html': 'car-starter-prevent-default.html',
+                            'start-05-unit-touch-vs-mouse.html': 'car-starter-touch-vs-mouse.html',
+                            'start-05-unit-canvas-joystick.html': 'car-starter-canvas-joystick.html',
+                            'start-05-unit-joystick-math.html': 'car-starter-joystick-math.html'
+                        };
+                        targetFile = lookup[currentFile] || currentFile.replace(/^start-/, 'en-');
+                    } else if (currentFile.match(/^\d{2}-unit-/)) {
+                        targetFile = currentFile.replace(/^\d{2}-unit-/, 'en-common-');
+                    } else if (currentFile.match(/^prepare-/)) {
+                        targetFile = currentFile.replace(/^prepare-/, 'en-common-');
+                    }
+                } else {
+                    if (targetFile.startsWith('en-car-starter-')) {
+                        targetFile = targetFile.replace(/^en-car-starter-/, 'tw-car-starter-');
+                    } else if (targetFile.startsWith('en-car-basic-')) {
+                        targetFile = targetFile.replace(/^en-car-basic-/, 'tw-car-basic-');
+                    } else if (targetFile.startsWith('en-car-advanced-')) {
+                        targetFile = targetFile.replace(/^en-car-advanced-/, 'tw-car-advanced-');
+                    } else if (targetFile.startsWith('en-common-')) {
+                        targetFile = targetFile.replace(/^en-common-/, 'tw-common-');
+                    } else if (targetFile.startsWith('en-')) {
+                        targetFile = targetFile.replace(/^en-/, 'tw-');
+                    }
+                }
+
                 const urlParams = new URLSearchParams(window.location.search);
                 urlParams.set('lang', newLocale === 'en' ? 'en' : 'zh-TW');
                 urlParams.set('locale', newLocale === 'en' ? 'en' : 'zh-TW');
-                
+
                 const newSearch = urlParams.toString();
                 const newPath = window.location.pathname.replace(currentFile, targetFile);
                 window.location.href = newPath + (newSearch ? '?' + newSearch : '') + window.location.hash;

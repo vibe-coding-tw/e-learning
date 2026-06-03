@@ -1,4 +1,23 @@
 (function () {
+    const LEGACY_UNIT_TO_CANONICAL_UNIT = {
+        "01-master-getting-started.html": "common-developer-identity.html",
+        "02-master-ai-agents.html": "common-agent-mode.html",
+        "03-master-wifi-motor.html": "common-github-classroom.html",
+        "01-unit-vscode-online.html": "common-vscode-online.html",
+        "01-unit-vscode-setup.html": "common-vscode-setup.html",
+        "02-unit-agent-mode.html": "common-agent-mode.html",
+        "02-unit-vibe-coding.html": "common-vibe-coding.html",
+        "02-unit-web-agents.html": "common-web-agents.html",
+        "03-unit-github-classroom.html": "common-github-classroom.html",
+        "03-unit-motor-ramping.html": "common-motor-ramping.html",
+        "03-unit-wifi-setup.html": "common-wifi-setup.html"
+    };
+    const CANONICAL_UNIT_TO_LEGACY_UNITS = Object.entries(LEGACY_UNIT_TO_CANONICAL_UNIT).reduce((acc, [legacy, canonical]) => {
+        if (!acc[canonical]) acc[canonical] = [];
+        acc[canonical].push(legacy);
+        return acc;
+    }, {});
+
     function normalizeRouteLooseKey(value = "") {
         return String(value || "").split('/').pop().split('?')[0].replace(/\.html$/i, '').toLowerCase();
     }
@@ -63,17 +82,27 @@
 
     function getEquivalentUnitIds(unitId) {
         if (!unitId) return [];
-        const normalized = String(unitId).toLowerCase().trim();
-        const base = normalized.replace('.html', '').replace(/^(?:tw|en-)?(?:common|car-(?:starter|basic|advanced))-|^(?:start-|basic-|adv-|advanced-|prepare-)?(?:\d{2}-)?(?:unit-|lesson-|master-)?/i, '');
-
-        return [
-            normalized,
-            base,
-            `${base}.html`,
-            `01-unit-${base}.html`,
-            `start-${base}`,
-            `start-${base}.html`
+        const raw = String(unitId).trim();
+        const normalized = raw.toLowerCase();
+        const stripped = normalized.replace(/\.html$/i, "");
+        const canonical = LEGACY_UNIT_TO_CANONICAL_UNIT[`${stripped}.html`] || LEGACY_UNIT_TO_CANONICAL_UNIT[raw] || raw;
+        const canonicalNoExt = String(canonical).replace(/\.html$/i, "");
+        const legacyAliases = CANONICAL_UNIT_TO_LEGACY_UNITS[`${canonicalNoExt}.html`] || CANONICAL_UNIT_TO_LEGACY_UNITS[canonical] || [];
+        const candidates = [
+            canonical,
+            canonicalNoExt,
+            `${canonicalNoExt}.html`,
+            ...legacyAliases,
+            raw,
+            stripped
         ];
+
+        if (/^(?:tw|en)-/i.test(raw)) {
+            const languageStripped = raw.replace(/^(?:tw|en)-/i, "");
+            candidates.push(languageStripped, languageStripped.replace(/\.html$/i, ""), `${languageStripped.replace(/\.html$/i, "")}.html`);
+        }
+
+        return Array.from(new Set(candidates.filter(Boolean)));
     }
 
     function resolveCanonicalUnitId(unitId, lessons = [], unitToDocId = {}) {
@@ -108,16 +137,22 @@
 
     function getPreferredUnitId(unitId, courseUnits = [], extraKeys = []) {
         const candidates = getEquivalentUnitIds(unitId);
-        return courseUnits.find(unit => candidates.includes(unit)) ||
-            extraKeys.find(key => candidates.includes(key)) ||
+        return candidates.find(id => courseUnits.includes(id)) ||
+            candidates.find(id => extraKeys.includes(id)) ||
             candidates.find(id => id.endsWith('.html')) ||
+            courseUnits.find(Boolean) ||
             unitId;
     }
 
     function normalizeTutorAdminUnitId(unitId) {
         const raw = String(unitId || '').trim();
         if (!raw) return raw;
-        if (raw === '02-unit-classroom-workflow.html') return '03-unit-github-classroom.html';
+        if (LEGACY_UNIT_TO_CANONICAL_UNIT[raw]) return LEGACY_UNIT_TO_CANONICAL_UNIT[raw];
+        if (LEGACY_UNIT_TO_CANONICAL_UNIT[raw.replace(/\.html$/i, '.html')]) {
+            return LEGACY_UNIT_TO_CANONICAL_UNIT[raw.replace(/\.html$/i, '.html')];
+        }
+        if (/^(?:tw|en)-/i.test(raw)) return raw.replace(/^(?:tw|en)-/i, '');
+        if (raw === '02-unit-classroom-workflow.html') return 'common-github-classroom.html';
         if (raw.startsWith('04-')) return raw.replace(/^04-/, '02-');
         return raw;
     }

@@ -111,11 +111,16 @@ firebase deploy --project e-learning-942f7
 | [docs/course-slug-canonical-rules.md](docs/course-slug-canonical-rules.md) | 課程 slug 命名規則 |
 | [docs/course-slug-migration-map.md](docs/course-slug-migration-map.md) | 課程 slug 遷移圖 |
 | [docs/course-slug-alias-implementation.md](docs/course-slug-alias-implementation.md) | 課程 alias 實作方案 |
+| [docs/localized-public-sync.md](docs/localized-public-sync.md) | 本地化 public 同步流程 |
+| [docs/examples/metadata-lessons-pricing-template.csv](docs/examples/metadata-lessons-pricing-template.csv) | metadata_lessons 價格範例 |
+| [docs/examples/metadata-lessons-pricing-template.md](docs/examples/metadata-lessons-pricing-template.md) | metadata_lessons 價格範例說明 |
 | [docs/distributor-fulfillment-model.md](docs/distributor-fulfillment-model.md) | 履約結算 |
 | [docs/migration-history.md](docs/migration-history.md) | 歷史遷移紀錄（Dashboard、Firestore ID 等） |
 | [docs/classroom-legacy-classification.md](docs/classroom-legacy-classification.md) | 歷史資產分類 |
 
 > 收尾原則：內部命名維持中性語意；歷史相容欄位先保留，API 回傳欄位最後再 cutover。
+>
+> `public/en/` 與 `public/tw/` 的本地化頁面以 `content-repo/public/{en,zh-TW}` 為來源，發版前請先同步再 fingerprint。
 
 ---
 

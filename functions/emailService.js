@@ -86,7 +86,7 @@ async function resolveUserLocale(email) {
 
 /**
  * Resolves Course Name and Unit Name dynamically from Firestore metadata_lessons.
- * @param {string} unitId - The unit ID or filename (e.g., 'tw-common-vscode-setup.html')
+ * @param {string} unitId - The unit ID or filename (e.g., 'common-vscode-setup.html')
  * @param {string} locale - User's locale ('zh-TW' or 'en')
  * @returns {Promise<{courseName: string, unitName: string}>}
  */

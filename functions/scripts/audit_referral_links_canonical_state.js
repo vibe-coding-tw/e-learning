@@ -14,9 +14,9 @@ if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
 const LEGACY_MASTER_TO_CANONICAL = {
-  "01-master-getting-started.html": "tw-common-developer-identity.html",
-  "02-master-ai-agents.html": "tw-common-agent-mode.html",
-  "03-master-wifi-motor.html": "tw-common-github-classroom.html",
+  "01-master-getting-started.html": "common-developer-identity.html",
+  "02-master-ai-agents.html": "common-agent-mode.html",
+  "03-master-wifi-motor.html": "common-github-classroom.html",
   "adv-01-master-s3-cam.html": "adv-01-unit-jpeg-quality.html",
   "adv-02-master-video.html": "adv-02-unit-bandwidth-fps.html",
   "adv-03-master-ble-advanced.html": "adv-03-unit-ble-mtu.html",
@@ -50,14 +50,14 @@ const LEGACY_MASTER_TO_CANONICAL = {
 };
 
 const LEGACY_UNIT_TO_CANONICAL_UNIT = {
-  "01-unit-vscode-online.html": "tw-common-vscode-online.html",
-  "01-unit-vscode-setup.html": "tw-common-vscode-setup.html",
-  "02-unit-agent-mode.html": "tw-common-agent-mode.html",
-  "02-unit-vibe-coding.html": "tw-common-vibe-coding.html",
-  "02-unit-web-agents.html": "tw-common-web-agents.html",
-  "03-unit-github-classroom.html": "tw-common-github-classroom.html",
-  "03-unit-motor-ramping.html": "tw-common-motor-ramping.html",
-  "03-unit-wifi-setup.html": "tw-common-wifi-setup.html"
+  "01-unit-vscode-online.html": "common-vscode-online.html",
+  "01-unit-vscode-setup.html": "common-vscode-setup.html",
+  "02-unit-agent-mode.html": "common-agent-mode.html",
+  "02-unit-vibe-coding.html": "common-vibe-coding.html",
+  "02-unit-web-agents.html": "common-web-agents.html",
+  "03-unit-github-classroom.html": "common-github-classroom.html",
+  "03-unit-motor-ramping.html": "common-motor-ramping.html",
+  "03-unit-wifi-setup.html": "common-wifi-setup.html"
 };
 
 function arg(name, fallback = "") {

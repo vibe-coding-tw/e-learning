@@ -96,6 +96,14 @@
 | `orderWeight` | number | 排序權重。 |
 | `metadataType` | string | 元資料類型：`course` / `product` / `legacy_product`。 |
 | `productId` | string | 商品識別碼（商品型 metadata 使用）。 |
+| `pricing` | map | 多地區定價主欄位。建議使用 `tw` / `en`，各值格式為 `{ amount, currency }`。 |
+| `priceByLocale` | map | 語系定價別名。建議使用 `zh-TW` / `en`。 |
+| `priceByRegion` | map | 區域定價別名。建議使用 `tw` / `en`。 |
+| `priceMap` | map | 舊版/相容定價別名，前端與後端都會讀。 |
+| `prices` | map | 簡化定價別名，通常對應 `tw` / `en` 的純金額。 |
+| `price_twd` | number | 相容欄位，台幣金額。 |
+| `price_usd` | number | 相容欄位，美金金額。 |
+| `currency` | string | 預設幣別，通常保留 `TWD`。 |
 | `hiddenFromCatalog` | boolean | 是否從課程/商品列表隱藏（保留歷史資料時使用）。 |
 | `isDeprecated` | boolean | 是否為已廢止舊資料（保留對帳/歷史用途）。 |
 
@@ -103,6 +111,12 @@
 > 不再依賴硬編碼單元白名單。
 > 所有執行期資料比對（包含邀請連結、課程授權、單元歸屬）都必須直接查 Firestore，禁止使用程式碼內相容名單或 fallback 白名單。
 > `metadata_lessons` 可同時承載課程與部分商品 metadata。判斷時請以 `metadataType`/`isPhysical` 區分用途，不可假設所有 `courseId` 都是課程頁檔名。
+>
+> 2026-06-03 價格規則更新：
+> - 課程與硬體商品皆採用多地區定價欄位，前端與後端不做匯率換算。
+> - 中文/TW 頁面讀取 `pricing.tw`，英文/US 頁面讀取 `pricing.en`。
+> - 推薦寫法為同時保留 `pricing`、`priceByLocale`、`priceByRegion`、`priceMap` 與 `price_twd` / `price_usd`，以維持舊資料相容。
+> - 目前課程標準價：入門 `TWD 1200 / USD 40`、基礎 `TWD 1500 / USD 50`、進階 `TWD 1800 / USD 60`。
 >
 > 2026-05-16 更新：
 > - `ai-agents-vibe.courseUnits` 已切換為 `02-unit-agent-mode.html`, `02-unit-web-agents.html`, `02-unit-vibe-coding.html`
@@ -118,7 +132,7 @@
 | `track` | string | 課程主軸，例如 `common`、`car`。 |
 | `level` | string | 課程層級，例如 `common`、`starter`、`basic`、`advanced`。 |
 | `entryUnitId` | string | 課程入口單元 ID，用於取代 `*-master-*` 頁面的進入責任（2026-05-30 起統一修正並指向課程的第一個單元，即 `courseUnits[0]`）。 |
-| `contentRef` | string | 對應外部內容倉的內容路徑，例如 `courses/zh-TW/tw-car-starter-html5-basics.html`。 |
+| `contentRef` | string | 對應外部內容倉的內容路徑，例如 `courses/zh-TW/car-starter-html5-basics.html`。 |
 | `i18n` | map | 可選的多語內容設定，例如各語系內容路徑或語系可用性資訊。 |
 | `learningPathLabel*` / `categoryLabel*` / `navLabel*` | string | 學習路徑分類顯示名稱。前端會優先讀取 Firestore / lesson metadata，而不是在程式碼中寫死。 |
 
@@ -148,6 +162,7 @@
 
 參考模板：
 - `docs/examples/metadata-lessons-migration-template.csv`
+- `docs/examples/metadata-lessons-pricing-template.csv`
 
 ---
 
@@ -327,7 +342,7 @@
 | `createdAt` | timestamp | 建立時間。 |
 
 補充說明：
-- `unitId` 現行規格應為 canonical unit page URL，例如 `tw-common-developer-identity.html`。
+- `unitId` 現行規格應為 canonical unit page URL，例如 `common-developer-identity.html`。
 - 2026-05-28 已完成歷史 `referral_links.unitId` 清理；8 筆 legacy unit 已轉為 canonical unit，另 1 筆 malformed referral index（`url = "authorized"`）已刪除。
 - `functions/index.js` 目前透過共用 helper 產生 referral link doc id 與 normalised URL；這是內部實作細節，不影響集合 schema。
 
@@ -356,7 +371,7 @@
 
 1. **唯一真實來源 (Firestore-first)**：所有單元、課程、推薦碼、付款授權、導師身分判定均以 Firestore 為 runtime 唯一真實來源。
 2. **角色與權限模型**：系統只區分全域 `role: admin` 與 `role: user`，導師資格由 `users.tutorConfigs[unitId].authorized` 判定。
-3. **頁面路由與導覽**：前台學習路徑、課程卡片及所有導覽，一律使用 canonical page URL（可直接開課之首個單元，例如 `/courses/tw-common-developer-identity.html`）。
+3. **頁面路由與導覽**：前台學習路徑、課程卡片及所有導覽，一律使用 canonical page URL（可直接開課之首個單元，例如 `/courses/common-developer-identity.html`）。
 4. **ID 命名歸一化**：比對 `unitId` 或 `courseId` 時，一律做歸一化（如移除 `.html` 後綴）。
 
 ### 10.2 Legacy Master Pages Retirement Spec (主頁面退役與相容規格)

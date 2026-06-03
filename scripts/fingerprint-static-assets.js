@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { syncLocalizedPublicPages } = require('./localized-public-sync');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
@@ -123,13 +124,11 @@ function main() {
     console.error(`public dir not found: ${publicDir}`);
     process.exit(1);
   }
+  syncLocalizedPublicPages({ verbose: true });
+
   const htmlRoots = [publicDir];
   if (fs.existsSync(privateCoursesDir)) {
     htmlRoots.push(privateCoursesDir);
-  }
-  const contentRepoDir = '/Users/roverchen/Documents/Apps/content-repo';
-  if (!process.env.FINGERPRINT_SKIP_CONTENT_REPO && fs.existsSync(contentRepoDir)) {
-    htmlRoots.push(contentRepoDir);
   }
   const htmlFiles = htmlRoots
     .flatMap((dir) => walkFiles(dir))
