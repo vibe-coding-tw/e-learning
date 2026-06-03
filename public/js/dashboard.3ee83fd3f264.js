@@ -517,7 +517,7 @@ function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor =
     const { filterUnitId } = getCurrentDashboardContext();
     const isUnitContext = !!filterUnitId;
     const isGlobalAdmin = !isUnitContext && isAdmin;
-    const canViewGlobalSettings = isGlobalAdmin;
+    const canViewGlobalSettings = isAdmin;
     const canViewUnitSettings = isUnitContext && (
         isAdmin ? !!adminTutorMode : !!isQualifiedTutor
     );
@@ -1078,7 +1078,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     if (settingsTabBtn) {
         settingsTabBtn.classList.toggle('hidden', !showSettingsTab);
-        settingsTabBtn.textContent = '課程設定 (Settings)';
+        settingsTabBtn.textContent = window.t('dash_tab_settings', '系統設定');
     }
 
     if (earningsTabBtn) {

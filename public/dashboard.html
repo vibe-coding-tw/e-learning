@@ -101,6 +101,10 @@
                     class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-blue-600 border-b-2 border-blue-600 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_overview">
                     概覽 (Overview)
                 </button>
+                <button onclick="switchTab('settings')" id="tab-btn-settings"
+                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_settings">
+                    系統設定
+                </button>
                 <button onclick="switchTab('tutors')" id="tab-btn-tutors"
                     class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_tutors">
                     導師管理 (Tutor Management)
@@ -112,10 +116,6 @@
                 <button onclick="switchTab('assignments')" id="tab-btn-assignments"
                     class="tab-btn px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_assignments">
                     作業 (Assignments)
-                </button>
-                <button onclick="switchTab('settings')" id="tab-btn-settings"
-                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_settings">
-                    系統設定
                 </button>
                 <button onclick="switchTab('earnings')" id="tab-btn-earnings"
                     class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
@@ -270,45 +270,7 @@
                 </div>
             </div>
 
-            <!-- TAB CONTENT: BUSINESS SETTINGS -->
-            <div id="view-business" class="tab-content hidden space-y-8 animate-fade-in">
-                <div class="card p-0">
-                    <div id="business-header" class="px-6 py-6 border-b border-gray-100 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-white rounded-t-3xl">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800">商業設定 (Business Settings)</h3>
-                            <p class="text-sm text-gray-500 mt-1">課程價格、分潤策略與營運規則集中管理</p>
-                        </div>
-                        <div class="text-xs text-gray-400 font-medium">
-                            只保留資料驅動設定，環境變數仍由 `.env` / Secret Manager 管理
-                        </div>
-                    </div>
 
-                    <div class="p-6 space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">課程總數</div>
-                                <div class="mt-2 text-3xl font-black text-slate-900" id="business-stat-lesson-count">0</div>
-                            </div>
-                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                                <div class="text-xs font-bold text-emerald-600 uppercase tracking-widest">有價格資料</div>
-                                <div class="mt-2 text-3xl font-black text-emerald-700" id="business-stat-priced-count">0</div>
-                            </div>
-                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                                <div class="text-xs font-bold text-blue-600 uppercase tracking-widest">啟用中的分潤策略</div>
-                                <div class="mt-2 text-3xl font-black text-blue-700" id="business-stat-policy-count">0</div>
-                            </div>
-                        </div>
-
-                        <div id="business-pricing-overview" class="space-y-6">
-                            <!-- JS Generated -->
-                        </div>
-
-                        <div id="business-revenue-tools" class="space-y-6">
-                            <!-- JS Generated -->
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- TAB CONTENT: COURSE SETTINGS (Restored Wrapper) -->
             <div id="view-settings" class="tab-content hidden space-y-12 animate-fade-in">
@@ -406,9 +368,41 @@
                 </div>
 
                 <!-- 3. 業務分潤與定價策略 (Business Settings & Pricing Policy) -->
-                <div id="business-settings-container" class="space-y-8">
-                    <div id="business-pricing-overview" class="space-y-6"></div>
-                    <div id="business-revenue-tools" class="space-y-6"></div>
+                <div id="business-settings-container" class="card p-0">
+                    <div id="business-header" class="px-6 py-6 border-b border-gray-100 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-white rounded-t-3xl">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">業務分潤與定價策略 (Business Settings & Pricing Policy)</h3>
+                            <p class="text-sm text-gray-500 mt-1">課程價格、分潤策略與營運規則集中管理</p>
+                        </div>
+                        <div class="text-xs text-gray-400 font-medium">
+                            只保留資料驅動設定，環境變數仍由 `.env` / Secret Manager 管理
+                        </div>
+                    </div>
+
+                    <div class="p-6 space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">課程總數</div>
+                                <div class="mt-2 text-3xl font-black text-slate-900" id="business-stat-lesson-count">0</div>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                                <div class="text-xs font-bold text-emerald-600 uppercase tracking-widest">有價格資料</div>
+                                <div class="mt-2 text-3xl font-black text-emerald-700" id="business-stat-priced-count">0</div>
+                            </div>
+                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                                <div class="text-xs font-bold text-blue-600 uppercase tracking-widest">啟用中的分潤策略</div>
+                                <div class="mt-2 text-3xl font-black text-blue-700" id="business-stat-policy-count">0</div>
+                            </div>
+                        </div>
+
+                        <div id="business-pricing-overview" class="space-y-6">
+                            <!-- JS Generated -->
+                        </div>
+
+                        <div id="business-revenue-tools" class="space-y-6">
+                            <!-- JS Generated -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -580,7 +574,7 @@
 
     <script src="./js/dashboard-lookup-utils.74291754cdb9.js"></script>
     <script src="./js/repo-slug-utils.397a2f388cc7.js"></script>
-    <script type="module" src="./js/dashboard.54ff4bd05e38.js"></script>
+    <script type="module" src="./js/dashboard.3ee83fd3f264.js"></script>
 </body>
 
 </html>
