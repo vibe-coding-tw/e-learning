@@ -1255,6 +1255,7 @@ function normalizeCanonicalCourseKey(value = "") {
 }
 
 function getCanonicalLessonIdentity(lesson = {}) {
+    if (!lesson || typeof lesson !== 'object') return '';
     const metadataType = String(lesson.metadataType || '').toLowerCase();
     if (lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product') {
         return String(
@@ -1280,7 +1281,7 @@ function findParentCourseIdByUnit(unitId, lessons = []) {
     if (!unitId) return null;
 
     const lesson = findCourseByUnitId(unitId, lessons);
-    return getCanonicalLessonIdentity(lesson) || null;
+    return lesson ? (getCanonicalLessonIdentity(lesson) || null) : null;
 }
 
 function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
@@ -1599,7 +1600,13 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     // 1. Resolve Canonical Context
     let canonicalUnitId = resolveCanonicalUnitId(normalizedUnitId, lessons);
     const course = findCourseByPageOrUnit(normalizedCourseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(normalizedCourseId, normalizedUnitId, lessons);
-    const effectiveCourseId = course ? course.courseId : (normalizedCourseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
+    const lessonByCourseRef = findLessonByCourseRef(normalizedCourseId, lessons)
+        || findLessonByCourseRef(normalizedUnitId, lessons)
+        || findLessonByCourseRef(canonicalUnitId, lessons)
+        || null;
+    const effectiveCourseId = course
+        ? course.courseId
+        : (getCanonicalLessonIdentity(lessonByCourseRef) || normalizedCourseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
     // Course-level checks (e.g. started/basic/advanced cards) may only pass courseId.
     // In that case, infer a representative unit from metadata so access is not falsely denied.
     if (!canonicalUnitId && course && Array.isArray(course.courseUnits) && course.courseUnits.length > 0) {
@@ -1665,18 +1672,19 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         }
 
         // FREE COURSE (NT$ 0) (Digital Only)
-        const lessonPrice = course
+        const freeCourseContext = course || lessonByCourseRef;
+        const lessonPrice = freeCourseContext
             ? Math.max(
-                Number(resolveLessonPrice(course, "zh-TW").amount || 0),
-                Number(resolveLessonPrice(course, "en").amount || 0)
+                Number(resolveLessonPrice(freeCourseContext, "zh-TW").amount || 0),
+                Number(resolveLessonPrice(freeCourseContext, "en").amount || 0)
               )
             : Math.max(
                 Number(resolveLessonPrice(findLessonByCourseRef(effectiveCourseId, lessons) || {}, "zh-TW").amount || 0),
                 Number(resolveLessonPrice(findLessonByCourseRef(effectiveCourseId, lessons) || {}, "en").amount || 0)
               ) || 9999;
-        const isFreeCourse = !!(course && parseInt(lessonPrice, 10) === 0);
+        const isFreeCourse = !!(freeCourseContext && parseInt(lessonPrice, 10) === 0);
         if (isFreeCourse) {
-            return { authorized: true, accessMode: 'free_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
+            return { authorized: true, accessMode: 'free_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course: freeCourseContext };
         }
 
         // Trial Course (Started category, within 30 days) (Digital Only)
@@ -1789,6 +1797,93 @@ exports.updateLessonI18n = onCall(async (request) => {
     return { success: true, courseId };
 });
 
+/**
+ * [Pricing Admin] 更新課程多地區價格欄位（僅限 admin 角色）
+ * 接受 { courseId, pricing }
+ * pricing 支援 { tw: { amount, currency }, en: { amount, currency } }
+ */
+exports.upsertLessonPricing = onCall(async (request) => {
+    const { auth, data } = request;
+
+    assertAuthenticated(auth);
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    assertAdminRole(userData.role);
+
+    const { courseId, pricing } = data || {};
+    assertRequiredValue(courseId, 'missing-course-id');
+    assertRequiredValue(pricing && typeof pricing === 'object', 'missing-pricing');
+
+    const normalizePriceEntry = (entry, fallbackCurrency) => {
+        const rawAmount = Number(entry?.amount ?? entry?.price ?? entry?.value ?? 0);
+        const amount = Number.isFinite(rawAmount) && rawAmount >= 0 ? rawAmount : 0;
+        const rawCurrency = normalizeText(entry?.currency || entry?.currencyCode || fallbackCurrency || '');
+        const currency = rawCurrency ? rawCurrency.toUpperCase() : fallbackCurrency;
+        return { amount, currency };
+    };
+
+    const tw = normalizePriceEntry(pricing.tw, 'TWD');
+    const en = normalizePriceEntry(pricing.en, 'USD');
+    const pricePayload = {
+        pricing: {
+            tw,
+            en
+        },
+        priceByLocale: {
+            'zh-TW': tw,
+            en
+        },
+        priceByRegion: {
+            tw,
+            en
+        },
+        priceMap: {
+            tw,
+            en
+        },
+        prices: {
+            tw: tw.amount,
+            en: en.amount
+        },
+        price_twd: tw.amount,
+        price_usd: en.amount,
+        currency: tw.currency || 'TWD',
+        pricingVersion: 'v2',
+        pricingUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        pricingUpdatedBy: auth.uid,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    const lessonsSnap = await db.collection('metadata_lessons')
+        .where('courseId', '==', courseId)
+        .limit(1)
+        .get();
+
+    let lessonDocRef = null;
+    if (!lessonsSnap.empty) {
+        lessonDocRef = lessonsSnap.docs[0].ref;
+    } else {
+        const docSnap = await db.collection('metadata_lessons').doc(courseId).get();
+        if (docSnap.exists) {
+            lessonDocRef = docSnap.ref;
+        }
+    }
+
+    if (!lessonDocRef) {
+        throw new HttpsError('not-found', `lesson-not-found: ${courseId}`);
+    }
+
+    await lessonDocRef.set(pricePayload, { merge: true });
+    console.log(`[upsertLessonPricing] ✅ Updated pricing for courseId=${courseId} by uid=${auth.uid}`);
+
+    return {
+        success: true,
+        courseId,
+        pricing: pricePayload.pricing
+    };
+});
+
 
 // [V12.4.7] ONCALL WRAPPER: For frontend's httpsCallable('checkPaymentAuthorization')
 exports.checkPaymentAuthorization = onCall(async (request) => {
@@ -1811,11 +1906,15 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
         );
 
         if (access.authorized) {
-            // [V13.0.8] Generate token for serveCourse
+            // [V13.0.8] Generate token for serveCourse (Bound to client IP and student UID)
             const expiry = Date.now() + 30 * 60 * 1000; // 30 mins
             const normalizedPageId = normalizeCourseVariantKey(pageId || fileName || "UNDEFINED") || "UNDEFINED";
             const normalizedScopePart = normalizeCourseVariantKey(fileName || pageId || "UNDEFINED") || normalizedPageId;
-            const raw = `${normalizedPageId}|${normalizedScopePart}|${expiry}`;
+            
+            const xForwardedFor = request.rawRequest?.headers?.['x-forwarded-for'];
+            const clientIp = xForwardedFor ? xForwardedFor.split(',')[0].trim() : request.rawRequest?.ip || '127.0.0.1';
+            
+            const raw = `${normalizedPageId}|${normalizedScopePart}|${expiry}|${auth.uid}|${clientIp}`;
             const signature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
             const token = `${raw}|${signature}`;
 
@@ -1883,10 +1982,34 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
         const localeCandidates = buildI18nFilenameCandidates(candidateFileName, locale);
         for (const localeCandidate of localeCandidates) {
             const key = `${repoOwner}/${repoName}@${ref}|${locale}|${localeCandidate}`;
+            const cacheDocId = crypto.createHash('md5').update(key).digest('hex');
+
+            // 1. 嘗試讀取本地記憶體快取
             const cached = CONTENT_FILE_CACHE.get(key);
             if (cached && cached.expiresAt > Date.now()) {
                 return { content: cached.content, source: "external-cache", locale, file: localeCandidate };
             }
+
+            // 2. 嘗試讀取 Firestore 共享快取
+            try {
+                const cacheDoc = await db.collection('course_cache').doc(cacheDocId).get();
+                if (cacheDoc.exists) {
+                    const cacheData = cacheDoc.data();
+                    if (cacheData && cacheData.expiresAt > Date.now()) {
+                        // 寫回本地記憶體快取
+                        CONTENT_FILE_CACHE.set(key, {
+                            content: cacheData.content,
+                            expiresAt: cacheData.expiresAt
+                        });
+                        console.log(`[content-runtime] source=external-cache-shared file=${localeCandidate} locale=${locale}`);
+                        return { content: cacheData.content, source: "external-cache-shared", locale, file: localeCandidate };
+                    }
+                }
+            } catch (err) {
+                console.warn(`[content-runtime] Firestore cache read error:`, err.message || err);
+            }
+
+            // 3. 快取均未命中，向 GitHub API 請求
             const contentPath = `courses/${locale}/${localeCandidate}`;
             const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/contents/${contentPath}?ref=${encodeURIComponent(ref)}`;
             try {
@@ -1910,10 +2033,24 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
                 const encoded = String(payload?.content || "").replace(/\n/g, "");
                 if (!encoded) continue;
                 const content = Buffer.from(encoded, "base64").toString("utf8");
+                const expiresAt = Date.now() + (Math.max(30, Number(runtimeConfig.cacheTtlSec || 300)) * 1000);
+
+                // 寫入本地記憶體快取
                 CONTENT_FILE_CACHE.set(key, {
                     content,
-                    expiresAt: Date.now() + (Math.max(30, Number(runtimeConfig.cacheTtlSec || 300)) * 1000)
+                    expiresAt
                 });
+
+                // 寫入 Firestore 共享快取 (非同步，不阻塞請求)
+                db.collection('course_cache').doc(cacheDocId).set({
+                    content,
+                    expiresAt,
+                    key,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }).catch(err => {
+                    console.warn(`[content-runtime] Firestore cache write error:`, err.message || err);
+                });
+
                 console.log(`[content-runtime] source=external file=${localeCandidate} locale=${locale} ms=${Date.now() - startedAt}`);
                 return { content, source: "external", locale, file: localeCandidate };
             } catch (err) {
@@ -2023,21 +2160,51 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
     }
 
     try {
-        // Token Format: pageId|scopePart|expiry|signature
         const parts = token.split('|');
-        if (parts.length !== 4) {
+        let pageId, scopePart, expiryStr, uid, tokenIp, signature;
+        let expectedSignature;
+        let expiry;
+
+        const normalizeIp = (ip = '') => {
+            let clean = String(ip).trim();
+            if (clean.startsWith('::ffff:')) {
+                clean = clean.substring(7);
+            }
+            return clean;
+        };
+
+        if (parts.length === 6) {
+            [pageId, scopePart, expiryStr, uid, tokenIp, signature] = parts;
+            expiry = parseInt(expiryStr);
+            const raw = `${pageId}|${scopePart}|${expiry}|${uid}|${tokenIp}`;
+            expectedSignature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
+
+            if (signature !== expectedSignature) {
+                return res.status(403).send("Access Denied: Invalid signature.");
+            }
+
+            // Verify IP Address
+            const clientXff = req.headers['x-forwarded-for'];
+            const currentClientIp = clientXff ? clientXff.split(',')[0].trim() : req.ip || '127.0.0.1';
+            
+            const cleanTokenIp = normalizeIp(tokenIp);
+            const cleanClientIp = normalizeIp(currentClientIp);
+
+            if (cleanTokenIp !== cleanClientIp && cleanTokenIp !== '127.0.0.1' && cleanClientIp !== '127.0.0.1') {
+                console.warn(`[serveCourse] IP Mismatch: token=${cleanTokenIp}, current=${cleanClientIp}`);
+                return res.status(403).send("Access Denied: Invalid client context.");
+            }
+        } else if (parts.length === 4) {
+            [pageId, scopePart, expiryStr, signature] = parts;
+            expiry = parseInt(expiryStr);
+            const raw = `${pageId}|${scopePart}|${expiry}`;
+            expectedSignature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
+
+            if (signature !== expectedSignature) {
+                return res.status(403).send("Access Denied: Invalid signature.");
+            }
+        } else {
             return res.status(403).send("Access Denied: Invalid token format.");
-        }
-
-        const [pageId, scopePart, expiryStr, signature] = parts;
-        const expiry = parseInt(expiryStr);
-
-        // A. Validate Signature
-        const raw = `${pageId}|${scopePart}|${expiry}`;
-        const expectedSignature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
-
-        if (signature !== expectedSignature) {
-            return res.status(403).send("Access Denied: Invalid signature.");
         }
 
         // C. Normalize target filename
