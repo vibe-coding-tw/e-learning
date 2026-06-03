@@ -157,13 +157,13 @@ async function collectRevenueShareChainTargets({
 
 const DEFAULT_REVENUE_SHARE_POLICY = Object.freeze({
     policyId: "default-v1",
-    policyName: "Default Tutor Sharing Policy",
+    policyName: "Default Sharing Policy",
     tutorRate: 0.2,
     tutorUplineRate: 0.2,
-    agentRate: 0,
+    agentRate: 0.2,
     agentUplineRate: 0,
-    courseDevRate: 0,
-    courseDevUplineRate: 0,
+    courseDevRate: 0.2,
+    courseDevUplineRate: 0.1,
     enabled: true
 });
 
@@ -200,38 +200,40 @@ async function resolveRevenueShareRoleEmails({ itemValue, order, initialTutor, g
 }
 
 async function loadRevenueSharePolicy({ db, policyCache, policyId = "" } = {}) {
-    const normalized = normalizeText(policyId) || DEFAULT_REVENUE_SHARE_POLICY.policyId;
+    const requestedId = normalizeText(policyId) || DEFAULT_REVENUE_SHARE_POLICY.policyId;
+    const normalized = DEFAULT_REVENUE_SHARE_POLICY.policyId;
+    if (requestedId !== normalized) {
+        console.warn(`[sharing] policy ${requestedId} is deprecated; using ${normalized}.`);
+    }
     if (policyCache.has(normalized)) return policyCache.get(normalized);
 
     let policy = DEFAULT_REVENUE_SHARE_POLICY;
-    if (normalized !== DEFAULT_REVENUE_SHARE_POLICY.policyId) {
-        try {
-            const snap = await db.collection("revenue_share_policies").doc(normalized).get();
-            if (snap.exists) {
-                const raw = snap.data() || {};
-                policy = {
-                    policyId: normalized,
-                    policyName: raw.policyName || raw.name || normalized,
-                    tutorRate: Number(raw.tutorRate ?? DEFAULT_REVENUE_SHARE_POLICY.tutorRate),
-                    tutorUplineRate: Number(raw.tutorUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.tutorUplineRate),
-                    agentRate: Number(raw.agentRate ?? DEFAULT_REVENUE_SHARE_POLICY.agentRate),
-                    agentUplineRate: Number(raw.agentUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.agentUplineRate),
-                    courseDevRate: Number(raw.courseDevRate ?? DEFAULT_REVENUE_SHARE_POLICY.courseDevRate),
-                    courseDevUplineRate: Number(raw.courseDevUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.courseDevUplineRate),
-                    enabled: raw.enabled !== false
-                };
-                if (!policy.enabled) {
-                    console.warn(`[sharing] policy disabled (${normalized}), fallback to default.`);
-                    policy = DEFAULT_REVENUE_SHARE_POLICY;
-                }
-            } else {
-                console.warn(`[sharing] policy not found (${normalized}), fallback to default.`);
+    try {
+        const snap = await db.collection("revenue_share_policies").doc(normalized).get();
+        if (snap.exists) {
+            const raw = snap.data() || {};
+            policy = {
+                policyId: normalized,
+                policyName: raw.policyName || raw.name || normalized,
+                tutorRate: Number(raw.tutorRate ?? DEFAULT_REVENUE_SHARE_POLICY.tutorRate),
+                tutorUplineRate: Number(raw.tutorUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.tutorUplineRate),
+                agentRate: Number(raw.agentRate ?? DEFAULT_REVENUE_SHARE_POLICY.agentRate),
+                agentUplineRate: Number(raw.agentUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.agentUplineRate),
+                courseDevRate: Number(raw.courseDevRate ?? DEFAULT_REVENUE_SHARE_POLICY.courseDevRate),
+                courseDevUplineRate: Number(raw.courseDevUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.courseDevUplineRate),
+                enabled: raw.enabled !== false
+            };
+            if (!policy.enabled) {
+                console.warn(`[sharing] policy disabled (${normalized}), fallback to default.`);
                 policy = DEFAULT_REVENUE_SHARE_POLICY;
             }
-        } catch (e) {
-            console.warn(`[sharing] load policy failed (${normalized}), fallback to default:`, e.message || e);
+        } else {
+            console.warn(`[sharing] policy not found (${normalized}), fallback to default.`);
             policy = DEFAULT_REVENUE_SHARE_POLICY;
         }
+    } catch (e) {
+        console.warn(`[sharing] load policy failed (${normalized}), fallback to default:`, e.message || e);
+        policy = DEFAULT_REVENUE_SHARE_POLICY;
     }
 
     policyCache.set(normalized, policy);

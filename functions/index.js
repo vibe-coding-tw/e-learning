@@ -2697,10 +2697,21 @@ exports.getRevenueSharePolicies = onCall(async (request) => {
     const userDoc = await db.collection('users').doc(uid).get();
     assertAdminRole((userDoc.data() || {}).role, 'Only admins can read revenue policies.');
 
-    const snap = await db.collection('revenue_share_policies').get();
-    const policies = snap.docs
-        .map((d) => ({ id: d.id, ...(d.data() || {}) }))
-        .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    const defaultPolicyRef = db.collection('revenue_share_policies').doc(DEFAULT_REVENUE_SHARE_POLICY.policyId);
+    const snap = await defaultPolicyRef.get();
+    const raw = snap.exists ? (snap.data() || {}) : {};
+    const policies = [{
+        id: DEFAULT_REVENUE_SHARE_POLICY.policyId,
+        policyId: DEFAULT_REVENUE_SHARE_POLICY.policyId,
+        policyName: raw.policyName || DEFAULT_REVENUE_SHARE_POLICY.policyName,
+        tutorRate: Number(raw.tutorRate ?? DEFAULT_REVENUE_SHARE_POLICY.tutorRate),
+        tutorUplineRate: Number(raw.tutorUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.tutorUplineRate),
+        agentRate: Number(raw.agentRate ?? DEFAULT_REVENUE_SHARE_POLICY.agentRate),
+        agentUplineRate: Number(raw.agentUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.agentUplineRate),
+        courseDevRate: Number(raw.courseDevRate ?? DEFAULT_REVENUE_SHARE_POLICY.courseDevRate),
+        courseDevUplineRate: Number(raw.courseDevUplineRate ?? DEFAULT_REVENUE_SHARE_POLICY.courseDevUplineRate),
+        enabled: raw.enabled !== false
+    }];
     return { policies };
 });
 
@@ -2714,6 +2725,9 @@ exports.upsertRevenueSharePolicy = onCall(async (request) => {
     const payload = request.data || {};
     const policyId = normalizeText(payload.policyId || '');
     assertRequiredValue(policyId, 'policyId is required');
+    if (policyId !== DEFAULT_REVENUE_SHARE_POLICY.policyId) {
+        throw new HttpsError('failed-precondition', 'Only default-v1 is supported.');
+    }
 
     const asRate = (v, fallback = 0) => {
         const n = Number(v);
@@ -2725,13 +2739,14 @@ exports.upsertRevenueSharePolicy = onCall(async (request) => {
 
     const docRef = db.collection('revenue_share_policies').doc(policyId);
     await docRef.set({
+        policyId,
         policyName: normalizeText(payload.policyName || payload.name || policyId) || policyId,
-        tutorRate: asRate(payload.tutorRate, 0),
-        tutorUplineRate: asRate(payload.tutorUplineRate, 0),
-        agentRate: asRate(payload.agentRate, 0),
-        agentUplineRate: asRate(payload.agentUplineRate, 0),
-        courseDevRate: asRate(payload.courseDevRate, 0),
-        courseDevUplineRate: asRate(payload.courseDevUplineRate, 0),
+        tutorRate: asRate(payload.tutorRate, DEFAULT_REVENUE_SHARE_POLICY.tutorRate),
+        tutorUplineRate: asRate(payload.tutorUplineRate, DEFAULT_REVENUE_SHARE_POLICY.tutorUplineRate),
+        agentRate: asRate(payload.agentRate, DEFAULT_REVENUE_SHARE_POLICY.agentRate),
+        agentUplineRate: asRate(payload.agentUplineRate, DEFAULT_REVENUE_SHARE_POLICY.agentUplineRate),
+        courseDevRate: asRate(payload.courseDevRate, DEFAULT_REVENUE_SHARE_POLICY.courseDevRate),
+        courseDevUplineRate: asRate(payload.courseDevUplineRate, DEFAULT_REVENUE_SHARE_POLICY.courseDevUplineRate),
         enabled: payload.enabled !== false,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         createdAt: admin.firestore.FieldValue.serverTimestamp()

@@ -257,10 +257,11 @@
 ---
 
 ## 6.1 `revenue_share_policies` 集合
-儲存分潤比例策略（由 `orders.policyId` 指定）。
+儲存單一分潤策略，目前系統只使用 `default-v1`。
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
+| `policyId` | string | 固定為 `default-v1`。 |
 | `policyName` | string | 策略名稱。 |
 | `tutorRate` | number | Tutor 直推分潤比例。 |
 | `tutorUplineRate` | number | Tutor 上線遞迴比例。 |
@@ -272,7 +273,8 @@
 | `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
 
 補充說明：
-- `functions/index.js` 的 `calculateMonthlySharing` 會先以共用 loader 讀取 policy，再產生 `policySnapshot`；文件中的欄位定義與資料契約不變。
+- `functions/index.js` 的 `calculateMonthlySharing` 會先以共用 loader 讀取 `default-v1`，再產生 `policySnapshot`；文件中的欄位定義與資料契約不變。
+- 舊的 `policyId` 若非 `default-v1`，前端與後端都會回落到 `default-v1`。
 
 ---
 

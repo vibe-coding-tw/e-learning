@@ -109,12 +109,20 @@
         const candidates = getEquivalentUnitIds(unitId);
         if (candidates.length === 0) return '';
 
+        const activeLessons = (Array.isArray(lessons) && lessons.length > 0)
+            ? lessons
+            : (window.dashboardData?.lessons || []);
+            
+        const activeUnitToDocId = (unitToDocId && Object.keys(unitToDocId).length > 0)
+            ? unitToDocId
+            : (window.dashboardData?.unitToDocId || {});
+
         for (const candidate of candidates) {
-            if (unitToDocId?.[candidate]) return candidate;
-            if ((Array.isArray(lessons) ? lessons : []).some(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(candidate))) return candidate;
+            if (activeUnitToDocId?.[candidate]) return candidate;
+            if (activeLessons.some(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(candidate))) return candidate;
         }
 
-        for (const l of (Array.isArray(lessons) ? lessons : [])) {
+        for (const l of activeLessons) {
             if (l.courseUnits) {
                 const matched = l.courseUnits.find(u => {
                     const clean = (id) => String(id).trim().toLowerCase().replace('.html', '').replace(/^(?:tw|en-)?(?:common|car-(?:starter|basic|advanced))-|^(?:start-|basic-|adv-|advanced-|prepare-)?(?:\d{2}-)?(?:unit-|lesson-|master-)?/i, '');
@@ -129,7 +137,10 @@
 
     function findParentCourseIdByUnit(unitId, lessons = []) {
         const candidates = getEquivalentUnitIds(unitId);
-        const lesson = (Array.isArray(lessons) ? lessons : []).find(l =>
+        const activeLessons = (Array.isArray(lessons) && lessons.length > 0)
+            ? lessons
+            : (window.dashboardData?.lessons || []);
+        const lesson = activeLessons.find(l =>
             Array.isArray(l.courseUnits) && l.courseUnits.some(courseUnit => candidates.includes(courseUnit))
         );
         return getCanonicalLessonIdentity(lesson) || null;

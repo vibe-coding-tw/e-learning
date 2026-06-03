@@ -3,7 +3,7 @@
 **Objective**: Define how multi-level referral sharing is computed, persisted, and audited.
 
 ## 1. Business Rule
-1. 分潤比例由 `orders.policyId -> revenue_share_policies/{policyId}` 決定（找不到時 fallback `default-v1`）。
+1. 分潤比例目前統一由 `revenue_share_policies/default-v1` 決定；`orders.policyId` 僅保留歷史欄位用途，非 `default-v1` 時會自動回落。
 2. Tutor 鏈條：
    - Level 1: `lineAmount * tutorRate`
    - Level N+1: `previousShare * tutorUplineRate`
