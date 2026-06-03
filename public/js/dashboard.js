@@ -2011,30 +2011,43 @@ window.buildRevenueSimulatorHtml = window.buildRevenueSimulatorHtml || function(
     `;
 };
 
+function policyRateInput(id, key, value, label) {
+    const valPercent = Math.round((Number.isFinite(Number(value)) ? Number(value) : 0) * 100);
+    return `
+        <div class="flex items-center gap-1.5 min-w-[100px]">
+            <span class="text-[10px] text-slate-400 font-semibold w-8">${escapeHtml(label)}</span>
+            <div class="relative flex-grow shadow-sm">
+                <input id="${key}-${id}" type="number" min="0" max="100" step="1" value="${valPercent}" oninput="window.markPolicyModified('${escapeHtml(id)}')" class="w-14 text-right rounded-lg border border-slate-200 pr-5 pl-1.5 py-1 text-xs font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition bg-white">
+                <span class="absolute inset-y-0 right-1.5 flex items-center text-[10px] font-bold text-slate-400 pointer-events-none">%</span>
+            </div>
+        </div>
+    `;
+}
+
 window.buildRevenuePolicyHtml = window.buildRevenuePolicyHtml || function() {
     return `
         <div class="mb-10 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">⚙️ 分潤策略管理（Admin）</h4>
-                <button onclick="window.loadRevenuePolicies()" class="px-3 py-1.5 text-xs font-bold border border-slate-300 rounded-lg hover:bg-slate-50">重新載入</button>
+            <div class="px-6 py-4 border-b border-slate-200 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">⚙️ 分潤策略管理（Admin）</h4>
+                    <p class="text-xs text-slate-500 mt-1">設定不同購買渠道下的分潤比例，數值以百分比 (%) 表示。各角色加總一般不高於 100%。</p>
+                </div>
+                <button onclick="window.loadRevenuePolicies()" class="px-3.5 py-1.5 text-xs font-bold border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition">重新整理</button>
             </div>
-            <div class="p-6 overflow-x-auto">
+            <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
-                        <tr class="text-slate-500 border-b">
-                            <th class="py-2 pr-3">Policy</th>
-                            <th class="py-2 pr-3">Tutor</th>
-                            <th class="py-2 pr-3">Tutor Up</th>
-                            <th class="py-2 pr-3">Agent</th>
-                            <th class="py-2 pr-3">Agent Up</th>
-                            <th class="py-2 pr-3">CourseDev</th>
-                            <th class="py-2 pr-3">CourseDev Up</th>
-                            <th class="py-2 pr-3">Enabled</th>
-                            <th class="py-2 text-right">操作</th>
+                        <tr class="text-slate-500 border-b border-slate-100 bg-slate-50">
+                            <th class="py-3 px-6 text-slate-600 font-bold">策略 ID (Policy)</th>
+                            <th class="py-3 px-6 text-slate-600 font-bold">導師分潤 (Tutor)</th>
+                            <th class="py-3 px-6 text-slate-600 font-bold">管道分潤 (Agent)</th>
+                            <th class="py-3 px-6 text-slate-600 font-bold">開發分潤 (Dev)</th>
+                            <th class="py-3 px-6 text-slate-600 font-bold">啟用</th>
+                            <th class="py-3 px-6 text-right text-slate-600 font-bold">操作</th>
                         </tr>
                     </thead>
-                    <tbody id="revenue-policy-body" class="divide-y">
-                        <tr><td colspan="9" class="py-6 text-center text-slate-400">載入中...</td></tr>
+                    <tbody id="revenue-policy-body" class="divide-y divide-slate-100">
+                        <tr><td colspan="6" class="py-10 text-center text-slate-400">載入中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -2492,7 +2505,7 @@ window.runRevenueSimulation = function () {
 window.loadRevenuePolicies = async function () {
     const body = document.getElementById('revenue-policy-body');
     if (!body) return;
-    body.innerHTML = '<tr><td colspan="9" class="py-6 text-center text-slate-400">載入中...</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400">載入中...</td></tr>';
     try {
         const fn = httpsCallable(functions, 'getRevenueSharePolicies');
         const res = await fn({});
@@ -2503,30 +2516,65 @@ window.loadRevenuePolicies = async function () {
             policyCountEl.textContent = String(policies.filter(p => p && p.enabled !== false).length);
         }
         if (!policies.length) {
-            body.innerHTML = '<tr><td colspan="9" class="py-6 text-center text-slate-400">尚無策略</td></tr>';
+            body.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400">尚無策略</td></tr>';
             return;
         }
+
         body.innerHTML = policies.map((p) => {
             const id = String(p.id || '');
-            const num = (k, d = 0) => Number.isFinite(Number(p[k])) ? Number(p[k]) : d;
-            const field = (name, value, type = 'number', step = '0.01') =>
-                `<input id="${name}-${id}" type="${type}" step="${step}" value="${value}" class="w-20 border rounded px-2 py-1">`;
+            
+            const tutorCell = `
+                <div class="flex flex-col gap-1.5 py-1">
+                    ${policyRateInput(id, 'policy-tutorRate', p.tutorRate, '導師')}
+                    ${policyRateInput(id, 'policy-tutorUplineRate', p.tutorUplineRate, '推薦')}
+                </div>
+            `;
+            
+            const agentCell = `
+                <div class="flex flex-col gap-1.5 py-1">
+                    ${policyRateInput(id, 'policy-agentRate', p.agentRate, '管道')}
+                    ${policyRateInput(id, 'policy-agentUplineRate', p.agentUplineRate, '推薦')}
+                </div>
+            `;
+            
+            const devCell = `
+                <div class="flex flex-col gap-1.5 py-1">
+                    ${policyRateInput(id, 'policy-courseDevRate', p.courseDevRate, '開發')}
+                    ${policyRateInput(id, 'policy-courseDevUplineRate', p.courseDevUplineRate, '推薦')}
+                </div>
+            `;
+
             return `
-                <tr>
-                    <td class="py-2 pr-3 font-bold">${escapeHtml(id)}</td>
-                    <td class="py-2 pr-3">${field('policy-tutorRate', num('tutorRate', 0))}</td>
-                    <td class="py-2 pr-3">${field('policy-tutorUplineRate', num('tutorUplineRate', 0))}</td>
-                    <td class="py-2 pr-3">${field('policy-agentRate', num('agentRate', 0))}</td>
-                    <td class="py-2 pr-3">${field('policy-agentUplineRate', num('agentUplineRate', 0))}</td>
-                    <td class="py-2 pr-3">${field('policy-courseDevRate', num('courseDevRate', 0))}</td>
-                    <td class="py-2 pr-3">${field('policy-courseDevUplineRate', num('courseDevUplineRate', 0))}</td>
-                    <td class="py-2 pr-3"><input id="policy-enabled-${id}" type="checkbox" ${p.enabled !== false ? 'checked' : ''}></td>
-                    <td class="py-2 text-right"><button onclick="window.saveRevenuePolicy('${id}')" class="px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded hover:bg-slate-700">儲存</button></td>
+                <tr class="hover:bg-slate-50/50 transition">
+                    <td class="py-4 px-6 align-middle">
+                        <div class="font-bold text-slate-800 text-sm font-mono">${escapeHtml(id)}</div>
+                    </td>
+                    <td class="py-4 px-6 align-middle">${tutorCell}</td>
+                    <td class="py-4 px-6 align-middle">${agentCell}</td>
+                    <td class="py-4 px-6 align-middle">${devCell}</td>
+                    <td class="py-4 px-6 align-middle">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input id="policy-enabled-${id}" type="checkbox" onchange="window.markPolicyModified('${escapeHtml(id)}')" ${p.enabled !== false ? 'checked' : ''} class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </td>
+                    <td class="py-4 px-6 text-right align-middle">
+                        <button id="btn-save-policy-${id}" onclick="window.saveRevenuePolicy('${escapeHtml(id)}')" class="px-3.5 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-700 transition duration-150 active:scale-95 whitespace-nowrap">儲存</button>
+                    </td>
                 </tr>
             `;
         }).join('');
     } catch (e) {
-        body.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-red-500">載入失敗：${escapeHtml(e.message || 'unknown')}</td></tr>`;
+        body.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-red-500">載入失敗：${escapeHtml(e.message || 'unknown')}</td></tr>`;
+    }
+};
+
+window.markPolicyModified = function(id) {
+    const btn = document.getElementById(`btn-save-policy-${id}`);
+    if (btn) {
+        btn.classList.remove('bg-slate-900', 'hover:bg-slate-700');
+        btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+        btn.textContent = '儲存變更';
     }
 };
 
@@ -2534,20 +2582,45 @@ window.saveRevenuePolicy = async function (policyId) {
     const g = (id) => document.getElementById(`${id}-${policyId}`);
     const payload = {
         policyId,
-        tutorRate: Number(g('policy-tutorRate')?.value || 0),
-        tutorUplineRate: Number(g('policy-tutorUplineRate')?.value || 0),
-        agentRate: Number(g('policy-agentRate')?.value || 0),
-        agentUplineRate: Number(g('policy-agentUplineRate')?.value || 0),
-        courseDevRate: Number(g('policy-courseDevRate')?.value || 0),
-        courseDevUplineRate: Number(g('policy-courseDevUplineRate')?.value || 0),
+        tutorRate: Number(g('policy-tutorRate')?.value || 0) / 100,
+        tutorUplineRate: Number(g('policy-tutorUplineRate')?.value || 0) / 100,
+        agentRate: Number(g('policy-agentRate')?.value || 0) / 100,
+        agentUplineRate: Number(g('policy-agentUplineRate')?.value || 0) / 100,
+        courseDevRate: Number(g('policy-courseDevRate')?.value || 0) / 100,
+        courseDevUplineRate: Number(g('policy-courseDevUplineRate')?.value || 0) / 100,
         enabled: !!g('policy-enabled')?.checked
     };
+    
+    const btn = document.getElementById(`btn-save-policy-${policyId}`);
+    const originalText = btn ? btn.textContent : '儲存';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "儲存中...";
+    }
+    
     try {
         const fn = httpsCallable(functions, 'upsertRevenueSharePolicy');
         await fn(payload);
-        alert(`已更新策略：${policyId}`);
+        vibeShowToast(`已成功儲存策略：${policyId}`, 'success');
+        
+        if (btn) {
+            btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+            btn.classList.add('bg-slate-900', 'hover:bg-slate-700');
+            btn.textContent = '儲存';
+        }
+        
+        await loadDashboard();
+        renderBusinessTab();
     } catch (e) {
+        console.error('[Business] Failed to save policy:', e);
         alert(`更新失敗：${e.message}`);
+        if (btn) {
+            btn.textContent = originalText;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+        }
     }
 };
 
