@@ -4,7 +4,7 @@ console.log("Dashboard Script v2026.05.15.V23.INVITE_BINDING_TOOL Loaded");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import { firebaseConfig, connectFirebaseEmulators } from "./firebase-local.js";
 
 const app = initializeApp(firebaseConfig);
@@ -191,7 +191,9 @@ let currentDashboardPermissions = {
     isQualifiedTutor: false,
     isPaidStudent: false,
     canViewAssignments: false,
-    canViewSettings: false
+    canViewSettings: false,
+    canViewUnitSettings: false,
+    canViewEarnings: false
 };
 
 async function loadMarkdownFromRepoWithFallback(org, candidateSlugs) {
@@ -213,6 +215,7 @@ async function loadMarkdownFromRepoWithFallback(org, candidateSlugs) {
 // [NEW] Admin Super Mode state
 // [NEW] Admin Tutor Mode state (formerly Super Mode)
 let adminTutorMode = localStorage.getItem('adminTutorMode') === 'true'; 
+window.vibeShowInterventionDashboard = window.vibeShowInterventionDashboard ?? false;
 try {
     const initialParams = new URLSearchParams(window.location.search);
     const forceTutorMode = initialParams.get('tutorMode');
@@ -359,6 +362,7 @@ async function loadDashboard() {
             : hasPaidAnything;
             
         updateCurrentDashboardPermissions({ isAdmin, isQualifiedTutor, isPaidStudent });
+        setupRealTimeAssignmentsListener({ isAdmin, isQualifiedTutor, filterUnitId, filterCourseId });
         const requestedTab = getRequestedTabFromUrl();
 
         // Determine the default tab to switch to on initial load
@@ -403,6 +407,67 @@ async function loadDashboard() {
     } catch (error) {
         console.error("Dashboard Load Error:", error);
         showAccessDenied(error.message);
+    }
+}
+
+function setupRealTimeAssignmentsListener({ isAdmin, isQualifiedTutor, filterUnitId, filterCourseId }) {
+    if (window.assignmentsListenerUnsubscribe) {
+        window.assignmentsListenerUnsubscribe();
+        window.assignmentsListenerUnsubscribe = null;
+    }
+
+    if (!auth.currentUser) return;
+
+    let q;
+    const assignmentsCol = collection(db, "assignments");
+    
+    if (isAdmin) {
+        if (filterUnitId) {
+            q = query(assignmentsCol, where("unitId", "==", filterUnitId));
+        } else {
+            q = query(assignmentsCol);
+        }
+    } else if (isQualifiedTutor) {
+        // Find by assigned tutor email
+        q = query(assignmentsCol, where("assignedTutorEmail", "==", myEmail));
+    } else {
+        // Student: query by userId
+        q = query(assignmentsCol, where("userId", "==", auth.currentUser.uid));
+    }
+
+    try {
+        console.log("[Dashboard] Initializing real-time assignments listener...");
+        window.assignmentsListenerUnsubscribe = onSnapshot(q, (snapshot) => {
+            console.log("[Dashboard] Real-time assignments update received, count:", snapshot.size);
+            const updatedAssignments = [];
+            snapshot.forEach(doc => {
+                const aData = doc.data();
+                updatedAssignments.push({ id: doc.id, ...aData });
+            });
+
+            // Update local dashboardData assignments cache
+            if (dashboardData) {
+                dashboardData.assignments = updatedAssignments;
+            }
+
+            // Re-render if the user is currently viewing the assignments tab
+            const activeTabBtn = document.querySelector('.tab-btn.text-blue-600');
+            const activeTab = activeTabBtn ? activeTabBtn.id.replace('tab-btn-', '') : 'overview';
+            if (activeTab === 'assignments') {
+                console.log("[Dashboard] Re-rendering assignments list in real-time...");
+                let displayAssignments = filterAssignmentsForCurrentView(updatedAssignments);
+                if (filterUnitId) {
+                    displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
+                } else if (filterCourseId) {
+                    displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+                }
+                renderAssignments(displayAssignments, "", { showGuide: false });
+            }
+        }, (err) => {
+            console.warn("[Dashboard] Real-time assignments listener failed:", err);
+        });
+    } catch (error) {
+        console.error("[Dashboard] Error setting up real-time assignments listener:", error);
     }
 }
 
@@ -452,19 +517,20 @@ function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor =
     const { filterUnitId } = getCurrentDashboardContext();
     const isUnitContext = !!filterUnitId;
     const isGlobalAdmin = !isUnitContext && isAdmin;
-    // Rule: In unit context, admin can view Settings only when TutorMode is ON.
-    // Non-admin users can view Settings only when they are qualified tutors.
-    const canViewSettings = isUnitContext && (
+    const canViewGlobalSettings = isGlobalAdmin;
+    const canViewUnitSettings = isUnitContext && (
         isAdmin ? !!adminTutorMode : !!isQualifiedTutor
     );
-    const canViewAssignments = isGlobalAdmin || (isUnitContext && !canViewSettings);
+    const canViewAssignments = isGlobalAdmin || isUnitContext;
     
     currentDashboardPermissions = {
         isAdmin,
         isQualifiedTutor,
         isPaidStudent,
         canViewAssignments,
-        canViewSettings
+        canViewSettings: canViewGlobalSettings,
+        canViewUnitSettings,
+        canViewEarnings: isGlobalAdmin
     };
 }
 
@@ -476,11 +542,18 @@ function canCurrentUserViewSettingsTab() {
     return !!currentDashboardPermissions.canViewSettings;
 }
 
+function canCurrentUserViewUnitSettingsTab() {
+    return !!currentDashboardPermissions.canViewUnitSettings;
+}
+
+function canCurrentUserViewEarningsTab() {
+    return !!currentDashboardPermissions.canViewEarnings;
+}
+
 function getPreferredDashboardTab(filterUnitId = null) {
     // [V12.1.1] Rule: If no unit context, always prefer Overview for global perspective
     if (!filterUnitId) return 'overview';
 
-    if (canCurrentUserViewSettingsTab()) return 'settings';
     return 'assignments'; // student/default unit context tab
 }
 
@@ -954,8 +1027,8 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const assignmentsTabBtn = document.getElementById('tab-btn-assignments');
     const adminTabBtn = document.getElementById('tab-btn-tutors');
     const settingsTabBtn = document.getElementById('tab-btn-settings');
-    const earningsTabBtn = document.getElementById('tab-btn-earnings');
     const shipmentsTabBtn = document.getElementById('tab-btn-shipments');
+    const earningsTabBtn = document.getElementById('tab-btn-earnings');
 
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
@@ -1001,15 +1074,20 @@ function renderAdminDashboard(data, filterUnitId = null) {
     // Settings & Assignments switch according to AGENT.md.
     // Settings & Earnings are only accessible within a specific UNIT context
     const showSettingsTab = canCurrentUserViewSettingsTab();
+    const showEarningsTab = canCurrentUserViewEarningsTab();
 
     if (settingsTabBtn) {
         settingsTabBtn.classList.toggle('hidden', !showSettingsTab);
         settingsTabBtn.textContent = '課程設定 (Settings)';
     }
-    
-    // [MODIFIED] Explicitly REMOVE/HIDE the Earnings standalone tab as requested
+
     if (earningsTabBtn) {
-        earningsTabBtn.classList.add('hidden');
+        earningsTabBtn.classList.toggle('hidden', !showEarningsTab);
+        if (!showEarningsTab) {
+            earningsTabBtn.style.display = 'none';
+        } else {
+            earningsTabBtn.style.display = '';
+        }
     }
 
     // Stats (Base on filtered students if unit is selected)
@@ -1727,11 +1805,11 @@ window.switchTab = function (tabName) {
     if (!tabName) return;
     
     // [V14.12] PERMISSION LEAK FIX: Explicitly block admin-only tabs for non-admins
-    if ((tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics') && myRole !== 'admin') {
+    if ((tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'settings' || tabName === 'earnings') && myRole !== 'admin') {
         console.warn(`[Security] Unauthorized tab access: ${tabName} blocked for ${myRole}.`);
         // Fallback: Redirect to assignments for tutors or overview for admins.
         tabName = getPreferredDashboardTab(getCurrentDashboardContext().filterUnitId);
-        if (tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics') {
+        if (tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'settings' || tabName === 'earnings') {
             tabName = 'assignments'; // Extreme safety fallback
         }
     }
@@ -1742,8 +1820,8 @@ window.switchTab = function (tabName) {
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
     const isUnitContext = !!filterUnitId;
 
-    // Unit context hard rule: only assignments/settings are visible tabs.
-    if (isUnitContext && (tabName === 'overview' || tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'earnings')) {
+    // Unit context hard rule: only assignments are visible tabs.
+    if (isUnitContext && (tabName === 'overview' || tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'earnings' || tabName === 'settings')) {
         tabName = getPreferredDashboardTab(filterUnitId);
     }
 
@@ -1761,7 +1839,12 @@ window.switchTab = function (tabName) {
         }
     }
     if (tabName === 'earnings') {
-        tabName = getPreferredDashboardTab(filterUnitId);
+        if (!canCurrentUserViewEarningsTab()) {
+            tabName = getPreferredDashboardTab(filterUnitId);
+            if (tabName === 'earnings' && !canCurrentUserViewEarningsTab()) {
+                return;
+            }
+        }
     }
 
     // [MODIFIED] Determine if current user is a student view context
@@ -1783,6 +1866,12 @@ window.switchTab = function (tabName) {
     if (tabName === 'shipments') {
         renderLogisticsTab();
     }
+    if (tabName === 'settings') {
+        renderBusinessTab();
+    }
+    if (tabName === 'earnings') {
+        renderEarningsTab(dashboardData);
+    }
 
     // Update buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1797,50 +1886,6 @@ window.switchTab = function (tabName) {
         activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
     }
 
-    // [NEW] Integrated Tab Logic: Settings now includes Assignments
-    if (tabName === 'settings') {
-        const filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
-        console.log("[Dashboard] Rendering Settings & Assignments for unitId:", filterUnitId);
-        
-        // 1. Render unit settings (links, guides)
-        renderSettingsTab(filterUnitId);
-
-        // 2. Fetch and Render assignments inside Settings (for tutors)
-        const isQualifiedTutor = !!filterUnitId && currentDashboardPermissions.isQualifiedTutor;
-        if (isQualifiedTutor || myRole === 'admin') {
-            document.getElementById('assignments-container')?.classList.remove('hidden');
-            console.log("[Debug] Total raw assignments in data:", dashboardData.assignments.length);
-            console.log("[Debug] Filtering for Unit:", filterUnitId);
-            
-            let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
-            console.log("[Debug] Assignments after permission filter:", displayAssignments.length);
-
-            if (filterUnitId) {
-                displayAssignments = displayAssignments.filter(a => {
-                    const match = unitIdsMatch(a.unitId, filterUnitId);
-                    if (normalizeEmail(a.studentEmail).includes('rover.k.chen')) {
-                        console.log(`[Debug] Checking Rover's doc ${a.id}: unitId=${a.unitId}, match=${match}`);
-                    }
-                    return match;
-                });
-            } else if (filterCourseId) {
-                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
-            }
-            console.log("[Debug] Final assignments to render:", displayAssignments.length);
-            // Resolve guide for the integrated view
-            renderAssignments(displayAssignments, "", { showGuide: false });
-        } else {
-            document.getElementById('assignments-container')?.classList.add('hidden');
-        }
-
-        // 3. Render integrated earnings (for tutors/admin)
-        if (myRole === 'admin' || currentDashboardPermissions.isQualifiedTutor) {
-            document.getElementById('earnings-container')?.classList.remove('hidden');
-            renderEarningsTab(dashboardData);
-        } else {
-            document.getElementById('earnings-container')?.classList.add('hidden');
-        }
-    }
     if (tabName === 'assignments') {
         const urlParams = new URLSearchParams(window.location.search);
         const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
@@ -1859,6 +1904,15 @@ window.switchTab = function (tabName) {
             let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
             console.log("[DebugTab] tab assignments: count after permissions filter:", displayAssignments.length);
 
+            const unitSettingsContainer = document.getElementById('unit-settings-container');
+            const unitSettingsVisible = !!filterUnitId && canCurrentUserViewUnitSettingsTab();
+            if (unitSettingsContainer) {
+                unitSettingsContainer.classList.toggle('hidden', !unitSettingsVisible);
+            }
+            if (unitSettingsVisible) {
+                renderSettingsTab(filterUnitId);
+            }
+
             if (filterUnitId) {
                 // Same here: prioritize unitId and relax courseId requirement for unit-specific view
                 displayAssignments = displayAssignments.filter(a => {
@@ -1874,7 +1928,7 @@ window.switchTab = function (tabName) {
             console.log("[DebugTab] tab assignments: Final count to render:", displayAssignments.length);
 
             renderAssignments(displayAssignments, "", { showGuide: false });
-            renderAssignmentsGuideMain(filterUnitId);
+            renderReferralInviteKitSection(dashboardData);
         } else {
             // [MODIFIED] For students, render their own assignments and refresh the README instruction placeholder
             let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
@@ -1882,9 +1936,7 @@ window.switchTab = function (tabName) {
                 displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
             }
             renderAssignments(displayAssignments, "", { showGuide: false });
-            if (filterUnitId) {
-                renderAssignmentsGuideMain(filterUnitId);
-            }
+            renderReferralInviteKitSection(dashboardData);
         }
     }
     if (tabName === 'tutors') {
@@ -1981,7 +2033,6 @@ window.renderLogisticsTab = function() {
     if (myRole !== 'admin' || !dashboardData) return;
     
     const container = document.getElementById('shipments-table-body');
-    const revenueToolsContainer = document.getElementById('shipments-revenue-tools');
     if (!container) return;
 
     const orders = dashboardData.hardwareOrders || [];
@@ -2057,15 +2108,6 @@ window.renderLogisticsTab = function() {
         `;
     }).join('');
 
-    if (revenueToolsContainer) {
-        revenueToolsContainer.innerHTML = window.buildRevenueToolsHtml ? window.buildRevenueToolsHtml() : '';
-    }
-    if (typeof window.runRevenueSimulation === 'function') {
-        window.runRevenueSimulation();
-    }
-    if (typeof window.loadRevenuePolicies === 'function') {
-        window.loadRevenuePolicies();
-    }
 };
 
 window.markAsShipped = async function(orderId) {
@@ -2435,6 +2477,11 @@ window.loadRevenuePolicies = async function () {
         const fn = httpsCallable(functions, 'getRevenueSharePolicies');
         const res = await fn({});
         const policies = Array.isArray(res?.data?.policies) ? res.data.policies : [];
+        window.__loadedRevenuePolicies = policies;
+        const policyCountEl = document.getElementById('business-stat-policy-count');
+        if (policyCountEl) {
+            policyCountEl.textContent = String(policies.filter(p => p && p.enabled !== false).length);
+        }
         if (!policies.length) {
             body.innerHTML = '<tr><td colspan="9" class="py-6 text-center text-slate-400">尚無策略</td></tr>';
             return;
@@ -2550,7 +2597,7 @@ window.vibeInjectAdminTutorModeToggle = function() {
         </div>
     `;
 
-    const targetIds = ['assignments-header', 'assignments-header-integrated', 'settings-header', 'admin-console-header'];
+    const targetIds = ['assignments-header', 'assignments-header-integrated', 'admin-console-header'];
     
     targetIds.forEach(id => {
         const header = document.getElementById(id);
@@ -2586,7 +2633,6 @@ function upsertHeaderExternalLink(headerEl, guideType) {
 function refreshDashboardExternalGuideLinks() {
     upsertHeaderExternalLink(document.getElementById('assignments-header'), 'assignment');
     upsertHeaderExternalLink(document.getElementById('assignments-header-integrated'), 'assignment');
-    upsertHeaderExternalLink(document.getElementById('settings-header'), 'tutor');
 }
 
 window.handleAssignTutor = async function (studentUid, unitId, tutorEmail) {
@@ -3146,6 +3192,207 @@ window.setupSettingsFeature = window.setupSettingsFeature || function() {
     // Buttons are now rendered individually in each row
 }
 
+window.setupBusinessFeature = window.setupBusinessFeature || function() {
+    // Business settings are rendered on-demand when the tab is opened.
+}
+
+function isBusinessPricedLesson(lesson = {}) {
+    if (!lesson || typeof lesson !== 'object') return false;
+    if (lesson.price != null || lesson.price_twd != null || lesson.price_usd != null) return true;
+    if (lesson.pricing || lesson.prices || lesson.priceByLocale || lesson.priceByRegion || lesson.priceMap) return true;
+    return false;
+}
+
+function getLessonBusinessPrice(lesson = {}, locale = 'zh-TW') {
+    if (window.vibePricing?.resolveLessonPrice) {
+        return window.vibePricing.resolveLessonPrice(lesson, locale);
+    }
+    const normalizedLocale = String(locale || '').startsWith('en') ? 'en' : 'zh-TW';
+    const amount = normalizedLocale === 'en'
+        ? Number(lesson.price_usd ?? lesson.price ?? 0)
+        : Number(lesson.price_twd ?? lesson.price ?? 0);
+    return {
+        amount: Number.isFinite(amount) ? amount : 0,
+        currency: normalizedLocale === 'en' ? 'USD' : 'TWD'
+    };
+}
+
+function getLessonBusinessPricingState(lesson = {}) {
+    const tw = getLessonBusinessPrice(lesson, 'zh-TW');
+    const en = getLessonBusinessPrice(lesson, 'en');
+    const twAmount = Number.isFinite(Number(tw.amount)) ? Number(tw.amount) : 0;
+    const enAmount = Number.isFinite(Number(en.amount)) ? Number(en.amount) : 0;
+
+    return {
+        tw: { amount: twAmount, currency: tw.currency || 'TWD' },
+        en: { amount: enAmount, currency: en.currency || 'USD' }
+    };
+}
+
+function businessPriceInput(value, currency, id) {
+    const amount = Number.isFinite(Number(value)) ? Number(value) : 0;
+    return `
+        <label class="block text-xs font-bold text-slate-600">
+            ${escapeHtml(currency)}
+            <input id="${id}" type="number" min="0" step="1" value="${amount}" class="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white">
+        </label>
+    `;
+}
+
+function buildBusinessPricingOverviewHtml() {
+    const lessons = Array.isArray(allLessons) ? allLessons : [];
+    const pricedLessons = lessons.filter(isBusinessPricedLesson);
+    const lessonCount = lessons.length;
+    const pricedCount = pricedLessons.length;
+    const activePolicies = Array.isArray(window.__loadedRevenuePolicies)
+        ? window.__loadedRevenuePolicies.filter(p => p && p.enabled !== false).length
+        : 0;
+
+    const rows = pricedLessons.map((lesson) => {
+        const courseId = String(lesson.courseId || lesson.id || '').trim();
+        const safeId = courseId.replace(/[^a-z0-9_-]/gi, '-');
+        const title = lesson.title || lesson.courseTitle || lesson.courseName || courseId || '未命名課程';
+        const pricingState = getLessonBusinessPricingState(lesson);
+        const priceSource = lesson.pricingVersion || lesson.pricingSource || (lesson.price_usd != null && lesson.price_twd != null ? 'multi-region' : 'legacy');
+        const updatedAt = lesson.pricingUpdatedAt?.seconds
+            ? new Date(lesson.pricingUpdatedAt.seconds * 1000).toLocaleString()
+            : (lesson.pricingUpdatedAt ? new Date(lesson.pricingUpdatedAt).toLocaleString() : '—');
+
+        return `
+            <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition">
+                <td class="py-4 pr-4 align-top">
+                    <div class="font-bold text-slate-900">${escapeHtml(title)}</div>
+                    <div class="text-[11px] text-slate-400 font-mono mt-1 break-all">${escapeHtml(courseId)}</div>
+                    <div class="mt-2 text-[10px] inline-flex items-center gap-2 px-2 py-1 rounded-full bg-slate-100 text-slate-500 font-semibold">
+                        <span>來源</span>
+                        <span>${escapeHtml(priceSource)}</span>
+                    </div>
+                </td>
+                <td class="py-4 pr-4 align-top">
+                    ${businessPriceInput(pricingState.tw.amount, 'TWD / tw', `business-price-tw-${safeId}`)}
+                </td>
+                <td class="py-4 pr-4 align-top">
+                    ${businessPriceInput(pricingState.en.amount, 'USD / en', `business-price-en-${safeId}`)}
+                </td>
+                <td class="py-4 pr-4 align-top text-sm text-slate-600">
+                    <div class="font-semibold text-slate-800">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.tw, 'zh-TW') : `TWD ${pricingState.tw.amount}`)}</div>
+                    <div class="mt-1">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.en, 'en') : `USD ${pricingState.en.amount}`)}</div>
+                    <div class="mt-2 text-[11px] text-slate-400">更新時間：${escapeHtml(updatedAt)}</div>
+                </td>
+                <td class="py-4 text-right align-top">
+                    <button onclick="window.saveLessonPricing('${escapeHtml(courseId)}')" class="px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-700">儲存</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h4 class="text-sm font-black text-slate-900">課程價格總覽</h4>
+                    <p class="text-xs text-slate-500 mt-1">資料直接寫入 Firestore 的 <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">metadata_lessons</code>，英文頁顯示 USD、中文頁顯示 TWD。</p>
+                </div>
+                <div class="text-xs text-slate-400 font-medium">可維護欄位：<code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">pricing</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceByLocale</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceByRegion</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceMap</code></div>
+            </div>
+            <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60">
+                <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">課程總數</div>
+                    <div class="mt-1 text-2xl font-black text-slate-900">${lessonCount}</div>
+                </div>
+                <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-emerald-500">有價格資料</div>
+                    <div class="mt-1 text-2xl font-black text-emerald-600">${pricedCount}</div>
+                </div>
+                <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">啟用中的分潤策略</div>
+                    <div class="mt-1 text-2xl font-black text-blue-600">${activePolicies}</div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100 bg-slate-50">
+                            <th class="py-3 px-6">課程 / Course</th>
+                            <th class="py-3 px-6 w-[18%]">TWD / tw</th>
+                            <th class="py-3 px-6 w-[18%]">USD / en</th>
+                            <th class="py-3 px-6 w-[20%]">即時顯示</th>
+                            <th class="py-3 px-6 text-right w-[12%]">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="business-pricing-table-body" class="divide-y divide-slate-100 text-sm">
+                        ${rows || '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚無可編輯的價格資料</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function renderBusinessPricingOverview() {
+    const container = document.getElementById('business-pricing-overview');
+    if (!container) return;
+    const lessons = Array.isArray(allLessons) ? allLessons : [];
+    const pricedLessons = lessons.filter(isBusinessPricedLesson);
+    if (!pricedLessons.length) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = buildBusinessPricingOverviewHtml();
+
+    const lessonCountEl = document.getElementById('business-stat-lesson-count');
+    const pricedCountEl = document.getElementById('business-stat-priced-count');
+    if (lessonCountEl) lessonCountEl.textContent = String(lessons.length);
+    if (pricedCountEl) pricedCountEl.textContent = String(pricedLessons.length);
+}
+
+window.saveLessonPricing = async function(courseId) {
+    const safeId = String(courseId || '').trim().replace(/[^a-z0-9_-]/gi, '-');
+    const readValue = (suffix) => {
+        const el = document.getElementById(`business-price-${suffix}-${safeId}`);
+        const n = Number(el?.value);
+        return Number.isFinite(n) && n >= 0 ? n : 0;
+    };
+
+    const payload = {
+        courseId: String(courseId || '').trim(),
+        pricing: {
+            tw: { amount: readValue('tw'), currency: 'TWD' },
+            en: { amount: readValue('en'), currency: 'USD' }
+        }
+    };
+
+    try {
+        const fn = httpsCallable(functions, 'upsertLessonPricing');
+        await fn(payload);
+        vibeShowToast('價格已更新！', 'success');
+        await loadLessons();
+        renderBusinessTab();
+    } catch (e) {
+        console.error('[Business] Failed to save lesson pricing:', e);
+        alert(`更新價格失敗：${e.message}`);
+    }
+};
+
+async function renderBusinessTab() {
+    if (myRole !== 'admin' || !dashboardData) return;
+    renderBusinessPricingOverview();
+
+    const revenueToolsContainer = document.getElementById('business-revenue-tools');
+    if (revenueToolsContainer) {
+        revenueToolsContainer.innerHTML = window.buildRevenueToolsHtml ? window.buildRevenueToolsHtml() : '';
+    }
+    if (typeof window.runRevenueSimulation === 'function') {
+        window.runRevenueSimulation();
+    }
+    if (typeof window.loadRevenuePolicies === 'function') {
+        window.loadRevenuePolicies();
+    }
+}
+
 /**
  * Checks if a user is explicitly authorized as a tutor for a specific unit.
  * Logic matches renderAdminConsole: unit-level authorizedTutors OR legacy classroom URL keys.
@@ -3684,7 +3931,6 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
     const totalEarningsEl = document.getElementById('stat-total-earnings');
     const promoCodeEl = document.getElementById('display-promo-code');
     const tableBody = document.getElementById('earnings-table-body');
-    const inviteKitEl = document.getElementById('promo-invite-kit-overview');
     if (!totalEarningsEl || !promoCodeEl || !tableBody) return;
 
     // 1. Display Referral Link (Unit-Specific)
@@ -3726,89 +3972,6 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
         `;
     }
 
-    if (inviteKitEl) {
-        inviteKitEl.classList.remove('hidden');
-        if (!inviteKit.ready) {
-            inviteKitEl.innerHTML = `
-                <div class="text-center py-10 text-gray-400">
-                    ${escapeHtml(inviteKit.message)}
-                </div>
-            `;
-        } else {
-            inviteKitEl.innerHTML = `
-            <div class="space-y-6">
-                <!-- Header -->
-                <div class="border-b border-slate-100 pb-4">
-                    <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Registration Tools</p>
-                    <h3 class="text-2xl font-black text-gray-900 mt-2">招生工具包</h3>
-                    <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
-                </div>
-
-                <!-- Main Layout Grid -->
-                <div class="flex flex-col lg:flex-row gap-8 items-start">
-                    
-                    <!-- Left Column: QR & Primary Actions -->
-                    <div class="lg:w-[320px] w-full flex flex-col gap-6 flex-shrink-0">
-                        <!-- QR Code -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center">
-                            <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Referral QR code" class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                            <p class="text-[10px] text-gray-400 mt-4 text-center break-all font-mono max-w-full">${escapeHtml(inviteKit.inviteUrl)}</p>
-                        </div>
-
-                        <!-- Buttons (Moved from right to below QR) -->
-                        <div class="flex flex-col gap-4">
-                            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                                <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">分銷連結 / Referral Link</p>
-                                <button type="button" class="promo-copy-link w-full inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition shadow-md active:scale-95">複製專屬連結</button>
-                            </div>
-                            <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
-                                <p class="text-[10px] text-emerald-600 font-bold uppercase mb-2 tracking-widest">快速分享 / Quick Share</p>
-                                <a href="${escapeHtml(inviteKit.mailtoUrl)}" class="w-full inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition shadow-md active:scale-95">按此發送郵件</a>
-                            </div>
-                        </div>
-
-                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 italic">
-                            💡 建議：您可以將 QR Code 下載後印在課程講義上，或直接將專屬連結貼到班級群組中。
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Registration Notice Letter -->
-                    <div class="flex-grow w-full">
-                        <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden h-full flex flex-col">
-                            <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
-                                <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Registration Notice</p>
-                                <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
-                                <p class="text-sm text-slate-500 mt-1 font-medium">複製下方文案並貼給學生，能提供最完整的報名指引。</p>
-                            </div>
-                            <div class="p-8 flex-grow">
-                                <pre class="promo-invite-letter whitespace-pre-wrap break-words text-sm leading-8 text-slate-700 font-sans bg-slate-50 rounded-2xl p-6 border border-slate-100 h-full">${escapeHtml(inviteKit.letterText)}</pre>
-                            </div>
-                            <div class="px-8 pb-8 flex flex-col sm:flex-row gap-4 mt-auto">
-                                <button type="button" class="promo-copy-letter flex-1 inline-flex items-center justify-center rounded-xl bg-slate-900 px-6 py-4 text-sm font-bold text-white hover:bg-slate-800 transition shadow-lg active:scale-95">複製完整通知書內容</button>
-                                <button type="button" class="promo-copy-qr inline-flex items-center justify-center rounded-xl border border-slate-300 px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95">複製 QR 連結</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-            const copyLinkBtn = inviteKitEl.querySelector('.promo-copy-link');
-            const copyLetterBtn = inviteKitEl.querySelector('.promo-copy-letter');
-            const copyQrBtn = inviteKitEl.querySelector('.promo-copy-qr');
-
-            if (copyLinkBtn) {
-                copyLinkBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.inviteUrl, '已複製專屬報名連結'));
-            }
-            if (copyLetterBtn) {
-                copyLetterBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.letterText, '已複製通知書內容'));
-            }
-            if (copyQrBtn) {
-                copyQrBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.qrUrl, '已複製 QR Code 圖片連結'));
-            }
-        }
-    }
-
     // 2. Display Earnings Ledger
     const earnings = data.earnings || [];
     let total = 0;
@@ -3833,6 +3996,107 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
 
     totalEarningsEl.innerText = total.toLocaleString();
 }
+
+window.renderReferralInviteKitSection = window.renderReferralInviteKitSection || function(data) {
+    const inviteKitEl = document.getElementById('promo-invite-kit-assignments');
+    if (!inviteKitEl) return;
+
+    const { filterUnitId } = getCurrentDashboardContext();
+    const isQualifiedTutor = !!currentDashboardPermissions.isQualifiedTutor;
+    const isUnitContext = !!filterUnitId;
+
+    if (!isQualifiedTutor) {
+        inviteKitEl.innerHTML = '';
+        inviteKitEl.classList.add('hidden');
+        return;
+    }
+
+    const inviteKit = buildReferralInviteKit(filterUnitId, data.myReferralLink);
+    inviteKitEl.classList.remove('hidden');
+
+    if (!isUnitContext) {
+        inviteKitEl.innerHTML = `
+            <div class="text-center py-10 text-gray-400">
+                ${escapeHtml(inviteKit.message || '請先切換到特定課程單元，才能生成專屬招生邀請工具。')}
+            </div>
+        `;
+        return;
+    }
+
+    if (!inviteKit.ready) {
+        inviteKitEl.innerHTML = `
+            <div class="text-center py-10 text-gray-400">
+                ${escapeHtml(inviteKit.message)}
+            </div>
+        `;
+        return;
+    }
+
+    inviteKitEl.innerHTML = `
+        <div class="space-y-6">
+            <div class="border-b border-slate-100 pb-4">
+                <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Registration Tools</p>
+                <h3 class="text-2xl font-black text-gray-900 mt-2">招生工具包</h3>
+                <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                <div class="lg:w-[320px] w-full flex flex-col gap-6 flex-shrink-0">
+                    <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center">
+                        <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Referral QR code" class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                        <p class="text-[10px] text-gray-400 mt-4 text-center break-all font-mono max-w-full">${escapeHtml(inviteKit.inviteUrl)}</p>
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                            <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">分銷連結 / Referral Link</p>
+                            <button type="button" class="promo-copy-link w-full inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition shadow-md active:scale-95">複製專屬連結</button>
+                        </div>
+                        <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                            <p class="text-[10px] text-emerald-600 font-bold uppercase mb-2 tracking-widest">快速分享 / Quick Share</p>
+                            <a href="${escapeHtml(inviteKit.mailtoUrl)}" class="w-full inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition shadow-md active:scale-95">按此發送郵件</a>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 italic">
+                        💡 建議：您可以將 QR Code 下載後印在課程講義上，或直接將專屬連結貼到班級群組中。
+                    </div>
+                </div>
+
+                <div class="flex-grow w-full">
+                    <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden h-full flex flex-col">
+                        <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+                            <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Registration Notice</p>
+                            <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
+                            <p class="text-sm text-slate-500 mt-1 font-medium">複製下方文案並貼給學生，能提供最完整的報名指引。</p>
+                        </div>
+                        <div class="p-8 flex-grow">
+                            <pre class="promo-invite-letter whitespace-pre-wrap break-words text-sm leading-8 text-slate-700 font-sans bg-slate-50 rounded-2xl p-6 border border-slate-100 h-full">${escapeHtml(inviteKit.letterText)}</pre>
+                        </div>
+                        <div class="px-8 pb-8 flex flex-col sm:flex-row gap-4 mt-auto">
+                            <button type="button" class="promo-copy-letter flex-1 inline-flex items-center justify-center rounded-xl bg-slate-900 px-6 py-4 text-sm font-bold text-white hover:bg-slate-800 transition shadow-lg active:scale-95">複製完整通知書內容</button>
+                            <button type="button" class="promo-copy-qr inline-flex items-center justify-center rounded-xl border border-slate-300 px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95">複製 QR 連結</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const copyLinkBtn = inviteKitEl.querySelector('.promo-copy-link');
+    const copyLetterBtn = inviteKitEl.querySelector('.promo-copy-letter');
+    const copyQrBtn = inviteKitEl.querySelector('.promo-copy-qr');
+
+    if (copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.inviteUrl, '已複製專屬報名連結'));
+    }
+    if (copyLetterBtn) {
+        copyLetterBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.letterText, '已複製通知書內容'));
+    }
+    if (copyQrBtn) {
+        copyQrBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.qrUrl, '已複製 QR Code 圖片連結'));
+    }
+};
 
 window.buildReferralInviteKit = window.buildReferralInviteKit || function(unitId, referralLink) {
     if (!unitId) {
@@ -3982,6 +4246,12 @@ async function loadMarkdown(url) {
 function renderTutorAlerts(data) {
     const container = document.getElementById('tutor-alerts-container');
     if (!container) return;
+
+    if (!window.vibeShowInterventionDashboard) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        return;
+    }
 
     const interventions = (data.interventions || []).filter(i => i.status === 'open' || i.status === 'in_progress');
     const assignments = data.assignments || [];
