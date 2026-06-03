@@ -3248,15 +3248,44 @@ function getLessonBusinessPricingState(lesson = {}) {
     };
 }
 
-function businessPriceInput(value, currency, id) {
+function businessPriceInput(value, currency, id, prefix, safeId) {
     const amount = Number.isFinite(Number(value)) ? Number(value) : 0;
     return `
-        <label class="block text-xs font-bold text-slate-600">
-            ${escapeHtml(currency)}
-            <input id="${id}" type="number" min="0" step="1" value="${amount}" class="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white">
-        </label>
+        <div class="w-full">
+            <label class="block text-[11px] font-bold text-slate-500 mb-1">
+                ${escapeHtml(currency)}
+            </label>
+            <div class="relative rounded-lg shadow-sm">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <span class="text-slate-400 text-xs font-semibold">${escapeHtml(prefix)}</span>
+                </div>
+                <input id="${id}" type="number" min="0" step="1" value="${amount}" oninput="window.markPriceModified('${escapeHtml(safeId)}')" class="block w-full rounded-lg border border-slate-200 pl-10 pr-3 py-2 text-sm bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition">
+            </div>
+        </div>
     `;
 }
+
+window.markPriceModified = function(safeId) {
+    const btn = document.getElementById(`btn-save-price-${safeId}`);
+    if (btn) {
+        btn.classList.remove('bg-slate-900', 'hover:bg-slate-700');
+        btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+        btn.textContent = '儲存變更';
+    }
+};
+
+window.filterPricingTable = function() {
+    const q = document.getElementById('pricing-search-input')?.value?.toLowerCase() || '';
+    const rows = document.querySelectorAll('#business-pricing-table-body tr');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        if (text.includes(q)) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    });
+};
 
 function buildBusinessPricingOverviewHtml() {
     const lessons = Array.isArray(allLessons) ? allLessons : [];
@@ -3277,29 +3306,34 @@ function buildBusinessPricingOverviewHtml() {
             ? new Date(lesson.pricingUpdatedAt.seconds * 1000).toLocaleString()
             : (lesson.pricingUpdatedAt ? new Date(lesson.pricingUpdatedAt).toLocaleString() : '—');
 
+        const isMultiRegion = priceSource === 'multi-region';
+        const badgeClass = isMultiRegion 
+            ? 'bg-blue-50 text-blue-700 border border-blue-100' 
+            : 'bg-amber-50 text-amber-700 border border-amber-100';
+        const badgeLabel = isMultiRegion ? '🌐 多語系定價' : '📝 舊版單一定價';
+
         return `
             <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition">
-                <td class="py-4 pr-4 align-top">
+                <td class="py-4 px-6 align-top">
                     <div class="font-bold text-slate-900">${escapeHtml(title)}</div>
                     <div class="text-[11px] text-slate-400 font-mono mt-1 break-all">${escapeHtml(courseId)}</div>
-                    <div class="mt-2 text-[10px] inline-flex items-center gap-2 px-2 py-1 rounded-full bg-slate-100 text-slate-500 font-semibold">
-                        <span>來源</span>
-                        <span>${escapeHtml(priceSource)}</span>
+                    <div class="mt-2 text-[10px] inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold ${badgeClass}">
+                        ${badgeLabel}
                     </div>
                 </td>
-                <td class="py-4 pr-4 align-top">
-                    ${businessPriceInput(pricingState.tw.amount, 'TWD / tw', `business-price-tw-${safeId}`)}
+                <td class="py-4 px-6 align-top">
+                    ${businessPriceInput(pricingState.tw.amount, 'TWD / tw', `business-price-tw-${safeId}`, 'NT$', safeId)}
                 </td>
-                <td class="py-4 pr-4 align-top">
-                    ${businessPriceInput(pricingState.en.amount, 'USD / en', `business-price-en-${safeId}`)}
+                <td class="py-4 px-6 align-top">
+                    ${businessPriceInput(pricingState.en.amount, 'USD / en', `business-price-en-${safeId}`, '$', safeId)}
                 </td>
-                <td class="py-4 pr-4 align-top text-sm text-slate-600">
+                <td class="py-4 px-6 align-top text-sm text-slate-600">
                     <div class="font-semibold text-slate-800">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.tw, 'zh-TW') : `TWD ${pricingState.tw.amount}`)}</div>
                     <div class="mt-1">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.en, 'en') : `USD ${pricingState.en.amount}`)}</div>
-                    <div class="mt-2 text-[11px] text-slate-400">更新時間：${escapeHtml(updatedAt)}</div>
+                    <div class="mt-2 text-[11px] text-slate-400">更新：${escapeHtml(updatedAt)}</div>
                 </td>
-                <td class="py-4 text-right align-top">
-                    <button onclick="window.saveLessonPricing('${escapeHtml(courseId)}')" class="px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-700">儲存</button>
+                <td class="py-4 px-6 text-right align-top">
+                    <button id="btn-save-price-${safeId}" onclick="window.saveLessonPricing('${escapeHtml(courseId)}')" class="px-3.5 py-2 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-700 transition duration-150 active:scale-95 whitespace-nowrap">儲存</button>
                 </td>
             </tr>
         `;
@@ -3312,8 +3346,21 @@ function buildBusinessPricingOverviewHtml() {
                     <h4 class="text-sm font-black text-slate-900">課程價格總覽</h4>
                     <p class="text-xs text-slate-500 mt-1">資料直接寫入 Firestore 的 <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">metadata_lessons</code>，英文頁顯示 USD、中文頁顯示 TWD。</p>
                 </div>
-                <div class="text-xs text-slate-400 font-medium">可維護欄位：<code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">pricing</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceByLocale</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceByRegion</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceMap</code></div>
+                <div class="text-xs text-slate-400 font-medium">可維護欄位：<code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">pricing</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceByLocale</code></div>
             </div>
+            
+            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-slate-50/30">
+                <div class="flex-grow max-w-md">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            🔍
+                        </span>
+                        <input type="text" id="pricing-search-input" oninput="window.filterPricingTable()" placeholder="搜尋課程名稱或 ID..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400 font-medium">請在欄位修改後點擊對應列的「儲存變更」</div>
+            </div>
+
             <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60">
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
                     <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">課程總數</div>
@@ -3333,8 +3380,8 @@ function buildBusinessPricingOverviewHtml() {
                     <thead>
                         <tr class="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100 bg-slate-50">
                             <th class="py-3 px-6">課程 / Course</th>
-                            <th class="py-3 px-6 w-[18%]">TWD / tw</th>
-                            <th class="py-3 px-6 w-[18%]">USD / en</th>
+                            <th class="py-3 px-6 w-[22%]">TWD / tw</th>
+                            <th class="py-3 px-6 w-[22%]">USD / en</th>
                             <th class="py-3 px-6 w-[20%]">即時顯示</th>
                             <th class="py-3 px-6 text-right w-[12%]">操作</th>
                         </tr>
