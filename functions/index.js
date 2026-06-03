@@ -1344,6 +1344,21 @@ function resolveCanonicalUnitId(unitId, lessons = [], options = {}) {
     return mappedUnitId;
 }
 
+function canonicalizeLessonForDashboard(lesson = {}, lessons = []) {
+    if (!lesson || typeof lesson !== 'object') return lesson;
+    const courseUnits = Array.isArray(lesson.courseUnits)
+        ? lesson.courseUnits.map((unitId) => resolveCanonicalUnitId(unitId, lessons, { allowLegacyMaster: true }) || unitId)
+        : lesson.courseUnits;
+
+    return {
+        ...lesson,
+        ...(Array.isArray(courseUnits) ? { courseUnits } : {}),
+        ...(lesson.entryUnitId ? {
+            entryUnitId: resolveCanonicalUnitId(lesson.entryUnitId, lessons, { allowLegacyMaster: true }) || lesson.entryUnitId
+        } : {})
+    };
+}
+
 /**
  * Normalizes a unitId for Firestore storage keys (strips .html, keep start- etc).
  */
@@ -4133,7 +4148,8 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                     id: doc.id,
                     ...data,
                     userId: targetUid, // Ensure normalized UID is present
-                    courseId: mappedCid
+                    courseId: mappedCid,
+                    unitId: resolveCanonicalUnitId(data.unitId, lessons, { allowLegacyMaster: true }) || data.unitId
                 }));
             }
         });
@@ -4220,7 +4236,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             }
         }
 
-        result.lessons = lessons; // [NEW] Backend fallback for frontend loadLessons() failures
+        result.lessons = lessons.map((lesson) => canonicalizeLessonForDashboard(lesson, lessons)); // [NEW] Backend fallback for frontend loadLessons() failures
         return result;
 
     } catch (error) {
