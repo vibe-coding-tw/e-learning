@@ -3625,6 +3625,8 @@ function buildInvestorProfileRow(profile = {}) {
     const balanceClass = balance > 0 ? 'text-emerald-700' : (balance < 0 ? 'text-rose-700' : 'text-slate-500');
     const balanceLabel = balance > 0 ? '累積應發' : (balance < 0 ? '累積虧損' : '零餘額');
     const shareUnits = Number(profile.shareUnits || 0);
+    const equityShares = Number(profile.equityShares || profile.shareUnits || 0);
+    const ownershipPct = Number(profile.ownershipPct || 0);
     return `
         <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition">
             <td class="py-4 px-6 align-top">
@@ -3634,11 +3636,23 @@ function buildInvestorProfileRow(profile = {}) {
             <td class="py-4 px-6 align-top">
                 <input id="investor-name-${safeId}" type="text" value="${escapeHtml(profile.investorName || '')}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                 <input id="investor-email-${safeId}" type="email" value="${escapeHtml(profile.investorEmail || '')}" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="investor@example.com">
+                <label class="mt-2 block text-[11px] font-bold text-slate-500">身份</label>
+                <select id="investor-participant-${safeId}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    <option value="investor" ${profile.participantType === 'investor' || !profile.participantType ? 'selected' : ''}>外部投資者</option>
+                    <option value="employee" ${profile.participantType === 'employee' ? 'selected' : ''}>員工折抵</option>
+                    <option value="consultant" ${profile.participantType === 'consultant' ? 'selected' : ''}>顧問折抵</option>
+                    <option value="advisor" ${profile.participantType === 'advisor' ? 'selected' : ''}>顧問 / Advisor</option>
+                </select>
             </td>
             <td class="py-4 px-6 align-top">
                 <div class="grid grid-cols-1 gap-2">
                     <label class="text-[11px] font-bold text-slate-500">份額單位</label>
                     <input id="investor-share-${safeId}" type="number" min="0" step="1" value="${shareUnits}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-[11px] text-slate-500">
+                        <div>已發股數：<span class="font-mono font-bold text-slate-700">${equityShares.toLocaleString()}</span></div>
+                        <div class="mt-1">持股比例：<span class="font-mono font-bold text-slate-700">${ownershipPct.toFixed(2)}%</span></div>
+                        <div class="mt-1">估值 ID：<span class="font-mono font-bold text-slate-700">${escapeHtml(profile.valuationId || '—')}</span></div>
+                    </div>
                     <label class="text-[11px] font-bold text-slate-500 mt-2">股利帳號</label>
                     <input id="investor-payout-${safeId}" type="text" value="${escapeHtml(profile.payoutAccount || '')}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="銀行帳號 / Wallet / 轉帳資訊">
                 </div>
@@ -3662,10 +3676,83 @@ function buildInvestorProfileRow(profile = {}) {
     `;
 }
 
+function buildValuationSnapshotCard(snapshot = {}) {
+    const valuationId = String(snapshot.valuationId || '').trim();
+    const sharePrice = Number(snapshot.sharePrice || 0);
+    const basis = Number(snapshot.shareBasis || 0);
+    return `
+        <div class="rounded-xl border border-slate-200 bg-white p-4">
+            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="font-black text-slate-900">${escapeHtml(snapshot.roundName || valuationId || '未命名估值')}</div>
+                    <div class="text-[11px] text-slate-400 font-mono">${escapeHtml(valuationId || '—')}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs font-bold ${snapshot.locked !== false ? 'text-emerald-600' : 'text-amber-600'}">${snapshot.locked !== false ? '鎖定中' : '可編輯'}</div>
+                    <div class="text-[11px] text-slate-400">${escapeHtml(snapshot.valuationType || 'pre-money')}</div>
+                </div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-500">
+                <div class="rounded-lg bg-slate-50 px-3 py-2">股本基準：<span class="font-mono font-bold text-slate-700">${basis.toLocaleString()}</span></div>
+                <div class="rounded-lg bg-slate-50 px-3 py-2">單價：<span class="font-mono font-bold text-slate-700">${sharePrice.toLocaleString()}</span></div>
+                <div class="rounded-lg bg-slate-50 px-3 py-2">前估值：<span class="font-mono font-bold text-slate-700">${Number(snapshot.preMoneyValuation || 0).toLocaleString()}</span></div>
+                <div class="rounded-lg bg-slate-50 px-3 py-2">後估值：<span class="font-mono font-bold text-slate-700">${Number(snapshot.postMoneyValuation || 0).toLocaleString()}</span></div>
+            </div>
+            <div class="mt-3 text-[11px] text-slate-500">
+                有效期間：${escapeHtml(String(snapshot.effectiveFrom?.toDate ? snapshot.effectiveFrom.toDate().toISOString().slice(0, 10) : snapshot.effectiveFrom || '—'))}
+                ~
+                ${escapeHtml(String(snapshot.effectiveTo?.toDate ? snapshot.effectiveTo.toDate().toISOString().slice(0, 10) : snapshot.effectiveTo || '—'))}
+            </div>
+            ${snapshot.notes ? `<div class="mt-2 text-[11px] text-slate-500 leading-5">${escapeHtml(snapshot.notes)}</div>` : ''}
+        </div>
+    `;
+}
+
+function buildEquityIssuanceRow(issuance = {}) {
+    return `
+        <tr class="border-b border-slate-100 last:border-b-0">
+            <td class="py-3 px-4 align-top">
+                <div class="font-bold text-slate-900">${escapeHtml(issuance.investorName || issuance.investorId || '—')}</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-1">${escapeHtml(issuance.investorId || '')}</div>
+            </td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${escapeHtml(issuance.participantType || 'investor')}</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600 font-mono">${escapeHtml(issuance.valuationId || '—')}</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${Number(issuance.considerationAmount || 0).toLocaleString()}</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${Number(issuance.issuedShares || 0).toLocaleString()}</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${Number(issuance.ownershipPct || 0).toFixed(2)}%</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${escapeHtml(issuance.sourceType || 'manual')}</td>
+        </tr>
+    `;
+}
+
+function buildInvestorEquityPositionRow(position = {}) {
+    return `
+        <tr class="border-b border-slate-100 last:border-b-0">
+            <td class="py-3 px-4 align-top">
+                <div class="font-bold text-slate-900">${escapeHtml(position.investorName || position.investorId || '—')}</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-1">${escapeHtml(position.investorId || '')}</div>
+            </td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${escapeHtml(position.participantType || 'investor')}</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${Number(position.totalIssuedShares || 0).toLocaleString()}</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${Number(position.ownershipPct || 0).toFixed(2)}%</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600 font-mono">${escapeHtml(position.valuationId || '—')}</td>
+            <td class="py-3 px-4 align-top text-xs text-slate-600">${Number(position.sharePrice || 0).toLocaleString()}</td>
+        </tr>
+    `;
+}
+
 window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
     const profiles = Array.isArray(window.__loadedInvestorProfiles) ? window.__loadedInvestorProfiles : [];
+    const snapshots = Array.isArray(window.__loadedValuationSnapshots) ? window.__loadedValuationSnapshots : [];
+    const activeSnapshot = window.__loadedActiveValuationSnapshot || snapshots.find((item) => item && item.locked !== false) || snapshots[0] || null;
+    const recentIssuances = Array.isArray(window.__loadedRecentIssuances) ? window.__loadedRecentIssuances : [];
+    const equityPositions = Array.isArray(window.__loadedInvestorEquityPositions) ? window.__loadedInvestorEquityPositions : [];
     const totalShareUnits = profiles.reduce((sum, p) => sum + Number(p.shareUnits || 0), 0);
     const totalBalance = profiles.reduce((sum, p) => sum + Number(p.currentBalance || 0), 0);
+    const activeSnapshotOptions = snapshots.map((snapshot) => {
+        const selected = activeSnapshot && snapshot.valuationId === activeSnapshot.valuationId ? 'selected' : '';
+        return `<option value="${escapeHtml(snapshot.valuationId)}" ${selected}>${escapeHtml(snapshot.roundName || snapshot.valuationId)}</option>`;
+    }).join('');
     return `
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -3695,6 +3782,182 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
             </div>
 
             <div class="p-6 space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h5 class="text-sm font-black text-slate-900">估值快照</h5>
+                                <p class="text-[11px] text-slate-500 mt-1">發股時只讀取這裡鎖定的估值，不會被之後的估值覆蓋。</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[11px] font-bold text-blue-600">當前快照</div>
+                                <div class="text-xs font-mono text-slate-600">${escapeHtml(activeSnapshot?.valuationId || '未設定')}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">估值 ID</div>
+                                <input id="valuation-snapshot-id" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="seed-2026-q2">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">輪次名稱</div>
+                                <input id="valuation-round-name" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Pre-Seed Round">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">估值類型</div>
+                                <select id="valuation-type" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                    <option value="pre-money">Pre-money</option>
+                                    <option value="post-money">Post-money</option>
+                                </select>
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">幣別</div>
+                                <input id="valuation-currency" type="text" value="TWD" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">前估值</div>
+                                <input id="valuation-pre-money" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="10000000">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">後估值</div>
+                                <input id="valuation-post-money" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="12000000">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">股本基準</div>
+                                <input id="valuation-share-basis" type="number" min="1" step="1" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="1000000">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">每股價格</div>
+                                <input id="valuation-share-price" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="12.5">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">生效日</div>
+                                <input id="valuation-effective-from" type="date" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">失效日</div>
+                                <input id="valuation-effective-to" type="date" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            </label>
+                            <label class="md:col-span-2">
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">說明</div>
+                                <textarea id="valuation-notes" rows="2" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="例如：以董事會核准的 pre-money 估值作為本輪發股基準。"></textarea>
+                            </label>
+                        </div>
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-600">
+                                <input id="valuation-locked" type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                鎖定此估值
+                            </label>
+                            <div class="flex gap-2">
+                                <button onclick="window.saveValuationSnapshot()" class="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 active:scale-95">儲存估值</button>
+                                <button onclick="window.syncInvestorManagementDefaults()" class="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">套用當前估值</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            ${activeSnapshot ? buildValuationSnapshotCard(activeSnapshot) : '<div class="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">尚未建立估值快照。請先建立一筆估值，之後發股才會鎖定使用。</div>'}
+                            <div class="rounded-xl border border-slate-200 bg-white p-4">
+                                <div class="text-sm font-black text-slate-900 mb-2">估值清單</div>
+                                <select id="valuation-snapshot-select" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" onchange="window.loadValuationSnapshotToForm(this.value)">
+                                    <option value="">選擇一筆估值</option>
+                                    ${activeSnapshotOptions}
+                                </select>
+                                <div class="mt-3 max-h-64 overflow-auto space-y-2">
+                                    ${snapshots.length ? snapshots.map(buildValuationSnapshotCard).join('') : '<div class="text-sm text-slate-400">尚未有估值資料</div>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h5 class="text-sm font-black text-slate-900">股權發行</h5>
+                                <p class="text-[11px] text-slate-500 mt-1">外部投資者、員工折抵與顧問折抵，都在這裡依估值換算成持股。</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[11px] font-bold text-emerald-600">預設估值</div>
+                                <div class="text-xs font-mono text-slate-600">${escapeHtml(activeSnapshot?.valuationId || '未設定')}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">投資人 ID</div>
+                                <input id="issue-investor-id" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="investor-001">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">投資人名稱</div>
+                                <input id="issue-investor-name" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="王小明">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">Email</div>
+                                <input id="issue-investor-email" type="email" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="investor@example.com">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">身份</div>
+                                <select id="issue-participant-type" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="investor">外部投資者</option>
+                                    <option value="employee">員工折抵</option>
+                                    <option value="consultant">顧問折抵</option>
+                                    <option value="advisor">顧問 / Advisor</option>
+                                </select>
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">使用估值</div>
+                                <select id="issue-valuation-id" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="">自動使用當前估值</option>
+                                    ${activeSnapshotOptions}
+                                </select>
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">對價類型</div>
+                                <select id="issue-consideration-type" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="cash">現金</option>
+                                    <option value="service">服務折抵</option>
+                                    <option value="offset">債務/成本折抵</option>
+                                </select>
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">對價金額</div>
+                                <input id="issue-consideration-amount" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="100000">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">來源類型</div>
+                                <input id="issue-source-type" type="text" value="manual" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="manual / payroll / contract">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">來源 ID</div>
+                                <input id="issue-source-id" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="PO-2026-001 / payroll-05">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">來源標籤</div>
+                                <input id="issue-source-label" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="本輪募資 / 顧問服務折抵">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">Vesting（月）</div>
+                                <input id="issue-vesting-months" type="number" min="0" step="1" value="0" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">Cliff（月）</div>
+                                <input id="issue-cliff-months" type="number" min="0" step="1" value="0" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">起算日</div>
+                                <input id="issue-start-date" type="date" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                            <label class="md:col-span-2">
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">說明</div>
+                                <textarea id="issue-note" rows="2" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" placeholder="例如：顧問服務折抵換股，按本輪估值計算。"></textarea>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-[11px] text-slate-500 leading-5">
+                                這裡會直接依估值快照計算 `considerationAmount / sharePrice`，並同步更新持股位置。
+                            </div>
+                            <button onclick="window.issueInvestorEquityFromForm()" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 active:scale-95">發行股權</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <label class="md:col-span-1">
                         <div class="text-[11px] font-bold text-slate-500 mb-1">事件類型</div>
@@ -3725,6 +3988,63 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
                     </label>
                     <div class="md:col-span-1 flex items-end">
                         <button onclick="window.submitInvestorFinanceEvent()" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 active:scale-95">新增事件</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="rounded-2xl border border-slate-200 overflow-hidden bg-white">
+                        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-black text-slate-900">最近發股紀錄</div>
+                                <div class="text-[11px] text-slate-500 mt-1">所有換股事件都會保留，不會被之後估值回寫。</div>
+                            </div>
+                            <div class="text-[11px] font-bold text-slate-400">${recentIssuances.length} 筆</div>
+                        </div>
+                        <div class="overflow-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-500">
+                                    <tr>
+                                        <th class="py-2 px-4">投資人</th>
+                                        <th class="py-2 px-4">身份</th>
+                                        <th class="py-2 px-4">估值</th>
+                                        <th class="py-2 px-4">對價</th>
+                                        <th class="py-2 px-4">股數</th>
+                                        <th class="py-2 px-4">比例</th>
+                                        <th class="py-2 px-4">來源</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${recentIssuances.length ? recentIssuances.map(buildEquityIssuanceRow).join('') : '<tr><td colspan="7" class="py-8 text-center text-slate-400">尚無發股紀錄</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 overflow-hidden bg-white">
+                        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-black text-slate-900">持股位置</div>
+                                <div class="text-[11px] text-slate-500 mt-1">依最新累計股數與估值基準顯示。</div>
+                            </div>
+                            <div class="text-[11px] font-bold text-slate-400">${equityPositions.length} 筆</div>
+                        </div>
+                        <div class="overflow-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-500">
+                                    <tr>
+                                        <th class="py-2 px-4">投資人</th>
+                                        <th class="py-2 px-4">身份</th>
+                                        <th class="py-2 px-4">股數</th>
+                                        <th class="py-2 px-4">比例</th>
+                                        <th class="py-2 px-4">估值</th>
+                                        <th class="py-2 px-4">單價</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${equityPositions.length ? equityPositions.map(buildInvestorEquityPositionRow).join('') : '<tr><td colspan="6" class="py-8 text-center text-slate-400">尚無持股位置</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -3760,9 +4080,18 @@ window.loadInvestorProfiles = async function () {
         const profiles = Array.isArray(res?.data?.profiles) ? res.data.profiles : [];
         window.__loadedInvestorProfiles = profiles;
         const config = res?.data?.config || {};
+        const valuationSnapshots = Array.isArray(res?.data?.valuationSnapshots) ? res.data.valuationSnapshots : [];
+        const activeValuationSnapshot = res?.data?.activeValuationSnapshot || null;
+        const recentIssuances = Array.isArray(res?.data?.recentIssuances) ? res.data.recentIssuances : [];
+        const equityPositions = Array.isArray(res?.data?.equityPositions) ? res.data.equityPositions : [];
+        window.__loadedValuationSnapshots = valuationSnapshots;
+        window.__loadedActiveValuationSnapshot = activeValuationSnapshot;
+        window.__loadedRecentIssuances = recentIssuances;
+        window.__loadedInvestorEquityPositions = equityPositions;
         window.__loadedInvestorConfig = config;
         container.classList.remove('hidden');
         container.innerHTML = window.buildInvestorPlanHtml ? window.buildInvestorPlanHtml() : '';
+        window.syncInvestorManagementDefaults?.();
 
         const dateInput = document.getElementById('investor-event-date');
         if (dateInput && !dateInput.value) {
@@ -3774,6 +4103,126 @@ window.loadInvestorProfiles = async function () {
     }
 };
 
+window.loadValuationSnapshotToForm = function (valuationId) {
+    const snapshots = Array.isArray(window.__loadedValuationSnapshots) ? window.__loadedValuationSnapshots : [];
+    const snapshot = snapshots.find((item) => item && item.valuationId === valuationId);
+    if (!snapshot) return;
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value ?? '';
+    };
+
+    setValue('valuation-snapshot-id', snapshot.valuationId || '');
+    setValue('valuation-round-name', snapshot.roundName || '');
+    setValue('valuation-type', snapshot.valuationType || 'pre-money');
+    setValue('valuation-currency', snapshot.currency || 'TWD');
+    setValue('valuation-pre-money', Number(snapshot.preMoneyValuation || 0));
+    setValue('valuation-post-money', Number(snapshot.postMoneyValuation || 0));
+    setValue('valuation-share-basis', Number(snapshot.shareBasis || 0));
+    setValue('valuation-share-price', Number(snapshot.sharePrice || 0));
+    setValue('valuation-notes', snapshot.notes || '');
+    const locked = document.getElementById('valuation-locked');
+    if (locked) locked.checked = snapshot.locked !== false;
+    const activeFrom = snapshot.effectiveFrom?.toDate ? snapshot.effectiveFrom.toDate().toISOString().slice(0, 10) : (snapshot.effectiveFrom || '');
+    const activeTo = snapshot.effectiveTo?.toDate ? snapshot.effectiveTo.toDate().toISOString().slice(0, 10) : (snapshot.effectiveTo || '');
+    setValue('valuation-effective-from', activeFrom || '');
+    setValue('valuation-effective-to', activeTo || '');
+    const issueValuation = document.getElementById('issue-valuation-id');
+    if (issueValuation) {
+        issueValuation.value = snapshot.valuationId || '';
+    }
+};
+
+window.syncInvestorManagementDefaults = function () {
+    const active = window.__loadedActiveValuationSnapshot || null;
+    const snapshots = Array.isArray(window.__loadedValuationSnapshots) ? window.__loadedValuationSnapshots : [];
+    const snapshot = active || snapshots[0] || null;
+    if (!snapshot) return;
+    window.loadValuationSnapshotToForm(snapshot.valuationId);
+
+    const issueValuation = document.getElementById('issue-valuation-id');
+    if (issueValuation && !issueValuation.value) {
+        issueValuation.value = snapshot.valuationId || '';
+    }
+    const issueDate = document.getElementById('issue-start-date');
+    if (issueDate && !issueDate.value) {
+        issueDate.value = new Date().toISOString().slice(0, 10);
+    }
+};
+
+window.saveValuationSnapshot = async function () {
+    const payload = {
+        valuationId: document.getElementById('valuation-snapshot-id')?.value || '',
+        roundName: document.getElementById('valuation-round-name')?.value || '',
+        valuationType: document.getElementById('valuation-type')?.value || 'pre-money',
+        currency: document.getElementById('valuation-currency')?.value || 'TWD',
+        preMoneyValuation: Number(document.getElementById('valuation-pre-money')?.value || 0),
+        postMoneyValuation: Number(document.getElementById('valuation-post-money')?.value || 0),
+        shareBasis: Number(document.getElementById('valuation-share-basis')?.value || 0),
+        sharePrice: Number(document.getElementById('valuation-share-price')?.value || 0),
+        effectiveFrom: document.getElementById('valuation-effective-from')?.value || '',
+        effectiveTo: document.getElementById('valuation-effective-to')?.value || '',
+        notes: document.getElementById('valuation-notes')?.value || '',
+        locked: !!document.getElementById('valuation-locked')?.checked
+    };
+
+    if (!payload.valuationId) {
+        alert('請輸入估值 ID');
+        return;
+    }
+    if (!Number.isFinite(payload.shareBasis) || payload.shareBasis <= 0) {
+        alert('請輸入有效的股本基準');
+        return;
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'upsertValuationSnapshot');
+        await fn(payload);
+        vibeShowToast('估值快照已儲存', 'success');
+        await loadInvestorProfiles();
+    } catch (e) {
+        alert(`儲存估值失敗：${e.message}`);
+    }
+};
+
+window.issueInvestorEquityFromForm = async function () {
+    const payload = {
+        investorId: document.getElementById('issue-investor-id')?.value || '',
+        investorName: document.getElementById('issue-investor-name')?.value || '',
+        investorEmail: document.getElementById('issue-investor-email')?.value || '',
+        participantType: document.getElementById('issue-participant-type')?.value || 'investor',
+        valuationId: document.getElementById('issue-valuation-id')?.value || '',
+        considerationType: document.getElementById('issue-consideration-type')?.value || 'cash',
+        considerationAmount: Number(document.getElementById('issue-consideration-amount')?.value || 0),
+        sourceType: document.getElementById('issue-source-type')?.value || 'manual',
+        sourceId: document.getElementById('issue-source-id')?.value || '',
+        sourceLabel: document.getElementById('issue-source-label')?.value || '',
+        vestingMonths: Number(document.getElementById('issue-vesting-months')?.value || 0),
+        cliffMonths: Number(document.getElementById('issue-cliff-months')?.value || 0),
+        startDate: document.getElementById('issue-start-date')?.value || '',
+        note: document.getElementById('issue-note')?.value || ''
+    };
+
+    if (!payload.investorId) {
+        alert('請輸入投資人 ID');
+        return;
+    }
+    if (!Number.isFinite(payload.considerationAmount) || payload.considerationAmount <= 0) {
+        alert('請輸入有效對價金額');
+        return;
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'issueInvestorEquity');
+        await fn(payload);
+        vibeShowToast('股權已發行', 'success');
+        await loadInvestorProfiles();
+    } catch (e) {
+        alert(`發行股權失敗：${e.message}`);
+    }
+};
+
 window.saveInvestorProfile = async function (investorId) {
     const safeId = String(investorId || '').trim().replace(/[^a-z0-9_-]/gi, '-');
     const g = (suffix) => document.getElementById(`investor-${suffix}-${safeId}`);
@@ -3781,6 +4230,7 @@ window.saveInvestorProfile = async function (investorId) {
         investorId,
         investorName: g('name')?.value || investorId,
         investorEmail: g('email')?.value || '',
+        participantType: g('participant')?.value || 'investor',
         shareUnits: Number(g('share')?.value || 0),
         payoutAccount: g('payout')?.value || '',
         notes: g('notes')?.value || '',

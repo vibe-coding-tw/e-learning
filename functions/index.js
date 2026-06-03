@@ -43,9 +43,13 @@ const {
 } = require('./lib/revenue-sharing');
 const {
     allocateByShareUnits,
+    issueInvestorEquity,
     loadInvestorConfig,
     loadInvestorProfiles,
+    loadActiveValuationSnapshot,
+    loadValuationSnapshots,
     recordInvestorFinanceEvent,
+    upsertValuationSnapshot,
     settleAnnualInvestorDividends
 } = require('./lib/investor-ledger');
 const {
@@ -2793,27 +2797,48 @@ exports.getInvestorProfiles = onCall(async (request) => {
 
     const profileCache = new Map();
     const configCache = new Map();
+    const snapshotCache = new Map();
     const [profiles, config] = await Promise.all([
         loadInvestorProfiles({ db, profileCache }),
         loadInvestorConfig({ db, configCache })
+    ]);
+    const [valuationSnapshots, activeValuationSnapshot] = await Promise.all([
+        loadValuationSnapshots({ db, snapshotCache }),
+        loadActiveValuationSnapshot({ db, snapshotCache })
     ]);
 
     const balancesSnap = await db.collection('investor_balances').get();
     const balancesByInvestor = new Map(
         balancesSnap.docs.map((doc) => [String((doc.data() || {}).investorId || doc.id), { id: doc.id, ...(doc.data() || {}) }])
     );
+    const positionsSnap = await db.collection('investor_equity_positions').get();
+    const positionsByInvestor = new Map(
+        positionsSnap.docs.map((doc) => [String((doc.data() || {}).investorId || doc.id), { id: doc.id, ...(doc.data() || {}) }])
+    );
+    const issuancesSnap = await db.collection('equity_issuances').orderBy('createdAt', 'desc').limit(25).get();
+    const recentIssuances = issuancesSnap.docs.map((doc) => ({ issuanceId: doc.id, ...(doc.data() || {}) }));
 
     return {
         config,
+        valuationSnapshots,
+        activeValuationSnapshot,
         profiles: profiles.map((profile) => {
             const balance = balancesByInvestor.get(profile.investorId) || {};
+            const position = positionsByInvestor.get(profile.investorId) || {};
             return {
                 ...profile,
                 currentBalance: Number(balance.currentBalance || 0),
                 lastSettlementYear: balance.lastSettlementYear || null,
-                lastCreditEventId: balance.lastCreditEventId || null
+                lastCreditEventId: balance.lastCreditEventId || null,
+                equityShares: Number(position.totalIssuedShares || profile.equityShares || profile.shareUnits || 0),
+                ownershipPct: Number(position.ownershipPct || profile.ownershipPct || 0),
+                valuationId: position.valuationId || profile.valuationId || "",
+                participantType: position.participantType || profile.participantType || "investor",
+                latestIssuanceId: position.latestIssuanceId || null
             };
-        })
+        }),
+        equityPositions: Array.from(positionsByInvestor.values()),
+        recentIssuances
     };
 });
 
@@ -2838,6 +2863,7 @@ exports.upsertInvestorProfile = onCall(async (request) => {
         investorId,
         investorName: normalizeText(payload.investorName || payload.name || investorId) || investorId,
         investorEmail: normalizeText(payload.investorEmail || payload.email || '').toLowerCase(),
+        participantType: normalizeText(payload.participantType || 'investor'),
         shareUnits: Math.max(0, shareUnits),
         payoutAccount: normalizeText(payload.payoutAccount || payload.paymentAccount || ''),
         notes: normalizeText(payload.notes || ''),
@@ -2850,12 +2876,53 @@ exports.upsertInvestorProfile = onCall(async (request) => {
         investorId,
         investorName: normalizeText(payload.investorName || payload.name || investorId) || investorId,
         investorEmail: normalizeText(payload.investorEmail || payload.email || '').toLowerCase(),
+        participantType: normalizeText(payload.participantType || 'investor'),
         shareUnits: Math.max(0, shareUnits),
         currentBalance: Number.isFinite(Number(payload.currentBalance)) ? Number(payload.currentBalance) : 0,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
     return { success: true, investorId };
+});
+
+exports.upsertValuationSnapshot = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    assertAuthenticated(request.auth, '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can write valuation snapshots.');
+
+    const payload = request.data || {};
+    const snapshotCache = new Map();
+    const result = await upsertValuationSnapshot({
+        db,
+        payload,
+        createdByUid: uid,
+        snapshotCache
+    });
+
+    return { success: true, valuationId: result.valuationId, snapshot: result };
+});
+
+exports.issueInvestorEquity = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    assertAuthenticated(request.auth, '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can issue investor equity.');
+
+    const payload = request.data || {};
+    const profileCache = new Map();
+    const snapshotCache = new Map();
+    const result = await issueInvestorEquity({
+        db,
+        payload,
+        createdByUid: uid,
+        profileCache,
+        snapshotCache
+    });
+
+    return { success: true, ...result };
 });
 
 exports.recordInvestorFinanceEvent = onCall(async (request) => {
@@ -4452,14 +4519,17 @@ exports.submitAssignment = onCall(async (request) => {
     }
 
     const db = admin.firestore();
-    // Unique ID for the submission
-    const docId = `${userId}_${assignmentId}`;
-    const docRef = db.collection('assignments').doc(docId);
 
     try {
         const lessons = await getLessons();
         const access = await resolveSubmissionAccessOrThrow(db, userId, courseId, unitId, lessons);
         const assignedTutorEmail = access.assignedTutorEmail || null;
+
+        // [CANONICAL MIGRATION] Always resolve and write under the canonical keys
+        const canonicalUnitId = access.canonicalUnitId;
+        const canonicalAssignmentId = canonicalUnitId.replace(/\.html$/i, "");
+        const canonicalDocId = `${userId}_${canonicalAssignmentId}`;
+        const docRef = db.collection('assignments').doc(canonicalDocId);
 
         const submissionUrl = normalizeText(url || "");
         const isAssignmentInvite = /classroom\.github\.com\/a\//i.test(submissionUrl);
@@ -4504,13 +4574,13 @@ exports.submitAssignment = onCall(async (request) => {
 
         const assignmentData = {
             ...buildAssignmentSubmissionRecord({
-                docId,
+                docId: canonicalDocId,
                 userId,
                 userEmail,
                 userName,
                 courseId,
-                unitId,
-                assignmentId,
+                unitId: canonicalUnitId,
+                assignmentId: canonicalAssignmentId,
                 title,
                 url,
                 note,
@@ -4533,7 +4603,7 @@ exports.submitAssignment = onCall(async (request) => {
 
         if (currentStatus === 'submitted' && assignedTutorEmail) {
             const dashboardUrl = `https://vibe-coding.tw/dashboard.html?courseId=${encodeURIComponent(access.effectiveCourseId)}&unitId=${encodeURIComponent(access.canonicalUnitId)}&tab=assignments`;
-            await sendAssignmentNotification(assignedTutorEmail, userName, assignmentData.assignmentTitle, dashboardUrl, unitId);
+            await sendAssignmentNotification(assignedTutorEmail, userName, assignmentData.assignmentTitle, dashboardUrl, canonicalUnitId);
         }
 
         return { success: true, message: currentStatus === 'started' ? "紀錄已更新" : "作業繳交成功！" };

@@ -369,7 +369,77 @@
 
 ---
 
-## 10. `investor_profiles` 集合
+## 10. `valuation_snapshots` 集合
+儲存每一輪鎖定的估值快照，發股時必須引用既有 snapshot，不直接依即時估值重算。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `valuationId` | string | 估值快照識別碼。 |
+| `roundName` | string | 輪次名稱。 |
+| `valuationType` | string | `pre-money` / `post-money`。 |
+| `currency` | string | 幣別，通常為 `TWD`。 |
+| `preMoneyValuation` | number | 前估值。 |
+| `postMoneyValuation` | number | 後估值。 |
+| `shareBasis` | number | 換算基準股數。 |
+| `sharePrice` | number | 每股價格。 |
+| `effectiveFrom` / `effectiveTo` | timestamp / null | 適用期間。 |
+| `notes` | string | 說明。 |
+| `locked` | boolean | 是否鎖定不可隨意修改。 |
+| `createdByUid` / `updatedByUid` | string | 維護者 UID。 |
+| `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
+
+---
+
+## 11. `equity_issuances` 集合
+儲存每一次實際換股結果，包含外部投資、員工折抵與顧問折抵。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `issuanceId` | string | 發股識別碼（冪等鍵）。 |
+| `valuationId` | string | 所引用的估值快照。 |
+| `investorId` | string | 對應投資人 / 員工 / 顧問。 |
+| `investorName` | string | 名稱。 |
+| `investorEmail` | string | Email。 |
+| `participantType` | string | `investor` / `employee` / `consultant` / `advisor`。 |
+| `sourceType` | string | 來源類型（如 `manual` / `payroll` / `contract`）。 |
+| `sourceId` | string | 來源編號。 |
+| `sourceLabel` | string | 來源說明。 |
+| `considerationType` | string | 對價類型（如 `cash` / `service` / `offset`）。 |
+| `considerationAmount` | number | 對價金額。 |
+| `sharePrice` | number | 換算時使用的單價。 |
+| `issuedShares` | number | 本次發行股數。 |
+| `shareBasis` | number | 估值基準股數。 |
+| `ownershipPct` | number | 本次或累計持股比例。 |
+| `vestingMonths` / `cliffMonths` | number | 歸屬條件。 |
+| `startDate` | timestamp | 起算日。 |
+| `status` | string | `active` / `cancelled` / `fully_vested` 等。 |
+| `note` | string | 備註。 |
+| `createdByUid` / `updatedByUid` | string | 維護者 UID。 |
+| `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
+
+---
+
+## 12. `investor_equity_positions` 集合
+儲存每位投資人目前的持股位置與最新估值參考。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `investorId` | string | 投資人識別碼。 |
+| `investorName` | string | 名稱。 |
+| `investorEmail` | string | Email。 |
+| `participantType` | string | 身份類型。 |
+| `totalIssuedShares` | number | 累計已發股數。 |
+| `shareBasis` | number | 估值基準股數。 |
+| `ownershipPct` | number | 累計持股比例。 |
+| `valuationId` | string | 最新套用的估值 ID。 |
+| `sharePrice` | number | 最新套用的單價。 |
+| `latestIssuanceId` | string | 最近一次發股識別碼。 |
+| `vestingMonths` / `cliffMonths` | number | 最新歸屬條件。 |
+| `updatedAt` | timestamp | 更新時間。 |
+
+---
+
+## 13. `investor_profiles` 集合
 儲存投資人與持股份額設定。
 
 | 欄位名稱 | 類型 | 說明 |
@@ -385,7 +455,7 @@
 
 ---
 
-## 11. `investor_finance_events` 集合
+## 14. `investor_finance_events` 集合
 儲存每一筆收入/支出事件的原始流水。
 
 | 欄位名稱 | 類型 | 說明 |
@@ -404,7 +474,7 @@
 
 ---
 
-## 12. `investor_credits` 集合
+## 15. `investor_credits` 集合
 儲存依份額拆分後的投資人 credit。
 
 | 欄位名稱 | 類型 | 說明 |
@@ -424,7 +494,7 @@
 
 ---
 
-## 13. `investor_balances` 集合
+## 16. `investor_balances` 集合
 儲存每位投資人的即時餘額與最近結算狀態。
 
 | 欄位名稱 | 類型 | 說明 |
@@ -440,7 +510,7 @@
 
 ---
 
-## 14. `investor_annual_settlements` 集合
+## 17. `investor_annual_settlements` 集合
 儲存年度股利結算結果與最後餘額。
 
 | 欄位名稱 | 類型 | 說明 |
@@ -462,19 +532,19 @@
 
 ---
 
-## 15. 規格定義與遷移備註 (Specs & Migration Notes)
+## 18. 規格定義與遷移備註 (Specs & Migration Notes)
 
 > [!NOTE]
 > 本章節區分現行生產規格、歷史相容機制與過去之遷移備註，以便維護者能快速釐清何者為「當前運作規範」，何者為「相容性歷史痕跡」。
 
-### 10.1 Live Production Specification (現行生產規格)
+### 18.1 Live Production Specification (現行生產規格)
 
 1. **唯一真實來源 (Firestore-first)**：所有單元、課程、推薦碼、付款授權、導師身分判定均以 Firestore 為 runtime 唯一真實來源。
 2. **角色與權限模型**：系統只區分全域 `role: admin` 與 `role: user`，導師資格由 `users.tutorConfigs[unitId].authorized` 判定。
 3. **頁面路由與導覽**：前台學習路徑、課程卡片及所有導覽，一律使用 canonical page URL（可直接開課之首個單元，例如 `/courses/common-developer-identity.html`）。
 4. **ID 命名歸一化**：比對 `unitId` 或 `courseId` 時，一律做歸一化（如移除 `.html` 後綴）。
 
-### 10.2 Legacy Master Pages Retirement Spec (主頁面退役與相容規格)
+### 18.2 Legacy Master Pages Retirement Spec (主頁面退役與相容規格)
 
 1. **退役計畫狀態**：`*-master-*.html` 頁面在架構上已退役，新生產網頁不再使用此命名。然而，**代碼與資料庫中的相容層仍處於啟用（ACTIVE）狀態**，不可直接移除。
 2. **舊網址重導向**：已在 Cloud Functions 的 `serveCourse` 實作 301 轉址，將歷史書籤重導向至 canonical courseId。
@@ -484,7 +554,7 @@
    - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `courseKey`，商品項目維持 `productId`。
    - 經過至少一次完整生產環境 pilot validation，確認無任何歷史用戶存取異常。
 
-### 10.3 Historical Migration Notes (歷史遷移備註)
+### 18.3 Historical Migration Notes (歷史遷移備註)
 
 - **2026-05-27 系統升級**：
   - 角色統一：歷史 `student` 角色已全部遷移為 `user`。
