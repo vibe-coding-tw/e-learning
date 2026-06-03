@@ -42,6 +42,13 @@ const {
     round2Amount
 } = require('./lib/revenue-sharing');
 const {
+    allocateByShareUnits,
+    loadInvestorConfig,
+    loadInvestorProfiles,
+    recordInvestorFinanceEvent,
+    settleAnnualInvestorDividends
+} = require('./lib/investor-ledger');
+const {
     addAssignmentHistoryEntry,
     backfillAutogradeGithubVariables,
     buildAssignmentSubmissionRecord,
@@ -995,6 +1002,28 @@ async function activateOrderPermissionsAndNotify(orderId) {
             const hasPhysical = hasPhysicalItem;
             
             await sendPaymentSuccessEmail(userEmail, orderId, orderData.amount, itemDesc, hasPhysical);
+        }
+
+        // 3.5. Investor income credit creation (order revenue entry)
+        try {
+            const investorProfileCache = new Map();
+            const investorEventResult = await recordInvestorFinanceEvent({
+                db,
+                profileCache: investorProfileCache,
+                payload: {
+                    eventType: "income",
+                    sourceType: "order",
+                    sourceId: orderId,
+                    sourceLabel: `Order ${orderId}`,
+                    amount: Number(orderData.amount || 0),
+                    note: `Auto credit from successful order ${orderId}`,
+                    occurredAtDate: orderData.paidAt?.toDate ? orderData.paidAt.toDate() : new Date()
+                },
+                createdByUid: "system"
+            });
+            console.log(`[activateOrderPermissionsAndNotify] ✅ Investor credit created for order ${orderId}: ${investorEventResult.eventId}`);
+        } catch (investorErr) {
+            console.warn(`[activateOrderPermissionsAndNotify] Investor credit creation skipped for order ${orderId}:`, investorErr.message || investorErr);
         }
 
         // 4. 自動指派導師與分潤綁定
@@ -2753,6 +2782,125 @@ exports.upsertRevenueSharePolicy = onCall(async (request) => {
     }, { merge: true });
 
     return { success: true, policyId };
+});
+
+exports.getInvestorProfiles = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    assertAuthenticated(request.auth, '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can read investor profiles.');
+
+    const profileCache = new Map();
+    const configCache = new Map();
+    const [profiles, config] = await Promise.all([
+        loadInvestorProfiles({ db, profileCache }),
+        loadInvestorConfig({ db, configCache })
+    ]);
+
+    const balancesSnap = await db.collection('investor_balances').get();
+    const balancesByInvestor = new Map(
+        balancesSnap.docs.map((doc) => [String((doc.data() || {}).investorId || doc.id), { id: doc.id, ...(doc.data() || {}) }])
+    );
+
+    return {
+        config,
+        profiles: profiles.map((profile) => {
+            const balance = balancesByInvestor.get(profile.investorId) || {};
+            return {
+                ...profile,
+                currentBalance: Number(balance.currentBalance || 0),
+                lastSettlementYear: balance.lastSettlementYear || null,
+                lastCreditEventId: balance.lastCreditEventId || null
+            };
+        })
+    };
+});
+
+exports.upsertInvestorProfile = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    assertAuthenticated(request.auth, '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can write investor profiles.');
+
+    const payload = request.data || {};
+    const investorId = normalizeText(payload.investorId || payload.id || '');
+    assertRequiredValue(investorId, 'investorId is required');
+
+    const shareUnits = Number(payload.shareUnits || payload.share || 0);
+    if (!Number.isFinite(shareUnits) || shareUnits < 0) {
+        throw new HttpsError('invalid-argument', 'shareUnits must be a non-negative number.');
+    }
+
+    const docRef = db.collection('investor_profiles').doc(investorId);
+    await docRef.set({
+        investorId,
+        investorName: normalizeText(payload.investorName || payload.name || investorId) || investorId,
+        investorEmail: normalizeText(payload.investorEmail || payload.email || '').toLowerCase(),
+        shareUnits: Math.max(0, shareUnits),
+        payoutAccount: normalizeText(payload.payoutAccount || payload.paymentAccount || ''),
+        notes: normalizeText(payload.notes || ''),
+        enabled: payload.enabled !== false,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    await db.collection('investor_balances').doc(investorId).set({
+        investorId,
+        investorName: normalizeText(payload.investorName || payload.name || investorId) || investorId,
+        investorEmail: normalizeText(payload.investorEmail || payload.email || '').toLowerCase(),
+        shareUnits: Math.max(0, shareUnits),
+        currentBalance: Number.isFinite(Number(payload.currentBalance)) ? Number(payload.currentBalance) : 0,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return { success: true, investorId };
+});
+
+exports.recordInvestorFinanceEvent = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    assertAuthenticated(request.auth, '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can record investor events.');
+
+    const payload = request.data || {};
+    const profileCache = new Map();
+    const result = await recordInvestorFinanceEvent({
+        db,
+        profileCache,
+        payload,
+        createdByUid: uid
+    });
+
+    return { success: true, ...result };
+});
+
+exports.settleAnnualInvestorDividends = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    assertAuthenticated(request.auth, '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can settle investor dividends.');
+
+    const payload = request.data || {};
+    const targetYear = Number(payload.year || new Date().getFullYear() - 1);
+    if (!Number.isFinite(targetYear)) {
+        throw new HttpsError('invalid-argument', 'year must be a number.');
+    }
+
+    const profileCache = new Map();
+    const configCache = new Map();
+    const result = await settleAnnualInvestorDividends({
+        db,
+        year: targetYear,
+        profileCache,
+        configCache,
+        createdByUid: uid
+    });
+
+    return { success: true, ...result };
 });
 
 // ==========================================
@@ -5455,6 +5603,27 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
         console.log(`Profit sharing completed. createdCredits=${creditTrail.length}, ledgerRows=${auditTrail.length}, balances=${balanceAgg.size}`);
     } catch (error) {
         console.error("Error in calculateMonthlySharing:", error);
+    }
+});
+
+exports.calculateAnnualInvestorDividends = onSchedule({
+    schedule: "0 0 1 1 *",
+    timeZone: "Asia/Taipei"
+}, async () => {
+    const db = admin.firestore();
+    const currentYear = new Date().getFullYear();
+    const targetYear = currentYear - 1;
+    try {
+        const result = await settleAnnualInvestorDividends({
+            db,
+            year: targetYear,
+            profileCache: new Map(),
+            configCache: new Map(),
+            createdByUid: "system"
+        });
+        console.log(`[calculateAnnualInvestorDividends] Completed for year=${targetYear} settlements=${result.settlementCount}`);
+    } catch (error) {
+        console.error("Error in calculateAnnualInvestorDividends:", error);
     }
 });
 

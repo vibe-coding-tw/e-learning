@@ -740,6 +740,34 @@ function filterAssignmentsForCurrentView(assignments = []) {
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
 
+    const isStudentAssignedToMe = (assignment) => {
+        const studentUid = assignment.userId || assignment.uid;
+        if (!studentUid) return false;
+        
+        const students = window.dashboardData?.students || [];
+        const student = students.find(s => s.uid === studentUid || s.id === studentUid);
+        if (!student) return false;
+        
+        if (filterUnitId) {
+            const assignedTutors = student.unitAssignments || {};
+            const isMatch = Object.entries(assignedTutors).some(([uid, tutorEmail]) => {
+                return unitIdsMatch(uid, filterUnitId) && normalizeEmail(tutorEmail) === normalizeEmail(myEmail);
+            });
+            if (isMatch) return true;
+        } else {
+            const hasAnyAssignmentToMe = Object.values(student.unitAssignments || {}).some(tutorEmail => {
+                return normalizeEmail(tutorEmail) === normalizeEmail(myEmail);
+            });
+            if (hasAnyAssignmentToMe) return true;
+        }
+        
+        if (assignment.assignedTutorEmail && normalizeEmail(assignment.assignedTutorEmail) === normalizeEmail(myEmail)) {
+            return true;
+        }
+        
+        return false;
+    };
+
     // 2. Unit Context: STRICT Role simulation for Admins/Tutors
     if (filterUnitId) {
         if (currentDashboardPermissions.isAdmin) {
@@ -747,7 +775,7 @@ function filterAssignmentsForCurrentView(assignments = []) {
                 // Admin in TUTOR mode: Only see assigned students, hide own.
                 console.log("[Debug] Admin Simulation: TUTOR MODE");
                 return assignments.filter(a => {
-                    return normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
+                    return isStudentAssignedToMe(a) && !isOwnAssignment(a);
                 });
             } else {
                 // Admin in STUDENT mode: Only see own.
@@ -759,7 +787,7 @@ function filterAssignmentsForCurrentView(assignments = []) {
         if (currentDashboardPermissions.isQualifiedTutor) {
              // Regular Tutor: Only see assigned students, hide own.
              return assignments.filter(a => {
-                 return normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
+                 return isStudentAssignedToMe(a) && !isOwnAssignment(a);
              });
         }
     }
@@ -773,7 +801,7 @@ function filterAssignmentsForCurrentView(assignments = []) {
     if (currentDashboardPermissions.isQualifiedTutor) {
         // Global Tutor Feed: See assigned students.
         return assignments.filter(a => {
-            return normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
+            return isStudentAssignedToMe(a) && !isOwnAssignment(a);
         });
     }
 
@@ -3590,6 +3618,243 @@ window.saveLessonPricing = async function(courseId) {
     }
 };
 
+function buildInvestorProfileRow(profile = {}) {
+    const id = String(profile.investorId || profile.id || '').trim();
+    const safeId = id.replace(/[^a-z0-9_-]/gi, '-');
+    const balance = Number(profile.currentBalance || 0);
+    const balanceClass = balance > 0 ? 'text-emerald-700' : (balance < 0 ? 'text-rose-700' : 'text-slate-500');
+    const balanceLabel = balance > 0 ? '累積應發' : (balance < 0 ? '累積虧損' : '零餘額');
+    const shareUnits = Number(profile.shareUnits || 0);
+    return `
+        <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition">
+            <td class="py-4 px-6 align-top">
+                <div class="font-black text-slate-900">${escapeHtml(profile.investorName || id || '未命名投資人')}</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-1 break-all">${escapeHtml(id)}</div>
+            </td>
+            <td class="py-4 px-6 align-top">
+                <input id="investor-name-${safeId}" type="text" value="${escapeHtml(profile.investorName || '')}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                <input id="investor-email-${safeId}" type="email" value="${escapeHtml(profile.investorEmail || '')}" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="investor@example.com">
+            </td>
+            <td class="py-4 px-6 align-top">
+                <div class="grid grid-cols-1 gap-2">
+                    <label class="text-[11px] font-bold text-slate-500">份額單位</label>
+                    <input id="investor-share-${safeId}" type="number" min="0" step="1" value="${shareUnits}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    <label class="text-[11px] font-bold text-slate-500 mt-2">股利帳號</label>
+                    <input id="investor-payout-${safeId}" type="text" value="${escapeHtml(profile.payoutAccount || '')}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="銀行帳號 / Wallet / 轉帳資訊">
+                </div>
+            </td>
+            <td class="py-4 px-6 align-top">
+                <div class="text-sm font-black ${balanceClass}">NT$ ${balance.toLocaleString()}</div>
+                <div class="mt-1 text-[11px] text-slate-400">${escapeHtml(balanceLabel)}</div>
+                <div class="mt-3 text-[11px] text-slate-500">最近結算年：${profile.lastSettlementYear || '—'}</div>
+            </td>
+            <td class="py-4 px-6 align-top">
+                <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <input id="investor-enabled-${safeId}" type="checkbox" ${profile.enabled !== false ? 'checked' : ''} class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    啟用
+                </label>
+                <textarea id="investor-notes-${safeId}" rows="2" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="備註">${escapeHtml(profile.notes || '')}</textarea>
+            </td>
+            <td class="py-4 px-6 align-top text-right">
+                <button id="btn-save-investor-${safeId}" onclick="window.saveInvestorProfile('${escapeHtml(id)}')" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-700 active:scale-95">儲存</button>
+            </td>
+        </tr>
+    `;
+}
+
+window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
+    const profiles = Array.isArray(window.__loadedInvestorProfiles) ? window.__loadedInvestorProfiles : [];
+    const totalShareUnits = profiles.reduce((sum, p) => sum + Number(p.shareUnits || 0), 0);
+    const totalBalance = profiles.reduce((sum, p) => sum + Number(p.currentBalance || 0), 0);
+    return `
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h4 class="text-sm font-black text-slate-900">投資人權益與年度股利</h4>
+                    <p class="text-xs text-slate-500 mt-1">每筆收入 / 支出都會依份額轉成 credit，年結時再發放股利並保留最後餘額。</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="window.loadInvestorProfiles()" class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">重新整理</button>
+                    <button onclick="window.settleInvestorYear()" class="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700">執行年結</button>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60">
+                <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">投資人數</div>
+                    <div class="mt-1 text-2xl font-black text-slate-900" id="business-stat-investor-count">${profiles.length}</div>
+                </div>
+                <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">份額總和</div>
+                    <div class="mt-1 text-2xl font-black text-blue-600" id="business-stat-investor-units">${totalShareUnits.toLocaleString()}</div>
+                </div>
+                <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-emerald-500">目前總餘額</div>
+                    <div class="mt-1 text-2xl font-black text-emerald-600" id="business-stat-investor-balance">NT$ ${totalBalance.toLocaleString()}</div>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <label class="md:col-span-1">
+                        <div class="text-[11px] font-bold text-slate-500 mb-1">事件類型</div>
+                        <select id="investor-event-type" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                            <option value="income">收入</option>
+                            <option value="expense">支出</option>
+                        </select>
+                    </label>
+                    <label class="md:col-span-1">
+                        <div class="text-[11px] font-bold text-slate-500 mb-1">金額</div>
+                        <input id="investor-event-amount" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="10000">
+                    </label>
+                    <label class="md:col-span-1">
+                        <div class="text-[11px] font-bold text-slate-500 mb-1">來源類型</div>
+                        <input id="investor-event-source-type" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" value="manual" placeholder="order / manual / expense">
+                    </label>
+                    <label class="md:col-span-1">
+                        <div class="text-[11px] font-bold text-slate-500 mb-1">來源 ID</div>
+                        <input id="investor-event-source-id" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="order-123 / exp-2026-001">
+                    </label>
+                    <label class="md:col-span-1">
+                        <div class="text-[11px] font-bold text-slate-500 mb-1">發生日期</div>
+                        <input id="investor-event-date" type="date" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    </label>
+                    <label class="md:col-span-4">
+                        <div class="text-[11px] font-bold text-slate-500 mb-1">備註</div>
+                        <input id="investor-event-note" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="例如：月租費 / 行銷費 / 新訂單收入">
+                    </label>
+                    <div class="md:col-span-1 flex items-end">
+                        <button onclick="window.submitInvestorFinanceEvent()" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 active:scale-95">新增事件</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 border-b border-slate-100">
+                                <th class="py-3 px-6">投資人</th>
+                                <th class="py-3 px-6">基本資料</th>
+                                <th class="py-3 px-6">份額 / 帳號</th>
+                                <th class="py-3 px-6">餘額</th>
+                                <th class="py-3 px-6">備註</th>
+                                <th class="py-3 px-6 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="business-investor-table-body" class="divide-y divide-slate-100">
+                            ${profiles.length ? profiles.map(buildInvestorProfileRow).join('') : '<tr><td colspan="6" class="py-10 text-center text-slate-400">尚未設定投資人</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+window.loadInvestorProfiles = async function () {
+    const container = document.getElementById('business-investor-container');
+    if (!container) return;
+    container.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">載入投資人資料中...</div>';
+    try {
+        const fn = httpsCallable(functions, 'getInvestorProfiles');
+        const res = await fn({});
+        const profiles = Array.isArray(res?.data?.profiles) ? res.data.profiles : [];
+        window.__loadedInvestorProfiles = profiles;
+        const config = res?.data?.config || {};
+        window.__loadedInvestorConfig = config;
+        container.classList.remove('hidden');
+        container.innerHTML = window.buildInvestorPlanHtml ? window.buildInvestorPlanHtml() : '';
+
+        const dateInput = document.getElementById('investor-event-date');
+        if (dateInput && !dateInput.value) {
+            const now = new Date();
+            dateInput.value = now.toISOString().slice(0, 10);
+        }
+    } catch (e) {
+        container.innerHTML = `<div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">載入投資人資料失敗：${escapeHtml(e.message || 'unknown')}</div>`;
+    }
+};
+
+window.saveInvestorProfile = async function (investorId) {
+    const safeId = String(investorId || '').trim().replace(/[^a-z0-9_-]/gi, '-');
+    const g = (suffix) => document.getElementById(`investor-${suffix}-${safeId}`);
+    const payload = {
+        investorId,
+        investorName: g('name')?.value || investorId,
+        investorEmail: g('email')?.value || '',
+        shareUnits: Number(g('share')?.value || 0),
+        payoutAccount: g('payout')?.value || '',
+        notes: g('notes')?.value || '',
+        enabled: !!g('enabled')?.checked
+    };
+
+    const btn = document.getElementById(`btn-save-investor-${safeId}`);
+    const originalText = btn ? btn.textContent : '儲存';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'upsertInvestorProfile');
+        await fn(payload);
+        vibeShowToast(`已儲存投資人：${investorId}`, 'success');
+        await loadInvestorProfiles();
+    } catch (e) {
+        alert(`儲存投資人失敗：${e.message}`);
+        if (btn) btn.textContent = originalText;
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+};
+
+window.submitInvestorFinanceEvent = async function () {
+    const eventType = document.getElementById('investor-event-type')?.value || 'income';
+    const amount = Number(document.getElementById('investor-event-amount')?.value || 0);
+    const sourceType = document.getElementById('investor-event-source-type')?.value || 'manual';
+    const sourceId = document.getElementById('investor-event-source-id')?.value || '';
+    const note = document.getElementById('investor-event-note')?.value || '';
+    const dateValue = document.getElementById('investor-event-date')?.value || '';
+    if (!Number.isFinite(amount) || amount <= 0) {
+        alert('請輸入有效金額');
+        return;
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'recordInvestorFinanceEvent');
+        await fn({
+            eventType,
+            amount,
+            sourceType,
+            sourceId,
+            note,
+            occurredAtDate: dateValue ? new Date(`${dateValue}T00:00:00`) : new Date()
+        });
+        vibeShowToast('投資人事件已新增', 'success');
+        await loadInvestorProfiles();
+    } catch (e) {
+        alert(`新增事件失敗：${e.message}`);
+    }
+};
+
+window.settleInvestorYear = async function () {
+    const yearValue = prompt('請輸入要結算的年度（預設前一年）', String((new Date()).getFullYear() - 1));
+    if (yearValue === null) return;
+    const year = Number(yearValue || 0);
+    if (!Number.isFinite(year) || year < 2000) {
+        alert('請輸入有效年份');
+        return;
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'settleAnnualInvestorDividends');
+        const res = await fn({ year });
+        vibeShowToast(`年度結算完成：${res.data?.settlementCount || 0} 位投資人`, 'success');
+        await loadInvestorProfiles();
+    } catch (e) {
+        alert(`年度結算失敗：${e.message}`);
+    }
+};
+
 async function renderBusinessTab() {
     if (myRole !== 'admin' || !dashboardData) return;
     renderBusinessPricingOverview();
@@ -3606,6 +3871,14 @@ async function renderBusinessTab() {
 
     if (typeof window.loadRevenuePolicies === 'function') {
         window.loadRevenuePolicies();
+    }
+
+    const investorContainer = document.getElementById('business-investor-container');
+    if (investorContainer) {
+        investorContainer.classList.remove('hidden');
+    }
+    if (typeof window.loadInvestorProfiles === 'function') {
+        window.loadInvestorProfiles();
     }
 
     // [NEW] System Administration & Settings rendering
