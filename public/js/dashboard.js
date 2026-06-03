@@ -3699,9 +3699,9 @@ function buildValuationSnapshotCard(snapshot = {}) {
                 <div class="rounded-lg bg-slate-50 px-3 py-2">後估值：<span class="font-mono font-bold text-slate-700">${Number(snapshot.postMoneyValuation || 0).toLocaleString()}</span></div>
             </div>
             <div class="mt-3 text-[11px] text-slate-500">
-                有效期間：${escapeHtml(String(snapshot.effectiveFrom?.toDate ? snapshot.effectiveFrom.toDate().toISOString().slice(0, 10) : snapshot.effectiveFrom || '—'))}
+                有效期間：${escapeHtml(formatInvestorLedgerDate(snapshot.effectiveFrom))}
                 ~
-                ${escapeHtml(String(snapshot.effectiveTo?.toDate ? snapshot.effectiveTo.toDate().toISOString().slice(0, 10) : snapshot.effectiveTo || '—'))}
+                ${escapeHtml(formatInvestorLedgerDate(snapshot.effectiveTo))}
             </div>
             ${snapshot.notes ? `<div class="mt-2 text-[11px] text-slate-500 leading-5">${escapeHtml(snapshot.notes)}</div>` : ''}
         </div>
@@ -3739,6 +3739,37 @@ function buildInvestorEquityPositionRow(position = {}) {
             <td class="py-3 px-4 align-top text-xs text-slate-600">${Number(position.sharePrice || 0).toLocaleString()}</td>
         </tr>
     `;
+}
+
+function parseInvestorLedgerDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value?.toDate === 'function') return value.toDate();
+    if (typeof value === 'number') return new Date(value);
+    if (typeof value === 'string') {
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    if (typeof value === 'object') {
+        if (typeof value.seconds === 'number') {
+            const nanos = Number(value.nanoseconds || value._nanoseconds || 0);
+            return new Date((value.seconds * 1000) + Math.floor(nanos / 1e6));
+        }
+        if (typeof value._seconds === 'number') {
+            const nanos = Number(value._nanoseconds || 0);
+            return new Date((value._seconds * 1000) + Math.floor(nanos / 1e6));
+        }
+    }
+    return null;
+}
+
+function formatInvestorLedgerDate(value, fallback = '—') {
+    const parsed = parseInvestorLedgerDate(value);
+    if (!parsed || Number.isNaN(parsed.getTime())) {
+        if (typeof value === 'string' && value) return value;
+        return fallback;
+    }
+    return parsed.toISOString().slice(0, 10);
 }
 
 window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
@@ -3851,6 +3882,7 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
                             <div class="flex gap-2">
                                 <button onclick="window.saveValuationSnapshot()" class="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 active:scale-95">儲存估值</button>
                                 <button onclick="window.syncInvestorManagementDefaults()" class="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">套用當前估值</button>
+                                <button onclick="window.fillInvestorLedgerSampleData()" class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-100 active:scale-95">載入範例</button>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3953,7 +3985,10 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
                             <div class="text-[11px] text-slate-500 leading-5">
                                 這裡會直接依估值快照計算 `considerationAmount / sharePrice`，並同步更新持股位置。
                             </div>
-                            <button onclick="window.issueInvestorEquityFromForm()" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 active:scale-95">發行股權</button>
+                            <div class="flex gap-2">
+                                <button onclick="window.fillInvestorLedgerSampleData()" class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-100 active:scale-95">範例</button>
+                                <button onclick="window.issueInvestorEquityFromForm()" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 active:scale-95">發行股權</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4124,8 +4159,8 @@ window.loadValuationSnapshotToForm = function (valuationId) {
     setValue('valuation-notes', snapshot.notes || '');
     const locked = document.getElementById('valuation-locked');
     if (locked) locked.checked = snapshot.locked !== false;
-    const activeFrom = snapshot.effectiveFrom?.toDate ? snapshot.effectiveFrom.toDate().toISOString().slice(0, 10) : (snapshot.effectiveFrom || '');
-    const activeTo = snapshot.effectiveTo?.toDate ? snapshot.effectiveTo.toDate().toISOString().slice(0, 10) : (snapshot.effectiveTo || '');
+    const activeFrom = formatInvestorLedgerDate(snapshot.effectiveFrom, '');
+    const activeTo = formatInvestorLedgerDate(snapshot.effectiveTo, '');
     setValue('valuation-effective-from', activeFrom || '');
     setValue('valuation-effective-to', activeTo || '');
     const issueValuation = document.getElementById('issue-valuation-id');
@@ -4149,6 +4184,45 @@ window.syncInvestorManagementDefaults = function () {
     if (issueDate && !issueDate.value) {
         issueDate.value = new Date().toISOString().slice(0, 10);
     }
+};
+
+window.fillInvestorLedgerSampleData = function () {
+    const today = new Date().toISOString().slice(0, 10);
+    const fields = {
+        'valuation-snapshot-id': 'pre-seed-2026-q2',
+        'valuation-round-name': 'Pre-Seed 2026 Q2',
+        'valuation-type': 'pre-money',
+        'valuation-currency': 'TWD',
+        'valuation-pre-money': '12000000',
+        'valuation-post-money': '15000000',
+        'valuation-share-basis': '1000000',
+        'valuation-share-price': '12',
+        'valuation-effective-from': today,
+        'valuation-notes': '董事會核准的預設示範估值，供外部投資與服務折抵換股測試。',
+        'issue-investor-id': 'investor-demo-001',
+        'issue-investor-name': 'Demo Investor',
+        'issue-investor-email': 'demo@example.com',
+        'issue-participant-type': 'consultant',
+        'issue-valuation-id': 'pre-seed-2026-q2',
+        'issue-consideration-type': 'service',
+        'issue-consideration-amount': '60000',
+        'issue-source-type': 'contract',
+        'issue-source-id': 'contract-2026-001',
+        'issue-source-label': '顧問服務折抵',
+        'issue-vesting-months': '12',
+        'issue-cliff-months': '3',
+        'issue-start-date': today,
+        'issue-note': '示範：顧問服務折抵換股，按鎖定估值計算。'
+    };
+
+    Object.entries(fields).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+    });
+
+    const locked = document.getElementById('valuation-locked');
+    if (locked) locked.checked = true;
+    vibeShowToast('已載入範例資料', 'success');
 };
 
 window.saveValuationSnapshot = async function () {

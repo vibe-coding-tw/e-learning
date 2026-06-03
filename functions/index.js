@@ -1363,18 +1363,36 @@ function resolveCanonicalUnitId(unitId, lessons = [], options = {}) {
     const mappedUnitId = allowLegacyMaster ? mapLegacyMasterToCanonical(unitId) : unitId;
     const cleanId = cleanUnitId(mappedUnitId);
 
+    let resolved = mappedUnitId;
     for (const lesson of lessons) {
         const courseUnits = Array.isArray(lesson.courseUnits) ? lesson.courseUnits : [];
-        if (courseUnits.includes(mappedUnitId)) return mappedUnitId; // Match original
+        if (courseUnits.includes(mappedUnitId)) {
+            resolved = mappedUnitId;
+            break;
+        }
         
         const matchedUnit = courseUnits.find(courseUnit => {
             return cleanUnitId(courseUnit) === cleanId;
         });
 
-        if (matchedUnit) return matchedUnit;
+        if (matchedUnit) {
+            resolved = matchedUnit;
+            break;
+        }
     }
 
-    return mappedUnitId;
+    // [CANONICAL CLEANUP] Normalize resolved keys to strip tw-/en- prefixes and convert start- to car-starter-
+    let canonical = resolved;
+    if (/^(?:tw|en)-/i.test(canonical)) {
+        canonical = canonical.replace(/^(?:tw|en)-/i, '');
+    }
+    if (/^start-\d{2}-unit-/i.test(canonical)) {
+        canonical = canonical.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+    } else if (/^start-/i.test(canonical)) {
+        canonical = canonical.replace(/^start-/i, 'car-starter-');
+    }
+
+    return canonical;
 }
 
 function canonicalizeLessonForDashboard(lesson = {}, lessons = []) {
