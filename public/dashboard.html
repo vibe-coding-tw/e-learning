@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="./js/pricing-utils.195a755aea80.js"></script>
     <link rel="stylesheet" href="./style.1b939bdb0a17.css">
     <style>
         /* Scoped styles for embedded markdown content */
@@ -116,6 +117,10 @@
                     class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none" data-i18n="dash_tab_settings">
                     課程設定 (Settings)
                 </button>
+                <button onclick="switchTab('earnings')" id="tab-btn-earnings"
+                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
+                    分潤 / Investor
+                </button>
             </div>
 
             <!-- TAB CONTENT: OVERVIEW -->
@@ -178,16 +183,30 @@
                     </div>
                 </div>
 
-                <div id="promo-invite-kit-overview" class="card p-6 hidden">
-                    <div class="text-center py-10 text-gray-400">正在準備招生邀請工具...</div>
-                </div>
             </div>
 
             <!-- TAB CONTENT: ASSIGNMENTS -->
             <div id="view-assignments" class="tab-content hidden space-y-6 animate-fade-in">
+                <div id="unit-settings-container" class="hidden space-y-12">
+                    <div id="settings-header-integrated" class="px-6 py-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
+                        <h3 class="text-xl font-bold text-gray-800">單元設定 (Unit Settings)</h3>
+                    </div>
+                    <div class="card p-6">
+                        <div id="assignment-setting" class="space-y-8">
+                            <div class="text-center py-10 text-gray-400">正在載入連結設定...</div>
+                        </div>
+                    </div>
+                    <div class="pt-12 border-t border-gray-100 space-y-8">
+                        <div id="guide-container" class="space-y-8 text-gray-400 italic">
+                            <div class="text-center py-10">正在載入教學指引...</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="card p-0">
                     <div id="assignments-header" class="px-6 py-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
                         <h3 class="text-xl font-bold text-gray-800" data-i18n="dash_assignments_title">作業批改 (Assignments)</h3>
+                    </div>
+                    <div id="promo-invite-kit-assignments" class="card p-6 hidden border-b border-gray-100 rounded-none">
                     </div>
                     <div class="p-6 overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -249,79 +268,67 @@
                         </table>
                     </div>
                 </div>
-                <div id="shipments-revenue-tools" class="space-y-6">
-                    <!-- JS Generated -->
+            </div>
+
+            <!-- TAB CONTENT: BUSINESS SETTINGS -->
+            <div id="view-business" class="tab-content hidden space-y-8 animate-fade-in">
+                <div class="card p-0">
+                    <div id="business-header" class="px-6 py-6 border-b border-gray-100 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-white rounded-t-3xl">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">商業設定 (Business Settings)</h3>
+                            <p class="text-sm text-gray-500 mt-1">課程價格、分潤策略與營運規則集中管理</p>
+                        </div>
+                        <div class="text-xs text-gray-400 font-medium">
+                            只保留資料驅動設定，環境變數仍由 `.env` / Secret Manager 管理
+                        </div>
+                    </div>
+
+                    <div class="p-6 space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">課程總數</div>
+                                <div class="mt-2 text-3xl font-black text-slate-900" id="business-stat-lesson-count">0</div>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                                <div class="text-xs font-bold text-emerald-600 uppercase tracking-widest">有價格資料</div>
+                                <div class="mt-2 text-3xl font-black text-emerald-700" id="business-stat-priced-count">0</div>
+                            </div>
+                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                                <div class="text-xs font-bold text-blue-600 uppercase tracking-widest">啟用中的分潤策略</div>
+                                <div class="mt-2 text-3xl font-black text-blue-700" id="business-stat-policy-count">0</div>
+                            </div>
+                        </div>
+
+                        <div id="business-pricing-overview" class="space-y-6">
+                            <!-- JS Generated -->
+                        </div>
+
+                        <div id="business-revenue-tools" class="space-y-6">
+                            <!-- JS Generated -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- TAB CONTENT: COURSE SETTINGS (Restored Wrapper) -->
             <div id="view-settings" class="tab-content hidden space-y-12 animate-fade-in">
-                <div id="settings-header" class="px-6 py-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
-                    <h3 class="text-xl font-bold text-gray-800" data-i18n="dash_settings_title">課程設定 (Settings)</h3>
+                <div id="business-settings-container" class="space-y-8">
+                    <div id="business-pricing-overview" class="space-y-6"></div>
+                    <div id="business-revenue-tools" class="space-y-6"></div>
                 </div>
+            </div>
 
-                <!-- 原生 API (Native API) 設定說明指引 -->
-                <div class="bg-gradient-to-r from-blue-50/70 to-indigo-50/70 border border-indigo-100 rounded-3xl p-6 shadow-sm">
-                    <div class="flex gap-4">
-                        <div class="text-indigo-600 text-2xl shrink-0"><i class="fa-solid fa-circle-info"></i></div>
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-sm mb-2">⚡ 如何設定與使用「自建原生 API (Native API)」作業指派模式？</h4>
-                            <div class="text-xs text-slate-600 space-y-3 leading-relaxed">
-                                <p><strong>1. 準備 GitHub 存取權杖 (Token)：</strong> 請至您的 GitHub 帳號產生一個 Fine-grained personal access token。必須賦予該 Token 對應組織/倉庫的 <code class="bg-white/90 px-1.5 py-0.5 rounded text-indigo-900 font-bold border border-indigo-50">Administration (Read & Write)</code>、<code class="bg-white/90 px-1.5 py-0.5 rounded text-indigo-900 font-bold border border-indigo-50">Contents (Read & Write)</code> 以及 <code class="bg-white/90 px-1.5 py-0.5 rounded text-indigo-900 font-bold border border-indigo-50">Metadata (Read-only)</code> 權限。</p>
-                                <p><strong>2. 於下方單元配置參數：</strong> 在下方要指派的單元中，將作業指派方式切換為「自建原生 API」，填入您的 <strong>組織名稱 (Org)</strong>、<strong>教材樣板倉庫 (Template Repo)</strong>，並貼上產生的 <strong>Token</strong> 後儲存。</p>
-                                <p><strong>3. 學生端一鍵自動建立：</strong> 請提供您的 Promotion code 給學員綁定。學生點擊「前往作業頁」並確認 GitHub 帳號後，系統即會在 3-8 秒內背景自動建立作業 Repository 並將學生加為協作者，免除一切組織加入卡點，徹底解決 Repository Access Issue！</p>
-                            </div>
-                        </div>
+            <!-- TAB CONTENT: EARNINGS -->
+            <div id="view-earnings" class="tab-content hidden space-y-8 animate-fade-in">
+                <div id="earnings-header" class="px-6 py-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">分潤 / Investor</h3>
+                        <p class="text-sm text-gray-500 mt-1">投資人與營運端的收益資訊</p>
                     </div>
                 </div>
 
-                <!-- 1. Assignment Links -->
-                <div id="assignment-setting" class="space-y-8">
-                    <div class="text-center py-10 text-gray-400">正在載入連結設定...</div>
-                </div>
-
-
-                <!-- [V14.7] Integrated Assignments Section -->
-                <div id="assignments-container" class="card hidden p-0">
-                     <div id="assignments-header-integrated" class="px-6 py-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
-                        <h3 class="text-xl font-bold text-gray-800">本單元作業批改 (Integrated Assignments)</h3>
-                    </div>
-                    <div class="p-6 overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="text-xs sm:text-sm text-gray-500 border-b">
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">學生</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2">作業/單元</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center">時間</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center">狀態</th>
-                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-center">分</th>
-                                    <th id="th-assignment-action-integrated" class="py-2 px-1 sm:py-3 sm:px-2 text-right">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody class="assignment-table-body text-sm text-gray-700 divide-y">
-                                <!-- JS Generated -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 3. Tutor Guides / Attachments (assignment-guide & tutor-guide) -->
-                <div class="pt-12 border-t border-gray-100 space-y-8">
-                    <div id="github-readme-placeholder-settings" class="markdown-embed p-6 mb-8 rounded-3xl border border-slate-200 bg-gray-50 shadow-sm overflow-hidden hidden">
-                        <div class="flex items-center gap-3 text-slate-400 italic font-medium" data-i18n="dash_loading_readme">
-                            <span class="animate-pulse">⏳</span> 正在讀取導師指南 (tutor-guide)...
-                        </div>
-                    </div>
-
-                    <div id="guide-container" class="space-y-8 text-gray-400 italic">
-                        <div class="text-center py-10">正在載入教學指引...</div>
-                    </div>
-                </div>
-
-                <!-- 4. Integrated Earnings Section (Financial Dashboard) -->
-                <div id="earnings-container" class="pt-12 border-t border-gray-100 space-y-8 hidden">
-
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div id="earnings-container" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="card border-l-4 border-emerald-500 p-6">
                             <p class="text-gray-500 text-sm font-medium">累積總分潤 (TWD)</p>
                             <h3 class="text-3xl font-bold text-gray-800 mt-1" id="stat-total-earnings">0</h3>
@@ -351,6 +358,7 @@
                             </table>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -478,7 +486,7 @@
 
     <script src="./js/dashboard-lookup-utils.2382857d18fd.js"></script>
     <script src="./js/repo-slug-utils.397a2f388cc7.js"></script>
-    <script type="module" src="./js/dashboard.9a2c9d75df3b.js"></script>
+    <script type="module" src="./js/dashboard.9ee53c459f02.js"></script>
 </body>
 
 </html>
