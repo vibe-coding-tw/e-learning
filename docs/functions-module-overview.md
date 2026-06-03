@@ -16,6 +16,7 @@
 | 模組 | 負責範圍 |
 |---|---|
 | `functions/lib/revenue-sharing.js` | 月結分潤、policy snapshot、credit/payout/balance 組裝 |
+| `functions/lib/investor-ledger.js` | 投資人事件流水、credit/年度結算、股利與餘額彙整 |
 | `functions/lib/assignment-flow.js` | 作業提交、autograde payload、intervention 同步、history / repo assignment 組裝 |
 | `functions/lib/tutor-utils.js` | 導師 config、申請紀錄、推薦碼、name resolver、dashboard tutor config 彙整 |
 | `functions/lib/order-utils.js` | 訂單 / 物流 / referral link / order normalization / shipment reminder / order authorization |
@@ -40,4 +41,3 @@
   - `docs/index-helper-inventory.md`
   - 本文件
   - 對應 domain spec
-

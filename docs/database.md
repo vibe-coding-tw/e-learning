@@ -362,9 +362,107 @@
 - `defaultValidityMonths`：預設攤提月數（建議 12）。
 - `defaultPayoutEmail`：缺省受益者（預設 `info@vibe-coding.tw`）。
 
+`investor_config` 常見欄位：
+- `settlementMonth`：年度結算月份，預設 12。
+- `settlementDay`：年度結算日期，預設 31。
+- `defaultPayoutAccount`：缺省投資人收款帳號（若個別投資人未填時可作為 fallback）。
+
 ---
 
-## 10. 規格定義與遷移備註 (Specs & Migration Notes)
+## 10. `investor_profiles` 集合
+儲存投資人與持股份額設定。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `investorId` | string | 投資人識別碼。 |
+| `investorName` | string | 投資人名稱。 |
+| `investorEmail` | string | 聯絡 Email。 |
+| `shareUnits` | number | 持有份額單位，所有投資人份額加總後用來分配每筆 credit。 |
+| `payoutAccount` | string | 股利發放帳號。 |
+| `notes` | string | 備註。 |
+| `enabled` | boolean | 是否啟用。 |
+| `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
+
+---
+
+## 11. `investor_finance_events` 集合
+儲存每一筆收入/支出事件的原始流水。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `eventId` | string | 事件識別碼（具冪等性）。 |
+| `eventType` | string | `income` / `expense`。 |
+| `sourceType` | string | 來源類型，例如 `order` / `manual`。 |
+| `sourceId` | string | 來源編號。 |
+| `sourceLabel` | string | 來源說明。 |
+| `grossAmount` | number | 原始金額。 |
+| `signedAmount` | number | 正負金額，支出為負。 |
+| `note` | string | 備註。 |
+| `eventYear` / `eventMonth` | number / string | 事件年度與月份。 |
+| `occurredAt` | timestamp | 發生時間。 |
+| `createdAt` | timestamp | 建立時間。 |
+
+---
+
+## 12. `investor_credits` 集合
+儲存依份額拆分後的投資人 credit。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `creditId` | string | credit 識別碼（event/investor 雜湊）。 |
+| `eventId` | string | 對應事件 ID。 |
+| `investorId` | string | 對應投資人。 |
+| `shareUnits` | number | 該投資人份額。 |
+| `totalShareUnits` | number | 全體份額總和。 |
+| `shareRatio` | number | 份額比例。 |
+| `eventType` | string | `income` / `expense`。 |
+| `grossAmount` | number | 事件原始金額。 |
+| `allocatedAmount` | number | 分配金額，支出為負。 |
+| `year` / `month` | number / string | 分配年度與月份。 |
+| `occurredAt` | timestamp | 發生時間。 |
+| `createdAt` | timestamp | 建立時間。 |
+
+---
+
+## 13. `investor_balances` 集合
+儲存每位投資人的即時餘額與最近結算狀態。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `investorId` | string | 投資人識別碼。 |
+| `currentBalance` | number | 當前累積餘額。 |
+| `shareUnits` | number | 最新份額快照。 |
+| `lastCreditEventId` | string | 最近一次 credit 事件。 |
+| `lastSettlementYear` | number | 最近一次年度結算年份。 |
+| `lastSettlementAt` | timestamp | 最近一次年度結算時間。 |
+| `settlementMonth` / `settlementDay` | number | 年度結算排程。 |
+| `updatedAt` | timestamp | 更新時間。 |
+
+---
+
+## 14. `investor_annual_settlements` 集合
+儲存年度股利結算結果與最後餘額。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `settlementId` | string | 結算識別碼（`year-investorId`）。 |
+| `investorId` | string | 投資人識別碼。 |
+| `year` | number | 結算年度。 |
+| `openingBalance` | number | 期初餘額。 |
+| `incomeTotal` | number | 當年度收入 credit 合計。 |
+| `expenseTotal` | number | 當年度支出 credit 合計。 |
+| `netAmount` | number | 當年度淨額。 |
+| `dividendPayable` | number | 應發股利。 |
+| `dividendPaid` | number | 實際已發股利。 |
+| `endingBalance` | number | 結算後最後餘額。 |
+| `payoutAccountPresent` | boolean | 是否有收款帳號。 |
+| `payoutStatus` | string | `paid` / `missing_payout_account` / `no_dividend`。 |
+| `creditCount` | number | 當年 credit 數量。 |
+| `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
+
+---
+
+## 15. 規格定義與遷移備註 (Specs & Migration Notes)
 
 > [!NOTE]
 > 本章節區分現行生產規格、歷史相容機制與過去之遷移備註，以便維護者能快速釐清何者為「當前運作規範」，何者為「相容性歷史痕跡」。
