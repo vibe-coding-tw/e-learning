@@ -515,6 +515,7 @@ function showAccessDenied(errorType = "") {
 
 function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor = false, isPaidStudent = false } = {}) {
     const { filterUnitId } = getCurrentDashboardContext();
+    const isUnitContext = !!filterUnitId;
     const isGlobalAdmin = !isUnitContext && isAdmin;
     const canViewGlobalSettings = isGlobalAdmin;
     const canViewUnitSettings = isUnitContext && (
