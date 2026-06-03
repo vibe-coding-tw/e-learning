@@ -53,6 +53,7 @@ async function main() {
     agentRate: 0.2,
     agentUplineRate: 0,
     courseDevRate: 0.2,
+    courseDevUplineRate: 0.1,
     enabled: true
   };
 
@@ -70,24 +71,27 @@ async function main() {
   }
 
   async function loadPolicyById(policyId = "") {
-    const normalized = String(policyId || "").trim() || fallbackPolicy.policyId;
+    const requested = String(policyId || "").trim() || fallbackPolicy.policyId;
+    const normalized = fallbackPolicy.policyId;
+    if (requested !== normalized) {
+      console.warn(`[simulate] policy ${requested} is deprecated; using ${normalized}.`);
+    }
     if (policyCache.has(normalized)) return policyCache.get(normalized);
     let policy = fallbackPolicy;
-    if (normalized !== fallbackPolicy.policyId) {
-      const snap = await db.collection("revenue_share_policies").doc(normalized).get();
-      if (snap.exists) {
-        const raw = snap.data() || {};
-        policy = {
-          policyId: normalized,
-          policyName: raw.policyName || raw.name || normalized,
-          tutorRate: Number(raw.tutorRate ?? fallbackPolicy.tutorRate),
-          tutorUplineRate: Number(raw.tutorUplineRate ?? fallbackPolicy.tutorUplineRate),
-          agentRate: Number(raw.agentRate ?? fallbackPolicy.agentRate),
-          agentUplineRate: Number(raw.agentUplineRate ?? fallbackPolicy.agentUplineRate),
-          courseDevRate: Number(raw.courseDevRate ?? fallbackPolicy.courseDevRate),
-          enabled: raw.enabled !== false
-        };
-      }
+    const snap = await db.collection("revenue_share_policies").doc(normalized).get();
+    if (snap.exists) {
+      const raw = snap.data() || {};
+      policy = {
+        policyId: normalized,
+        policyName: raw.policyName || raw.name || normalized,
+        tutorRate: Number(raw.tutorRate ?? fallbackPolicy.tutorRate),
+        tutorUplineRate: Number(raw.tutorUplineRate ?? fallbackPolicy.tutorUplineRate),
+        agentRate: Number(raw.agentRate ?? fallbackPolicy.agentRate),
+        agentUplineRate: Number(raw.agentUplineRate ?? fallbackPolicy.agentUplineRate),
+        courseDevRate: Number(raw.courseDevRate ?? fallbackPolicy.courseDevRate),
+        courseDevUplineRate: Number(raw.courseDevUplineRate ?? fallbackPolicy.courseDevUplineRate),
+        enabled: raw.enabled !== false
+      };
     }
     if (!policy.enabled) policy = fallbackPolicy;
     policyCache.set(normalized, policy);

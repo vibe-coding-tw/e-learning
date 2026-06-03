@@ -647,9 +647,34 @@ async function fetchGuideSectionFromUnitPage(filterUnitId, sectionId) {
         return m && m[1] ? m[1].trim() : '';
     };
     try {
-        const unitUrl = `${window.location.origin}/${filterUnitId}`;
+        const parentCourseId = findParentCourseIdByUnit(filterUnitId);
+        const courseId = parentCourseId || filterUnitId;
+        
+        let pageName = filterUnitId;
+        if (!pageName.endsWith('.html')) {
+            pageName += '.html';
+        }
+        
+        const isTutor = (sectionId === 'tutor-guide');
+        const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
+        const response = await checkAuthFunction({
+            pageId: courseId,
+            fileName: pageName,
+            tutorMode: isTutor
+        });
+        
+        const token = response?.data?.token || response?.data?.result?.token;
+        if (!token) {
+            console.warn(`[GuideRefresh] No serve token returned for ${pageName}. Response:`, response);
+            return "";
+        }
+        
+        const unitUrl = `${window.location.origin}/courses/${pageName}?token=${encodeURIComponent(token)}`;
         const resp = await fetch(unitUrl, { cache: 'no-store' });
-        if (!resp.ok) return "";
+        if (!resp.ok) {
+            console.warn(`[GuideRefresh] serve fetch failed: ${resp.status} ${resp.statusText} for URL: ${unitUrl}`);
+            return "";
+        }
         const html = await resp.text();
         return extractSection(html, sectionId);
     } catch (e) {
@@ -2011,45 +2036,49 @@ window.buildRevenueSimulatorHtml = window.buildRevenueSimulatorHtml || function(
     `;
 };
 
-function policyRateInput(id, key, value, label) {
+function policyRateInput(id, key, value, title, description) {
     const valPercent = Math.round((Number.isFinite(Number(value)) ? Number(value) : 0) * 100);
     return `
-        <div class="flex items-center gap-1.5 min-w-[100px]">
-            <span class="text-[10px] text-slate-400 font-semibold w-8">${escapeHtml(label)}</span>
-            <div class="relative flex-grow shadow-sm">
-                <input id="${key}-${id}" type="number" min="0" max="100" step="1" value="${valPercent}" oninput="window.markPolicyModified('${escapeHtml(id)}')" class="w-14 text-right rounded-lg border border-slate-200 pr-5 pl-1.5 py-1 text-xs font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition bg-white">
-                <span class="absolute inset-y-0 right-1.5 flex items-center text-[10px] font-bold text-slate-400 pointer-events-none">%</span>
+        <label class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="text-sm font-black text-slate-900">${escapeHtml(title)}</div>
+                    <div class="mt-1 text-[11px] leading-5 text-slate-500">${escapeHtml(description)}</div>
+                </div>
+                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">${escapeHtml(key.replace('policy-', ''))}</span>
             </div>
-        </div>
+            <div class="flex items-center gap-2">
+                <input id="${key}-${id}" type="number" min="0" max="100" step="1" value="${valPercent}" oninput="window.markPolicyModified('${escapeHtml(id)}')" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100">
+                <span class="text-xs font-black text-slate-400">%</span>
+            </div>
+        </label>
     `;
 }
 
 window.buildRevenuePolicyHtml = window.buildRevenuePolicyHtml || function() {
     return `
-        <div class="mb-10 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div class="px-6 py-4 border-b border-slate-200 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">⚙️ 分潤策略管理（Admin）</h4>
-                    <p class="text-xs text-slate-500 mt-1">設定不同購買渠道下的分潤比例，數值以百分比 (%) 表示。各角色加總一般不高於 100%。</p>
+        <div class="mb-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 px-6 py-6 text-white">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div class="max-w-3xl">
+                        <div class="text-[11px] font-black uppercase tracking-[0.35em] text-slate-400">Revenue Policy</div>
+                        <div class="mt-2 flex flex-wrap items-center gap-3">
+                            <h4 class="text-lg font-black">default-v1 單一分潤策略</h4>
+                            <span class="rounded-full bg-emerald-500/15 px-3 py-1 text-[11px] font-bold text-emerald-200">唯一生效</span>
+                        </div>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">
+                            系統現在只讀取 <code>default-v1</code>。如果舊資料裡還有其他 <code>policyId</code>，後端會自動忽略並回落到這一組設定。
+                        </p>
+                    </div>
+                    <button onclick="window.loadRevenuePolicies()" class="self-start rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/15 active:scale-95">
+                        重新整理
+                    </button>
                 </div>
-                <button onclick="window.loadRevenuePolicies()" class="px-3.5 py-1.5 text-xs font-bold border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition">重新整理</button>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="text-slate-500 border-b border-slate-100 bg-slate-50">
-                            <th class="py-3 px-6 text-slate-600 font-bold">策略 ID (Policy)</th>
-                            <th class="py-3 px-6 text-slate-600 font-bold">導師分潤 (Tutor)</th>
-                            <th class="py-3 px-6 text-slate-600 font-bold">管道分潤 (Agent)</th>
-                            <th class="py-3 px-6 text-slate-600 font-bold">開發分潤 (Dev)</th>
-                            <th class="py-3 px-6 text-slate-600 font-bold">啟用</th>
-                            <th class="py-3 px-6 text-right text-slate-600 font-bold">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="revenue-policy-body" class="divide-y divide-slate-100">
-                        <tr><td colspan="6" class="py-10 text-center text-slate-400">載入中...</td></tr>
-                    </tbody>
-                </table>
+            <div id="revenue-policy-body" class="p-6">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                    載入中...
+                </div>
             </div>
         </div>
     `;
@@ -2505,7 +2534,7 @@ window.runRevenueSimulation = function () {
 window.loadRevenuePolicies = async function () {
     const body = document.getElementById('revenue-policy-body');
     if (!body) return;
-    body.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400">載入中...</td></tr>';
+    body.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">載入中...</div>';
     try {
         const fn = httpsCallable(functions, 'getRevenueSharePolicies');
         const res = await fn({});
@@ -2513,59 +2542,102 @@ window.loadRevenuePolicies = async function () {
         window.__loadedRevenuePolicies = policies;
         const policyCountEl = document.getElementById('business-stat-policy-count');
         if (policyCountEl) {
-            policyCountEl.textContent = String(policies.filter(p => p && p.enabled !== false).length);
+            policyCountEl.textContent = String(policies.some(p => p && p.enabled !== false) ? 1 : 0);
         }
         if (!policies.length) {
-            body.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400">尚無策略</td></tr>';
+            body.innerHTML = '<div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">找不到 default-v1，請直接儲存以建立預設策略。</div>';
             return;
         }
 
-        body.innerHTML = policies.map((p) => {
-            const id = String(p.id || '');
-            
-            const tutorCell = `
-                <div class="flex flex-col gap-1.5 py-1">
-                    ${policyRateInput(id, 'policy-tutorRate', p.tutorRate, '導師')}
-                    ${policyRateInput(id, 'policy-tutorUplineRate', p.tutorUplineRate, '推薦')}
-                </div>
-            `;
-            
-            const agentCell = `
-                <div class="flex flex-col gap-1.5 py-1">
-                    ${policyRateInput(id, 'policy-agentRate', p.agentRate, '管道')}
-                    ${policyRateInput(id, 'policy-agentUplineRate', p.agentUplineRate, '推薦')}
-                </div>
-            `;
-            
-            const devCell = `
-                <div class="flex flex-col gap-1.5 py-1">
-                    ${policyRateInput(id, 'policy-courseDevRate', p.courseDevRate, '開發')}
-                    ${policyRateInput(id, 'policy-courseDevUplineRate', p.courseDevUplineRate, '推薦')}
-                </div>
-            `;
+        const policy = policies.find((p) => String(p.id || p.policyId || '') === 'default-v1') || policies[0];
+        const id = 'default-v1';
+        const tutorRate = Number(policy.tutorRate ?? 0.2);
+        const tutorUplineRate = Number(policy.tutorUplineRate ?? 0.2);
+        const agentRate = Number(policy.agentRate ?? 0.2);
+        const agentUplineRate = Number(policy.agentUplineRate ?? 0);
+        const courseDevRate = Number(policy.courseDevRate ?? 0.2);
+        const courseDevUplineRate = Number(policy.courseDevUplineRate ?? 0.1);
 
-            return `
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td class="py-4 px-6 align-middle">
-                        <div class="font-bold text-slate-800 text-sm font-mono">${escapeHtml(id)}</div>
-                    </td>
-                    <td class="py-4 px-6 align-middle">${tutorCell}</td>
-                    <td class="py-4 px-6 align-middle">${agentCell}</td>
-                    <td class="py-4 px-6 align-middle">${devCell}</td>
-                    <td class="py-4 px-6 align-middle">
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input id="policy-enabled-${id}" type="checkbox" onchange="window.markPolicyModified('${escapeHtml(id)}')" ${p.enabled !== false ? 'checked' : ''} class="sr-only peer">
-                            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                    </td>
-                    <td class="py-4 px-6 text-right align-middle">
-                        <button id="btn-save-policy-${id}" onclick="window.saveRevenuePolicy('${escapeHtml(id)}')" class="px-3.5 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-700 transition duration-150 active:scale-95 whitespace-nowrap">儲存</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        const policySummary = (label, directRate, uplineRate, accent, note) => `
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-sm font-black text-slate-900">${escapeHtml(label)}</div>
+                        <div class="mt-1 text-[11px] leading-5 text-slate-500">${escapeHtml(note)}</div>
+                    </div>
+                    <div class="rounded-full px-3 py-1 text-[11px] font-bold ${accent.bg} ${accent.fg}">
+                        直推 ${Math.round(directRate * 100)}% / 上線 ${Math.round(uplineRate * 100)}%
+                    </div>
+                </div>
+            </div>
+        `;
+
+        body.innerHTML = `
+            <div class="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
+                <div class="space-y-6">
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
+                        <div class="font-black">使用說明</div>
+                        <ul class="mt-2 space-y-1.5 text-[13px] leading-6">
+                            <li>• 這組設定會套用到所有訂單與月結，不再區分直銷、代理等多套策略。</li>
+                            <li>• 「直推」是第一層分潤；「上線」是往上一層遞迴分潤比例。</li>
+                            <li>• 若某個角色不需要分潤，直接把該欄位設為 <code>0</code> 即可。</li>
+                        </ul>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        ${policyRateInput(id, 'policy-tutorRate', tutorRate, '導師直推分潤', '訂單成交時，第一層導師可拿到的比例。')}
+                        ${policyRateInput(id, 'policy-tutorUplineRate', tutorUplineRate, '導師上線分潤', '導師的上線會依這個比例繼續遞迴分潤。')}
+                        ${policyRateInput(id, 'policy-agentRate', agentRate, '管道直推分潤', '若訂單有對應的推廣或代理角色，第一層的比例。')}
+                        ${policyRateInput(id, 'policy-agentUplineRate', agentUplineRate, '管道上線分潤', '代理角色的上線遞迴比例。設為 0 即停止往上分。')}
+                        ${policyRateInput(id, 'policy-courseDevRate', courseDevRate, '開發直推分潤', '課程開發者的第一層分潤比例。')}
+                        ${policyRateInput(id, 'policy-courseDevUplineRate', courseDevUplineRate, '開發上線分潤', '開發者上線的遞迴比例。通常設定得比直推更低。')}
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div class="text-sm font-black text-slate-900">設定提醒</div>
+                        <div class="mt-2 grid gap-3 md:grid-cols-3">
+                            ${policySummary('導師', tutorRate, tutorUplineRate, { bg: 'bg-blue-50', fg: 'text-blue-700' }, '最常使用的主分潤，建議先確認這一組。')}
+                            ${policySummary('管道 / Agent', agentRate, agentUplineRate, { bg: 'bg-emerald-50', fg: 'text-emerald-700' }, '如果沒有代理通路，兩個欄位都可以保持 0。')}
+                            ${policySummary('課程開發', courseDevRate, courseDevUplineRate, { bg: 'bg-amber-50', fg: 'text-amber-700' }, '適合用來分配內容提供者或課程作者。')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
+                        <div class="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Current Policy</div>
+                        <div class="mt-2 text-2xl font-black">${escapeHtml(id)}</div>
+                        <p class="mt-3 text-sm leading-6 text-slate-300">
+                            這是目前唯一會被讀取的分潤策略。儲存後會立即影響新訂單的分潤計算與後續月結。
+                        </p>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                        <div class="text-sm font-black text-slate-900">快速檢查</div>
+                        <div class="mt-4 space-y-3 text-sm text-slate-600">
+                            <div class="flex items-start gap-3">
+                                <span class="mt-0.5 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">1</span>
+                                <span>若只想保留單一固定分潤，所有欄位都在這裡調整即可。</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="mt-0.5 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">2</span>
+                                <span>把某個欄位設成 <code>0</code>，就等於關閉該角色的分潤。</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="mt-0.5 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">3</span>
+                                <span>目前系統不再使用其他 <code>policyId</code>，舊資料也會自動回落到 <code>default-v1</code>。</span>
+                            </div>
+                        </div>
+
+                        <button id="btn-save-policy-${id}" onclick="window.saveRevenuePolicy('${escapeHtml(id)}')" class="mt-5 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 active:scale-95">
+                            儲存 default-v1
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
     } catch (e) {
-        body.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-red-500">載入失敗：${escapeHtml(e.message || 'unknown')}</td></tr>`;
+        body.innerHTML = `<div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">載入失敗：${escapeHtml(e.message || 'unknown')}</div>`;
     }
 };
 
@@ -2581,14 +2653,15 @@ window.markPolicyModified = function(id) {
 window.saveRevenuePolicy = async function (policyId) {
     const g = (id) => document.getElementById(`${id}-${policyId}`);
     const payload = {
-        policyId,
+        policyId: 'default-v1',
+        policyName: 'Default Sharing Policy',
         tutorRate: Number(g('policy-tutorRate')?.value || 0) / 100,
         tutorUplineRate: Number(g('policy-tutorUplineRate')?.value || 0) / 100,
         agentRate: Number(g('policy-agentRate')?.value || 0) / 100,
         agentUplineRate: Number(g('policy-agentUplineRate')?.value || 0) / 100,
         courseDevRate: Number(g('policy-courseDevRate')?.value || 0) / 100,
         courseDevUplineRate: Number(g('policy-courseDevUplineRate')?.value || 0) / 100,
-        enabled: !!g('policy-enabled')?.checked
+        enabled: true
     };
     
     const btn = document.getElementById(`btn-save-policy-${policyId}`);
@@ -2601,7 +2674,7 @@ window.saveRevenuePolicy = async function (policyId) {
     try {
         const fn = httpsCallable(functions, 'upsertRevenueSharePolicy');
         await fn(payload);
-        vibeShowToast(`已成功儲存策略：${policyId}`, 'success');
+        vibeShowToast('已成功儲存 default-v1 分潤設定', 'success');
         
         if (btn) {
             btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');

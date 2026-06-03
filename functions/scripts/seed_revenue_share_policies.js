@@ -25,28 +25,6 @@ const policies = [
     courseDevRate: 0.2,
     courseDevUplineRate: 0.1,
     enabled: true
-  },
-  {
-    id: "tw-direct-v1",
-    policyName: "TW Direct Sales Policy",
-    tutorRate: 0.2,
-    tutorUplineRate: 0.2,
-    agentRate: 0,
-    agentUplineRate: 0,
-    courseDevRate: 0.2,
-    courseDevUplineRate: 0.1,
-    enabled: true
-  },
-  {
-    id: "tw-agent-v1",
-    policyName: "TW Channel Partner Policy",
-    tutorRate: 0.2,
-    tutorUplineRate: 0.2,
-    agentRate: 0.2,
-    agentUplineRate: 0.1,
-    courseDevRate: 0.2,
-    courseDevUplineRate: 0.1,
-    enabled: true
   }
 ];
 
@@ -67,6 +45,15 @@ async function main() {
     }
     await ref.set(payload, { merge: true });
     console.log(`[apply] upserted ${policy.id}`);
+  }
+
+  for (const legacyId of ["tw-direct-v1", "tw-agent-v1"]) {
+    if (!shouldApply) {
+      console.log(`[dry-run] would delete legacy policy ${legacyId}`);
+      continue;
+    }
+    await col.doc(legacyId).delete().catch(() => {});
+    console.log(`[apply] deleted legacy policy ${legacyId}`);
   }
 }
 

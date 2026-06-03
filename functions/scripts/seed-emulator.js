@@ -700,49 +700,31 @@ async function seed() {
   }, { merge: true });
   console.log(`\n  👤 使用者 ${TEST_USER_EMAIL} (uid: ${TEST_USER_UID})`);
 
-  // Seed default revenue share policies
-  const policies = [
-    {
-      policyName: "Default Sharing Policy",
-      tutorRate: 0.2,
-      tutorUplineRate: 0.2,
-      agentRate: 0.2,
-      agentUplineRate: 0,
-      courseDevRate: 0.2,
-      courseDevUplineRate: 0.1,
-      enabled: true
-    },
-    {
-      policyName: "TW Direct Sales Policy",
-      tutorRate: 0.2,
-      tutorUplineRate: 0.2,
-      agentRate: 0,
-      agentUplineRate: 0,
-      courseDevRate: 0.2,
-      courseDevUplineRate: 0.1,
-      enabled: true
-    },
-    {
-      policyName: "TW Channel Partner Policy",
-      tutorRate: 0.2,
-      tutorUplineRate: 0.2,
-      agentRate: 0.2,
-      agentUplineRate: 0.1,
-      courseDevRate: 0.2,
-      courseDevUplineRate: 0.1,
-      enabled: true
-    }
-  ];
+  // Seed the single canonical revenue share policy
+  const policyId = "default-v1";
+  const policy = {
+    policyName: "Default Sharing Policy",
+    tutorRate: 0.2,
+    tutorUplineRate: 0.2,
+    agentRate: 0.2,
+    agentUplineRate: 0,
+    courseDevRate: 0.2,
+    courseDevUplineRate: 0.1,
+    enabled: true
+  };
 
-  const policyIds = ["default-v1", "tw-direct-v1", "tw-agent-v1"];
-  for (let i = 0; i < policies.length; i++) {
-    const policyId = policyIds[i];
-    await db.collection('revenue_share_policies').doc(policyId).set({
-      ...policies[i],
-      updatedAt: admin.firestore.Timestamp.now(),
-      createdAt: admin.firestore.Timestamp.now()
-    });
-    console.log(`  📋 Policy Seeded: ${policyId}`);
+  await db.collection('revenue_share_policies').doc(policyId).set({
+    ...policy,
+    policyId,
+    updatedAt: admin.firestore.Timestamp.now(),
+    createdAt: admin.firestore.Timestamp.now()
+  });
+  console.log(`  📋 Policy Seeded: ${policyId}`);
+
+  // Keep older local datasets from accumulating extra policies when the seed reruns.
+  const legacyPolicyIds = ["tw-direct-v1", "tw-agent-v1"];
+  for (const legacyPolicyId of legacyPolicyIds) {
+    await db.collection('revenue_share_policies').doc(legacyPolicyId).delete().catch(() => {});
   }
 
   // Seed orders for basic + advanced courses (using normalized courses for canonical keys)
