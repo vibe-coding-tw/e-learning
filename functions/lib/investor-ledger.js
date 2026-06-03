@@ -14,6 +14,10 @@ function toTimestamp(value) {
     if (value instanceof Date) return admin.firestore.Timestamp.fromDate(value);
     if (value?.toDate) return admin.firestore.Timestamp.fromDate(value.toDate());
     if (typeof value === "number") return admin.firestore.Timestamp.fromMillis(value);
+    if (typeof value === "string") {
+        const parsed = new Date(value);
+        if (!Number.isNaN(parsed.getTime())) return admin.firestore.Timestamp.fromDate(parsed);
+    }
     return admin.firestore.FieldValue.serverTimestamp();
 }
 
@@ -21,7 +25,23 @@ function toDate(value) {
     if (value instanceof Date) return new Date(value.getTime());
     if (value?.toDate) return value.toDate();
     if (typeof value === "number") return new Date(value);
+    if (typeof value === "string") {
+        const parsed = new Date(value);
+        if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
     return new Date();
+}
+
+function toSortableMillis(value) {
+    if (!value) return 0;
+    if (typeof value === "number") return value;
+    if (typeof value?.toMillis === "function") return value.toMillis();
+    if (typeof value?.toDate === "function") return value.toDate().getTime();
+    if (typeof value === "string") {
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+    }
+    return 0;
 }
 
 function buildInvestorEventId({
@@ -181,6 +201,359 @@ async function loadInvestorConfig({ db, configCache } = {}) {
     return config;
 }
 
+function deriveSharePrice({ preMoneyValuation, postMoneyValuation, shareBasis, sharePrice } = {}) {
+    const basis = Math.max(1, Number(shareBasis || 0));
+    const explicitPrice = Number(sharePrice);
+    if (Number.isFinite(explicitPrice) && explicitPrice > 0) return round2Amount(explicitPrice);
+    const post = Number(postMoneyValuation);
+    if (Number.isFinite(post) && post > 0) return round2Amount(post / basis);
+    const pre = Number(preMoneyValuation);
+    if (Number.isFinite(pre) && pre > 0) return round2Amount(pre / basis);
+    return 0;
+}
+
+function buildValuationSnapshotRecord({
+    valuationId,
+    roundName,
+    valuationType,
+    currency,
+    preMoneyValuation,
+    postMoneyValuation,
+    shareBasis,
+    sharePrice,
+    effectiveFrom,
+    effectiveTo,
+    notes,
+    locked,
+    createdAt
+} = {}) {
+    const resolvedSharePrice = deriveSharePrice({
+        preMoneyValuation,
+        postMoneyValuation,
+        shareBasis,
+        sharePrice
+    });
+    const basis = Math.max(1, Number(shareBasis || 0));
+    return {
+        valuationId,
+        roundName: normalizeText(roundName || valuationId),
+        valuationType: normalizeText(valuationType || "pre-money"),
+        currency: normalizeText(currency || "TWD") || "TWD",
+        preMoneyValuation: round2Amount(preMoneyValuation || 0),
+        postMoneyValuation: round2Amount(postMoneyValuation || 0),
+        shareBasis: basis,
+        sharePrice: round2Amount(resolvedSharePrice || 0),
+        effectiveFrom: effectiveFrom ? toTimestamp(effectiveFrom) : admin.firestore.FieldValue.serverTimestamp(),
+        effectiveTo: effectiveTo ? toTimestamp(effectiveTo) : null,
+        notes: normalizeText(notes || ""),
+        locked: locked !== false,
+        createdAt: createdAt || admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+}
+
+function buildEquityIssuanceId({
+    valuationId = "",
+    investorId = "",
+    sourceType = "",
+    sourceId = "",
+    considerationAmount = 0,
+    issuedShares = 0
+} = {}) {
+    const seed = [
+        normalizeText(valuationId).toLowerCase(),
+        normalizeText(investorId).toLowerCase(),
+        normalizeText(sourceType).toLowerCase(),
+        normalizeText(sourceId).toLowerCase(),
+        round2Amount(considerationAmount).toFixed(2),
+        round2Amount(issuedShares).toFixed(4)
+    ].join("|");
+    return crypto.createHash("sha256").update(seed).digest("hex").slice(0, 40);
+}
+
+function buildEquityIssuanceRecord({
+    issuanceId,
+    valuationId,
+    investorId,
+    investorName,
+    investorEmail,
+    participantType,
+    sourceType,
+    sourceId,
+    sourceLabel,
+    considerationType,
+    considerationAmount,
+    valuationSnapshot,
+    sharePrice,
+    issuedShares,
+    shareBasis,
+    ownershipPct,
+    vestingMonths,
+    cliffMonths,
+    startDate,
+    status,
+    note,
+    createdAt
+} = {}) {
+    return {
+        issuanceId,
+        valuationId,
+        investorId,
+        investorName: normalizeText(investorName),
+        investorEmail: normalizeText(investorEmail).toLowerCase(),
+        participantType: normalizeText(participantType || "investor"),
+        sourceType: normalizeText(sourceType || "manual"),
+        sourceId: normalizeText(sourceId || ""),
+        sourceLabel: normalizeText(sourceLabel || ""),
+        considerationType: normalizeText(considerationType || "cash"),
+        considerationAmount: round2Amount(considerationAmount || 0),
+        valuationSnapshot: valuationSnapshot || null,
+        sharePrice: round2Amount(sharePrice || 0),
+        issuedShares: round2Amount(issuedShares || 0),
+        shareBasis: round2Amount(shareBasis || 0),
+        ownershipPct: round2Amount(ownershipPct || 0),
+        vestingMonths: Math.max(0, Number(vestingMonths || 0)),
+        cliffMonths: Math.max(0, Number(cliffMonths || 0)),
+        startDate: startDate ? toTimestamp(startDate) : admin.firestore.FieldValue.serverTimestamp(),
+        status: normalizeText(status || "active"),
+        note: normalizeText(note || ""),
+        createdAt: createdAt || admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+}
+
+function buildEquityPositionRecord({
+    investorId,
+    investorName,
+    investorEmail,
+    participantType,
+    totalIssuedShares,
+    shareBasis,
+    ownershipPct,
+    valuationId,
+    sharePrice,
+    latestIssuanceId,
+    vestingMonths,
+    cliffMonths,
+    updatedAt
+} = {}) {
+    return {
+        investorId,
+        investorName: normalizeText(investorName),
+        investorEmail: normalizeText(investorEmail).toLowerCase(),
+        participantType: normalizeText(participantType || "investor"),
+        totalIssuedShares: round2Amount(totalIssuedShares || 0),
+        shareBasis: round2Amount(shareBasis || 0),
+        ownershipPct: round2Amount(ownershipPct || 0),
+        valuationId: normalizeText(valuationId || ""),
+        sharePrice: round2Amount(sharePrice || 0),
+        latestIssuanceId: normalizeText(latestIssuanceId || ""),
+        vestingMonths: Math.max(0, Number(vestingMonths || 0)),
+        cliffMonths: Math.max(0, Number(cliffMonths || 0)),
+        updatedAt: updatedAt || admin.firestore.FieldValue.serverTimestamp()
+    };
+}
+
+async function loadValuationSnapshots({ db, snapshotCache } = {}) {
+    const cacheKey = "valuation-snapshots";
+    if (snapshotCache?.has(cacheKey)) return snapshotCache.get(cacheKey);
+    const snap = await db.collection("valuation_snapshots").get();
+    const snapshots = snap.docs
+        .map((doc) => ({ valuationId: doc.id, ...(doc.data() || {}) }))
+        .map((row) => ({
+            valuationId: normalizeText(row.valuationId),
+            roundName: normalizeText(row.roundName || row.valuationId),
+            valuationType: normalizeText(row.valuationType || "pre-money"),
+            currency: normalizeText(row.currency || "TWD") || "TWD",
+            preMoneyValuation: round2Amount(row.preMoneyValuation || 0),
+            postMoneyValuation: round2Amount(row.postMoneyValuation || 0),
+            shareBasis: Math.max(1, Number(row.shareBasis || 0)),
+            sharePrice: round2Amount(row.sharePrice || deriveSharePrice({
+                preMoneyValuation: row.preMoneyValuation,
+                postMoneyValuation: row.postMoneyValuation,
+                shareBasis: row.shareBasis
+            })),
+            effectiveFrom: row.effectiveFrom || null,
+            effectiveTo: row.effectiveTo || null,
+            notes: normalizeText(row.notes || ""),
+            locked: row.locked !== false,
+            updatedAt: row.updatedAt || null
+        }))
+        .sort((a, b) => toSortableMillis(b.updatedAt || b.effectiveFrom) - toSortableMillis(a.updatedAt || a.effectiveFrom) || a.roundName.localeCompare(b.roundName));
+    if (snapshotCache) snapshotCache.set(cacheKey, snapshots);
+    return snapshots;
+}
+
+async function loadActiveValuationSnapshot({ db, snapshotCache, valuationId = "" } = {}) {
+    const snapshots = await loadValuationSnapshots({ db, snapshotCache });
+    if (valuationId) {
+        const matched = snapshots.find((s) => s.valuationId === normalizeText(valuationId));
+        if (matched) return matched;
+    }
+    return snapshots.find((s) => s.locked !== false) || snapshots[0] || null;
+}
+
+async function upsertValuationSnapshot({
+    db,
+    payload = {},
+    createdByUid = "",
+    snapshotCache
+} = {}) {
+    const valuationId = normalizeText(payload.valuationId || payload.id || "");
+    if (!valuationId) throw new Error("valuationId is required");
+    const shareBasis = Math.max(1, Number(payload.shareBasis || payload.totalShares || 0));
+    if (!Number.isFinite(shareBasis) || shareBasis <= 0) throw new Error("shareBasis must be greater than 0");
+    const docRef = db.collection("valuation_snapshots").doc(valuationId);
+    const snapshotDoc = buildValuationSnapshotRecord({
+        valuationId,
+        roundName: payload.roundName || payload.name || valuationId,
+        valuationType: payload.valuationType || "pre-money",
+        currency: payload.currency || "TWD",
+        preMoneyValuation: payload.preMoneyValuation,
+        postMoneyValuation: payload.postMoneyValuation,
+        shareBasis,
+        sharePrice: payload.sharePrice,
+        effectiveFrom: payload.effectiveFrom || payload.effectiveAt || new Date(),
+        effectiveTo: payload.effectiveTo || null,
+        notes: payload.notes || "",
+        locked: payload.locked !== false
+    });
+    await docRef.set({
+        ...snapshotDoc,
+        createdByUid: normalizeText(createdByUid),
+        updatedByUid: normalizeText(createdByUid)
+    }, { merge: true });
+    if (snapshotCache) snapshotCache.delete("valuation-snapshots");
+    return snapshotDoc;
+}
+
+async function issueInvestorEquity({
+    db,
+    payload = {},
+    createdByUid = "",
+    profileCache,
+    snapshotCache
+} = {}) {
+    const investorId = normalizeText(payload.investorId || payload.investor || "");
+    if (!investorId) throw new Error("investorId is required");
+
+    const requestedValuationId = normalizeText(payload.valuationId || payload.snapshotId || "");
+    const valuation = requestedValuationId
+        ? (await loadValuationSnapshots({ db, snapshotCache })).find((snapshot) => snapshot.valuationId === requestedValuationId)
+        : await loadActiveValuationSnapshot({ db, snapshotCache });
+    if (!valuation) throw new Error("No valuation snapshot available");
+    if (requestedValuationId && valuation.valuationId !== requestedValuationId) {
+        throw new Error(`Valuation snapshot not found: ${requestedValuationId}`);
+    }
+    const sharePrice = round2Amount(payload.sharePrice || valuation.sharePrice || 0);
+    if (sharePrice <= 0) throw new Error("sharePrice must be greater than 0");
+
+    const considerationAmount = Math.abs(Number(payload.considerationAmount || payload.amount || 0));
+    if (considerationAmount <= 0) throw new Error("considerationAmount must be greater than 0");
+
+    const investorDoc = await db.collection("investor_profiles").doc(investorId).get();
+    const investorData = investorDoc.exists ? (investorDoc.data() || {}) : {};
+    const investorName = normalizeText(payload.investorName || investorData.investorName || investorId);
+    const investorEmail = normalizeText(payload.investorEmail || investorData.investorEmail || "").toLowerCase();
+    const participantType = normalizeText(payload.participantType || investorData.participantType || "investor");
+    const sourceType = normalizeText(payload.sourceType || "manual");
+    const sourceId = normalizeText(payload.sourceId || "");
+    const sourceLabel = normalizeText(payload.sourceLabel || payload.note || sourceType || "manual");
+    const considerationType = normalizeText(payload.considerationType || "cash");
+    const note = normalizeText(payload.note || "");
+    const vestingMonths = Math.max(0, Number(payload.vestingMonths || investorData.vestingMonths || 0));
+    const cliffMonths = Math.max(0, Number(payload.cliffMonths || investorData.cliffMonths || 0));
+    const startDate = payload.startDate || payload.effectiveAt || new Date();
+    const issuedShares = round2Amount(considerationAmount / sharePrice);
+    const shareBasis = Math.max(1, Number(valuation.shareBasis || 0));
+    const ownershipPct = shareBasis > 0 ? round2Amount((issuedShares / shareBasis) * 100) : 0;
+    const issuanceId = normalizeText(payload.issuanceId || buildEquityIssuanceId({
+        valuationId: valuation.valuationId,
+        investorId,
+        sourceType,
+        sourceId,
+        considerationAmount,
+        issuedShares
+    }));
+    const issuanceRef = db.collection("equity_issuances").doc(issuanceId);
+    const existing = await issuanceRef.get();
+    if (existing.exists) {
+        return { issuanceId, created: false, issuance: existing.data() || null };
+    }
+
+    const issuanceDoc = buildEquityIssuanceRecord({
+        issuanceId,
+        valuationId: valuation.valuationId,
+        investorId,
+        investorName,
+        investorEmail,
+        participantType,
+        sourceType,
+        sourceId,
+        sourceLabel,
+        considerationType,
+        considerationAmount,
+        valuationSnapshot: valuation,
+        sharePrice,
+        issuedShares,
+        shareBasis,
+        ownershipPct,
+        vestingMonths,
+        cliffMonths,
+        startDate,
+        status: payload.status || "active",
+        note
+    });
+    await issuanceRef.set({
+        ...issuanceDoc,
+        createdByUid: normalizeText(createdByUid)
+    }, { merge: true });
+
+    const positionRef = db.collection("investor_equity_positions").doc(investorId);
+    const existingPositionSnap = await positionRef.get();
+    const existingPosition = existingPositionSnap.exists ? (existingPositionSnap.data() || {}) : {};
+    const previousTotalIssuedShares = round2Amount(existingPosition.totalIssuedShares || 0);
+    const newTotalIssuedShares = round2Amount(previousTotalIssuedShares + issuedShares);
+    const positionDoc = buildEquityPositionRecord({
+        investorId,
+        investorName,
+        investorEmail,
+        participantType,
+        totalIssuedShares: newTotalIssuedShares,
+        shareBasis,
+        ownershipPct: shareBasis > 0 ? round2Amount((newTotalIssuedShares / shareBasis) * 100) : 0,
+        valuationId: valuation.valuationId,
+        sharePrice,
+        latestIssuanceId: issuanceId,
+        vestingMonths,
+        cliffMonths
+    });
+    await positionRef.set({
+        ...positionDoc,
+        createdByUid: normalizeText(createdByUid)
+    }, { merge: true });
+
+    const updatedShareUnits = round2Amount(Number(investorData.shareUnits || 0) + issuedShares);
+    await db.collection("investor_profiles").doc(investorId).set({
+        investorId,
+        investorName,
+        investorEmail,
+        participantType,
+        shareUnits: updatedShareUnits,
+        valuationId: valuation.valuationId,
+        valuationName: valuation.roundName,
+        valuationSharePrice: sharePrice,
+        equityShares: updatedShareUnits,
+        ownershipPct: positionDoc.ownershipPct,
+        vestingMonths,
+        cliffMonths,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    if (profileCache) profileCache.delete("investor-profiles");
+    return { issuanceId, created: true, issuance: issuanceDoc, position: positionDoc, valuation };
+}
+
 async function loadInvestorProfiles({ db, profileCache } = {}) {
     const cacheKey = "investor-profiles";
     if (profileCache?.has(cacheKey)) return profileCache.get(cacheKey);
@@ -192,7 +565,11 @@ async function loadInvestorProfiles({ db, profileCache } = {}) {
             investorId: normalizeText(p.investorId),
             investorName: normalizeText(p.investorName || p.name || p.investorId),
             investorEmail: normalizeText(p.investorEmail || p.email || "").toLowerCase(),
+            participantType: normalizeText(p.participantType || "investor"),
             shareUnits: round2Amount(p.shareUnits || p.share || 0),
+            equityShares: round2Amount(p.equityShares || p.shareUnits || p.share || 0),
+            ownershipPct: round2Amount(p.ownershipPct || 0),
+            valuationId: normalizeText(p.valuationId || ""),
             payoutAccount: normalizeText(p.payoutAccount || p.paymentAccount || ""),
             notes: normalizeText(p.notes || ""),
             enabled: p.enabled !== false
@@ -450,11 +827,20 @@ module.exports = {
     buildInvestorCreditId,
     buildInvestorCreditRecord,
     buildInvestorEventId,
+    buildEquityIssuanceId,
+    buildEquityIssuanceRecord,
+    buildEquityPositionRecord,
     buildInvestorFinanceEventRecord,
+    buildValuationSnapshotRecord,
     buildInvestorSettlementRecord,
+    deriveSharePrice,
+    issueInvestorEquity,
+    loadActiveValuationSnapshot,
     loadInvestorConfig,
     loadInvestorProfiles,
+    loadValuationSnapshots,
     recordInvestorFinanceEvent,
     round2Amount,
+    upsertValuationSnapshot,
     settleAnnualInvestorDividends
 };
