@@ -38,6 +38,9 @@
   - `status === "SUCCESS"`
   - `expiryDate > now`
 - `checkPaymentAuthorization` 與 `resolveAssignmentAccess` 必須共用同一套判定邏輯。
+- **課程 Token 安全防護（IP 與 UID 雙重綁定）**：
+  - 授權 Token 格式升級為 `pageId|scopePart|expiry|uid|clientIp|signature` 6 段式架構。
+  - `serveCourse` 在驗證 Token 時，必須提取連線的 Client IP（處理標準化 IPv6 與 `x-forwarded-for` 標頭）並與 Token 中的 IP 比對，不符時以 `403` 拒絕，以防範付費 Token 被任意複製擴散。同時支援 legacy 4 段式 Token 的向下相容。
 - 過期或未付費使用者不得存取付費單元的作業指引與設定介面。
 - 比對任何單元 ID 時，必須先做歸一化處理，例如移除 `.html` 後綴。
 - 課程卡片僅在該課程下所有關聯單元 `authorized: true` 時才視為「已開通」。
@@ -93,6 +96,8 @@
 - 所有設定資料應透過 `users.tutorConfigs` 儲存，`course_configs` 已廢棄。
 - 屬性過期判定必須使用 `expiryDate.toMillis() > now.toMillis()`。
 - 發現資料不一致時，優先進行資料遷移，禁止新增執行期 fallback。
+- **共享快取規範**：
+  - 課程 HTML 快取儲存於 `content_cache` 集合，藉此實作多實例共享二級快取以保護外部 Git 存取限制。
 
 ---
 
@@ -131,10 +136,12 @@ git commit -m "docs: update README"
   3. `git commit`（commit 訊息需符合 Conventional Commits 與 `[skip ci]` 規範）
   4. 依循 Rule 6a，在 `git push` 前暫時關閉 Actions 功能，推送後重開。
   5. 部署至 Firebase：`firebase deploy --project e-learning-942f7` (或依需求指定 `--only`)
+- **服務快取失效策略**：
+  - 當更新外部 `content-repo` 課程 HTML 後，必須更新資料庫的 `contentVersion` 欄位以強制使所有實例的快取失效，重整前台內容。
 - 確保生產環境與最新程式碼同步。
 
 ---
 
 > 本文件是本專案 AI agent 的正式工作手冊，任何其他 agent 或訓練資料若要引用專案規則，請一律參考 `AGENT.md`。
 > 
-> 最後更新：2026-06-02
+> 最後更新：2026-06-03
