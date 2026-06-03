@@ -515,9 +515,8 @@ function showAccessDenied(errorType = "") {
 
 function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor = false, isPaidStudent = false } = {}) {
     const { filterUnitId } = getCurrentDashboardContext();
-    const isUnitContext = !!filterUnitId;
     const isGlobalAdmin = !isUnitContext && isAdmin;
-    const canViewGlobalSettings = isAdmin;
+    const canViewGlobalSettings = isGlobalAdmin;
     const canViewUnitSettings = isUnitContext && (
         isAdmin ? !!adminTutorMode : !!isQualifiedTutor
     );
@@ -1893,6 +1892,13 @@ window.switchTab = function (tabName) {
 
         const isStudent = !currentDashboardPermissions.isAdmin && !currentDashboardPermissions.isQualifiedTutor;
         
+        if (filterUnitId) {
+            renderAssignmentsGuideMain(filterUnitId);
+        } else {
+            const placeholder = document.getElementById('github-readme-placeholder-main');
+            if (placeholder) placeholder.classList.add('hidden');
+        }
+
         // Update Title for Student vs Tutor
         const headerEl = document.querySelector('#assignments-header h3');
         if (headerEl) {
@@ -1910,7 +1916,12 @@ window.switchTab = function (tabName) {
                 unitSettingsContainer.classList.toggle('hidden', !unitSettingsVisible);
             }
             if (unitSettingsVisible) {
-                renderSettingsTab(filterUnitId);
+                renderSettingsTab(filterUnitId).then(() => {
+                    const settingsHeader = document.getElementById('settings-header-integrated');
+                    const settingsCard = document.getElementById('assignment-setting-card');
+                    if (settingsHeader) settingsHeader.classList.add('hidden');
+                    if (settingsCard) settingsCard.classList.add('hidden');
+                });
             }
 
             if (filterUnitId) {
