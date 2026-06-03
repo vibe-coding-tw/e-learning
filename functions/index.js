@@ -1205,6 +1205,61 @@ function cleanUnitId(unitId) {
         .replace(/^(?:tw-(?:common|car-(?:starter|basic|advanced))-|start-|basic-|adv-|advanced-|prepare-)?(?:\d{2}-)?(?:unit-|lesson-|master-)?/i, '');
 }
 
+const LEGACY_TUTOR_UNIT_TO_CANONICAL = {
+    '01-master-getting-started.html': 'common-developer-identity.html',
+    '02-master-ai-agents.html': 'common-agent-mode.html',
+    '03-master-wifi-motor.html': 'common-github-classroom.html',
+    '01-unit-vscode-online.html': 'common-vscode-online.html',
+    '01-unit-vscode-setup.html': 'common-vscode-setup.html',
+    '02-unit-agent-mode.html': 'common-agent-mode.html',
+    '02-unit-vibe-coding.html': 'common-vibe-coding.html',
+    '02-unit-web-agents.html': 'common-web-agents.html',
+    '03-unit-github-classroom.html': 'common-github-classroom.html',
+    '03-unit-motor-ramping.html': 'common-motor-ramping.html',
+    '03-unit-wifi-setup.html': 'common-wifi-setup.html'
+};
+
+const CANONICAL_TUTOR_UNIT_TO_LEGACY = Object.entries(LEGACY_TUTOR_UNIT_TO_CANONICAL).reduce((acc, [legacy, canonical]) => {
+    if (!acc[canonical]) acc[canonical] = [];
+    acc[canonical].push(legacy);
+    return acc;
+}, {});
+
+function normalizeTutorAdminUnitId(unitId = '') {
+    const raw = normalizeText(unitId);
+    if (!raw) return '';
+    const withHtml = raw.endsWith('.html') ? raw : `${raw}.html`;
+    if (LEGACY_TUTOR_UNIT_TO_CANONICAL[withHtml]) return LEGACY_TUTOR_UNIT_TO_CANONICAL[withHtml];
+    if (LEGACY_TUTOR_UNIT_TO_CANONICAL[raw]) return LEGACY_TUTOR_UNIT_TO_CANONICAL[raw];
+    if (/^(?:tw|en)-/i.test(raw)) return raw.replace(/^(?:tw|en)-/i, '');
+    if (raw === '02-unit-classroom-workflow.html') return 'common-github-classroom.html';
+    if (raw.startsWith('04-')) return raw.replace(/^04-/, '02-');
+    return raw;
+}
+
+function getTutorAdminUnitAliasCandidates(unitId = '') {
+    const canonical = normalizeTutorAdminUnitId(unitId);
+    const raw = normalizeText(unitId);
+    const withHtml = canonical.endsWith('.html') ? canonical : `${canonical}.html`;
+    const noHtml = withHtml.replace(/\.html$/i, '');
+    const legacyAliases = [
+        ...(CANONICAL_TUTOR_UNIT_TO_LEGACY[withHtml] || []),
+        ...(CANONICAL_TUTOR_UNIT_TO_LEGACY[noHtml] || [])
+    ];
+    const candidates = new Set([
+        canonical,
+        withHtml,
+        noHtml,
+        raw,
+        raw.replace(/\.html$/i, '')
+    ]);
+    legacyAliases.forEach(alias => {
+        candidates.add(alias);
+        candidates.add(alias.replace(/\.html$/i, ''));
+    });
+    return Array.from(candidates).filter(Boolean);
+}
+
 function mapLegacyMasterToCanonical(value = '') {
     // Use cached mapping if available; fallback to value if not
     const mapping = peekLegacyMasterMapping();
@@ -1796,6 +1851,92 @@ exports.updateLessonI18n = onCall(async (request) => {
 
     return { success: true, courseId };
 });
+
+/**
+ * [System Settings Admin] 更新系統全域參數設定（僅限 admin 角色）
+ * 接受 { contentVersion }
+ */
+exports.updateSystemConfig = onCall(async (request) => {
+    const { auth, data } = request;
+
+    // 驗證登入與 admin 角色
+    assertAuthenticated(auth);
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    assertAdminRole(userData.role);
+
+    const { contentVersion } = data || {};
+    if (contentVersion !== undefined) {
+        if (typeof contentVersion !== 'string' || contentVersion.trim().length < 7) {
+            throw new HttpsError('invalid-argument', 'invalid-content-version-hash');
+        }
+        
+        // 寫入 metadata_settings/content_runtime
+        await db.collection('metadata_settings').doc('content_runtime').set({
+            contentVersion: contentVersion.trim(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedBy: auth.uid
+        }, { merge: true });
+        
+        console.log(`[updateSystemConfig] ✅ Updated contentVersion to ${contentVersion} by uid=${auth.uid}`);
+        
+        // 自動清除快取
+        await purgeContentCacheHelper(db);
+    }
+
+    return { success: true };
+});
+
+/**
+ * [System Settings Admin] 一鍵清除內容 HTML 快取（僅限 admin 角色）
+ */
+exports.purgeContentCache = onCall(async (request) => {
+    const { auth } = request;
+
+    // 驗證登入與 admin 角色
+    assertAuthenticated(auth);
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    assertAdminRole(userData.role);
+
+    await purgeContentCacheHelper(db);
+    return { success: true };
+});
+
+async function purgeContentCacheHelper(db) {
+    console.log(`[purgeContentCacheHelper] Starting cache purge...`);
+    const cacheSnap = await db.collection('content_cache').get();
+    if (cacheSnap.empty) {
+        console.log(`[purgeContentCacheHelper] No cache records found.`);
+        return;
+    }
+
+    const batchSize = 100;
+    let batch = db.batch();
+    let count = 0;
+
+    for (const doc of cacheSnap.docs) {
+        batch.delete(doc.ref);
+        count++;
+        if (count % batchSize === 0) {
+            await batch.commit();
+            batch = db.batch();
+        }
+    }
+
+    if (count % batchSize !== 0) {
+        await batch.commit();
+    }
+    
+    // 同時清除本機記憶體快取
+    if (typeof CONTENT_FILE_CACHE !== 'undefined' && CONTENT_FILE_CACHE.clear) {
+        CONTENT_FILE_CACHE.clear();
+    }
+
+    console.log(`[purgeContentCacheHelper] ✅ Purged ${count} cache files from content_cache.`);
+}
 
 /**
  * [Pricing Admin] 更新課程多地區價格欄位（僅限 admin 角色）
@@ -2826,6 +2967,9 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
 
     try {
         const db = admin.firestore();
+        const lessons = await getLessons();
+        const canonicalCourseId = normalizeTutorAdminUnitId(resolveCanonicalUnitId(courseId, lessons) || courseId);
+        const aliasCandidates = getTutorAdminUnitAliasCandidates(canonicalCourseId);
         // [V13.0.22] All authorization data is now strictly user-centric. 
         // No longer using centralized course_configs collection.
 
@@ -2848,7 +2992,7 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
             try {
                 const userRecord = await admin.auth().getUserByEmail(tutorEmail);
                 const tutorUid = userRecord.uid;
-                await upsertTutorConfigForUser(db, tutorUid, courseId, buildTutorConfigEntry({
+                await upsertTutorConfigForUser(db, tutorUid, canonicalCourseId, buildTutorConfigEntry({
                     email: tutorEmail,
                     name: tutorName,
                     qualifiedAt: nowIsoTimestamp()
@@ -2863,19 +3007,18 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
 
             // [V15.2] Unit-Specific Assignment Link & Email Notification
             try {
-                const lessons = await getLessons();
-                const unitMetadata = findLessonByCourseRef(courseId, lessons) || lessons.find(l => l.courseUnits && l.courseUnits.includes(courseId));
-                const unitName = unitMetadata ? (unitMetadata.title || unitMetadata.courseName || courseId) : courseId;
+                const unitMetadata = findLessonByCourseRef(canonicalCourseId, lessons) || lessons.find(l => l.courseUnits && l.courseUnits.includes(canonicalCourseId));
+                const unitName = unitMetadata ? (unitMetadata.title || unitMetadata.courseName || canonicalCourseId) : canonicalCourseId;
 
                 // Fetch the recently updated assignmentUrl from tutor's config
                 const tutorUserRecord = await admin.auth().getUserByEmail(tutorEmail);
                 const tutorUid = tutorUserRecord.uid;
                 const tutorDoc = await db.collection('users').doc(tutorUid).get();
                 const tutorData = tutorDoc.exists ? tutorDoc.data() : {};
-                const assignmentUrl = getUserTutorConfig(tutorData, courseId)?.assignmentUrl || null;
+                const assignmentUrl = getUserTutorConfig(tutorData, canonicalCourseId)?.assignmentUrl || null;
 
-                await sendTutorAuthorizationEmail(tutorEmail, unitName, courseId, assignmentUrl);
-                console.log(`[Auth] Authorization link ${assignmentUrl || 'None'} sent to ${tutorEmail} for ${courseId}`);
+                await sendTutorAuthorizationEmail(tutorEmail, unitName, canonicalCourseId, assignmentUrl);
+                console.log(`[Auth] Authorization link ${assignmentUrl || 'None'} sent to ${tutorEmail} for ${canonicalCourseId}`);
             } catch (authExtraErr) {
                 console.error("[Auth] Failed to generate promo code or send email:", authExtraErr);
             }
@@ -2890,10 +3033,13 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
             try {
                 const userRecord = await admin.auth().getUserByEmail(tutorEmail);
                 const tutorUid = userRecord.uid;
-                await upsertTutorConfigForUser(db, tutorUid, courseId, buildTutorConfigEntry({
-                    email: tutorEmail,
-                    authorized: false
-                }));
+                const updatePatch = {
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                };
+                for (const alias of aliasCandidates) {
+                    updatePatch[`tutorConfigs.${alias}`] = admin.firestore.FieldValue.delete();
+                }
+                await db.collection('users').doc(tutorUid).set(updatePatch, { merge: true });
                 console.log(`[Role] Successfully removed auth for ${tutorEmail} from user doc.`);
             } catch (authSyncErr) {
                 console.warn(`[Role] Failed to sync user doc removal for ${tutorEmail}: ${authSyncErr.message}`);
@@ -3941,6 +4087,17 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                 result.pendingShipmentsCount = shipmentSummary.pendingShipmentsCount;
             } catch (shipErr) {
                 console.error("Error aggregating shipments:", shipErr);
+            }
+        }
+
+        if (requesterRole === 'admin') {
+            try {
+                const configDoc = await db.collection('metadata_settings').doc('content_runtime').get();
+                if (configDoc.exists) {
+                    result.contentVersion = configDoc.data().contentVersion || "";
+                }
+            } catch (err) {
+                console.warn("[getDashboardData] Failed to fetch content_runtime version:", err.message);
             }
         }
 
