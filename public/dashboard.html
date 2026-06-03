@@ -274,6 +274,45 @@
 
             <!-- TAB CONTENT: COURSE SETTINGS (Restored Wrapper) -->
             <div id="view-settings" class="tab-content hidden space-y-12 animate-fade-in">
+                <!-- 0. 分潤策略管理 (Revenue Policies Admin) -->
+                <div id="admin-revenue-policy-container" class="space-y-8 hidden">
+                    <div id="business-revenue-policies"></div>
+                </div>
+
+                <!-- 3. 業務分潤與定價策略 (Business Settings & Pricing Policy) -->
+                <div id="business-settings-container" class="card p-0">
+                    <div id="business-header" class="px-6 py-6 border-b border-gray-100 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-white rounded-t-3xl">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">業務分潤與定價策略 (Business Settings & Pricing Policy)</h3>
+                            <p class="text-sm text-gray-500 mt-1">課程價格、分潤策略與營運規則集中管理</p>
+                        </div>
+                        <div class="text-xs text-gray-400 font-medium">
+                            只保留資料驅動設定，環境變數仍由 `.env` / Secret Manager 管理
+                        </div>
+                    </div>
+
+                    <div class="p-6 space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">課程總數</div>
+                                <div class="mt-2 text-3xl font-black text-slate-900" id="business-stat-lesson-count">0</div>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                                <div class="text-xs font-bold text-emerald-600 uppercase tracking-widest">有價格資料</div>
+                                <div class="mt-2 text-3xl font-black text-emerald-700" id="business-stat-priced-count">0</div>
+                            </div>
+                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                                <div class="text-xs font-bold text-blue-600 uppercase tracking-widest">啟用中的分潤策略</div>
+                                <div class="mt-2 text-3xl font-black text-blue-700" id="business-stat-policy-count">0</div>
+                            </div>
+                        </div>
+
+                        <div id="business-pricing-overview" class="space-y-6">
+                            <!-- JS Generated -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 1. 系統設定與全域管理 (System Settings) -->
                 <div id="system-settings-container" class="space-y-8 hidden">
                     <div class="card p-0">
@@ -366,44 +405,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 3. 業務分潤與定價策略 (Business Settings & Pricing Policy) -->
-                <div id="business-settings-container" class="card p-0">
-                    <div id="business-header" class="px-6 py-6 border-b border-gray-100 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-white rounded-t-3xl">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800">業務分潤與定價策略 (Business Settings & Pricing Policy)</h3>
-                            <p class="text-sm text-gray-500 mt-1">課程價格、分潤策略與營運規則集中管理</p>
-                        </div>
-                        <div class="text-xs text-gray-400 font-medium">
-                            只保留資料驅動設定，環境變數仍由 `.env` / Secret Manager 管理
-                        </div>
-                    </div>
-
-                    <div class="p-6 space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">課程總數</div>
-                                <div class="mt-2 text-3xl font-black text-slate-900" id="business-stat-lesson-count">0</div>
-                            </div>
-                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                                <div class="text-xs font-bold text-emerald-600 uppercase tracking-widest">有價格資料</div>
-                                <div class="mt-2 text-3xl font-black text-emerald-700" id="business-stat-priced-count">0</div>
-                            </div>
-                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                                <div class="text-xs font-bold text-blue-600 uppercase tracking-widest">啟用中的分潤策略</div>
-                                <div class="mt-2 text-3xl font-black text-blue-700" id="business-stat-policy-count">0</div>
-                            </div>
-                        </div>
-
-                        <div id="business-pricing-overview" class="space-y-6">
-                            <!-- JS Generated -->
-                        </div>
-
-                        <div id="business-revenue-tools" class="space-y-6">
-                            <!-- JS Generated -->
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- TAB CONTENT: EARNINGS -->
@@ -416,6 +417,9 @@
                 </div>
 
                 <div id="earnings-container" class="space-y-8">
+                    <!-- Revenue Simulator -->
+                    <div id="earnings-revenue-simulator" class="w-full hidden"></div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="card border-l-4 border-emerald-500 p-6">
                             <p class="text-gray-500 text-sm font-medium">累積總分潤 (TWD)</p>
@@ -574,7 +578,7 @@
 
     <script src="./js/dashboard-lookup-utils.74291754cdb9.js"></script>
     <script src="./js/repo-slug-utils.397a2f388cc7.js"></script>
-    <script type="module" src="./js/dashboard.41682f4d82b7.js"></script>
+    <script type="module" src="./js/dashboard.22b9ebce9c46.js"></script>
 </body>
 
 </html>

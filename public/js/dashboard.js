@@ -1965,7 +1965,7 @@ window.setupAdminFeatures = window.setupAdminFeatures || function() {
     // Admin features are now initialized during renderAdminConsole
 }
 
-window.buildRevenueToolsHtml = window.buildRevenueToolsHtml || function() {
+window.buildRevenueSimulatorHtml = window.buildRevenueSimulatorHtml || function() {
     return `
         <div class="mb-10 bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 border-b border-blue-100 flex items-center justify-between">
@@ -2007,7 +2007,11 @@ window.buildRevenueToolsHtml = window.buildRevenueToolsHtml || function() {
             </div>
             <div id="revenue-sim-result" class="px-6 pb-6"></div>
         </div>
+    `;
+};
 
+window.buildRevenuePolicyHtml = window.buildRevenuePolicyHtml || function() {
+    return `
         <div class="mb-10 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                 <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">⚙️ 分潤策略管理（Admin）</h4>
@@ -2035,6 +2039,10 @@ window.buildRevenueToolsHtml = window.buildRevenueToolsHtml || function() {
             </div>
         </div>
     `;
+};
+
+window.buildRevenueToolsHtml = function() {
+    return '';
 };
 
 /**
@@ -3392,13 +3400,16 @@ async function renderBusinessTab() {
     if (myRole !== 'admin' || !dashboardData) return;
     renderBusinessPricingOverview();
 
-    const revenueToolsContainer = document.getElementById('business-revenue-tools');
-    if (revenueToolsContainer) {
-        revenueToolsContainer.innerHTML = window.buildRevenueToolsHtml ? window.buildRevenueToolsHtml() : '';
+    // Render Policy Admin at the top
+    const revenuePolicyContainer = document.getElementById('business-revenue-policies');
+    if (revenuePolicyContainer) {
+        revenuePolicyContainer.innerHTML = window.buildRevenuePolicyHtml ? window.buildRevenuePolicyHtml() : '';
     }
-    if (typeof window.runRevenueSimulation === 'function') {
-        window.runRevenueSimulation();
+    const adminRevenuePolicyContainer = document.getElementById('admin-revenue-policy-container');
+    if (adminRevenuePolicyContainer) {
+        adminRevenuePolicyContainer.classList.remove('hidden');
     }
+
     if (typeof window.loadRevenuePolicies === 'function') {
         window.loadRevenuePolicies();
     }
@@ -4191,6 +4202,21 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
     }
 
     totalEarningsEl.innerText = total.toLocaleString();
+
+    // 3. Render Revenue Simulator (Read-Only) for Admins
+    const simContainer = document.getElementById('earnings-revenue-simulator');
+    if (simContainer) {
+        if (myRole === 'admin') {
+            simContainer.innerHTML = window.buildRevenueSimulatorHtml ? window.buildRevenueSimulatorHtml() : '';
+            simContainer.classList.remove('hidden');
+            if (typeof window.runRevenueSimulation === 'function') {
+                window.runRevenueSimulation();
+            }
+        } else {
+            simContainer.innerHTML = '';
+            simContainer.classList.add('hidden');
+        }
+    }
 }
 
 window.renderReferralInviteKitSection = window.renderReferralInviteKitSection || function(data) {
