@@ -316,6 +316,41 @@
                     <div id="business-pricing-overview" class="space-y-6"></div>
                     <div id="business-revenue-tools" class="space-y-6"></div>
                 </div>
+                <div id="system-settings-container" class="space-y-8 mt-12 hidden">
+                    <div class="card p-0">
+                        <div class="px-6 py-6 border-b border-gray-100 bg-white rounded-t-3xl">
+                            <h3 class="text-xl font-bold text-gray-800">系統管理與全域設定 (System Administration & Global Settings)</h3>
+                            <p class="text-sm text-gray-500 mt-1">環境運行參數控制與全局快取維護</p>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <!-- GitHub Content Version Control -->
+                            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                                <h4 class="text-md font-bold text-slate-800 mb-2">GitHub 內容版本控制 (Content Version)</h4>
+                                <p class="text-xs text-gray-500 mb-4 leading-relaxed">設定目前的內容 Git Commit Hash，這將決定 `serveCourse` 載入哪一個版本的課程網頁。更新此處將會自動清除整個系統的快取。</p>
+                                <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                                    <div class="flex-grow col-span-3">
+                                        <input type="text" id="sys-content-version-input" placeholder="請輸入 40 碼 Git Commit Hash" class="w-full p-3 border rounded-xl font-mono text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <button onclick="window.updateSystemContentVersion()" id="btn-save-content-version" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition duration-150 active:scale-95 text-sm whitespace-nowrap">
+                                        儲存並鎖定版本
+                                    </button>
+                                </div>
+                                <div id="current-content-version-display" class="text-xs font-mono text-blue-600 mt-3 font-semibold">讀取中...</div>
+                            </div>
+
+                            <!-- Cache Maintenance -->
+                            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                                <div class="flex-grow max-w-xl">
+                                    <h4 class="text-md font-bold text-slate-800 mb-2">全域內容快取維護 (Content Cache Purge)</h4>
+                                    <p class="text-xs text-gray-500 leading-relaxed">一鍵清除 Firestore `content_cache` 集合中儲存的所有快取課程 HTML 網頁。清除後，學生下一次存取該網頁時，伺服器會重新至外部 Git 拉取最新內容。</p>
+                                </div>
+                                <button onclick="window.purgeSystemContentCache()" id="btn-purge-content-cache" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition duration-150 active:scale-95 text-sm whitespace-nowrap">
+                                    🔥 一鍵清除全網快取
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- TAB CONTENT: EARNINGS -->
@@ -484,9 +519,9 @@
     <script src="./js/footer-component.1c6f334c52a2.js"></script>
     </main>
 
-    <script src="./js/dashboard-lookup-utils.2382857d18fd.js"></script>
+    <script src="./js/dashboard-lookup-utils.74291754cdb9.js"></script>
     <script src="./js/repo-slug-utils.397a2f388cc7.js"></script>
-    <script type="module" src="./js/dashboard.9ee53c459f02.js"></script>
+    <script type="module" src="./js/dashboard.7d2e9fe70c14.js"></script>
 </body>
 
 </html>
