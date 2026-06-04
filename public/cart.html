@@ -150,7 +150,7 @@
 
     <div id="footer-placeholder" data-root="."></div>
     <script src="./js/footer-component.1c6f334c52a2.js"></script>
-    <script src="./js/pricing-utils.195a755aea80.js"></script>
+    <script src="./js/pricing-utils.e362733979a2.js"></script>
 
 
 
@@ -197,6 +197,9 @@
                 const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
                 const currency = priceEntry?.currency || (String(locale || "").startsWith("en") ? "USD" : "TWD");
                 if (!amount) return String(locale || "").startsWith("en") ? "Free" : "免費";
+                if (currency === "TWD") {
+                    return `TWD ${Math.round(amount).toLocaleString()}`;
+                }
                 return `${currency} ${amount.toLocaleString()}`;
             }
         };

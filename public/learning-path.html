@@ -15,7 +15,7 @@
   <script src="./js/dashboard-lookup-utils.527f08c8573b.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
   <script src="./js/course-shared.33bddaa1f174.js"></script>
-  <script src="./js/pricing-utils.195a755aea80.js"></script>
+  <script src="./js/pricing-utils.e362733979a2.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -229,6 +229,9 @@
           const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
           const currency = priceEntry?.currency || (String(locale || "").startsWith("en") ? "USD" : "TWD");
           if (!amount) return String(locale || "").startsWith("en") ? "Free" : "免費";
+          if (currency === "TWD") {
+            return `TWD ${Math.round(amount).toLocaleString()}`;
+          }
           return `${currency} ${amount.toLocaleString()}`;
         }
       };

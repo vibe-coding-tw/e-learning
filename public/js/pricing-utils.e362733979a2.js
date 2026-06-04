@@ -171,12 +171,20 @@
     if (amount <= 0) return normalizedLocale === "en" ? "Free" : "免費";
 
     try {
-      return new Intl.NumberFormat(normalizedLocale === "en" ? "en-US" : "zh-TW", {
+      const options = {
         style: "currency",
         currency,
         currencyDisplay: "symbol",
-      }).format(amount);
+      };
+      if (currency === "TWD") {
+        options.minimumFractionDigits = 0;
+        options.maximumFractionDigits = 0;
+      }
+      return new Intl.NumberFormat(normalizedLocale === "en" ? "en-US" : "zh-TW", options).format(amount);
     } catch (_) {
+      if (currency === "TWD") {
+        return `NT$ ${Math.round(amount).toLocaleString()}`;
+      }
       return `${currency} ${amount.toLocaleString()}`;
     }
   }
