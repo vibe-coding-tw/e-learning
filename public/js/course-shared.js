@@ -505,7 +505,7 @@ function normalizeCourseTopNav() {
                         targetFile = currentFile.replace(/^tw-/, 'en-');
                     } else if (currentFile.startsWith('start-')) {
                         const lookup = {
-                            'start-01-unit-html5-basics.html': 'car-starter-html5-basics.html',
+                            'start-01-unit-html5-basics.html': 'car-starter-flexbox-layout.html',
                             'start-01-unit-flexbox-layout.html': 'car-starter-flexbox-layout.html',
                             'start-01-unit-ui-ux-standards.html': 'car-starter-ui-ux-standards.html',
                             'start-02-unit-ble-security.html': 'car-starter-ble-security.html',

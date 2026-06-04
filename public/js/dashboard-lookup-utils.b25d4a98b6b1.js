@@ -7,7 +7,8 @@
         "02-unit-web-agents.html": "common-web-agents.html",
         "03-unit-github-classroom.html": "common-github-classroom.html",
         "03-unit-motor-ramping.html": "common-motor-ramping.html",
-        "03-unit-wifi-setup.html": "common-wifi-setup.html"
+        "03-unit-wifi-setup.html": "common-wifi-setup.html",
+        "start-01-unit-html5-basics.html": "start-01-unit-flexbox-layout.html"
     };
     const LEGACY_MASTER_TO_CANONICAL = {
         "01-master-getting-started.html": "common-developer-identity.html",
