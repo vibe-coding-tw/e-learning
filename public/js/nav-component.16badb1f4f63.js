@@ -23,7 +23,133 @@ async function consumeGoogleRedirectResult() {
     }
 }
 
+function isInAppBrowser() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    return (
+        ua.indexOf("FBAN") > -1 ||
+        ua.indexOf("FBAV") > -1 ||
+        ua.indexOf("Line/") > -1 ||
+        ua.indexOf("Instagram") > -1 ||
+        ua.indexOf("WeChat") > -1
+    );
+}
+
+function showInAppBrowserModal() {
+    const isZh = isZhLocale(detectUiLocale());
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    // Create backdrop
+    const backdrop = document.createElement("div");
+    backdrop.id = "in-app-browser-modal";
+    backdrop.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 1000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(12px);
+        padding: 1.5rem;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    `;
+    
+    // Modal card
+    const card = document.createElement("div");
+    card.style.cssText = `
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border-radius: 2rem;
+        max-width: 28rem;
+        width: 100%;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        position: relative;
+        animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    `;
+    
+    // Add CSS animations
+    let animationStyle = document.getElementById("in-app-modal-animations");
+    if (!animationStyle) {
+        animationStyle = document.createElement("style");
+        animationStyle.id = "in-app-modal-animations";
+        animationStyle.innerHTML = `
+            @keyframes scaleIn {
+                from { transform: scale(0.9); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(animationStyle);
+    }
+
+    const titleText = isZh ? "請使用外部瀏覽器開啟" : "Open in External Browser";
+    const descText = isZh 
+        ? "Google 為了維護您的帳戶安全，已封鎖在 LINE、Facebook、Instagram 等 App 內建瀏覽器中的登入要求。" 
+        : "Google blocks OAuth sign-in inside in-app browsers (LINE, Facebook, Instagram, etc.) to keep your account secure.";
+        
+    const stepText = isZh
+        ? (isIOS 
+            ? "請點擊右上角「<span style='font-weight: 800; color: #4f46e5;'>⋯</span>」或「<span style='font-weight: 800; color: #4f46e5;'>分享</span>」按鈕，並選擇 <b>在 Safari 中開啟</b>。" 
+            : "請點擊右上角「<span style='font-weight: 800; color: #4f46e5;'>⋯</span>」按鈕，並選擇 <b>在 Chrome / 預設瀏覽器中開啟</b>。")
+        : (isIOS
+            ? "Tap the top-right '...' or Share icon, and select <b>Open in Safari</b>."
+            : "Tap the top-right '...' icon, and select <b>Open in Chrome / Browser</b>.");
+
+    const btnText = isZh ? "複製網頁連結" : "Copy Web Link";
+    const closeText = isZh ? "關閉提示" : "Close Notification";
+
+    card.innerHTML = `
+        <div style="width: 4.5rem; height: 4.5rem; background: #e0e7ff; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #4f46e5; font-size: 2rem;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </div>
+        <h3 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem; letter-spacing: -0.025em;">${titleText}</h3>
+        <p style="font-size: 0.875rem; color: #475569; line-height: 1.6; margin-bottom: 1.5rem;">${descText}</p>
+        
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 1.25rem; padding: 1.25rem; font-size: 0.9rem; color: #334155; line-height: 1.6; text-align: left; margin-bottom: 1.75rem; position: relative;">
+            <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                <span style="background: #4f46e5; color: #fff; width: 1.25rem; height: 1.25rem; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; margin-top: 0.2rem;">1</span>
+                <div>${stepText}</div>
+            </div>
+        </div>
+
+        <button id="in-app-copy-btn" style="width: 100%; padding: 1rem; background: #4f46e5; color: #fff; border: none; border-radius: 1rem; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); margin-bottom: 0.75rem;">
+            ${btnText}
+        </button>
+        <button id="in-app-close-btn" style="width: 100%; padding: 0.75rem; background: transparent; color: #64748b; border: none; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+            ${closeText}
+        </button>
+    `;
+
+    backdrop.appendChild(card);
+    document.body.appendChild(backdrop);
+
+    document.getElementById("in-app-close-btn").onclick = () => {
+        backdrop.remove();
+    };
+
+    document.getElementById("in-app-copy-btn").onclick = async () => {
+        const copyBtn = document.getElementById("in-app-copy-btn");
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            copyBtn.innerText = isZh ? "✓ 連結複製成功！" : "✓ Copied Successfully!";
+            copyBtn.style.background = "#10b981";
+            setTimeout(() => {
+                copyBtn.innerText = btnText;
+                copyBtn.style.background = "#4f46e5";
+            }, 2000);
+        } catch (e) {
+            alert(isZh ? "複製失敗，請手動複製網址。" : "Failed to copy link, please copy manually.");
+        }
+    };
+}
+
 async function startGoogleLogin() {
+    if (isInAppBrowser()) {
+        showInAppBrowserModal();
+        return;
+    }
+
     const provider = new GoogleAuthProvider();
     try {
         // Try popup login first in all environments. This is much more reliable
@@ -45,7 +171,7 @@ const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v4";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
-    { key: "car-common", href: "learning-path.html?path=car-common", icon: "fa-book-open", label: "課前準備" },
+    { key: "common", href: "learning-path.html?path=common", icon: "fa-book-open", label: "課前準備" },
     { key: "car-starter", href: "learning-path.html?path=car-starter", icon: "fa-rocket", label: "入門課程" },
     { key: "car-basic", href: "learning-path.html?path=car-basic", icon: "fa-code", label: "基礎課程" },
     { key: "car-advanced", href: "learning-path.html?path=car-advanced", icon: "fa-microchip", label: "進階課程" }
@@ -55,16 +181,14 @@ const REPO_UTILS = window.repoSlugUtils || {};
 const normalizeCanonicalLearningPathKey = REPO_UTILS.normalizeCanonicalLearningPathKey || function (value = "") {
     const v = String(value || "").trim().toLowerCase().split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
     if (!v) return "";
-    if (v === "car-common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
-    if (v === "common") return "car-common";
-    if (/^(?:tw|en)-common$/i.test(v)) return "car-common";
-    if (/^(?:tw|en)-car-common$/i.test(v)) return "car-common";
+    if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
+    if (/^(?:tw|en)-common$/i.test(v)) return "common";
     if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
     if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
     if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
     if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
-    if (/^\d{2}-unit-/i.test(v)) return "car-common";
-    if (/^prepare-\d+/i.test(v)) return "car-common";
+    if (/^\d{2}-unit-/i.test(v)) return "common";
+    if (/^prepare-\d+/i.test(v)) return "common";
     return v;
 };
 const legacyLearningPathKeyFromCanonical = REPO_UTILS.legacyLearningPathKeyFromCanonical || function (value = "", locale = "zh-TW") {
@@ -80,14 +204,14 @@ const pathKeyCandidatesFromValue = REPO_UTILS.learningPathKeyCandidatesFromValue
 
 function canonicalLearningPathHref(pathKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);
-    if (!canonical) return "learning-path.html?path=car-common";
+    if (!canonical) return "learning-path.html?path=common";
     return `learning-path.html?path=${encodeURIComponent(canonical)}`;
 }
 
 function getDefaultLearningPaths(uiLocale = "zh-TW") {
     const isZh = isZhLocale(uiLocale);
     return [
-        { key: "car-common", href: canonicalLearningPathHref("car-common"), icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
+        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
         { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Unit" },
         { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: isZh ? "基礎課程" : "Basic Unit" },
         { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Unit" }
@@ -292,7 +416,7 @@ function isZhLocale(locale) {
 function resolveCategoryFromFilename(filename = "") {
     const file = String(filename || "").toLowerCase();
     if (!file) return null;
-    if (file.startsWith("prepare-") || file.startsWith("common-") || file.startsWith("tw-common-") || file.startsWith("en-common-") || file.startsWith("car-common-") || file.startsWith("tw-car-common-") || file.startsWith("en-car-common-")) return "car-common";
+    if (file.startsWith("prepare-") || file.startsWith("common-") || file.startsWith("tw-common-") || file.startsWith("en-common-")) return "common";
     if (file.startsWith("start-") || file.startsWith("car-starter-") || file.startsWith("tw-car-starter-") || file.startsWith("en-car-starter-")) return "car-starter";
     if (file.startsWith("basic-") || file.startsWith("car-basic-") || file.startsWith("tw-car-basic-") || file.startsWith("en-car-basic-")) return "car-basic";
     if (file.startsWith("adv-") || file.startsWith("advanced-") || file.startsWith("car-advanced-") || file.startsWith("tw-car-advanced-") || file.startsWith("en-car-advanced-")) return "car-advanced";
@@ -323,14 +447,14 @@ function normalizeTrack(raw = "") {
 function resolveCategoryFromLesson(lesson = {}) {
     const level = normalizeLevel(lesson.level || "");
     const track = normalizeTrack(lesson.track || "");
-    if (level === "common") return "car-common";
+    if (level === "common") return "common";
     if (track && track !== "common") return `${track}-${level}`;
     return `car-${level}`;
 }
 
 function getCategoryHref(categoryKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(categoryKey);
-    return canonicalLearningPathHref(canonical || categoryKey || "car-common");
+    return canonicalLearningPathHref(canonical || categoryKey || "common");
 }
 
 function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
@@ -383,7 +507,7 @@ function pickLessonCategoryLabel(lesson = {}, uiLocale = "zh-TW") {
 }
 
 function sortCategoryKeys(keys = [], uiLocale = "zh-TW") {
-    const levelRank = { "car-common": 0, "car-starter": 1, "car-basic": 2, "car-advanced": 3 };
+    const levelRank = { common: 0, "car-starter": 1, "car-basic": 2, "car-advanced": 3 };
     return [...keys].sort((a, b) => {
         const canonicalA = normalizeCanonicalLearningPathKey(a);
         const canonicalB = normalizeCanonicalLearningPathKey(b);
@@ -981,7 +1105,7 @@ function normalizeCourseTopNavBrandLink() {
         if (file.startsWith('start-') || file.startsWith('tw-car-starter-') || file.startsWith('en-car-starter-') || file.startsWith('car-starter-')) target = canonicalLearningPathHref('car-starter');
         else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-') || file.startsWith('en-car-basic-') || file.startsWith('car-basic-')) target = canonicalLearningPathHref('car-basic');
         else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-') || file.startsWith('en-car-advanced-') || file.startsWith('car-advanced-')) target = canonicalLearningPathHref('car-advanced');
-        else if (file.startsWith('prepare-') || file.startsWith('tw-common-') || file.startsWith('en-common-') || file.startsWith('common-') || file.startsWith('car-common-') || file.startsWith('tw-car-common-') || file.startsWith('en-car-common-')) target = canonicalLearningPathHref('car-common');
+        else if (file.startsWith('prepare-') || file.startsWith('tw-common-') || file.startsWith('en-common-') || file.startsWith('common-')) target = canonicalLearningPathHref('common');
         brand.setAttribute('href', target);
         brand.setAttribute('target', '_top');
     } catch (e) {
@@ -1068,6 +1192,7 @@ function initNavComponent() {
 }
 
 consumeGoogleRedirectResult();
+window.vibeStartGoogleLogin = startGoogleLogin;
 
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initNavComponent); }
 else { initNavComponent(); }

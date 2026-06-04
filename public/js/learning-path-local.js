@@ -29,16 +29,14 @@ function normalizeCanonicalLearningPathKey(value = "") {
   if (fromUtils) return fromUtils;
   const v = String(value || "").trim().toLowerCase().split("?")[0].split("#")[0].replace(/\.html$/i, "");
   if (!v) return "";
-  if (v === "car-common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
-  if (v === "common") return "car-common";
-  if (/^(?:tw|en)-common$/i.test(v)) return "car-common";
-  if (/^(?:tw|en)-car-common$/i.test(v)) return "car-common";
+  if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
+  if (/^(?:tw|en)-common$/i.test(v)) return "common";
   if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
   if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
   if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
   if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
-  if (/^\d{2}-unit-/i.test(v)) return "car-common";
-  if (/^prepare-\d+/i.test(v)) return "car-common";
+  if (/^\d{2}-unit-/i.test(v)) return "common";
+  if (/^prepare-\d+/i.test(v)) return "common";
   return v;
 }
 
@@ -49,7 +47,7 @@ function legacyPathKeyFromCanonical(value = "", uiLocale = "zh-TW") {
     return legacyLearningPathKeyFromCanonical(canonical, uiLocale);
   }
   const prefix = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "tw";
-  if (canonical === "car-common") return `${prefix}-common`;
+  if (canonical === "common") return `${prefix}-common`;
   return `${prefix}-${canonical}`;
 }
 
@@ -361,7 +359,7 @@ function normalizeCanonicalCourseKey(value = "") {
 function categoryFromLesson(lesson = {}) {
   const level = normalizeLevel(lesson.level || lesson.category || "");
   const track = normalizeTrack(lesson.track || "");
-  if (level === "common") return "car-common";
+  if (level === "common") return "common";
   if (track && track !== "common") return `${track}-${level}`;
   return `car-${level}`;
 }
@@ -413,8 +411,8 @@ function categoryLabel(path = "", categoryLabelsMap = {}) {
   const uiLocale = detectUiLocale();
   const canonical = normalizeCanonicalLearningPathKey(path);
   const dict = uiLocale.startsWith("en")
-    ? { common: "Preparation", "car-common": "Preparation", "car-starter": "Starter Course", "car-basic": "Basic Course", "car-advanced": "Advanced Course" }
-    : { common: "課前準備", "car-common": "課前準備", "car-starter": "入門課程", "car-basic": "基礎課程", "car-advanced": "進階課程" };
+    ? { common: "Preparation", "car-starter": "Starter Course", "car-basic": "Basic Course", "car-advanced": "Advanced Course" }
+    : { common: "課前準備", "car-starter": "入門課程", "car-basic": "基礎課程", "car-advanced": "進階課程" };
   const localizedLegacy = legacyPathKeyFromCanonical(canonical || path, uiLocale);
   if (dict && dict[localizedLegacy]) return dict[localizedLegacy];
   if (dict && dict[canonical]) return dict[canonical];
@@ -431,7 +429,7 @@ function toList(value) {
 function normalizeLegacyUnitFilename(file = "") {
   const v = String(file || "").trim();
   if (!v) return "";
-  if (/^(?:tw|en)-(common|car-common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+  if (/^(?:tw|en)-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
   if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, "car-starter-");
   if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, "car-basic-");
   if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(?:adv|advanced)-\d{2}-unit-/i, "car-advanced-");
@@ -610,7 +608,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   title.textContent = categoryLabel(pathKey, categoryLabelsMap);
   const catalogCourses = lessons.filter(isCatalogCourseLesson);
   const matchingPathKeys = pathKeyCandidates(pathKey, uiLocale);
-  const isCommonPath = normalizeCanonicalLearningPathKey(pathKey) === "car-common";
+  const isCommonPath = normalizeCanonicalLearningPathKey(pathKey) === "common";
 
   const rows = dedupeLessonsForRender(
     catalogCourses
@@ -756,7 +754,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   }).join("");
 
   let pageHtml = "";
-  const isCommon = normalizeCanonicalLearningPathKey(pathKey) === "car-common";
+  const isCommon = normalizeCanonicalLearningPathKey(pathKey) === "common";
   if (isCommon) {
     if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
     if (courseHtml) pageHtml += renderSection("", courseHtml);
@@ -791,7 +789,7 @@ async function initLocalLearningPath() {
     document.title = titleText;
 
     const params = new URLSearchParams(location.search);
-  const pathKey = normalizeCanonicalLearningPathKey(params.get("path") || "car-common") || "car-common";
+  const pathKey = normalizeCanonicalLearningPathKey(params.get("path") || "common") || "common";
     const lessons = await loadLessonsFromFirestore();
     const categoryLabelsMap = deriveCategoryLabels(lessons, {}, uiLocale);
     renderLessons(lessons, pathKey, categoryLabelsMap);
