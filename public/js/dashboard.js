@@ -5,7 +5,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-import { firebaseConfig, connectFirebaseEmulators } from "./firebase-local.js";
+import { firebaseConfig, connectFirebaseEmulators } from "./firebase-local.js?v=3";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -2599,7 +2599,7 @@ window.loadRevenuePolicies = async function () {
         }
 
         const policy = policies.find((p) => p && p.enabled !== false) || policies[0];
-        const id = 'default-v1';
+        const id = 'fixed-policy';
         const tutorRate = Number(policy.tutorRate ?? 0.2);
         const tutorUplineRate = Number(policy.tutorUplineRate ?? 0.2);
         const agentRate = Number(policy.agentRate ?? 0.2);
