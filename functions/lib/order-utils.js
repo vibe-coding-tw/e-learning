@@ -252,12 +252,29 @@ function hasActiveOrderForCourse(ordersSnapshot, courseId, lessons = [], resolve
     let hasCourse = false;
     const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
     const now = Date.now();
+    const targetLesson = (resolvers.findLessonByCourseRef || findLessonByCourseRef)(courseId, lessons);
+    const targetKeys = new Set();
+    const addTargetKey = (value) => {
+        if (!value) return;
+        const raw = String(value || '').trim();
+        if (!raw) return;
+        targetKeys.add(raw);
+        targetKeys.add(raw.replace(/\.html$/i, ''));
+        targetKeys.add(normalizeLookupValue(raw));
+    };
+
+    addTargetKey(courseId);
+    if (targetLesson) {
+        for (const key of getLessonLookupKeys(targetLesson)) {
+            addTargetKey(key);
+        }
+    }
 
     ordersSnapshot.forEach(doc => {
         const data = doc.data();
         const items = data.items || {};
 
-        let matched = !!items[courseId];
+        let matched = Object.keys(items).some((itemKey) => targetKeys.has(itemKey) || targetKeys.has(String(itemKey || '').replace(/\.html$/i, '')) || targetKeys.has(normalizeLookupValue(itemKey)));
 
         if (!matched && lessons.length > 0) {
             for (const itemKey of Object.keys(items)) {
