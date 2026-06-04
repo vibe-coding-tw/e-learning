@@ -14,9 +14,8 @@
   <script type="module" src="./js/nav-component.74ec72455021.js"></script>
   <script src="./js/dashboard-lookup-utils.a9e75e9831bd.js"></script>
   <script src="./js/repo-slug-utils.397a2f388cc7.js"></script>
-  <script src="./js/course-shared.c5397f6db0eb.js"></script>
+  <script src="./js/course-shared.5ab6b0f49401.js"></script>
   <script src="./js/pricing-utils.195a755aea80.js"></script>
-  <script type="module" src="./js/learning-path-local.10bcc9ff2e43.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -48,6 +47,10 @@
 
     const checkAuthFunction = httpsCallable(functions, "checkPaymentAuthorization");
     const getLessonsFunc = httpsCallable(functions, "getLessonsMetadata");
+    window.__getLessonsMetadata = async function () {
+      const res = await getLessonsFunc({});
+      return res?.data || {};
+    };
     const AUTH_URL = "/auth.html?v=" + Date.now();
     const CART_URL = "cart.html";
     const {
@@ -1003,9 +1006,16 @@
       }).join("");
 
       let pageHtml = "";
-      if (courseHtml) pageHtml += renderSection("", courseHtml);
-      if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
-      if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
+      const isCommon = normalizeCanonicalLearningPathKey(pathKey) === "common";
+      if (isCommon) {
+        if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
+        if (courseHtml) pageHtml += renderSection("", courseHtml);
+        if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
+      } else {
+        if (courseHtml) pageHtml += renderSection("", courseHtml);
+        if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
+        if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
+      }
       container.innerHTML = pageHtml;
 
       container.querySelectorAll(".video-btn").forEach((btn, i) => {

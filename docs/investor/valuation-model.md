@@ -73,6 +73,8 @@ Indicative range under high uncertainty:
 - Negotiation band: NTD 150M-300M
 - Defensive floor: NTD 100M (unless strategic channel/resource package is included)
 
+> Note: this valuation is a pricing anchor for financing and issuance discussions, not a public market quote. For equity issuance, the system should freeze a valuation snapshot and derive an issue price from that snapshot instead of retroactively rewriting past records.
+
 ## 7) System-only Valuation (Product/IP carve-out)
 
 If valuing only platform/IP (excluding operating company):

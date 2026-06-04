@@ -1,5 +1,3 @@
-const LOCAL_DATA_URL = "./data/metadata_lessons.local.json";
-
 const {
   normalizeCanonicalLearningPathKey: normalizeCanonicalLearningPathKeyFromUtils,
   legacyLearningPathKeyFromCanonical,
@@ -755,16 +753,29 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   }).join("");
 
   let pageHtml = "";
-  if (courseHtml) pageHtml += renderSection("", courseHtml);
-  if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
-  if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
+  const isCommon = normalizeCanonicalLearningPathKey(pathKey) === "common";
+  if (isCommon) {
+    if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
+    if (courseHtml) pageHtml += renderSection("", courseHtml);
+    if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
+  } else {
+    if (courseHtml) pageHtml += renderSection("", courseHtml);
+    if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
+    if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
+  }
   container.innerHTML = pageHtml || `<p class="text-center text-gray-500 py-12">${t.emptyCategory}</p>`;
 }
 
-async function loadLocalLessons() {
-  const res = await fetch(LOCAL_DATA_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load local lessons: ${res.status}`);
-  return res.json();
+async function loadLessonsFromFirestore() {
+  const fetchLessons = window.__getLessonsMetadata;
+  if (typeof fetchLessons !== "function") {
+    throw new Error("Lessons metadata loader is not ready");
+  }
+
+  const payload = await fetchLessons();
+  if (Array.isArray(payload?.lessons)) return payload.lessons;
+  if (Array.isArray(payload)) return payload;
+  return [];
 }
 
 async function initLocalLearningPath() {
@@ -778,11 +789,11 @@ async function initLocalLearningPath() {
 
     const params = new URLSearchParams(location.search);
     const pathKey = normalizeCanonicalLearningPathKey(params.get("path") || "common") || "common";
-    const lessons = await loadLocalLessons();
+    const lessons = await loadLessonsFromFirestore();
     const categoryLabelsMap = deriveCategoryLabels(lessons, {}, uiLocale);
     renderLessons(lessons, pathKey, categoryLabelsMap);
   } catch (error) {
-    console.error("[learning-path-local] failed to render local lessons", error);
+    console.error("[learning-path-local] failed to render lessons from Firestore", error);
   }
 }
 

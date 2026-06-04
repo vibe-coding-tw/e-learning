@@ -6,7 +6,7 @@
 - Keep Firestore as source of truth for authorization and mapping.
 
 > **2026-05-27 決策**：`private_courses_i18n` local mirror 層已廢除。
-> 課程內容僅由 content-repo (GitHub) 提供，Legacy fallback 為 `private_courses/` 目錄。
+> 課程內容以 content-repo (GitHub) 為主，所有降級邏輯都以 pinned 版本與 branch fallback 處理，不再使用本地內容 fallback。
 
 ---
 
@@ -18,8 +18,6 @@
   - Runtime version selection (`contentVersion`)
 - External repo (`vibe-coding-tw/content-repo`)：
   - Course HTML content（primary，所有語系）
-- Legacy local (`functions/private_courses`)：
-  - Fallback only（僅限舊版未遷移課程）
 
 ---
 
@@ -35,7 +33,7 @@ Fields:
 - `repoName`: `string`（`content-repo`）
 - `contentVersion`: `string`（pinned commit SHA，建議使用）
 - `defaultLocale`: `string`（`zh-TW`）
-- `fallbackEnabled`: `boolean`（建議 `true`）
+- `fallbackEnabled`: `boolean`（僅控制是否允許退回較舊的 pinned 版本）
 - `cacheTtlSec`: `number`（建議 `300`）
 - `updatedAt`: Firestore Timestamp
 - `updatedBy`: `string`（admin email/uid）
@@ -47,10 +45,10 @@ Fields:
 ```
 1. External repo（content-repo）at pinned contentVersion  ← primary
 2. External repo at branch fallback（通常 main，disabled by default）
-3. Legacy local: functions/private_courses/<fileName>      ← legacy fallback
 ```
 
 > ~~Local mirror `functions/private_courses_i18n/`~~ ← **已移除（2026-05-27）**
+> ~~Legacy local fallback `functions/private_courses/`~~ ← **已停用**
 
 ---
 
@@ -93,8 +91,8 @@ Log 欄位：
 
 ## 9. Rollback SOP
 
-- **最快**：設 `enabled=false`，runtime 退回 legacy local fallback。
-- **版本回退**：保持 `enabled=true`，將 `contentVersion` 改回前一個 SHA。
+- **最快**：將 `contentVersion` 改回前一個 SHA。
+- **保守停用**：設 `enabled=false`，暫停外部 repo 抓取。
 
 ---
 
@@ -104,3 +102,4 @@ Log 欄位：
 - No per-user personalized content variants.
 - No write-back to external repo from runtime path.
 - ~~No local i18n mirror sync~~ ← 已廢除。
+- ~~No legacy local content fallback~~ ← 已停用。

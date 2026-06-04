@@ -2639,7 +2639,12 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
             return res.status(404).send("File not found.");
         }
 
-        // [NEW] Ensure core course scripts are always present even when content-repo keeps old hashed asset links.
+        // [NEW] Normalize legacy hashed core script links to stable runtime assets.
+        content = content
+            .replace(/\/js\/course-shared\.[0-9a-f]{12}\.js\b/gi, '/js/course-shared.js')
+            .replace(/\/js\/nav-component\.[0-9a-f]{12}\.js\b/gi, '/js/nav-component.js');
+
+        // Ensure core course scripts are always present even when content-repo omits them.
         const hasStableCourseSharedScript = /\/js\/course-shared\.js/i.test(content);
         const hasStableNavComponentScript = /\/js\/nav-component\.js/i.test(content);
         const runtimeScripts = [];

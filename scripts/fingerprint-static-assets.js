@@ -3,7 +3,6 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { syncLocalizedPublicPages } = require('./localized-public-sync');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
@@ -124,7 +123,6 @@ function main() {
     console.error(`public dir not found: ${publicDir}`);
     process.exit(1);
   }
-  syncLocalizedPublicPages({ verbose: true });
 
   const htmlRoots = [publicDir];
   if (fs.existsSync(privateCoursesDir)) {

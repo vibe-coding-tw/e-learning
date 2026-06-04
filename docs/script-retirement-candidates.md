@@ -54,6 +54,8 @@
 
 以下腳本已確認不再需要，並已從 repo 移除：
 
+- `scripts/localized-public-sync.js`
+- `scripts/sync_localized_public_pages.js`
 - `scripts/delete_bridge_repos.py`
 - `scripts/generate_all_graders.py`
 - `scripts/merge_classroom_templates.py`
