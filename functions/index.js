@@ -1810,7 +1810,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         || findLessonByCourseRef(canonicalUnitId, lessons)
         || null;
     const effectiveCourseId = course
-        ? course.courseId
+        ? (getCanonicalLessonIdentity(course) || course.courseId)
         : (getCanonicalLessonIdentity(lessonByCourseRef) || normalizedCourseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
     // Course-level checks (e.g. started/basic/advanced cards) may only pass courseId.
     // In that case, infer a representative unit from metadata so access is not falsely denied.

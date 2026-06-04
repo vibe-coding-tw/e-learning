@@ -11,10 +11,10 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.fb53b04fbea9.js"></script>
+  <script type="module" src="./js/nav-component.4aa521e8a3f9.js"></script>
   <script src="./js/dashboard-lookup-utils.527f08c8573b.js"></script>
-  <script src="./js/repo-slug-utils.397a2f388cc7.js"></script>
-  <script src="./js/course-shared.5ab6b0f49401.js"></script>
+  <script src="./js/repo-slug-utils.2d2d0a3c8f5d.js"></script>
+  <script src="./js/course-shared.dfca33a2390e.js"></script>
   <script src="./js/pricing-utils.195a755aea80.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
@@ -114,10 +114,12 @@
         alreadyInCart: "⚠️ 「{name}」已在購物車中！",
         coursesConfigMissing: "⚠️ 課程連結尚未備妥，請聯繫客服。",
         "tw-common": "課前準備",
+        "tw-car-common": "課前準備",
         "tw-car-starter": "入門課程",
         "tw-car-basic": "基礎課程",
         "tw-car-advanced": "進階課程",
         "en-common": "課前準備",
+        "en-car-common": "課前準備",
         "en-car-starter": "入門課程",
         "en-car-basic": "基礎課程",
         "en-car-advanced": "進階課程"
@@ -139,10 +141,12 @@
         alreadyInCart: "⚠️ \"{name}\" is already in your cart!",
         coursesConfigMissing: "⚠️ Course link not ready, please contact customer support.",
         "tw-common": "Preparation",
+        "tw-car-common": "Preparation",
         "tw-car-starter": "Starter Course",
         "tw-car-basic": "Basic Course",
         "tw-car-advanced": "Advanced Course",
         "en-common": "Preparation",
+        "en-car-common": "Preparation",
         "en-car-starter": "Starter Course",
         "en-car-basic": "Basic Course",
         "en-car-advanced": "Advanced Course"
@@ -173,14 +177,16 @@
       if (fromUtils) return fromUtils;
       const v = String(value || "").trim().toLowerCase().split('?')[0].split('#')[0].replace(/\.html$/i, '');
       if (!v) return "";
-      if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
-      if (/^(?:tw|en)-common$/i.test(v)) return "common";
+      if (v === "car-common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
+      if (v === "common") return "car-common";
+      if (/^(?:tw|en)-common$/i.test(v)) return "car-common";
+      if (/^(?:tw|en)-car-common$/i.test(v)) return "car-common";
       if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
       if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
       if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
       if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
-      if (/^\d{2}-unit-/i.test(v)) return "common";
-      if (/^prepare-\d+/i.test(v)) return "common";
+      if (/^\d{2}-unit-/i.test(v)) return "car-common";
+      if (/^prepare-\d+/i.test(v)) return "car-common";
       return v;
     }
     function legacyPathKeyFromCanonical(value = "", uiLocale = "zh-TW") {
@@ -190,6 +196,7 @@
         return legacyLearningPathKeyFromCanonical(canonical, uiLocale);
       }
       const prefix = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "tw";
+      if (canonical === "car-common") return `${prefix}-common`;
       return `${prefix}-${canonical}`;
     }
     function pathKeyCandidates(value = "", uiLocale = "zh-TW") {
@@ -496,7 +503,7 @@
     function categoryFromLesson(lesson = {}) {
       const level = normalizeLevel(lesson.level || lesson.category || "");
       const track = normalizeTrack(lesson.track || "");
-      if (level === "common") return "common";
+      if (level === "common") return "car-common";
       if (track && track !== "common") return `${track}-${level}`;
       return `car-${level}`;
     }
@@ -579,7 +586,7 @@
     function normalizeLegacyUnitFilename(file = "") {
       const v = String(file || "").trim();
       if (!v) return "";
-      if (/^(?:tw|en)-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+      if (/^(?:tw|en)-(common|car-common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
       if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, "car-starter-");
       if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, "car-basic-");
       if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(?:adv|advanced)-\d{2}-unit-/i, "car-advanced-");
@@ -846,7 +853,7 @@
         ),
         uiLocale
       ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
-      if (!rows.length && !hardwareRows.length && normalizeCanonicalLearningPathKey(pathKey) !== "common") {
+      if (!rows.length && !hardwareRows.length && normalizeCanonicalLearningPathKey(pathKey) !== "car-common") {
         container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">${t.emptyCategory}</p>`;
         return;
       }
@@ -1006,7 +1013,7 @@
       }).join("");
 
       let pageHtml = "";
-      const isCommon = normalizeCanonicalLearningPathKey(pathKey) === "common";
+      const isCommon = normalizeCanonicalLearningPathKey(pathKey) === "car-common";
       if (isCommon) {
         if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
         if (courseHtml) pageHtml += renderSection("", courseHtml);
@@ -1029,7 +1036,7 @@
       const t = TRANSLATIONS[uiLocale];
       document.title = t.title;
 
-      const pathKey = normalizeCanonicalLearningPathKey(new URLSearchParams(location.search).get("path") || "common") || "common";
+      const pathKey = normalizeCanonicalLearningPathKey(new URLSearchParams(location.search).get("path") || "car-common") || "car-common";
       const result = await getLessonsFunc({});
       const lessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
       categoryLabelsMap = deriveCategoryLabels(lessons, result?.data?.categoryLabels || {}, uiLocale);

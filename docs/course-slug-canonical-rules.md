@@ -9,6 +9,8 @@
 3. 舊的 `tw-` / `en-` 檔名只作 alias，不再當成新命名標準。
 4. Firestore、前端路由、grader、同步腳本都要讀同一個 canonical slug。
 
+> 補充：學習路徑與授權層的 canonical path key 目前以 `car-common` 表示免費課程群；舊的 `common` 只作相容 alias。既有課程檔名可暫時保留 `common-*`，等內容與外部依賴都完成遷移後再統一。
+
 ## 建議目錄結構
 
 ```text

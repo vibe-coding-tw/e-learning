@@ -45,7 +45,7 @@ const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v4";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
-    { key: "common", href: "learning-path.html?path=common", icon: "fa-book-open", label: "課前準備" },
+    { key: "car-common", href: "learning-path.html?path=car-common", icon: "fa-book-open", label: "課前準備" },
     { key: "car-starter", href: "learning-path.html?path=car-starter", icon: "fa-rocket", label: "入門課程" },
     { key: "car-basic", href: "learning-path.html?path=car-basic", icon: "fa-code", label: "基礎課程" },
     { key: "car-advanced", href: "learning-path.html?path=car-advanced", icon: "fa-microchip", label: "進階課程" }
@@ -55,14 +55,16 @@ const REPO_UTILS = window.repoSlugUtils || {};
 const normalizeCanonicalLearningPathKey = REPO_UTILS.normalizeCanonicalLearningPathKey || function (value = "") {
     const v = String(value || "").trim().toLowerCase().split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
     if (!v) return "";
-    if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
-    if (/^(?:tw|en)-common$/i.test(v)) return "common";
+    if (v === "car-common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
+    if (v === "common") return "car-common";
+    if (/^(?:tw|en)-common$/i.test(v)) return "car-common";
+    if (/^(?:tw|en)-car-common$/i.test(v)) return "car-common";
     if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
     if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
     if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
     if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
-    if (/^\d{2}-unit-/i.test(v)) return "common";
-    if (/^prepare-\d+/i.test(v)) return "common";
+    if (/^\d{2}-unit-/i.test(v)) return "car-common";
+    if (/^prepare-\d+/i.test(v)) return "car-common";
     return v;
 };
 const legacyLearningPathKeyFromCanonical = REPO_UTILS.legacyLearningPathKeyFromCanonical || function (value = "", locale = "zh-TW") {
@@ -78,14 +80,14 @@ const pathKeyCandidatesFromValue = REPO_UTILS.learningPathKeyCandidatesFromValue
 
 function canonicalLearningPathHref(pathKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);
-    if (!canonical) return "learning-path.html?path=common";
+    if (!canonical) return "learning-path.html?path=car-common";
     return `learning-path.html?path=${encodeURIComponent(canonical)}`;
 }
 
 function getDefaultLearningPaths(uiLocale = "zh-TW") {
     const isZh = isZhLocale(uiLocale);
     return [
-        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
+        { key: "car-common", href: canonicalLearningPathHref("car-common"), icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
         { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Unit" },
         { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: isZh ? "基礎課程" : "Basic Unit" },
         { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Unit" }
@@ -290,7 +292,7 @@ function isZhLocale(locale) {
 function resolveCategoryFromFilename(filename = "") {
     const file = String(filename || "").toLowerCase();
     if (!file) return null;
-    if (file.startsWith("prepare-") || file.startsWith("common-") || file.startsWith("tw-common-") || file.startsWith("en-common-")) return "common";
+    if (file.startsWith("prepare-") || file.startsWith("common-") || file.startsWith("tw-common-") || file.startsWith("en-common-") || file.startsWith("car-common-") || file.startsWith("tw-car-common-") || file.startsWith("en-car-common-")) return "car-common";
     if (file.startsWith("start-") || file.startsWith("car-starter-") || file.startsWith("tw-car-starter-") || file.startsWith("en-car-starter-")) return "car-starter";
     if (file.startsWith("basic-") || file.startsWith("car-basic-") || file.startsWith("tw-car-basic-") || file.startsWith("en-car-basic-")) return "car-basic";
     if (file.startsWith("adv-") || file.startsWith("advanced-") || file.startsWith("car-advanced-") || file.startsWith("tw-car-advanced-") || file.startsWith("en-car-advanced-")) return "car-advanced";
@@ -321,14 +323,14 @@ function normalizeTrack(raw = "") {
 function resolveCategoryFromLesson(lesson = {}) {
     const level = normalizeLevel(lesson.level || "");
     const track = normalizeTrack(lesson.track || "");
-    if (level === "common") return "common";
+    if (level === "common") return "car-common";
     if (track && track !== "common") return `${track}-${level}`;
     return `car-${level}`;
 }
 
 function getCategoryHref(categoryKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(categoryKey);
-    return canonicalLearningPathHref(canonical || categoryKey || "common");
+    return canonicalLearningPathHref(canonical || categoryKey || "car-common");
 }
 
 function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
@@ -381,7 +383,7 @@ function pickLessonCategoryLabel(lesson = {}, uiLocale = "zh-TW") {
 }
 
 function sortCategoryKeys(keys = [], uiLocale = "zh-TW") {
-    const levelRank = { common: 0, "car-starter": 1, "car-basic": 2, "car-advanced": 3 };
+    const levelRank = { "car-common": 0, "car-starter": 1, "car-basic": 2, "car-advanced": 3 };
     return [...keys].sort((a, b) => {
         const canonicalA = normalizeCanonicalLearningPathKey(a);
         const canonicalB = normalizeCanonicalLearningPathKey(b);
@@ -979,7 +981,7 @@ function normalizeCourseTopNavBrandLink() {
         if (file.startsWith('start-') || file.startsWith('tw-car-starter-') || file.startsWith('en-car-starter-') || file.startsWith('car-starter-')) target = canonicalLearningPathHref('car-starter');
         else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-') || file.startsWith('en-car-basic-') || file.startsWith('car-basic-')) target = canonicalLearningPathHref('car-basic');
         else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-') || file.startsWith('en-car-advanced-') || file.startsWith('car-advanced-')) target = canonicalLearningPathHref('car-advanced');
-        else if (file.startsWith('prepare-') || file.startsWith('tw-common-') || file.startsWith('en-common-') || file.startsWith('common-')) target = canonicalLearningPathHref('common');
+        else if (file.startsWith('prepare-') || file.startsWith('tw-common-') || file.startsWith('en-common-') || file.startsWith('common-') || file.startsWith('car-common-') || file.startsWith('tw-car-common-') || file.startsWith('en-car-common-')) target = canonicalLearningPathHref('car-common');
         brand.setAttribute('href', target);
         brand.setAttribute('target', '_top');
     } catch (e) {
