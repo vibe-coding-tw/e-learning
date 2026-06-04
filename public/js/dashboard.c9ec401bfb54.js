@@ -684,6 +684,43 @@ function getCourseGuideConfig(courseId) {
     return dashboardData?.courseGuideIndex?.[courseId] || {};
 }
 
+function getCachedGuideSectionFromDashboard(filterUnitId, sectionId) {
+    if (!filterUnitId || !sectionId) return "";
+    const courseId = findParentCourseIdByUnit(filterUnitId) || "";
+    const guideConfig = getCourseGuideConfig(courseId);
+    const guideBucket = sectionId === 'tutor-guide'
+        ? (guideConfig.tutorGuide || {})
+        : (guideConfig.assignmentGuide || {});
+
+    if (!guideBucket || typeof guideBucket !== 'object') return "";
+
+    const candidates = new Set();
+    const unitCandidates = getEquivalentUnitIds(filterUnitId);
+    unitCandidates.forEach((candidate) => {
+        candidates.add(candidate);
+        candidates.add(String(candidate || '').replace(/\.html$/i, ''));
+    });
+    candidates.add(filterUnitId);
+    candidates.add(String(filterUnitId || '').replace(/\.html$/i, ''));
+
+    for (const candidate of candidates) {
+        if (!candidate) continue;
+        if (typeof guideBucket[candidate] === 'string' && guideBucket[candidate].trim()) {
+            return guideBucket[candidate].trim();
+        }
+    }
+
+    return "";
+}
+
+function isNonCourseGuideContext(filterUnitId) {
+    if (!filterUnitId) return false;
+    const lesson = resolveLessonByAnyKey(filterUnitId) || findParentCourseIdByUnit(filterUnitId) && resolveLessonByAnyKey(findParentCourseIdByUnit(filterUnitId));
+    if (!lesson) return false;
+    const metadataType = String(lesson.metadataType || '').toLowerCase();
+    return lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product' || metadataType === 'spec';
+}
+
 async function fetchGuideSectionFromUnitPage(filterUnitId, sectionId) {
     if (!filterUnitId || !sectionId) return "";
     const extractSection = (html, targetSectionId) => {
@@ -717,13 +754,14 @@ async function fetchGuideSectionFromUnitPage(filterUnitId, sectionId) {
         const resp = await fetch(unitUrl, { cache: 'no-store' });
         if (!resp.ok) {
             console.warn(`[GuideRefresh] serve fetch failed: ${resp.status} ${resp.statusText} for URL: ${unitUrl}`);
-            return "";
+            return getCachedGuideSectionFromDashboard(filterUnitId, sectionId);
         }
         const html = await resp.text();
-        return extractSection(html, sectionId);
+        const extracted = extractSection(html, sectionId);
+        return extracted || getCachedGuideSectionFromDashboard(filterUnitId, sectionId);
     } catch (e) {
         console.warn(`[GuideRefresh] direct unit html fetch failed for #${sectionId}:`, e);
-        return "";
+        return getCachedGuideSectionFromDashboard(filterUnitId, sectionId);
     }
 }
 
@@ -1852,6 +1890,11 @@ async function renderAssignmentsGuideMain(filterUnitId) {
         placeholder.classList.add('hidden');
         return;
     }
+    if (isNonCourseGuideContext(filterUnitId)) {
+        placeholder.classList.add('hidden');
+        placeholder.innerHTML = '';
+        return;
+    }
 
     placeholder.classList.remove('hidden');
     placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在讀取作業指南 (assignment-guide)...</div>`;
@@ -1860,7 +1903,7 @@ async function renderAssignmentsGuideMain(filterUnitId) {
         placeholder.innerHTML = extracted;
         normalizeGuideHeadingStyles(placeholder);
     } else {
-        placeholder.innerHTML = `<div class="text-red-500 text-sm">⚠️ 無法載入 assignment-guide</div>`;
+        placeholder.innerHTML = `<div class="text-amber-600 text-sm">⚠️ 該單元目前沒有 assignment-guide，已顯示可用內容。</div>`;
     }
 }
 
@@ -1871,6 +1914,11 @@ async function renderTutorGuideMain(filterUnitId) {
         placeholder.classList.add('hidden');
         return;
     }
+    if (isNonCourseGuideContext(filterUnitId)) {
+        placeholder.classList.add('hidden');
+        placeholder.innerHTML = '';
+        return;
+    }
 
     placeholder.classList.remove('hidden');
     placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在讀取導師指南 (tutor-guide)...</div>`;
@@ -1879,7 +1927,7 @@ async function renderTutorGuideMain(filterUnitId) {
         placeholder.innerHTML = extracted;
         normalizeGuideHeadingStyles(placeholder);
     } else {
-        placeholder.innerHTML = `<div class="text-red-500 text-sm">⚠️ 無法載入 tutor-guide</div>`;
+        placeholder.innerHTML = `<div class="text-amber-600 text-sm">⚠️ 該單元目前沒有 tutor-guide，已顯示可用內容。</div>`;
     }
 }
 
