@@ -15,24 +15,22 @@ const REPO_UTILS = window.repoSlugUtils || {};
 const normalizeCanonicalLearningPathKey = REPO_UTILS.normalizeCanonicalLearningPathKey || function (value = "") {
     const v = String(value || "").trim().toLowerCase().split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
     if (!v) return '';
-    if (v === 'car-common' || v === 'car-starter' || v === 'car-basic' || v === 'car-advanced') return v;
-    if (v === 'common') return 'car-common';
-    if (/^(?:tw|en)-common$/i.test(v)) return 'car-common';
-    if (/^(?:tw|en)-car-common$/i.test(v)) return 'car-common';
+    if (v === 'common' || v === 'car-starter' || v === 'car-basic' || v === 'car-advanced') return v;
+    if (/^(?:tw|en)-common$/i.test(v)) return 'common';
     if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, '');
     if (/^start-\d{2}-unit-/i.test(v)) return 'car-starter';
     if (/^basic-\d{2}-unit-/i.test(v)) return 'car-basic';
     if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return 'car-advanced';
-    if (/^\d{2}-unit-/i.test(v)) return 'car-common';
-    if (/^prepare-\d+/i.test(v)) return 'car-common';
+    if (/^\d{2}-unit-/i.test(v)) return 'common';
+    if (/^prepare-\d+/i.test(v)) return 'common';
     return v;
 };
 const normalizeCanonicalUnitFilenameForRoute = REPO_UTILS.normalizeCanonicalRepoSlug || function (file = '') {
     const v = String(file || '').split('/').pop().split('?')[0].trim();
     if (!v) return '';
-    if (/^(common|car-common|car-(starter|basic|advanced))-/i.test(v)) return v;
-    if (/^tw-(common|car-common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
-    if (/^en-(common|car-common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^en-/i, '');
+    if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
+    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
+    if (/^en-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^en-/i, '');
     if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
     if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
     if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
@@ -42,7 +40,7 @@ const normalizeCanonicalUnitFilenameForRoute = REPO_UTILS.normalizeCanonicalRepo
 };
 function canonicalLearningPathHref(pathKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);
-    return `/learning-path.html?path=${encodeURIComponent(canonical || 'car-common')}`;
+    return `/learning-path.html?path=${encodeURIComponent(canonical || 'common')}`;
 }
 
 // Initializer
@@ -338,7 +336,7 @@ function normalizeCourseTopNav() {
         const isStarter = file.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(file);
         const isBasic = file.startsWith('basic-') || /^(?:tw|en|car-basic)-/i.test(file);
         const isAdvanced = file.startsWith('adv-') || file.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(file);
-        const isPrepare = file.startsWith('prepare-') || /^(?:tw|en|common|car-common)-/i.test(file);
+        const isPrepare = file.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(file);
         const targetHref = isStarter
             ? canonicalLearningPathHref('car-starter')
             : isBasic
@@ -346,7 +344,7 @@ function normalizeCourseTopNav() {
                 : isAdvanced
                     ? canonicalLearningPathHref('car-advanced')
                     : isPrepare
-                        ? canonicalLearningPathHref('car-common')
+                        ? canonicalLearningPathHref('common')
                         : '';
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -395,7 +393,7 @@ function normalizeCourseTopNav() {
                 navLabel.setAttribute('target', '_top');
             } else if (isPrepare) {
                 navLabel.textContent = translate('prepare_title', '準備課程');
-                navLabel.setAttribute('href', `${canonicalLearningPathHref('car-common')}${langQuery}`);
+                navLabel.setAttribute('href', `${canonicalLearningPathHref('common')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
         }
@@ -460,7 +458,7 @@ function normalizeCourseTopNav() {
                                 'agent-mode': '04', 'vibe-coding': '05', 'web-agents': '06',
                                 'github-classroom': '07', 'wifi-setup': '08', 'motor-ramping': '09'
                             };
-                            const suffixMatch = file.match(/^(?:tw|en|common|car-common)-(.+)\.html$/i);
+                            const suffixMatch = file.match(/^(?:tw|en|common)-(.+)\.html$/i);
                             if (suffixMatch && lookup[suffixMatch[1]]) {
                                 courseNum = lookup[suffixMatch[1]];
                             }
@@ -592,7 +590,7 @@ function hideGlobalNavOnCoursePage() {
         const path = window.location.pathname || '';
         const file = (path.split('/').pop() || '').toLowerCase();
         const isCourseRoute = path.startsWith('/courses/');
-        const isPrepareUnit = /^(?:prepare-\d+|(?:tw|en-)?common-|(?:tw|en-)?car-common-|common-|car-common-).*\.html$/.test(file);
+        const isPrepareUnit = /^(?:prepare-\d+|(?:tw|en-)?common-|common-).*\.html$/.test(file);
         if (!isCourseRoute && !isPrepareUnit) return;
         if (document.getElementById('course-hide-main-nav-style')) return;
 
@@ -1982,7 +1980,7 @@ async function initFirebaseFeatures() {
             if (fileName.startsWith('adv-') || fileName.startsWith('advanced-') || fileName.startsWith('car-advanced-')) return 'advanced';
             if (fileName.startsWith('basic-') || fileName.startsWith('car-basic-')) return 'basic';
             if (fileName.startsWith('start-') || fileName.startsWith('car-starter-')) return 'started';
-            if (fileName.match(/^[0-9]/) || fileName.startsWith('prepare-') || fileName.startsWith('common-') || fileName.startsWith('car-common-')) return 'prepare';
+            if (fileName.match(/^[0-9]/) || fileName.startsWith('prepare-') || fileName.startsWith('common-')) return 'prepare';
             return 'basic';
         };
 

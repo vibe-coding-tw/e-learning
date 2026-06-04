@@ -6,16 +6,14 @@
     function normalizeCanonicalLearningPathKey(value = "") {
         const v = stripPathFragment(value).replace(/\.html$/i, '').toLowerCase();
         if (!v) return '';
-        if (v === 'car-common' || v === 'car-starter' || v === 'car-basic' || v === 'car-advanced') return v;
-        if (v === 'common') return 'car-common';
-        if (/^(?:tw|en)-common$/i.test(v)) return 'car-common';
-        if (/^(?:tw|en)-car-common$/i.test(v)) return 'car-common';
+        if (v === 'common' || v === 'car-starter' || v === 'car-basic' || v === 'car-advanced') return v;
+        if (/^(?:tw|en)-common$/i.test(v)) return 'common';
         if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, '');
         if (/^start-\d{2}-unit-/i.test(v)) return 'car-starter';
         if (/^basic-\d{2}-unit-/i.test(v)) return 'car-basic';
         if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return 'car-advanced';
-        if (/^\d{2}-unit-/i.test(v)) return 'car-common';
-        if (/^prepare-\d+/i.test(v)) return 'car-common';
+        if (/^\d{2}-unit-/i.test(v)) return 'common';
+        if (/^prepare-\d+/i.test(v)) return 'common';
         return v;
     }
 
@@ -23,7 +21,7 @@
         const canonical = normalizeCanonicalLearningPathKey(value);
         if (!canonical) return '';
         const prefix = String(locale || '').toLowerCase().startsWith('en') ? 'en' : 'tw';
-        if (canonical === 'car-common') return `${prefix}-common`;
+        if (canonical === 'common') return `${prefix}-common`;
         return `${prefix}-${canonical}`;
     }
 
