@@ -91,3 +91,15 @@ Last updated: 2026-06-04
 3. [Cap Table Implementation Spec](./cap-table-implementation-spec.md)
 4. [Investor Ledger System](./investor-ledger-system.md)
 
+## 10. 股份一定要有實際交易，才算有價值嗎？
+
+不一定。
+
+可以先有估值，再有交易。
+- 估值可以先透過融資討論、可比公司、現金流、或協議條件建立
+- 實際交易價格是最強的市場驗證
+- 但交易不是價值存在的前提
+
+更精準地說：
+- 股份價值不以交易存在為前提，但交易是最重要的市場驗證。
+- 估值可以先被定義，實際成交價格會讓它更落地、更容易被市場接受。

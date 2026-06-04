@@ -45,6 +45,7 @@ For now, the ownership master should stay off-chain.
 
 The platform already supports:
 - investor profiles
+- balance sheet snapshots
 - valuation snapshots
 - equity issuances
 - investor positions
@@ -57,6 +58,7 @@ The platform already supports:
 
 The safest setup is:
 - keep the cap table as the master record
+- store balance-sheet snapshots separately so NAV can be compared against valuation
 - use valuation snapshots to price each issuance
 - keep operational income and expense separate from equity
 - use crypto only where it adds real operational value
@@ -65,6 +67,7 @@ The safest setup is:
 ## 7. Related documents
 
 - [Investor FAQ](./faq.md)
+- [Valuation & NAV Checklist](./valuation-checklist.md)
 - [Cap Table & Tokenization Strategy](./cap-table-and-tokenization-strategy.md)
 - [Investor Ledger System](./investor-ledger-system.md)
 - [Valuation Model](./valuation-model.md)

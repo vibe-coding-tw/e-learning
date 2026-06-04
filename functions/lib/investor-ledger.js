@@ -354,6 +354,90 @@ function buildEquityPositionRecord({
     };
 }
 
+function sumBalanceSheetAssets(row = {}) {
+    return round2Amount(
+        Number(row.cash || 0) +
+        Number(row.accountsReceivable || 0) +
+        Number(row.otherAssets || 0) +
+        Number(row.fixedAssets || 0) +
+        Number(row.intangibleAssets || 0) +
+        Number(row.prepaidExpenses || 0)
+    );
+}
+
+function sumBalanceSheetLiabilities(row = {}) {
+    return round2Amount(
+        Number(row.accountsPayable || 0) +
+        Number(row.shortTermDebt || 0) +
+        Number(row.longTermDebt || 0) +
+        Number(row.otherLiabilities || 0)
+    );
+}
+
+function buildBalanceSheetSnapshotRecord({
+    snapshotId,
+    snapshotDate,
+    currency,
+    cash,
+    accountsReceivable,
+    otherAssets,
+    fixedAssets,
+    intangibleAssets,
+    prepaidExpenses,
+    accountsPayable,
+    shortTermDebt,
+    longTermDebt,
+    otherLiabilities,
+    totalAssets,
+    totalLiabilities,
+    issuedShares,
+    notes,
+    locked,
+    createdAt
+} = {}) {
+    const computedAssets = round2Amount(Number(totalAssets) > 0 ? totalAssets : sumBalanceSheetAssets({
+        cash,
+        accountsReceivable,
+        otherAssets,
+        fixedAssets,
+        intangibleAssets,
+        prepaidExpenses
+    }));
+    const computedLiabilities = round2Amount(Number(totalLiabilities) > 0 ? totalLiabilities : sumBalanceSheetLiabilities({
+        accountsPayable,
+        shortTermDebt,
+        longTermDebt,
+        otherLiabilities
+    }));
+    const netAssetValue = round2Amount(computedAssets - computedLiabilities);
+    const shareCount = Math.max(0, Number(issuedShares || 0));
+    const navPerIssuedShare = shareCount > 0 ? round2Amount(netAssetValue / shareCount) : 0;
+    return {
+        snapshotId,
+        snapshotDate: snapshotDate ? toTimestamp(snapshotDate) : admin.firestore.FieldValue.serverTimestamp(),
+        currency: normalizeText(currency || "TWD") || "TWD",
+        cash: round2Amount(cash || 0),
+        accountsReceivable: round2Amount(accountsReceivable || 0),
+        otherAssets: round2Amount(otherAssets || 0),
+        fixedAssets: round2Amount(fixedAssets || 0),
+        intangibleAssets: round2Amount(intangibleAssets || 0),
+        prepaidExpenses: round2Amount(prepaidExpenses || 0),
+        accountsPayable: round2Amount(accountsPayable || 0),
+        shortTermDebt: round2Amount(shortTermDebt || 0),
+        longTermDebt: round2Amount(longTermDebt || 0),
+        otherLiabilities: round2Amount(otherLiabilities || 0),
+        totalAssets: computedAssets,
+        totalLiabilities: computedLiabilities,
+        netAssetValue,
+        issuedShares: shareCount,
+        navPerIssuedShare,
+        notes: normalizeText(notes || ""),
+        locked: locked !== false,
+        createdAt: createdAt || admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+}
+
 async function loadValuationSnapshots({ db, snapshotCache } = {}) {
     const cacheKey = "valuation-snapshots";
     if (snapshotCache?.has(cacheKey)) return snapshotCache.get(cacheKey);
@@ -382,6 +466,95 @@ async function loadValuationSnapshots({ db, snapshotCache } = {}) {
         .sort((a, b) => toSortableMillis(b.updatedAt || b.effectiveFrom) - toSortableMillis(a.updatedAt || a.effectiveFrom) || a.roundName.localeCompare(b.roundName));
     if (snapshotCache) snapshotCache.set(cacheKey, snapshots);
     return snapshots;
+}
+
+async function loadBalanceSheetSnapshots({ db, snapshotCache } = {}) {
+    const cacheKey = "balance-sheet-snapshots";
+    if (snapshotCache?.has(cacheKey)) return snapshotCache.get(cacheKey);
+    const snap = await db.collection("balance_sheet_snapshots").get();
+    const snapshots = snap.docs
+        .map((doc) => ({ snapshotId: doc.id, ...(doc.data() || {}) }))
+        .map((row) => {
+            const totalAssets = round2Amount(row.totalAssets || sumBalanceSheetAssets(row));
+            const totalLiabilities = round2Amount(row.totalLiabilities || sumBalanceSheetLiabilities(row));
+            const netAssetValue = round2Amount(
+                row.netAssetValue || (totalAssets - totalLiabilities)
+            );
+            const issuedShares = Math.max(0, Number(row.issuedShares || 0));
+            return {
+                snapshotId: normalizeText(row.snapshotId),
+                snapshotDate: row.snapshotDate || row.effectiveFrom || row.createdAt || null,
+                currency: normalizeText(row.currency || "TWD") || "TWD",
+                cash: round2Amount(row.cash || 0),
+                accountsReceivable: round2Amount(row.accountsReceivable || 0),
+                otherAssets: round2Amount(row.otherAssets || 0),
+                fixedAssets: round2Amount(row.fixedAssets || 0),
+                intangibleAssets: round2Amount(row.intangibleAssets || 0),
+                prepaidExpenses: round2Amount(row.prepaidExpenses || 0),
+                accountsPayable: round2Amount(row.accountsPayable || 0),
+                shortTermDebt: round2Amount(row.shortTermDebt || 0),
+                longTermDebt: round2Amount(row.longTermDebt || 0),
+                otherLiabilities: round2Amount(row.otherLiabilities || 0),
+                totalAssets,
+                totalLiabilities,
+                netAssetValue,
+                issuedShares,
+                navPerIssuedShare: round2Amount(row.navPerIssuedShare || (issuedShares > 0 ? (netAssetValue / issuedShares) : 0)),
+                notes: normalizeText(row.notes || ""),
+                locked: row.locked !== false,
+                updatedAt: row.updatedAt || null
+            };
+        })
+        .sort((a, b) => toSortableMillis(b.updatedAt || b.snapshotDate) - toSortableMillis(a.updatedAt || a.snapshotDate) || b.netAssetValue - a.netAssetValue);
+    if (snapshotCache) snapshotCache.set(cacheKey, snapshots);
+    return snapshots;
+}
+
+async function loadActiveBalanceSheetSnapshot({ db, snapshotCache, snapshotId = "" } = {}) {
+    const snapshots = await loadBalanceSheetSnapshots({ db, snapshotCache });
+    if (snapshotId) {
+        const matched = snapshots.find((s) => s.snapshotId === normalizeText(snapshotId));
+        if (matched) return matched;
+    }
+    return snapshots.find((s) => s.locked !== false) || snapshots[0] || null;
+}
+
+async function upsertBalanceSheetSnapshot({
+    db,
+    payload = {},
+    createdByUid = "",
+    snapshotCache
+} = {}) {
+    const snapshotId = normalizeText(payload.snapshotId || payload.id || "");
+    if (!snapshotId) throw new Error("snapshotId is required");
+    const docRef = db.collection("balance_sheet_snapshots").doc(snapshotId);
+    const snapshotDoc = buildBalanceSheetSnapshotRecord({
+        snapshotId,
+        snapshotDate: payload.snapshotDate || payload.effectiveAt || new Date(),
+        currency: payload.currency || "TWD",
+        cash: payload.cash,
+        accountsReceivable: payload.accountsReceivable,
+        otherAssets: payload.otherAssets,
+        fixedAssets: payload.fixedAssets,
+        intangibleAssets: payload.intangibleAssets,
+        prepaidExpenses: payload.prepaidExpenses,
+        accountsPayable: payload.accountsPayable,
+        shortTermDebt: payload.shortTermDebt,
+        longTermDebt: payload.longTermDebt,
+        otherLiabilities: payload.otherLiabilities,
+        totalAssets: payload.totalAssets,
+        totalLiabilities: payload.totalLiabilities,
+        issuedShares: payload.issuedShares,
+        notes: payload.notes || "",
+        locked: payload.locked !== false
+    });
+    await docRef.set({
+        ...snapshotDoc,
+        createdByUid: normalizeText(createdByUid),
+        updatedByUid: normalizeText(createdByUid)
+    }, { merge: true });
+    if (snapshotCache) snapshotCache.delete("balance-sheet-snapshots");
+    return snapshotDoc;
 }
 
 async function loadActiveValuationSnapshot({ db, snapshotCache, valuationId = "" } = {}) {
@@ -827,6 +1000,7 @@ module.exports = {
     buildInvestorCreditId,
     buildInvestorCreditRecord,
     buildInvestorEventId,
+    buildBalanceSheetSnapshotRecord,
     buildEquityIssuanceId,
     buildEquityIssuanceRecord,
     buildEquityPositionRecord,
@@ -835,12 +1009,15 @@ module.exports = {
     buildInvestorSettlementRecord,
     deriveSharePrice,
     issueInvestorEquity,
+    loadBalanceSheetSnapshots,
+    loadActiveBalanceSheetSnapshot,
     loadActiveValuationSnapshot,
     loadInvestorConfig,
     loadInvestorProfiles,
     loadValuationSnapshots,
     recordInvestorFinanceEvent,
     round2Amount,
+    upsertBalanceSheetSnapshot,
     upsertValuationSnapshot,
     settleAnnualInvestorDividends
 };

@@ -388,6 +388,34 @@
 - `investor_finance_events` 與 `investor_credits` 只處理收入 / 支出或其他可結算事件。
 - `investor_equity_positions` 是讀取用的持股快照，來源應可追溯到 `equity_issuances`。
 
+### 9.2 `balance_sheet_snapshots` 集合
+儲存公司資產負債快照，供 NAV 與每股淨值計算使用。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `snapshotId` | string | 財務快照識別碼。 |
+| `snapshotDate` | timestamp | 快照日期。 |
+| `currency` | string | 幣別，預設 `TWD`。 |
+| `cash` | number | 現金。 |
+| `accountsReceivable` | number | 應收帳款。 |
+| `otherAssets` | number | 其他資產。 |
+| `fixedAssets` | number | 固定資產。 |
+| `intangibleAssets` | number | 無形資產。 |
+| `prepaidExpenses` | number | 預付費用。 |
+| `accountsPayable` | number | 應付帳款。 |
+| `shortTermDebt` | number | 短期借款。 |
+| `longTermDebt` | number | 長期借款。 |
+| `otherLiabilities` | number | 其他負債。 |
+| `totalAssets` | number | 總資產。 |
+| `totalLiabilities` | number | 總負債。 |
+| `netAssetValue` | number | 淨值 / NAV。 |
+| `issuedShares` | number | 當期已發行股數。 |
+| `navPerIssuedShare` | number | 每股淨值。 |
+| `notes` | string | 備註。 |
+| `locked` | boolean | 是否鎖定。 |
+| `createdByUid` / `updatedByUid` | string | 維護者 UID。 |
+| `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
+
 ---
 
 ## 10. `valuation_snapshots` 集合

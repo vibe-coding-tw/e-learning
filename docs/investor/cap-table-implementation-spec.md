@@ -48,6 +48,7 @@ It is intended for engineering, product, and finance operations.
 - `investor_credits`
 - `investor_balances`
 - `investor_annual_settlements`
+- `balance_sheet_snapshots`
 
 ## 5. Ownership flow
 
@@ -58,6 +59,7 @@ It is intended for engineering, product, and finance operations.
 5. Record operational events separately in `investor_finance_events`.
 6. Rebuild `investor_credits` and `investor_balances` from event data.
 7. Run annual settlement to produce `investor_annual_settlements`.
+8. Store periodic balance sheet snapshots in `balance_sheet_snapshots`.
 
 ## 6. Business rules
 
@@ -85,6 +87,13 @@ It is intended for engineering, product, and finance operations.
 - Pay out cash when a payout account exists.
 - Carry ending balance into the next year.
 
+### 6.6 Pricing and market validation
+- A valuation snapshot may be created before any external transaction exists.
+- The absence of a transaction does not mean the equity has no value.
+- A real transaction price is the strongest market validation for a specific moment.
+- If a secondary transfer or primary issuance exists, store that realized price as transaction evidence.
+- Do not overwrite past valuation snapshots after a later market transaction occurs.
+
 ## 7. What not to mix
 
 - Do not mix tutor / agent revenue share with investor equity.
@@ -110,4 +119,3 @@ If tokenization is added:
 - [ ] Event-to-credit pipeline
 - [ ] Annual settlement job
 - [ ] Optional token mirror design
-
