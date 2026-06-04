@@ -2442,6 +2442,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                     Object.keys(unitAssignmentMap || {}).forEach(pushTutorEmail);
                     const unitTutors = Array.from(unitTutorEmails);
                     const unitName = formatUnitName(normalizedFile) || formatUnitName(unitFile) || unitFile;
+                    const displayTitle = unitsTitleMap[resolveCanonicalUnitId(normalizedFile)] || unitName;
 
                     const isSelected = filterUnitId && unitIdsMatch(normalizedFile, filterUnitId);
                     const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/20 transition-colors";
@@ -2452,7 +2453,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                             <!-- Section 1: Unit Info -->
                             <div>
                                 <div class="text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">課程 / COURSE</div>
-                                <div class="text-lg font-black text-gray-800">${escapeHtml(lesson.title)}</div>
+                                <div class="text-lg font-black text-gray-800">${escapeHtml(displayTitle)}</div>
                                 <div class="text-xs text-gray-400 font-mono mt-1 leading-relaxed">${escapeHtml(normalizedFile.replace(/\.html$/i, ''))}</div>
                             </div>
 
@@ -3801,6 +3802,7 @@ function buildBalanceSheetSnapshotCard(snapshot = {}) {
     const issuedShares = Number(snapshot.issuedShares || 0);
     const totalAssets = Number(snapshot.totalAssets || 0);
     const totalLiabilities = Number(snapshot.totalLiabilities || 0);
+    const isAutoManaged = snapshot.autoManaged === true || snapshotId === 'auto-current';
     return `
         <div class="rounded-xl border border-violet-200 bg-violet-50/40 p-4">
             <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -3809,7 +3811,7 @@ function buildBalanceSheetSnapshotCard(snapshot = {}) {
                     <div class="text-[11px] text-slate-400 font-mono">${escapeHtml(formatInvestorLedgerDate(snapshot.snapshotDate) || '—')}</div>
                 </div>
                 <div class="text-right">
-                    <div class="text-xs font-bold ${snapshot.locked !== false ? 'text-violet-600' : 'text-amber-600'}">${snapshot.locked !== false ? '鎖定中' : '可編輯'}</div>
+                    <div class="text-xs font-bold ${isAutoManaged ? 'text-blue-600' : (snapshot.locked !== false ? 'text-violet-600' : 'text-amber-600')}">${isAutoManaged ? '系統自動追蹤' : (snapshot.locked !== false ? '鎖定中' : '可編輯')}</div>
                     <div class="text-[11px] text-slate-400 font-mono">${escapeHtml(snapshot.currency || 'TWD')}</div>
                 </div>
             </div>
@@ -3822,7 +3824,7 @@ function buildBalanceSheetSnapshotCard(snapshot = {}) {
                 <div class="rounded-lg bg-white px-3 py-2 border border-violet-100">現金：<span class="font-mono font-bold text-slate-700">${Number(snapshot.cash || 0).toLocaleString()}</span></div>
             </div>
             <div class="mt-3 text-[11px] text-slate-500 leading-5">
-                資產負債快照會和估值快照並排保存，作為帳面淨值與每股淨值的依據。
+                資產負債快照會和估值快照並排保存，作為帳面淨值與每股淨值的依據。若是系統自動追蹤的 current snapshot，收入 / 支出事件會直接推動現金與 NAV。
             </div>
             ${snapshot.notes ? `<div class="mt-2 text-[11px] text-slate-500 leading-5">${escapeHtml(snapshot.notes)}</div>` : ''}
         </div>

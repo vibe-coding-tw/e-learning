@@ -1,10 +1,10 @@
 # Investor Ledger System
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04
 
 ## 1. Goal
 把投資人計劃變成可執行的系統模組：
-- 每一筆收入 / 支出都形成可追蹤的 event
+- 每一筆收入 / 支出都形成可追蹤的 event，並可自動推動 current balance sheet snapshot
 - 每一筆 event 依投資人份額拆成 credit
 - 每一輪估值先鎖定為 valuation snapshot，再依 snapshot 換算發股
 - 員工 / 顧問折抵與外部投資者都走同一套 equity issuance
@@ -32,15 +32,16 @@ See also:
 2. 系統寫入 `investor_finance_events/{eventId}`。
 3. 系統依 `shareUnits` 拆分為 `investor_credits/{creditId}`。
 4. 系統同步更新 `investor_balances/{investorId}`。
-5. 估值快照先寫入 `valuation_snapshots/{valuationId}`，發股時引用該快照，不回寫舊發股紀錄。
-6. 發股時產生 `equity_issuances/{issuanceId}` 與 `investor_equity_positions/{investorId}`。
-7. 每年 1 月 1 日執行年度結算，產生 `investor_annual_settlements/{year-investorId}`。
+5. 系統依收入 / 支出金額自動更新 current `balance_sheet_snapshots`，若 active snapshot 已鎖定，則寫入系統管理的 `auto-current` 快照。
+6. 估值快照先寫入 `valuation_snapshots/{valuationId}`，發股時引用該快照，不回寫舊發股紀錄。
+7. 發股時產生 `equity_issuances/{issuanceId}` 與 `investor_equity_positions/{investorId}`。
+8. 每年 1 月 1 日執行年度結算，產生 `investor_annual_settlements/{year-investorId}`。
 
 ## 4. Current Integration Points
 - 訂單成功付款後，會自動建立 `income` 類 investor event。
 - `manual` 支出可透過 admin callable 補登。
 - `calculateAnnualInvestorDividends` 為年度結算排程。
-- `upsertBalanceSheetSnapshot` 用於鎖定資產負債快照。
+- `upsertBalanceSheetSnapshot` 用於鎖定或手動修正資產負債快照；`recordInvestorFinanceEvent` 會同步推動 current snapshot。
 - `upsertValuationSnapshot` 用於鎖定估值快照。
 - `issueInvestorEquity` 用於將現金、服務折抵或其他對價直接換算成持股。
 

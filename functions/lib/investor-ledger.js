@@ -1,6 +1,8 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 
+const AUTO_BALANCE_SHEET_SNAPSHOT_ID = "auto-current";
+
 function normalizeText(value = "") {
     return String(value || "").trim();
 }
@@ -502,6 +504,14 @@ async function loadBalanceSheetSnapshots({ db, snapshotCache } = {}) {
                 navPerIssuedShare: round2Amount(row.navPerIssuedShare || (issuedShares > 0 ? (netAssetValue / issuedShares) : 0)),
                 notes: normalizeText(row.notes || ""),
                 locked: row.locked !== false,
+                autoManaged: row.autoManaged === true || normalizeText(row.snapshotId) === AUTO_BALANCE_SHEET_SNAPSHOT_ID,
+                lastEventId: normalizeText(row.lastEventId || ""),
+                lastEventType: normalizeText(row.lastEventType || ""),
+                lastEventSourceType: normalizeText(row.lastEventSourceType || ""),
+                lastEventSourceId: normalizeText(row.lastEventSourceId || ""),
+                lastEventSourceLabel: normalizeText(row.lastEventSourceLabel || ""),
+                lastEventNote: normalizeText(row.lastEventNote || ""),
+                lastEventAt: row.lastEventAt || null,
                 updatedAt: row.updatedAt || null
             };
         })
@@ -516,7 +526,101 @@ async function loadActiveBalanceSheetSnapshot({ db, snapshotCache, snapshotId = 
         const matched = snapshots.find((s) => s.snapshotId === normalizeText(snapshotId));
         if (matched) return matched;
     }
-    return snapshots.find((s) => s.locked !== false) || snapshots[0] || null;
+    return snapshots.find((s) => s.autoManaged === true)
+        || snapshots.find((s) => s.locked !== false)
+        || snapshots[0]
+        || null;
+}
+
+async function applyInvestorEventToBalanceSheetSnapshot({
+    db,
+    eventType,
+    grossAmount,
+    occurredAtDate,
+    eventId,
+    sourceType,
+    sourceId,
+    sourceLabel,
+    note,
+    createdByUid = "",
+    snapshotCache,
+    issuedShares = 0
+} = {}) {
+    const delta = round2Amount((normalizeText(eventType).toLowerCase() === "expense" ? -1 : 1) * Math.abs(Number(grossAmount || 0)));
+    if (!Number.isFinite(delta) || delta === 0) return null;
+
+    const snapshots = await loadBalanceSheetSnapshots({ db, snapshotCache });
+    const activeSnapshot = await loadActiveBalanceSheetSnapshot({ db, snapshotCache });
+    const sourceSnapshot = activeSnapshot || snapshots.find((s) => s.autoManaged === true) || null;
+
+    const resolvedIssuedShares = Math.max(0, Number(sourceSnapshot?.issuedShares || 0)) || Math.max(0, Number(issuedShares || 0));
+    const baseCash = round2Amount(Number(sourceSnapshot?.cash || 0));
+    const baseReceivable = round2Amount(Number(sourceSnapshot?.accountsReceivable || 0));
+    const baseOtherAssets = round2Amount(Number(sourceSnapshot?.otherAssets || 0));
+    const baseFixedAssets = round2Amount(Number(sourceSnapshot?.fixedAssets || 0));
+    const baseIntangibleAssets = round2Amount(Number(sourceSnapshot?.intangibleAssets || 0));
+    const basePrepaidExpenses = round2Amount(Number(sourceSnapshot?.prepaidExpenses || 0));
+    const basePayables = round2Amount(Number(sourceSnapshot?.accountsPayable || 0));
+    const baseShortDebt = round2Amount(Number(sourceSnapshot?.shortTermDebt || 0));
+    const baseLongDebt = round2Amount(Number(sourceSnapshot?.longTermDebt || 0));
+    const baseOtherLiabilities = round2Amount(Number(sourceSnapshot?.otherLiabilities || 0));
+
+    const updatedCash = round2Amount(baseCash + delta);
+    const updatedAssets = round2Amount(
+        updatedCash +
+        baseReceivable +
+        baseOtherAssets +
+        baseFixedAssets +
+        baseIntangibleAssets +
+        basePrepaidExpenses
+    );
+    const totalLiabilities = round2Amount(basePayables + baseShortDebt + baseLongDebt + baseOtherLiabilities);
+    const netAssetValue = round2Amount(updatedAssets - totalLiabilities);
+    const navPerIssuedShare = resolvedIssuedShares > 0 ? round2Amount(netAssetValue / resolvedIssuedShares) : 0;
+
+    const snapshotDoc = buildBalanceSheetSnapshotRecord({
+        snapshotId: sourceSnapshot?.autoManaged === true ? sourceSnapshot.snapshotId : AUTO_BALANCE_SHEET_SNAPSHOT_ID,
+        snapshotDate: occurredAtDate || new Date(),
+        currency: sourceSnapshot?.currency || "TWD",
+        cash: updatedCash,
+        accountsReceivable: baseReceivable,
+        otherAssets: baseOtherAssets,
+        fixedAssets: baseFixedAssets,
+        intangibleAssets: baseIntangibleAssets,
+        prepaidExpenses: basePrepaidExpenses,
+        accountsPayable: basePayables,
+        shortTermDebt: baseShortDebt,
+        longTermDebt: baseLongDebt,
+        otherLiabilities: baseOtherLiabilities,
+        totalAssets: updatedAssets,
+        totalLiabilities,
+        issuedShares: resolvedIssuedShares,
+        notes: sourceSnapshot?.notes || "Auto-updated from investor finance events.",
+        locked: false,
+        autoManaged: true,
+        lastEventId: normalizeText(eventId),
+        lastEventType: normalizeText(eventType).toLowerCase(),
+        lastEventSourceType: normalizeText(sourceType),
+        lastEventSourceId: normalizeText(sourceId),
+        lastEventSourceLabel: normalizeText(sourceLabel),
+        lastEventNote: normalizeText(note),
+        lastEventAt: occurredAtDate ? toTimestamp(occurredAtDate) : admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: sourceSnapshot?.createdAt || admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    const autoSnapshotRef = db.collection("balance_sheet_snapshots").doc(snapshotDoc.snapshotId || AUTO_BALANCE_SHEET_SNAPSHOT_ID);
+    await autoSnapshotRef.set({
+        ...snapshotDoc,
+        autoManaged: true,
+        locked: false,
+        updatedByUid: normalizeText(createdByUid),
+        createdByUid: normalizeText(sourceSnapshot?.createdByUid || createdByUid)
+    }, { merge: true });
+
+    if (snapshotCache) snapshotCache.delete("balance-sheet-snapshots");
+
+    return snapshotDoc;
 }
 
 async function upsertBalanceSheetSnapshot({
@@ -550,6 +654,14 @@ async function upsertBalanceSheetSnapshot({
     });
     await docRef.set({
         ...snapshotDoc,
+        autoManaged: payload.autoManaged === true || snapshotId === AUTO_BALANCE_SHEET_SNAPSHOT_ID,
+        lastEventId: normalizeText(payload.lastEventId || ""),
+        lastEventType: normalizeText(payload.lastEventType || ""),
+        lastEventSourceType: normalizeText(payload.lastEventSourceType || ""),
+        lastEventSourceId: normalizeText(payload.lastEventSourceId || ""),
+        lastEventSourceLabel: normalizeText(payload.lastEventSourceLabel || ""),
+        lastEventNote: normalizeText(payload.lastEventNote || ""),
+        lastEventAt: payload.lastEventAt ? toTimestamp(payload.lastEventAt) : null,
         createdByUid: normalizeText(createdByUid),
         updatedByUid: normalizeText(createdByUid)
     }, { merge: true });
@@ -837,6 +949,7 @@ async function recordInvestorFinanceEvent({
     const activeProfiles = profiles.filter((p) => p && Number(p.shareUnits || 0) > 0);
     const allocations = allocateByShareUnits(signedAmount, activeProfiles);
     const totalShareUnits = round2Amount(activeProfiles.reduce((sum, p) => sum + Number(p.shareUnits || 0), 0));
+    const totalIssuedShares = round2Amount(profiles.reduce((sum, p) => sum + Number(p.equityShares || p.shareUnits || 0), 0));
 
     const eventDoc = buildInvestorFinanceEventRecord({
         eventId,
@@ -899,6 +1012,21 @@ async function recordInvestorFinanceEvent({
             }
         });
     }
+
+    await applyInvestorEventToBalanceSheetSnapshot({
+        db,
+        eventType,
+        grossAmount,
+        occurredAtDate,
+        eventId,
+        sourceType,
+        sourceId,
+        sourceLabel,
+        note,
+        createdByUid,
+        snapshotCache,
+        issuedShares: totalIssuedShares
+    });
 
     return { eventId, created: true, event: eventDoc, credits };
 }
@@ -1001,6 +1129,7 @@ module.exports = {
     buildInvestorCreditRecord,
     buildInvestorEventId,
     buildBalanceSheetSnapshotRecord,
+    applyInvestorEventToBalanceSheetSnapshot,
     buildEquityIssuanceId,
     buildEquityIssuanceRecord,
     buildEquityPositionRecord,

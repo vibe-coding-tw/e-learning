@@ -413,6 +413,11 @@
 | `navPerIssuedShare` | number | 每股淨值。 |
 | `notes` | string | 備註。 |
 | `locked` | boolean | 是否鎖定。 |
+| `autoManaged` | boolean | 是否為系統自動追蹤的 current snapshot。 |
+| `lastEventId` / `lastEventType` | string | 造成這筆快照變動的最新事件。 |
+| `lastEventSourceType` / `lastEventSourceId` / `lastEventSourceLabel` | string | 最新事件來源摘要。 |
+| `lastEventNote` | string | 最新事件備註。 |
+| `lastEventAt` | timestamp | 最新事件時間。 |
 | `createdByUid` / `updatedByUid` | string | 維護者 UID。 |
 | `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
 

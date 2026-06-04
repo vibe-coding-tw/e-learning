@@ -42,7 +42,7 @@
 - `loadActiveBalanceSheetSnapshot`
 - `upsertValuationSnapshot`
 - `issueInvestorEquity`
-- `recordInvestorFinanceEvent`
+- `recordInvestorFinanceEvent`（會同步推動 current balance sheet snapshot）
 - `settleAnnualInvestorDividends`
 
 ## 5. Maintenance Rules

@@ -81,6 +81,7 @@ It is intended for engineering, product, and finance operations.
 ### 6.4 Income / expense ledger
 - Income and expense are not equity issuance.
 - They create investor events and credits, not new shares.
+- They also roll forward the system-managed current `balance_sheet_snapshots` record so NAV stays in sync with operational activity.
 
 ### 6.5 Annual settlement
 - Compute annual dividend payable from accumulated balances and policy.

@@ -26,16 +26,19 @@ async function consumeGoogleRedirectResult() {
 async function startGoogleLogin() {
     const provider = new GoogleAuthProvider();
     try {
-        if (isLocalDev()) {
-            await signInWithPopup(auth, provider);
-            return;
-        }
-        sessionStorage.setItem(GOOGLE_LOGIN_IN_PROGRESS_KEY, "1");
-        await signInWithRedirect(auth, provider);
+        // Try popup login first in all environments. This is much more reliable
+        // on custom domains under modern browser privacy restrictions (blocking third-party cookies).
+        await signInWithPopup(auth, provider);
     } catch (error) {
-        console.error("[NavComp] Google login failed:", error);
-        sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
-        alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。");
+        console.warn("[NavComp] Google popup login failed or blocked, trying redirect...", error);
+        try {
+            sessionStorage.setItem(GOOGLE_LOGIN_IN_PROGRESS_KEY, "1");
+            await signInWithRedirect(auth, provider);
+        } catch (redirectError) {
+            console.error("[NavComp] Google redirect login failed:", redirectError);
+            sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
+            alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。");
+        }
     }
 }
 const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v4";
@@ -1026,14 +1029,16 @@ function initNavComponent() {
             if (!userDisplay || !loginBtn) return;
             if (user) {
                 userDisplay.innerText = resolvedDisplayName;
+                userDisplay.style.display = ''; // Clear inline display to allow CSS rules
                 userDisplay.classList.remove('hidden');
                 loginBtn.innerText = isZh ? '登出' : 'Logout';
                 loginBtn.onclick = () => auth.signOut();
             } else {
                 userDisplay.innerText = isZh ? '訪客' : 'Guest';
                 if (userDisplay.id === 'user-display') {
-                    userDisplay.classList.add('hidden');
+                    userDisplay.style.display = 'none'; // Force hide on desktop
                 } else {
+                    userDisplay.style.display = '';
                     userDisplay.classList.remove('hidden');
                 }
                 loginBtn.innerText = isZh ? '登入' : 'Login';

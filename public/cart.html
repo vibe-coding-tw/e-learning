@@ -22,7 +22,7 @@
 
 <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.74ec72455021.js"></script>
+    <script type="module" src="./js/nav-component.fb53b04fbea9.js"></script>
     
 
     <main class="flex-grow pt-32 pb-20 hero-gradient">
@@ -773,9 +773,16 @@
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
+                // Try popup login first in all environments. This is much more reliable
+                // on custom domains under modern browser privacy restrictions (blocking third-party cookies).
                 await signInWithPopup(auth, provider);
             } catch (error) {
-                console.error("登入失敗:", error);
+                console.warn("Google popup login failed or blocked, trying redirect...", error);
+                try {
+                    await signInWithRedirect(auth, provider);
+                } catch (redirectError) {
+                    console.error("Google redirect login failed:", redirectError);
+                }
             }
         }
 

@@ -107,6 +107,7 @@ If you instead use only issued shares, replace the denominator with the actual i
 - Balance sheet snapshots are stored in `balance_sheet_snapshots`
 - Valuation snapshots are stored in `valuation_snapshots`
 - The dashboard compares both values so you can see book value, NAV, and the fundraising anchor side by side
+- Operational income / expense events automatically update the system-managed `auto-current` balance sheet snapshot, while manually locked snapshots remain available as historical references
 
 ## 9. Related documents
 
