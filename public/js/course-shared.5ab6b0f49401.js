@@ -2794,7 +2794,10 @@ async function initGithubReadme() {
 
     // 3. Fetch README
     const GITHUB_ORG = 'vibe-coding-template';
-    const repoCandidates = repoSlugCandidatesFromValue(unitId);
+    const repoUtils = window.repoSlugUtils || {};
+    const repoCandidates = typeof repoUtils.repoSlugCandidatesFromValue === 'function'
+        ? repoUtils.repoSlugCandidatesFromValue(unitId)
+        : [unitId].filter(Boolean);
 
     try {
         console.log("[CourseShared] Fetching README from Github Raw...");

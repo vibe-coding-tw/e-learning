@@ -11,6 +11,9 @@ Last updated: 2026-06-03
 - 年度結算時發放股利
 - 結算後保留最後餘額，作為下一年度的起始餘額
 
+See also:
+- [Cap Table & Tokenization Strategy](./cap-table-and-tokenization-strategy.md)
+
 ## 2. Core Rules
 1. 投資人份額以 `shareUnits` 表示。
 2. 所有 active 投資人份額加總後，依比例分配每筆金額。
@@ -53,3 +56,4 @@ Last updated: 2026-06-03
 ## 6. Notes
 - 若未來有退款、補貼、行銷費、雲端成本等來源，可全部走同一套 event 入口。
 - 這套模型刻意與 `revenue_share_*` 分離，避免投資人結算與 tutor/agent 分潤互相污染。
+- 股權主檔、估值快照與年度結算的法律 / 財務語意，請以 [Cap Table & Tokenization Strategy](./cap-table-and-tokenization-strategy.md) 為準。

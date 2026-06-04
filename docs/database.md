@@ -369,6 +369,27 @@
 
 ---
 
+## 9.1 股權主檔與投資人資料總覽
+
+以下集合共同構成目前的股權主檔與投資人資料層：
+
+- `investor_profiles`: 名單與份額設定
+- `valuation_snapshots`: 估值快照與發股定價基準
+- `equity_issuances`: 每次實際發股或服務換股
+- `investor_equity_positions`: 每位投資人的最新持股位置
+- `investor_finance_events`: 收入 / 支出 / 手動調整事件
+- `investor_credits`: 依份額拆分後的 credit 明細
+- `investor_balances`: 即時餘額
+- `investor_annual_settlements`: 年度股利結算結果
+
+資料語意原則：
+- 股權主檔是 ownership 的主來源，不應和 revenue share 混用。
+- `valuation_snapshots` 只用來鎖定發股價格，不回寫舊發行紀錄。
+- `investor_finance_events` 與 `investor_credits` 只處理收入 / 支出或其他可結算事件。
+- `investor_equity_positions` 是讀取用的持股快照，來源應可追溯到 `equity_issuances`。
+
+---
+
 ## 10. `valuation_snapshots` 集合
 儲存每一輪鎖定的估值快照，發股時必須引用既有 snapshot，不直接依即時估值重算。
 
