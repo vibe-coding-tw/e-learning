@@ -393,14 +393,24 @@ async function addAssignmentHistoryEntry(docRef, patch = {}, historyEntry, metho
     return docRef.update(payload);
 }
 
+function normalizeBackendCourseId(cid = "") {
+    const v = String(cid || "").trim().toLowerCase().replace(/^(?:tw|en)-/i, "");
+    if (v === "common") return "car-common";
+    return v;
+}
+
 function isAssignmentAuthorized({ targetUid, uid, requesterRole, requesterHasTutorAccess, assignmentTutor, requesterEmail, mappedCid, authorizedCourseIds, unitId }) {
-    return (targetUid === uid) ||
-        (requesterRole === 'admin') ||
-        (requesterHasTutorAccess && (
-            assignmentTutor === requesterEmail ||
-            authorizedCourseIds.includes(mappedCid) ||
-            (unitId && authorizedCourseIds.some(() => false))
-        ));
+    if (targetUid === uid) return true;
+    if (requesterRole === 'admin') return true;
+
+    if (requesterHasTutorAccess) {
+        if (assignmentTutor === requesterEmail) return true;
+
+        const normMappedCid = normalizeBackendCourseId(mappedCid);
+        const normAuthorizedCourseIds = (authorizedCourseIds || []).map(normalizeBackendCourseId);
+        if (normAuthorizedCourseIds.includes(normMappedCid)) return true;
+    }
+    return false;
 }
 
 function normalizeTemplateRepoName(id) {
