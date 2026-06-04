@@ -25,13 +25,47 @@ async function consumeGoogleRedirectResult() {
 
 function isInAppBrowser() {
     const ua = navigator.userAgent || navigator.vendor || window.opera;
-    return (
+    
+    // 1. Explicit signatures for known webviews
+    const knownInApp = (
         ua.indexOf("FBAN") > -1 ||
         ua.indexOf("FBAV") > -1 ||
         ua.indexOf("Line/") > -1 ||
         ua.indexOf("Instagram") > -1 ||
-        ua.indexOf("WeChat") > -1
+        ua.indexOf("WeChat") > -1 ||
+        ua.indexOf("GSA/") > -1 || // Google Search App
+        ua.indexOf("Twitter") > -1 ||
+        ua.indexOf("Slack") > -1 ||
+        ua.indexOf("Discord") > -1
     );
+    if (knownInApp) return true;
+
+    // 2. iOS WebView detection (e.g. Gmail app, which doesn't specify custom UA tokens but lacks standard Safari tokens)
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    if (isIOS) {
+        const isStandardMobileBrowser = (
+            ua.indexOf("Safari") > -1 || 
+            ua.indexOf("CriOS") > -1 || 
+            ua.indexOf("FxiOS") > -1 || 
+            ua.indexOf("DuckDuckGo") > -1 || 
+            ua.indexOf("EdgiOS") > -1
+        );
+        const hasWebKitHandlers = !!(window.webkit && window.webkit.messageHandlers);
+        if (!isStandardMobileBrowser || hasWebKitHandlers) {
+            return true;
+        }
+    }
+
+    // 3. Android WebView detection
+    const isAndroid = /Android/i.test(ua);
+    if (isAndroid) {
+        const isAndroidWebView = ua.indexOf("; wv)") > -1 || (ua.indexOf("Version/") > -1 && ua.indexOf("Chrome") > -1 && ua.indexOf("Mobile") > -1 && ua.indexOf("Version/4.0") > -1);
+        if (isAndroidWebView) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function showInAppBrowserModal() {
@@ -83,10 +117,10 @@ function showInAppBrowserModal() {
         document.head.appendChild(animationStyle);
     }
 
-    const titleText = isZh ? "請使用外部瀏覽器開啟" : "Open in External Browser";
+    const titleText = isZh ? "請使用獨立瀏覽器開啟" : "Open in Standalone Browser";
     const descText = isZh 
-        ? "Google 為了維護您的帳戶安全，已封鎖在 LINE、Facebook、Instagram 等 App 內建瀏覽器中的登入要求。" 
-        : "Google blocks OAuth sign-in inside in-app browsers (LINE, Facebook, Instagram, etc.) to keep your account secure.";
+        ? "Google 為了帳戶安全，已封鎖在 App 內建瀏覽器（如 LINE、FB、Gmail、Slack 等）的登入。若您是從其他 App 開啟此連結，請切換至系統獨立的 Safari 或 Chrome App 即可正常登入。" 
+        : "Google blocks OAuth sign-in inside in-app browsers (LINE, Gmail, Slack, FB, etc.) to keep your account secure. Please switch to standard Safari or Chrome app to log in.";
         
     const stepText = isZh
         ? (isIOS 
