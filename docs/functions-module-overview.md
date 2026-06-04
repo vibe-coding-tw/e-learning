@@ -1,5 +1,5 @@
 # Functions Module Overview
-**Updated**: 2026-06-02
+**Updated**: 2026-06-04
 
 > 這份文件是 `functions/` 內部模組的快速地圖，方便理解哪些 helper 已經拆出去、各模組負責什麼，以及現在 `index.js` 還扮演什麼角色。
 
@@ -16,7 +16,7 @@
 | 模組 | 負責範圍 |
 |---|---|
 | `functions/lib/revenue-sharing.js` | 月結分潤、policy snapshot、credit/payout/balance 組裝 |
-| `functions/lib/investor-ledger.js` | 投資人事件流水、credit/年度結算、股利與餘額彙整 |
+| `functions/lib/investor-ledger.js` | 投資人事件流水、資產負債快照、valuation snapshot、credit/年度結算、股利與餘額彙整 |
 | `functions/lib/assignment-flow.js` | 作業提交、autograde payload、intervention 同步、history / repo assignment 組裝 |
 | `functions/lib/tutor-utils.js` | 導師 config、申請紀錄、推薦碼、name resolver、dashboard tutor config 彙整 |
 | `functions/lib/order-utils.js` | 訂單 / 物流 / referral link / order normalization / shipment reminder / order authorization |
@@ -33,7 +33,19 @@
 
 其中 `normalizeOrderItems` 這條線已經搬到 `functions/lib/order-utils.js`，但仍透過 resolver injection 使用 `index.js` 的 lesson/canonical helpers。
 
-## 3. Maintenance Rules
+## 4. Investor Ledger Surface
+
+`functions/lib/investor-ledger.js` 現在除了投資人事件、發股與年度結算，也包含資產負債快照與 NAV 相關資料流：
+
+- `upsertBalanceSheetSnapshot`
+- `loadBalanceSheetSnapshots`
+- `loadActiveBalanceSheetSnapshot`
+- `upsertValuationSnapshot`
+- `issueInvestorEquity`
+- `recordInvestorFinanceEvent`
+- `settleAnnualInvestorDividends`
+
+## 5. Maintenance Rules
 
 - 新增共用 helper 時，優先評估是否應放入對應的 `functions/lib/*.js`
 - 如果 helper 需要 lesson / canonical / user context，優先設計成可注入 resolver

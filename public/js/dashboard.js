@@ -3503,16 +3503,37 @@ window.filterPricingTable = function() {
     });
 };
 
+window.__pricingFilter = window.__pricingFilter || 'all';
+
+window.setPricingFilter = function(filter) {
+    const hasUnsaved = !!document.querySelector('button[id^="btn-save-price-"].bg-emerald-600');
+    if (hasUnsaved && !confirm("您有尚未儲存的價格變更，切換篩選將會遺失變更，是否繼續？")) {
+        return;
+    }
+    window.__pricingFilter = filter;
+    renderBusinessPricingOverview();
+};
+
 function buildBusinessPricingOverviewHtml() {
     const lessons = Array.isArray(allLessons) ? allLessons : [];
     const pricedLessons = lessons.filter(isBusinessPricedLesson);
     const lessonCount = lessons.length;
+    
+    const filter = window.__pricingFilter || 'all';
+    
+    // Apply filter
+    const filteredLessons = pricedLessons.filter(lesson => {
+        if (filter === 'courses') return lesson.isPhysical !== true;
+        if (filter === 'physical') return lesson.isPhysical === true;
+        return true;
+    });
+
     const pricedCount = pricedLessons.length;
     const activePolicies = Array.isArray(window.__loadedRevenuePolicies)
         ? window.__loadedRevenuePolicies.filter(p => p && p.enabled !== false).length
         : 0;
 
-    const rows = pricedLessons.map((lesson) => {
+    const rows = filteredLessons.map((lesson) => {
         const courseId = String(lesson.courseId || lesson.id || '').trim();
         const safeId = courseId.replace(/[^a-z0-9_-]/gi, '-');
         const title = lesson.title || lesson.courseTitle || lesson.courseName || courseId || '未命名課程';
@@ -3530,19 +3551,42 @@ function buildBusinessPricingOverviewHtml() {
             : (lesson.pricingUpdatedAt ? new Date(lesson.pricingUpdatedAt).toLocaleString() : '—');
 
         const isMultiRegion = priceSource === 'multi-region';
+        const isPhysical = lesson.isPhysical === true;
+        
+        // Multi-region or legacy badge
         const badgeClass = isMultiRegion 
             ? 'bg-blue-50 text-blue-700 border border-blue-100' 
             : 'bg-amber-50 text-amber-700 border border-amber-100';
         const badgeLabel = isMultiRegion ? '🌐 多語系定價' : '📝 舊版單一定價';
+
+        // Type badge (Course vs Hardware)
+        const typeBadgeClass = isPhysical 
+            ? 'bg-purple-50 text-purple-700 border border-purple-100'
+            : 'bg-sky-50 text-sky-700 border border-sky-100';
+        const typeBadgeLabel = isPhysical ? '📦 實體商品 (Hardware)' : '📘 線上課程 (Course)';
+
+        // USD Warning Badge
+        const hasUsdWarning = pricingState.en.amount === 0 && pricingState.tw.amount > 0;
+        const usdWarningBadge = hasUsdWarning 
+            ? `<div class="mt-2 text-[10px] inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold bg-rose-50 text-rose-700 border border-rose-100">
+                ⚠️ 缺美金定價
+               </div>` 
+            : '';
 
         return `
             <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition">
                 <td class="py-4 px-6 align-top">
                     <div class="font-bold text-slate-900">${escapeHtml(title)}</div>
                     <div class="text-[11px] text-slate-400 font-mono mt-1 break-all">${escapeHtml(displayId)}</div>
-                    <div class="mt-2 text-[10px] inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold ${badgeClass}">
-                        ${badgeLabel}
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                        <span class="text-[10px] inline-flex items-center px-2 py-0.5 rounded font-semibold ${typeBadgeClass}">
+                            ${typeBadgeLabel}
+                        </span>
+                        <span class="text-[10px] inline-flex items-center px-2 py-0.5 rounded font-semibold ${badgeClass}">
+                            ${badgeLabel}
+                        </span>
                     </div>
+                    ${usdWarningBadge}
                 </td>
                 <td class="py-4 px-6 align-top">
                     ${businessPriceInput(pricingState.tw.amount, 'TWD / tw', `business-price-tw-${safeId}`, 'NT$', safeId)}
@@ -3566,19 +3610,26 @@ function buildBusinessPricingOverviewHtml() {
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h4 class="text-sm font-black text-slate-900">課程價格總覽</h4>
+                    <h4 class="text-sm font-black text-slate-900">課程與商品定價維護</h4>
                     <p class="text-xs text-slate-500 mt-1">資料直接寫入 Firestore 的 <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">metadata_lessons</code>，英文頁顯示 USD、中文頁顯示 TWD。</p>
                 </div>
                 <div class="text-xs text-slate-400 font-medium">可維護欄位：<code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">pricing</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceByLocale</code></div>
             </div>
             
-            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-slate-50/30">
-                <div class="flex-grow max-w-md">
-                    <div class="relative">
+            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-slate-50/30">
+                <div class="flex flex-wrap items-center gap-3 flex-grow max-w-2xl">
+                    <div class="relative flex-grow max-w-xs">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
                             🔍
                         </span>
-                        <input type="text" id="pricing-search-input" oninput="window.filterPricingTable()" placeholder="搜尋課程名稱或 ID..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <input type="text" id="pricing-search-input" oninput="window.filterPricingTable()" placeholder="搜尋名稱或 ID..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    </div>
+                    
+                    <!-- Filter Button Group -->
+                    <div class="flex items-center gap-1 border border-slate-200 rounded-xl p-1 bg-white shadow-sm">
+                        <button onclick="window.setPricingFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'all' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">全部商品</button>
+                        <button onclick="window.setPricingFilter('courses')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'courses' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">📘 線上課程</button>
+                        <button onclick="window.setPricingFilter('physical')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'physical' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">📦 實體硬體</button>
                     </div>
                 </div>
                 <div class="text-xs text-slate-400 font-medium">請在欄位修改後點擊對應列的「儲存變更」</div>
@@ -3586,15 +3637,15 @@ function buildBusinessPricingOverviewHtml() {
 
             <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60">
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">課程總數</div>
-                    <div class="mt-1 text-2xl font-black text-slate-900">${lessonCount}</div>
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">當前篩選品項</div>
+                    <div class="mt-1 text-2xl font-black text-slate-900">${filteredLessons.length}</div>
                 </div>
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-widest font-bold text-emerald-500">有價格資料</div>
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-emerald-500">總有價格品項</div>
                     <div class="mt-1 text-2xl font-black text-emerald-600">${pricedCount}</div>
                 </div>
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">啟用中的固定設定</div>
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">啟用中的分潤策略</div>
                     <div class="mt-1 text-2xl font-black text-blue-600">${activePolicies}</div>
                 </div>
             </div>
@@ -3610,7 +3661,7 @@ function buildBusinessPricingOverviewHtml() {
                         </tr>
                     </thead>
                     <tbody id="business-pricing-table-body" class="divide-y divide-slate-100 text-sm">
-                        ${rows || '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚無可編輯的價格資料</td></tr>'}
+                        ${rows || '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚無符合篩選條件的價格資料</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -3757,6 +3808,41 @@ function buildValuationSnapshotCard(snapshot = {}) {
     `;
 }
 
+function buildBalanceSheetSnapshotCard(snapshot = {}) {
+    const snapshotId = String(snapshot.snapshotId || '').trim();
+    const nav = Number(snapshot.netAssetValue || 0);
+    const navPerShare = Number(snapshot.navPerIssuedShare || 0);
+    const issuedShares = Number(snapshot.issuedShares || 0);
+    const totalAssets = Number(snapshot.totalAssets || 0);
+    const totalLiabilities = Number(snapshot.totalLiabilities || 0);
+    return `
+        <div class="rounded-xl border border-violet-200 bg-violet-50/40 p-4">
+            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="font-black text-slate-900">${escapeHtml(snapshotId || '未命名財務快照')}</div>
+                    <div class="text-[11px] text-slate-400 font-mono">${escapeHtml(formatInvestorLedgerDate(snapshot.snapshotDate) || '—')}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs font-bold ${snapshot.locked !== false ? 'text-violet-600' : 'text-amber-600'}">${snapshot.locked !== false ? '鎖定中' : '可編輯'}</div>
+                    <div class="text-[11px] text-slate-400 font-mono">${escapeHtml(snapshot.currency || 'TWD')}</div>
+                </div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-500">
+                <div class="rounded-lg bg-white px-3 py-2 border border-violet-100">總資產：<span class="font-mono font-bold text-slate-700">${totalAssets.toLocaleString()}</span></div>
+                <div class="rounded-lg bg-white px-3 py-2 border border-violet-100">總負債：<span class="font-mono font-bold text-slate-700">${totalLiabilities.toLocaleString()}</span></div>
+                <div class="rounded-lg bg-white px-3 py-2 border border-violet-100">NAV：<span class="font-mono font-bold text-slate-700">${nav.toLocaleString()}</span></div>
+                <div class="rounded-lg bg-white px-3 py-2 border border-violet-100">每股淨值：<span class="font-mono font-bold text-slate-700">${navPerShare.toLocaleString()}</span></div>
+                <div class="rounded-lg bg-white px-3 py-2 border border-violet-100">已發股數：<span class="font-mono font-bold text-slate-700">${issuedShares.toLocaleString()}</span></div>
+                <div class="rounded-lg bg-white px-3 py-2 border border-violet-100">現金：<span class="font-mono font-bold text-slate-700">${Number(snapshot.cash || 0).toLocaleString()}</span></div>
+            </div>
+            <div class="mt-3 text-[11px] text-slate-500 leading-5">
+                資產負債快照會和估值快照並排保存，作為帳面淨值與每股淨值的依據。
+            </div>
+            ${snapshot.notes ? `<div class="mt-2 text-[11px] text-slate-500 leading-5">${escapeHtml(snapshot.notes)}</div>` : ''}
+        </div>
+    `;
+}
+
 function buildEquityIssuanceRow(issuance = {}) {
     return `
         <tr class="border-b border-slate-100 last:border-b-0">
@@ -3825,14 +3911,23 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
     const profiles = Array.isArray(window.__loadedInvestorProfiles) ? window.__loadedInvestorProfiles : [];
     const snapshots = Array.isArray(window.__loadedValuationSnapshots) ? window.__loadedValuationSnapshots : [];
     const activeSnapshot = window.__loadedActiveValuationSnapshot || snapshots.find((item) => item && item.locked !== false) || snapshots[0] || null;
+    const balanceSheetSnapshots = Array.isArray(window.__loadedBalanceSheetSnapshots) ? window.__loadedBalanceSheetSnapshots : [];
+    const activeBalanceSheetSnapshot = window.__loadedActiveBalanceSheetSnapshot || balanceSheetSnapshots.find((item) => item && item.locked !== false) || balanceSheetSnapshots[0] || null;
     const recentIssuances = Array.isArray(window.__loadedRecentIssuances) ? window.__loadedRecentIssuances : [];
     const equityPositions = Array.isArray(window.__loadedInvestorEquityPositions) ? window.__loadedInvestorEquityPositions : [];
     const totalShareUnits = profiles.reduce((sum, p) => sum + Number(p.shareUnits || 0), 0);
     const totalBalance = profiles.reduce((sum, p) => sum + Number(p.currentBalance || 0), 0);
-    const activeSnapshotOptions = snapshots.map((snapshot) => {
+    const totalIssuedShares = equityPositions.reduce((sum, p) => sum + Number(p.totalIssuedShares || 0), 0) || profiles.reduce((sum, p) => sum + Number(p.equityShares || p.shareUnits || 0), 0);
+    const activeSnapshotOptions = snapshots.filter(Boolean).map((snapshot) => {
         const selected = activeSnapshot && snapshot.valuationId === activeSnapshot.valuationId ? 'selected' : '';
         return `<option value="${escapeHtml(snapshot.valuationId)}" ${selected}>${escapeHtml(snapshot.roundName || snapshot.valuationId)}</option>`;
     }).join('');
+    const activeBalanceSnapshotOptions = balanceSheetSnapshots.filter(Boolean).map((snapshot) => {
+        const selected = activeBalanceSheetSnapshot && snapshot.snapshotId === activeBalanceSheetSnapshot.snapshotId ? 'selected' : '';
+        return `<option value="${escapeHtml(snapshot.snapshotId)}" ${selected}>${escapeHtml(snapshot.snapshotId || '未命名快照')}</option>`;
+    }).join('');
+    const latestNav = Number(activeBalanceSheetSnapshot?.netAssetValue || 0);
+    const latestNavPerShare = Number(activeBalanceSheetSnapshot?.navPerIssuedShare || 0);
     return `
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -3846,7 +3941,7 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
                 </div>
             </div>
 
-            <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60">
+            <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50/60">
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
                     <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">投資人數</div>
                     <div class="mt-1 text-2xl font-black text-slate-900" id="business-stat-investor-count">${profiles.length}</div>
@@ -3859,9 +3954,149 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
                     <div class="text-[11px] uppercase tracking-widest font-bold text-emerald-500">目前總餘額</div>
                     <div class="mt-1 text-2xl font-black text-emerald-600" id="business-stat-investor-balance">NT$ ${totalBalance.toLocaleString()}</div>
                 </div>
+                <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-violet-500">帳面淨值</div>
+                    <div class="mt-1 text-2xl font-black text-violet-600">${activeBalanceSheetSnapshot ? `NT$ ${latestNav.toLocaleString()}` : '—'}</div>
+                    <div class="mt-1 text-[11px] text-slate-400 font-mono">${activeBalanceSheetSnapshot ? `每股 NT$ ${latestNavPerShare.toLocaleString()} / ${totalIssuedShares.toLocaleString()} 股` : '尚未建立資產負債快照'}</div>
+                </div>
             </div>
 
             <div class="p-6 space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h5 class="text-sm font-black text-slate-900">財務快照 / Balance Sheet</h5>
+                                <p class="text-[11px] text-slate-500 mt-1">資產負債快照會計算 NAV，作為估值與每股淨值的參考，但不會覆蓋發股估值。</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[11px] font-bold text-violet-600">當前快照</div>
+                                <div class="text-xs font-mono text-slate-600">${escapeHtml(activeBalanceSheetSnapshot?.snapshotId || '未設定')}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">快照 ID</div>
+                                <input id="balance-snapshot-id" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="bs-2026-q2">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">快照日期</div>
+                                <input id="balance-snapshot-date" type="date" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">幣別</div>
+                                <input id="balance-currency" type="text" value="TWD" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">已發股數</div>
+                                <input id="balance-issued-shares" type="number" min="0" step="1" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="${totalIssuedShares || 10000000}">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">現金</div>
+                                <input id="balance-cash" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="500000">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">應收帳款</div>
+                                <input id="balance-receivable" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="120000">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">其他資產</div>
+                                <input id="balance-other-assets" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="0">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">固定資產</div>
+                                <input id="balance-fixed-assets" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="0">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">無形資產</div>
+                                <input id="balance-intangible-assets" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="0">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">預付費用</div>
+                                <input id="balance-prepaid-expenses" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="0">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">應付帳款</div>
+                                <input id="balance-payable" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="80000">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">短期借款</div>
+                                <input id="balance-short-debt" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="0">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">長期借款</div>
+                                <input id="balance-long-debt" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="0">
+                            </label>
+                            <label>
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">其他負債</div>
+                                <input id="balance-other-liabilities" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="0">
+                            </label>
+                            <label class="md:col-span-2">
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">說明</div>
+                                <textarea id="balance-notes" rows="2" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="例如：月底財務快照 / 董事會審閱用"></textarea>
+                            </label>
+                        </div>
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-600">
+                                <input id="balance-locked" type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500">
+                                鎖定此快照
+                            </label>
+                            <div class="flex gap-2">
+                                <button onclick="window.saveBalanceSheetSnapshot()" class="rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-700 active:scale-95">儲存財務快照</button>
+                                <button onclick="window.syncInvestorManagementDefaults()" class="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">套用快照預設</button>
+                                <button onclick="window.fillBalanceSheetSampleData()" class="rounded-xl border border-violet-300 bg-violet-50 px-4 py-2 text-xs font-bold text-violet-700 transition hover:bg-violet-100 active:scale-95">載入範例</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-violet-100 bg-white p-4 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h5 class="text-sm font-black text-slate-900">快照摘要</h5>
+                                <p class="text-[11px] text-slate-500 mt-1">按時間保存的資產負債快照，可直接拿來比較 NAV 與每股淨值。</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[11px] font-bold text-violet-600">NAV</div>
+                                <div class="text-xs font-mono text-slate-600">${activeBalanceSheetSnapshot ? `NT$ ${latestNav.toLocaleString()}` : '—'}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-500">
+                            <div class="rounded-lg bg-slate-50 px-3 py-2">總資產：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.totalAssets || 0).toLocaleString() : '—'}</span></div>
+                            <div class="rounded-lg bg-slate-50 px-3 py-2">總負債：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.totalLiabilities || 0).toLocaleString() : '—'}</span></div>
+                            <div class="rounded-lg bg-slate-50 px-3 py-2">已發股數：<span class="font-mono font-bold text-slate-700">${totalIssuedShares.toLocaleString()}</span></div>
+                            <div class="rounded-lg bg-slate-50 px-3 py-2">每股淨值：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? latestNavPerShare.toLocaleString() : '—'}</span></div>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+                            <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2">資產 / Assets</div>
+                            <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                                <div>現金：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.cash || 0).toLocaleString() : '—'}</span></div>
+                                <div>應收：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.accountsReceivable || 0).toLocaleString() : '—'}</span></div>
+                                <div>其他資產：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.otherAssets || 0).toLocaleString() : '—'}</span></div>
+                                <div>固定資產：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.fixedAssets || 0).toLocaleString() : '—'}</span></div>
+                            </div>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+                            <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2">負債 / Liabilities</div>
+                            <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                                <div>應付：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.accountsPayable || 0).toLocaleString() : '—'}</span></div>
+                                <div>短借：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.shortTermDebt || 0).toLocaleString() : '—'}</span></div>
+                                <div>長借：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.longTermDebt || 0).toLocaleString() : '—'}</span></div>
+                                <div>其他負債：<span class="font-mono font-bold text-slate-700">${activeBalanceSheetSnapshot ? Number(activeBalanceSheetSnapshot.otherLiabilities || 0).toLocaleString() : '—'}</span></div>
+                            </div>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-white p-4">
+                            <div class="text-sm font-black text-slate-900 mb-2">資產負債快照清單</div>
+                            <select id="balance-sheet-snapshot-select" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100" onchange="window.loadBalanceSheetSnapshotToForm(this.value)">
+                                <option value="">選擇一筆快照</option>
+                                ${activeBalanceSnapshotOptions}
+                            </select>
+                            <div class="mt-3 max-h-64 overflow-auto space-y-2">
+                                ${balanceSheetSnapshots.length ? balanceSheetSnapshots.map(buildBalanceSheetSnapshotCard).join('') : '<div class="text-sm text-slate-400">尚未有資產負債快照</div>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div class="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
                         <div class="flex items-center justify-between gap-3">
@@ -4216,10 +4451,14 @@ window.loadInvestorProfiles = async function () {
         const config = res?.data?.config || {};
         const valuationSnapshots = Array.isArray(res?.data?.valuationSnapshots) ? res.data.valuationSnapshots : [];
         const activeValuationSnapshot = res?.data?.activeValuationSnapshot || null;
+        const balanceSheetSnapshots = Array.isArray(res?.data?.balanceSheetSnapshots) ? res.data.balanceSheetSnapshots : [];
+        const activeBalanceSheetSnapshot = res?.data?.activeBalanceSheetSnapshot || null;
         const recentIssuances = Array.isArray(res?.data?.recentIssuances) ? res.data.recentIssuances : [];
         const equityPositions = Array.isArray(res?.data?.equityPositions) ? res.data.equityPositions : [];
         window.__loadedValuationSnapshots = valuationSnapshots;
         window.__loadedActiveValuationSnapshot = activeValuationSnapshot;
+        window.__loadedBalanceSheetSnapshots = balanceSheetSnapshots;
+        window.__loadedActiveBalanceSheetSnapshot = activeBalanceSheetSnapshot;
         window.__loadedRecentIssuances = recentIssuances;
         window.__loadedInvestorEquityPositions = equityPositions;
         window.__loadedInvestorConfig = config;
@@ -4234,6 +4473,70 @@ window.loadInvestorProfiles = async function () {
         }
     } catch (e) {
         container.innerHTML = `<div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">載入投資人資料失敗：${escapeHtml(e.message || 'unknown')}</div>`;
+    }
+};
+
+window.loadBalanceSheetSnapshotToForm = function (snapshotId) {
+    const snapshots = Array.isArray(window.__loadedBalanceSheetSnapshots) ? window.__loadedBalanceSheetSnapshots : [];
+    const snapshot = snapshots.find((item) => item && item.snapshotId === snapshotId);
+    if (!snapshot) return;
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value ?? '';
+    };
+
+    setValue('balance-snapshot-id', snapshot.snapshotId || '');
+    setValue('balance-snapshot-date', formatInvestorLedgerDate(snapshot.snapshotDate, '') || '');
+    setValue('balance-currency', snapshot.currency || 'TWD');
+    setValue('balance-issued-shares', Number(snapshot.issuedShares || 0));
+    setValue('balance-cash', Number(snapshot.cash || 0));
+    setValue('balance-receivable', Number(snapshot.accountsReceivable || 0));
+    setValue('balance-other-assets', Number(snapshot.otherAssets || 0));
+    setValue('balance-fixed-assets', Number(snapshot.fixedAssets || 0));
+    setValue('balance-intangible-assets', Number(snapshot.intangibleAssets || 0));
+    setValue('balance-prepaid-expenses', Number(snapshot.prepaidExpenses || 0));
+    setValue('balance-payable', Number(snapshot.accountsPayable || 0));
+    setValue('balance-short-debt', Number(snapshot.shortTermDebt || 0));
+    setValue('balance-long-debt', Number(snapshot.longTermDebt || 0));
+    setValue('balance-other-liabilities', Number(snapshot.otherLiabilities || 0));
+    setValue('balance-notes', snapshot.notes || '');
+    const locked = document.getElementById('balance-locked');
+    if (locked) locked.checked = snapshot.locked !== false;
+};
+
+window.saveBalanceSheetSnapshot = async function () {
+    const payload = {
+        snapshotId: document.getElementById('balance-snapshot-id')?.value || '',
+        snapshotDate: document.getElementById('balance-snapshot-date')?.value || '',
+        currency: document.getElementById('balance-currency')?.value || 'TWD',
+        issuedShares: Number(document.getElementById('balance-issued-shares')?.value || 0),
+        cash: Number(document.getElementById('balance-cash')?.value || 0),
+        accountsReceivable: Number(document.getElementById('balance-receivable')?.value || 0),
+        otherAssets: Number(document.getElementById('balance-other-assets')?.value || 0),
+        fixedAssets: Number(document.getElementById('balance-fixed-assets')?.value || 0),
+        intangibleAssets: Number(document.getElementById('balance-intangible-assets')?.value || 0),
+        prepaidExpenses: Number(document.getElementById('balance-prepaid-expenses')?.value || 0),
+        accountsPayable: Number(document.getElementById('balance-payable')?.value || 0),
+        shortTermDebt: Number(document.getElementById('balance-short-debt')?.value || 0),
+        longTermDebt: Number(document.getElementById('balance-long-debt')?.value || 0),
+        otherLiabilities: Number(document.getElementById('balance-other-liabilities')?.value || 0),
+        notes: document.getElementById('balance-notes')?.value || '',
+        locked: !!document.getElementById('balance-locked')?.checked
+    };
+
+    if (!payload.snapshotId) {
+        alert('請輸入財務快照 ID');
+        return;
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'upsertBalanceSheetSnapshot');
+        await fn(payload);
+        notify('財務快照已儲存', 'success');
+        await loadInvestorProfiles();
+    } catch (e) {
+        alert(`儲存財務快照失敗：${e.message}`);
     }
 };
 
@@ -4272,16 +4575,33 @@ window.syncInvestorManagementDefaults = function () {
     const active = window.__loadedActiveValuationSnapshot || null;
     const snapshots = Array.isArray(window.__loadedValuationSnapshots) ? window.__loadedValuationSnapshots : [];
     const snapshot = active || snapshots[0] || null;
-    if (!snapshot) return;
-    window.loadValuationSnapshotToForm(snapshot.valuationId);
+    if (snapshot) {
+        window.loadValuationSnapshotToForm(snapshot.valuationId);
+    }
 
     const issueValuation = document.getElementById('issue-valuation-id');
     if (issueValuation && !issueValuation.value) {
-        issueValuation.value = snapshot.valuationId || '';
+        issueValuation.value = snapshot?.valuationId || '';
     }
     const issueDate = document.getElementById('issue-start-date');
     if (issueDate && !issueDate.value) {
         issueDate.value = new Date().toISOString().slice(0, 10);
+    }
+
+    const balanceSnapshot = window.__loadedActiveBalanceSheetSnapshot || (Array.isArray(window.__loadedBalanceSheetSnapshots) ? window.__loadedBalanceSheetSnapshots[0] : null) || null;
+    if (balanceSnapshot) {
+        window.loadBalanceSheetSnapshotToForm(balanceSnapshot.snapshotId);
+    }
+    const balanceDate = document.getElementById('balance-snapshot-date');
+    if (balanceDate && !balanceDate.value) {
+        balanceDate.value = new Date().toISOString().slice(0, 10);
+    }
+    const balanceIssuedShares = document.getElementById('balance-issued-shares');
+    if (balanceIssuedShares && !balanceIssuedShares.value) {
+        const totalIssuedShares = (Array.isArray(window.__loadedInvestorEquityPositions) ? window.__loadedInvestorEquityPositions : [])
+            .reduce((sum, p) => sum + Number(p.totalIssuedShares || 0), 0)
+            || (Array.isArray(window.__loadedInvestorProfiles) ? window.__loadedInvestorProfiles.reduce((sum, p) => sum + Number(p.equityShares || p.shareUnits || 0), 0) : 0);
+        if (totalIssuedShares > 0) balanceIssuedShares.value = String(totalIssuedShares);
     }
 };
 
@@ -4320,6 +4640,21 @@ window.createInvestorProfileFromForm = async function () {
 window.fillInvestorLedgerSampleData = function () {
     const today = new Date().toISOString().slice(0, 10);
     const fields = {
+        'balance-snapshot-id': 'bs-2026-q2',
+        'balance-snapshot-date': today,
+        'balance-currency': 'TWD',
+        'balance-issued-shares': '10000000',
+        'balance-cash': '500000',
+        'balance-receivable': '120000',
+        'balance-other-assets': '0',
+        'balance-fixed-assets': '0',
+        'balance-intangible-assets': '0',
+        'balance-prepaid-expenses': '0',
+        'balance-payable': '80000',
+        'balance-short-debt': '0',
+        'balance-long-debt': '0',
+        'balance-other-liabilities': '0',
+        'balance-notes': '示範：月底資產負債快照，供 NAV / 每股淨值測試。',
         'valuation-snapshot-id': 'pre-seed-2026-q2',
         'valuation-round-name': 'Pre-Seed 2026 Q2',
         'valuation-type': 'pre-money',
@@ -4354,6 +4689,36 @@ window.fillInvestorLedgerSampleData = function () {
     const locked = document.getElementById('valuation-locked');
     if (locked) locked.checked = true;
     notify('已載入範例資料', 'success');
+};
+
+window.fillBalanceSheetSampleData = function () {
+    const today = new Date().toISOString().slice(0, 10);
+    const fields = {
+        'balance-snapshot-id': 'bs-2026-q2',
+        'balance-snapshot-date': today,
+        'balance-currency': 'TWD',
+        'balance-issued-shares': '10000000',
+        'balance-cash': '500000',
+        'balance-receivable': '120000',
+        'balance-other-assets': '0',
+        'balance-fixed-assets': '0',
+        'balance-intangible-assets': '0',
+        'balance-prepaid-expenses': '0',
+        'balance-payable': '80000',
+        'balance-short-debt': '0',
+        'balance-long-debt': '0',
+        'balance-other-liabilities': '0',
+        'balance-notes': '示範：月底資產負債快照，供 NAV / 每股淨值測試。'
+    };
+
+    Object.entries(fields).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+    });
+
+    const locked = document.getElementById('balance-locked');
+    if (locked) locked.checked = true;
+    notify('已載入財務快照範例', 'success');
 };
 
 window.saveValuationSnapshot = async function () {

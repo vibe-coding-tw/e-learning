@@ -40,12 +40,14 @@ See also:
 - 訂單成功付款後，會自動建立 `income` 類 investor event。
 - `manual` 支出可透過 admin callable 補登。
 - `calculateAnnualInvestorDividends` 為年度結算排程。
+- `upsertBalanceSheetSnapshot` 用於鎖定資產負債快照。
 - `upsertValuationSnapshot` 用於鎖定估值快照。
 - `issueInvestorEquity` 用於將現金、服務折抵或其他對價直接換算成持股。
 
 ## 5. Related Collections
 - `investor_profiles`
 - `valuation_snapshots`
+- `balance_sheet_snapshots`
 - `equity_issuances`
 - `investor_equity_positions`
 - `investor_finance_events`

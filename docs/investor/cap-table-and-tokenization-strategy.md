@@ -44,6 +44,7 @@ The actual negotiated price for a specific issuance or transfer.
 - Usually derived from the valuation snapshot
 - Not always equal to a public market price
 - For private companies, there may be no public market price at all
+- A realized trade price is the strongest market validation for that moment, but it is not required for value to exist in the first place
 
 ## 3. What is similar to crypto, and what is not
 
@@ -114,6 +115,7 @@ The current system already has the following collections:
 - `investor_credits`
 - `investor_balances`
 - `investor_annual_settlements`
+- `balance_sheet_snapshots`
 
 Recommended meaning:
 - `investor_profiles`: who participates in the equity / credit system
@@ -124,6 +126,7 @@ Recommended meaning:
 - `investor_credits`: per-investor event allocation
 - `investor_balances`: current running balance
 - `investor_annual_settlements`: year-end dividend and ending balance record
+- `balance_sheet_snapshots`: periodic assets/liabilities snapshots used for NAV and per-share NAV comparisons
 
 ## 7. Process rules
 

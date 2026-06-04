@@ -43,12 +43,15 @@ const {
 } = require('./lib/revenue-sharing');
 const {
     allocateByShareUnits,
+    loadBalanceSheetSnapshots,
+    loadActiveBalanceSheetSnapshot,
     issueInvestorEquity,
     loadInvestorConfig,
     loadInvestorProfiles,
     loadActiveValuationSnapshot,
     loadValuationSnapshots,
     recordInvestorFinanceEvent,
+    upsertBalanceSheetSnapshot,
     upsertValuationSnapshot,
     settleAnnualInvestorDividends
 } = require('./lib/investor-ledger');
@@ -2825,9 +2828,11 @@ exports.getInvestorProfiles = onCall(async (request) => {
         loadInvestorProfiles({ db, profileCache }),
         loadInvestorConfig({ db, configCache })
     ]);
-    const [valuationSnapshots, activeValuationSnapshot] = await Promise.all([
+    const [valuationSnapshots, activeValuationSnapshot, balanceSheetSnapshots, activeBalanceSheetSnapshot] = await Promise.all([
         loadValuationSnapshots({ db, snapshotCache }),
-        loadActiveValuationSnapshot({ db, snapshotCache })
+        loadActiveValuationSnapshot({ db, snapshotCache }),
+        loadBalanceSheetSnapshots({ db, snapshotCache }),
+        loadActiveBalanceSheetSnapshot({ db, snapshotCache })
     ]);
 
     const balancesSnap = await db.collection('investor_balances').get();
@@ -2845,6 +2850,8 @@ exports.getInvestorProfiles = onCall(async (request) => {
         config,
         valuationSnapshots,
         activeValuationSnapshot,
+        balanceSheetSnapshots,
+        activeBalanceSheetSnapshot,
         profiles: profiles.map((profile) => {
             const balance = balancesByInvestor.get(profile.investorId) || {};
             const position = positionsByInvestor.get(profile.investorId) || {};
@@ -2925,6 +2932,25 @@ exports.upsertValuationSnapshot = onCall(async (request) => {
     });
 
     return { success: true, valuationId: result.valuationId, snapshot: result };
+});
+
+exports.upsertBalanceSheetSnapshot = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    assertAuthenticated(request.auth, '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    assertAdminRole((userDoc.data() || {}).role, 'Only admins can write balance sheet snapshots.');
+
+    const payload = request.data || {};
+    const snapshotCache = new Map();
+    const result = await upsertBalanceSheetSnapshot({
+        db,
+        payload,
+        createdByUid: uid,
+        snapshotCache
+    });
+
+    return { success: true, snapshotId: result.snapshotId, snapshot: result };
 });
 
 exports.issueInvestorEquity = onCall(async (request) => {
