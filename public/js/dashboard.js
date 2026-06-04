@@ -2621,14 +2621,14 @@ window.loadRevenuePolicies = async function () {
         const courseDevUplineRate = Number(policy.courseDevUplineRate ?? 0.1);
 
         const policySummary = (label, directRate, uplineRate, accent, note) => `
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex h-full min-h-[170px] flex-col gap-4">
-                <div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex-grow">
                     <div class="text-sm font-black text-slate-900">${escapeHtml(label)}</div>
-                    <div class="mt-1 text-[12px] leading-6 text-slate-500">${escapeHtml(note)}</div>
+                    <div class="mt-1 text-[12px] leading-5 text-slate-500">${escapeHtml(note)}</div>
                 </div>
-                <div class="mt-auto flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-                    <div class="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">分潤比例</div>
-                    <div class="rounded-full px-3 py-1.5 text-[11px] font-black ${accent.bg} ${accent.fg}">
+                <div class="flex-shrink-0 flex items-center justify-between sm:justify-end gap-3 rounded-2xl bg-slate-50 px-4 py-2.5 sm:py-2">
+                    <div class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">分潤比例</div>
+                    <div class="rounded-full px-3 py-1.5 text-[11px] font-black ${accent.bg} ${accent.fg} whitespace-nowrap">
                         直推 ${Math.round(directRate * 100)}% / 上線 ${Math.round(uplineRate * 100)}%
                     </div>
                 </div>
@@ -2680,7 +2680,7 @@ window.loadRevenuePolicies = async function () {
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                         <div class="text-sm font-black text-slate-900">設定提醒</div>
                         <div class="mt-1 text-xs leading-6 text-slate-500">這裡是三個角色的固定分潤摘要，先看用途，再看比例。</div>
-                        <div class="mt-4 grid gap-4 xl:grid-cols-3">
+                        <div class="mt-4 flex flex-col gap-3">
                             ${policySummary('導師', tutorRate, tutorUplineRate, { bg: 'bg-blue-50', fg: 'text-blue-700' }, '最常使用的主分潤，建議先確認這一組。')}
                             ${policySummary('管道 / Agent', agentRate, agentUplineRate, { bg: 'bg-emerald-50', fg: 'text-emerald-700' }, '如果沒有代理通路，兩個欄位都可以保持 0。')}
                             ${policySummary('課程開發', courseDevRate, courseDevUplineRate, { bg: 'bg-amber-50', fg: 'text-amber-700' }, '適合用來分配內容提供者或課程作者。')}
