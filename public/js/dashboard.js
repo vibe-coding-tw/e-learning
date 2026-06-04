@@ -2442,6 +2442,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                     Object.keys(unitAssignmentMap || {}).forEach(pushTutorEmail);
                     const unitTutors = Array.from(unitTutorEmails);
                     const unitName = formatUnitName(normalizedFile) || formatUnitName(unitFile) || unitFile;
+                    const displayTitle = unitsTitleMap[resolveCanonicalUnitId(normalizedFile)] || unitName;
 
                     const isSelected = filterUnitId && unitIdsMatch(normalizedFile, filterUnitId);
                     const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/20 transition-colors";
@@ -2452,7 +2453,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                             <!-- Section 1: Unit Info -->
                             <div>
                                 <div class="text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">課程 / COURSE</div>
-                                <div class="text-lg font-black text-gray-800">${escapeHtml(lesson.title)}</div>
+                                <div class="text-lg font-black text-gray-800">${escapeHtml(displayTitle)}</div>
                                 <div class="text-xs text-gray-400 font-mono mt-1 leading-relaxed">${escapeHtml(normalizedFile.replace(/\.html$/i, ''))}</div>
                             </div>
 
