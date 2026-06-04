@@ -704,7 +704,7 @@ async function fetchGuideSectionFromUnitPage(filterUnitId, sectionId) {
         const response = await checkAuthFunction({
             pageId: courseId,
             fileName: pageName,
-            tutorMode: isTutor
+            tutorMode: isTutor || (myRole === 'admin' && adminTutorMode) || !!currentDashboardPermissions?.isQualifiedTutor
         });
         
         const token = response?.data?.token || response?.data?.result?.token;
