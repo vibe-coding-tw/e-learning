@@ -1302,6 +1302,7 @@ const LEGACY_TUTOR_UNIT_TO_CANONICAL = {
     '03-unit-github-classroom.html': 'common-github-classroom.html',
     '03-unit-motor-ramping.html': 'common-motor-ramping.html',
     '03-unit-wifi-setup.html': 'common-wifi-setup.html',
+    'start-01-unit-html5-basics.html': 'start-01-unit-flexbox-layout.html',
     
     // Start, Basic, and Advanced legacy master mappings
     "adv-01-master-s3-cam.html": "adv-01-unit-jpeg-quality.html",
@@ -1395,7 +1396,11 @@ function resolveCanonicalUnitId(unitId, lessons = [], options = {}) {
     const { allowLegacyMaster = false } = options;
 
     // Only explicit compatibility paths should translate retired master ids.
-    const mappedUnitId = allowLegacyMaster ? mapLegacyMasterToCanonical(unitId) : unitId;
+    let mappedUnitId = allowLegacyMaster ? mapLegacyMasterToCanonical(unitId) : unitId;
+    const tutorMappedUnitId = normalizeTutorAdminUnitId(mappedUnitId);
+    if (tutorMappedUnitId && tutorMappedUnitId !== mappedUnitId) {
+        mappedUnitId = tutorMappedUnitId;
+    }
     const cleanId = cleanUnitId(mappedUnitId);
 
     let resolved = mappedUnitId;
@@ -4148,7 +4153,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         // Fetch profit sharing data and the current unit referral link for tutors.
         if (isManagementView) {
             try {
-                if (hasQualifiedTutorStatus(userData)) {
+                if (requesterRole === 'admin' || hasQualifiedTutorStatus(userData)) {
                     const userRef = db.collection('users').doc(uid);
                     result.myPromotionCode = await ensureTutorPromotionCode(db, userRef, userData, uid, email);
                 }
@@ -4159,9 +4164,9 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                     const canonicalId = resolveCanonicalUnitId(filterUnitId, lessons);
                     // [V15.5] Robust field lookup via getEffectiveTutorConfig (Handles nested dots)
                     const unitConfig = getEffectiveTutorConfig(canonicalId, myTutorConfigs);
-                    if (unitConfig && unitConfig.authorized) {
+                    if ((unitConfig && unitConfig.authorized) || requesterRole === 'admin') {
                         const unitCourse = findLessonByCourseRef(canonicalId, lessons);
-                        result.myReferralLink = getTutorAssignmentUrlFromConfig(unitConfig, unitCourse, canonicalId, email, lessons) || null;
+                        result.myReferralLink = getTutorAssignmentUrlFromConfig(unitConfig || {}, unitCourse, canonicalId, email, lessons) || null;
                     }
                 }
 

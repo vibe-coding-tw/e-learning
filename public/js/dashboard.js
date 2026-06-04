@@ -1864,6 +1864,25 @@ async function renderAssignmentsGuideMain(filterUnitId) {
     }
 }
 
+async function renderTutorGuideMain(filterUnitId) {
+    const placeholder = document.getElementById('github-readme-placeholder-main');
+    if (!placeholder) return;
+    if (!filterUnitId) {
+        placeholder.classList.add('hidden');
+        return;
+    }
+
+    placeholder.classList.remove('hidden');
+    placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在讀取導師指南 (tutor-guide)...</div>`;
+    const extracted = await fetchGuideSectionFromUnitPage(filterUnitId, 'tutor-guide');
+    if (extracted) {
+        placeholder.innerHTML = extracted;
+        normalizeGuideHeadingStyles(placeholder);
+    } else {
+        placeholder.innerHTML = `<div class="text-red-500 text-sm">⚠️ 無法載入 tutor-guide</div>`;
+    }
+}
+
 window.renderAssignments = renderAssignments;
 
 function renderChart(students) {
@@ -1991,8 +2010,12 @@ window.switchTab = function (tabName) {
         const isTutor = !!currentDashboardPermissions.isQualifiedTutor || (myRole === 'admin' && adminTutorMode);
         const isStudent = !currentDashboardPermissions.isAdmin && !currentDashboardPermissions.isQualifiedTutor;
         
-        if (filterUnitId && !isTutor) {
-            renderAssignmentsGuideMain(filterUnitId);
+        if (filterUnitId) {
+            if (isTutor) {
+                renderTutorGuideMain(filterUnitId);
+            } else {
+                renderAssignmentsGuideMain(filterUnitId);
+            }
         } else {
             const placeholder = document.getElementById('github-readme-placeholder-main');
             if (placeholder) placeholder.classList.add('hidden');
@@ -5708,12 +5731,39 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
         return;
     }
 
+    const currentTutor = (data.tutors || []).find(t => normalizeEmail(t.email) === normalizeEmail(myEmail));
+    const tutorName = currentTutor?.name || auth.currentUser?.displayName || '授課老師';
+    const promoCode = data.myPromotionCode || '';
+
+    const tutorInfoHtml = `
+        <div class="mb-6 p-5 bg-indigo-50 border border-indigo-100 rounded-3xl">
+            <div class="text-[10px] text-indigo-600 font-bold uppercase tracking-widest mb-3">
+                🧑‍🏫 導師專屬作業資訊 (Tutor Information)
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <div class="text-xs text-gray-400">導師姓名</div>
+                    <div class="text-sm font-bold text-gray-800">${escapeHtml(tutorName)}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400">電子信箱</div>
+                    <div class="text-sm font-bold text-gray-800 font-mono">${escapeHtml(myEmail)}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400">專屬 Promo Code</div>
+                    <div class="text-sm font-black text-indigo-700 font-mono">${escapeHtml(promoCode || '尚未生成')}</div>
+                </div>
+            </div>
+        </div>
+    `;
+
     const inviteKit = buildReferralInviteKit(filterUnitId, data.myReferralLink);
     inviteKitEl.classList.remove('hidden');
 
     if (!isUnitContext) {
         inviteKitEl.innerHTML = `
-            <div class="space-y-1 font-sans">
+            ${tutorInfoHtml}
+            <div class="space-y-1 font-sans p-4 bg-amber-50 border border-amber-100 rounded-3xl">
                 <p class="text-gray-500 text-sm font-bold">專屬作業資訊 (Promo Code / 邀請連結)</p>
                 <p class="text-gray-400 text-sm mt-2 font-medium">請先從上方切換單元</p>
                 <p class="text-[10px] text-gray-300 mt-1 font-normal">每一單元皆有專屬作業連結</p>
@@ -5724,7 +5774,8 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
 
     if (!inviteKit.ready) {
         inviteKitEl.innerHTML = `
-            <div class="space-y-1 font-sans">
+            ${tutorInfoHtml}
+            <div class="space-y-1 font-sans p-4 bg-orange-50 border border-orange-100 rounded-3xl">
                 <p class="text-gray-500 text-sm font-bold">專屬作業資訊 (Promo Code / 邀請連結)</p>
                 <p class="text-orange-500 text-sm font-bold mt-2">${escapeHtml(inviteKit.message)}</p>
             </div>
@@ -5733,6 +5784,7 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
     }
 
     inviteKitEl.innerHTML = `
+        ${tutorInfoHtml}
         <div class="space-y-6">
             <div class="border-b border-slate-100 pb-4">
                 <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Registration Tools</p>
