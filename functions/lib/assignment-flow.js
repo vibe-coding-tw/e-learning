@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const { sendAutogradeResultToStudent, sendAutogradeResultToTutor } = require("../emailService");
 const { upsertGithubActionsVariable } = require("./github-utils");
+const { normalizeLegacyId } = require("./id-utils");
 
 function normalizeText(value = "") {
     return String(value || "").trim();
@@ -172,8 +173,7 @@ async function resolveAutogradeAssignmentDocId(db, {
     }
 
     const unitCandidates = Array.from(new Set([
-        cleanUnitId(inferredUnitId || ""),
-        normalizeText(inferredUnitId || "").replace(/\.html$/, ''),
+        normalizeLegacyId(inferredUnitId || ""),
     ].filter(Boolean)));
 
     const candidateDocs = [];
@@ -395,7 +395,7 @@ async function addAssignmentHistoryEntry(docRef, patch = {}, historyEntry, metho
 
 function normalizeBackendCourseId(cid = "") {
     const v = String(cid || "").trim().toLowerCase().replace(/^(?:tw|en)-/i, "");
-    if (v === "common") return "car-common";
+    if (v === "car-common") return "common";
     return v;
 }
 
