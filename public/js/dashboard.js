@@ -39,6 +39,50 @@ window.getPreferredUnitId = window.getPreferredUnitId || getPreferredUnitId;
 window.normalizeTutorAdminUnitId = window.normalizeTutorAdminUnitId || normalizeTutorAdminUnitId;
 window.normalizeTutorIdentifier = window.normalizeTutorIdentifier || normalizeTutorIdentifier;
 
+if (typeof window.notify !== 'function') {
+    window.notify = function (message, variant = 'info') {
+        const text = String(message || '').trim();
+        const toneMap = {
+            success: { bg: 'bg-emerald-600', border: 'border-emerald-700', label: '成功' },
+            warning: { bg: 'bg-amber-500', border: 'border-amber-600', label: '提醒' },
+            error: { bg: 'bg-rose-600', border: 'border-rose-700', label: '錯誤' },
+            info: { bg: 'bg-slate-900', border: 'border-slate-800', label: '資訊' }
+        };
+        const tone = toneMap[String(variant || 'info').toLowerCase()] || toneMap.info;
+
+        if (!text) return;
+
+        let host = document.getElementById('vibe-toast-host');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'vibe-toast-host';
+            host.className = 'fixed top-4 right-4 z-[10000001] flex flex-col gap-2 pointer-events-none';
+            document.body.appendChild(host);
+        }
+
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto max-w-sm rounded-2xl border px-4 py-3 text-sm font-semibold text-white shadow-xl ${tone.bg} ${tone.border}`;
+        el.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="mt-0.5 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">${tone.label}</div>
+                <div class="min-w-0 flex-1 leading-6">${escapeHtml(text)}</div>
+            </div>
+        `;
+        host.appendChild(el);
+
+        window.setTimeout(() => {
+            el.classList.add('opacity-0', 'translate-y-1');
+            el.style.transition = 'opacity 180ms ease, transform 180ms ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(4px)';
+            window.setTimeout(() => el.remove(), 220);
+        }, 2800);
+    };
+}
+
+window.vibeShowToast = window.vibeShowToast || window.notify;
+window.showToast = window.showToast || window.notify;
+
 /**
  * Standard Email Normalizer
  */
@@ -1704,7 +1748,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             rowOnClick = `window.openGradingModal('${a.id}')`;
         } else {
             // clickAction === 'url'
-            rowOnClick = a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : "vibeShowToast('此作業無連結', 'warning')";
+            rowOnClick = a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : "notify('此作業無連結', 'warning')";
         }
         
         return `
@@ -1944,9 +1988,10 @@ window.switchTab = function (tabName) {
         const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
         let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
+        const isTutor = !!currentDashboardPermissions.isQualifiedTutor || (myRole === 'admin' && adminTutorMode);
         const isStudent = !currentDashboardPermissions.isAdmin && !currentDashboardPermissions.isQualifiedTutor;
         
-        if (filterUnitId) {
+        if (filterUnitId && !isTutor) {
             renderAssignmentsGuideMain(filterUnitId);
         } else {
             const placeholder = document.getElementById('github-readme-placeholder-main');
@@ -2086,23 +2131,6 @@ function policyRateInput(id, key, value, title, description) {
 window.buildRevenuePolicyHtml = window.buildRevenuePolicyHtml || function() {
     return `
         <div class="mb-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 px-6 py-6 text-white">
-                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div class="max-w-3xl">
-                        <div class="text-[11px] font-black uppercase tracking-[0.35em] text-slate-400">Revenue Policy</div>
-                        <div class="mt-2 flex flex-wrap items-center gap-3">
-                            <h4 class="text-lg font-black">default-v1 單一分潤策略</h4>
-                            <span class="rounded-full bg-emerald-500/15 px-3 py-1 text-[11px] font-bold text-emerald-200">唯一生效</span>
-                        </div>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">
-                            系統現在只讀取 <code>default-v1</code>。如果舊資料裡還有其他 <code>policyId</code>，後端會自動忽略並回落到這一組設定。
-                        </p>
-                    </div>
-                    <button onclick="window.loadRevenuePolicies()" class="self-start rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/15 active:scale-95">
-                        重新整理
-                    </button>
-                </div>
-            </div>
             <div id="revenue-policy-body" class="p-6">
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
                     載入中...
@@ -2208,7 +2236,7 @@ window.markAsShipped = async function(orderId) {
         const result = await markShippedFunc({ orderId });
         
         if (result.data?.success) {
-            vibeShowToast('訂單狀態已更新！', 'success');
+            notify('訂單狀態已更新！', 'success');
             // Refresh local data state
             const order = (dashboardData.hardwareOrders || []).find(o => o.id === orderId);
             if (order) order.fulfillmentStatus = 'SHIPPED';
@@ -2395,22 +2423,29 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                     if (renderedUnits.has(normalizedFile)) return ''; 
                     renderedUnits.add(normalizedFile);
 
-                    const unitDocConfig = getUnitTutorConfig(unitFile);
-
+                    const unitDocConfig = getUnitTutorConfig(normalizedFile);
+                    const unitAssignmentMap = getAssignmentUrlMapForUnit(
+                        unitDocConfig.assignmentUrlMap || unitDocConfig.assignmentUrls || {},
+                        normalizedFile
+                    ) || {};
                     const unitTutorsArr = Array.isArray(unitDocConfig.authorizedTutors) ? unitDocConfig.authorizedTutors : [];
-                    const configEmails = Object.keys(unitDocConfig.assignmentUrlMap || unitDocConfig.assignmentUrls || {})
-                        .map(normalizeTutorIdentifier)
-                        .filter(Boolean);
-                    const tutorDetailsEmails = Object.values(unitDocConfig.tutorDetails || {})
-                        .map(entry => entry?.email)
-                        .filter(Boolean);
-                    const unitTutors = Array.from(new Set([...unitTutorsArr, ...configEmails, ...tutorDetailsEmails]))
-                        .filter(t => t && t !== 'default');
-                    const unitName = formatUnitName(unitFile) || unitFile;
+                    const unitTutorEmails = new Set();
+                    const pushTutorEmail = (value) => {
+                        const email = normalizeEmail(normalizeTutorIdentifier(value));
+                        if (email && email.includes('@') && email !== 'default') {
+                            unitTutorEmails.add(email);
+                        }
+                    };
+                    unitTutorsArr.forEach(pushTutorEmail);
+                    Object.keys(unitDocConfig.tutorDetails || {}).forEach(pushTutorEmail);
+                    Object.values(unitDocConfig.tutorDetails || {}).forEach(entry => pushTutorEmail(entry?.email));
+                    Object.keys(unitAssignmentMap || {}).forEach(pushTutorEmail);
+                    const unitTutors = Array.from(unitTutorEmails);
+                    const unitName = formatUnitName(normalizedFile) || formatUnitName(unitFile) || unitFile;
 
-                    const isSelected = filterUnitId && unitIdsMatch(unitFile, filterUnitId);
+                    const isSelected = filterUnitId && unitIdsMatch(normalizedFile, filterUnitId);
                     const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/20 transition-colors";
-                    const inputId = `input-auth-${lesson.courseId}-${unitFile}`.replace(/[^a-z0-9]/gi, '-');
+                    const inputId = `input-auth-${lesson.courseId}-${normalizedFile}`.replace(/[^a-z0-9]/gi, '-');
 
                     return `
                         <div class="flex flex-col ${containerClass} p-6 gap-6 relative">
@@ -2419,7 +2454,6 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                 <div class="text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">課程單元 / Unit</div>
                                 <div class="text-xs text-gray-400 font-mono mb-1 leading-relaxed">${escapeHtml(lesson.title)}</div>
                                 <div class="text-lg font-black text-gray-800 flex items-center gap-2">${escapeHtml(unitName)}</div>
-                                <div class="text-xs text-gray-400 font-mono mt-1.5 opacity-80">${escapeHtml(unitFile)}</div>
                             </div>
 
                             <!-- Section 2: Tutor Management -->
@@ -2440,14 +2474,14 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                             ${unitTutors.length > 0
                                 ? unitTutors.map(email => {
                     const details = unitDocConfig.tutorDetails?.[email] || {};
-                    const displayEmail = email.includes('@') ? email : (details.email || email);
+                    const displayEmail = details.email || email;
+                    if (!displayEmail || !displayEmail.includes('@')) return '';
                     const name = details.name || displayEmail.split('@')[0];
-                    const assignmentUrlMap = getAssignmentUrlMapForUnit(unitDocConfig.assignmentUrlMap || unitDocConfig.assignmentUrls || {}, unitFile) || {};
                     const assignmentUrlRaw =
                         details.assignmentUrl ||
-                        assignmentUrlMap[displayEmail] ||
-                        assignmentUrlMap[email] ||
-                                        assignmentUrlMap.default ||
+                        unitAssignmentMap[displayEmail] ||
+                        unitAssignmentMap[email] ||
+                        unitAssignmentMap.default ||
                                         '';
                                     const assignmentUrl = typeof assignmentUrlRaw === 'string' ? assignmentUrlRaw.trim() : '';
                                     const time = details.qualifiedAt
@@ -2466,14 +2500,14 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                                 </td>
                                                 <td class="py-2.5 px-4 text-gray-400">${escapeHtml(time)}</td>
                                                 <td class="py-2.5 px-4 text-right">
-                                                    <button onclick="handleUnitTutorAuth('${lesson.courseId}', '${unitFile}', '${displayEmail}', 'remove', '${lesson.courseId}')" 
+                                                    <button onclick="handleUnitTutorAuth('${lesson.courseId}', '${normalizedFile}', '${displayEmail}', 'remove', '${lesson.courseId}')" 
                                                         class="text-red-500 hover:text-red-700 transition-colors p-1 font-bold">
                                                         移除 ✕
                                                     </button>
                                                 </td>
                                             </tr>
                                         `;
-                                }).join('')
+                                }).filter(Boolean).join('')
                                 : '<tr><td colspan="5" class="py-8 text-center text-gray-300 italic">目前無核心授權導師</td></tr>'
                             }
                                         </tbody>
@@ -2573,11 +2607,11 @@ window.loadRevenuePolicies = async function () {
             policyCountEl.textContent = String(policies.some(p => p && p.enabled !== false) ? 1 : 0);
         }
         if (!policies.length) {
-            body.innerHTML = '<div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">找不到 default-v1，請直接儲存以建立預設策略。</div>';
+            body.innerHTML = '<div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">找不到固定分潤設定，請直接儲存以建立預設值。</div>';
             return;
         }
 
-        const policy = policies.find((p) => String(p.id || p.policyId || '') === 'default-v1') || policies[0];
+        const policy = policies.find((p) => p && p.enabled !== false) || policies[0];
         const id = 'default-v1';
         const tutorRate = Number(policy.tutorRate ?? 0.2);
         const tutorUplineRate = Number(policy.tutorUplineRate ?? 0.2);
@@ -2587,13 +2621,14 @@ window.loadRevenuePolicies = async function () {
         const courseDevUplineRate = Number(policy.courseDevUplineRate ?? 0.1);
 
         const policySummary = (label, directRate, uplineRate, accent, note) => `
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <div class="text-sm font-black text-slate-900">${escapeHtml(label)}</div>
-                        <div class="mt-1 text-[11px] leading-5 text-slate-500">${escapeHtml(note)}</div>
-                    </div>
-                    <div class="rounded-full px-3 py-1 text-[11px] font-bold ${accent.bg} ${accent.fg}">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex h-full min-h-[170px] flex-col gap-4">
+                <div>
+                    <div class="text-sm font-black text-slate-900">${escapeHtml(label)}</div>
+                    <div class="mt-1 text-[12px] leading-6 text-slate-500">${escapeHtml(note)}</div>
+                </div>
+                <div class="mt-auto flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                    <div class="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">分潤比例</div>
+                    <div class="rounded-full px-3 py-1.5 text-[11px] font-black ${accent.bg} ${accent.fg}">
                         直推 ${Math.round(directRate * 100)}% / 上線 ${Math.round(uplineRate * 100)}%
                     </div>
                 </div>
@@ -2621,25 +2656,9 @@ window.loadRevenuePolicies = async function () {
                         ${policyRateInput(id, 'policy-courseDevUplineRate', courseDevUplineRate, '開發上線分潤', '開發者上線的遞迴比例。通常設定得比直推更低。')}
                     </div>
 
-                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div class="text-sm font-black text-slate-900">設定提醒</div>
-                        <div class="mt-2 grid gap-3 md:grid-cols-3">
-                            ${policySummary('導師', tutorRate, tutorUplineRate, { bg: 'bg-blue-50', fg: 'text-blue-700' }, '最常使用的主分潤，建議先確認這一組。')}
-                            ${policySummary('管道 / Agent', agentRate, agentUplineRate, { bg: 'bg-emerald-50', fg: 'text-emerald-700' }, '如果沒有代理通路，兩個欄位都可以保持 0。')}
-                            ${policySummary('課程開發', courseDevRate, courseDevUplineRate, { bg: 'bg-amber-50', fg: 'text-amber-700' }, '適合用來分配內容提供者或課程作者。')}
-                        </div>
-                    </div>
                 </div>
 
                 <div class="space-y-4">
-                    <div class="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
-                        <div class="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Current Policy</div>
-                        <div class="mt-2 text-2xl font-black">${escapeHtml(id)}</div>
-                        <p class="mt-3 text-sm leading-6 text-slate-300">
-                            這是目前唯一會被讀取的分潤策略。儲存後會立即影響新訂單的分潤計算與後續月結。
-                        </p>
-                    </div>
-
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                         <div class="text-sm font-black text-slate-900">快速檢查</div>
                         <div class="mt-4 space-y-3 text-sm text-slate-600">
@@ -2653,14 +2672,24 @@ window.loadRevenuePolicies = async function () {
                             </div>
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">3</span>
-                                <span>目前系統不再使用其他 <code>policyId</code>，舊資料也會自動回落到 <code>default-v1</code>。</span>
+                                <span>目前系統不再使用其他策略名稱，舊資料也會自動回落到固定設定。</span>
                             </div>
                         </div>
-
-                        <button id="btn-save-policy-${id}" onclick="window.saveRevenuePolicy('${escapeHtml(id)}')" class="mt-5 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 active:scale-95">
-                            儲存 default-v1
-                        </button>
                     </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div class="text-sm font-black text-slate-900">設定提醒</div>
+                        <div class="mt-1 text-xs leading-6 text-slate-500">這裡是三個角色的固定分潤摘要，先看用途，再看比例。</div>
+                        <div class="mt-4 grid gap-4 xl:grid-cols-3">
+                            ${policySummary('導師', tutorRate, tutorUplineRate, { bg: 'bg-blue-50', fg: 'text-blue-700' }, '最常使用的主分潤，建議先確認這一組。')}
+                            ${policySummary('管道 / Agent', agentRate, agentUplineRate, { bg: 'bg-emerald-50', fg: 'text-emerald-700' }, '如果沒有代理通路，兩個欄位都可以保持 0。')}
+                            ${policySummary('課程開發', courseDevRate, courseDevUplineRate, { bg: 'bg-amber-50', fg: 'text-amber-700' }, '適合用來分配內容提供者或課程作者。')}
+                        </div>
+                    </div>
+
+                    <button id="btn-save-policy-${id}" onclick="window.saveRevenuePolicy('${escapeHtml(id)}')" class="mt-5 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 active:scale-95">
+                        儲存固定設定
+                    </button>
                 </div>
             </div>
         `;
@@ -2702,7 +2731,7 @@ window.saveRevenuePolicy = async function (policyId) {
     try {
         const fn = httpsCallable(functions, 'upsertRevenueSharePolicy');
         await fn(payload);
-        vibeShowToast('已成功儲存 default-v1 分潤設定', 'success');
+        notify('已成功儲存固定分潤設定', 'success');
         
         if (btn) {
             btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
@@ -3246,7 +3275,7 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
             assignmentLink: assignmentUrl
         });
 
-        vibeShowToast('已送出作業連結，管理員已收到審核通知。', 'success');
+        notify('已送出作業連結，管理員已收到審核通知。', 'success');
         urlParams.delete('action');
         urlParams.delete('applicationId');
         const cleanedQuery = urlParams.toString();
@@ -3283,7 +3312,19 @@ window.formatUnitName = window.formatUnitName || function(fileName) {
     // Fallback: if unit/master/prepare still appears in middle, trim the left part.
     const nameMatch = name.match(/(?:unit-|master-|prepare-|tw-common-|tw-car-(?:starter|basic|advanced)-|common-|car-(?:starter|basic|advanced)-)(.+)/i);
     if (nameMatch && nameMatch[1]) name = nameMatch[1];
-    return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); // Title Case
+    const titleCased = name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    return titleCased
+        .replace(/\bGithub\b/g, 'GitHub')
+        .replace(/\bPwm\b/g, 'PWM')
+        .replace(/\bWifi\b/g, 'WiFi')
+        .replace(/\bUi\b/g, 'UI')
+        .replace(/\bUx\b/g, 'UX')
+        .replace(/\bApi\b/g, 'API')
+        .replace(/\bBle\b/g, 'BLE')
+        .replace(/\bId\b/g, 'ID')
+        .replace(/\bHtml\b/g, 'HTML')
+        .replace(/\bCss\b/g, 'CSS')
+        .replace(/\bJs\b/g, 'JS');
 }
 
 window.formatUnitIdForUI = window.formatUnitIdForUI || function(unitId) {
@@ -3475,6 +3516,13 @@ function buildBusinessPricingOverviewHtml() {
         const courseId = String(lesson.courseId || lesson.id || '').trim();
         const safeId = courseId.replace(/[^a-z0-9_-]/gi, '-');
         const title = lesson.title || lesson.courseTitle || lesson.courseName || courseId || '未命名課程';
+        const displayId = String(
+            lesson.courseKey ||
+            lesson.entryUnitId ||
+            courseId.replace(/\.html$/i, '') ||
+            lesson.id ||
+            courseId
+        ).trim();
         const pricingState = getLessonBusinessPricingState(lesson);
         const priceSource = lesson.pricingVersion || lesson.pricingSource || (lesson.price_usd != null && lesson.price_twd != null ? 'multi-region' : 'legacy');
         const updatedAt = lesson.pricingUpdatedAt?.seconds
@@ -3491,7 +3539,7 @@ function buildBusinessPricingOverviewHtml() {
             <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition">
                 <td class="py-4 px-6 align-top">
                     <div class="font-bold text-slate-900">${escapeHtml(title)}</div>
-                    <div class="text-[11px] text-slate-400 font-mono mt-1 break-all">${escapeHtml(courseId)}</div>
+                    <div class="text-[11px] text-slate-400 font-mono mt-1 break-all">${escapeHtml(displayId)}</div>
                     <div class="mt-2 text-[10px] inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold ${badgeClass}">
                         ${badgeLabel}
                     </div>
@@ -3546,7 +3594,7 @@ function buildBusinessPricingOverviewHtml() {
                     <div class="mt-1 text-2xl font-black text-emerald-600">${pricedCount}</div>
                 </div>
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">啟用中的分潤策略</div>
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">啟用中的固定設定</div>
                     <div class="mt-1 text-2xl font-black text-blue-600">${activePolicies}</div>
                 </div>
             </div>
@@ -3609,7 +3657,7 @@ window.saveLessonPricing = async function(courseId) {
     try {
         const fn = httpsCallable(functions, 'upsertLessonPricing');
         await fn(payload);
-        vibeShowToast('價格已更新！', 'success');
+        notify('價格已更新！', 'success');
         await loadLessons();
         renderBusinessTab();
     } catch (e) {
@@ -3638,6 +3686,7 @@ function buildInvestorProfileRow(profile = {}) {
                 <input id="investor-email-${safeId}" type="email" value="${escapeHtml(profile.investorEmail || '')}" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="investor@example.com">
                 <label class="mt-2 block text-[11px] font-bold text-slate-500">身份</label>
                 <select id="investor-participant-${safeId}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    <option value="founder" ${profile.participantType === 'founder' ? 'selected' : ''}>原始股東 / Founder</option>
                     <option value="investor" ${profile.participantType === 'investor' || !profile.participantType ? 'selected' : ''}>外部投資者</option>
                     <option value="employee" ${profile.participantType === 'employee' ? 'selected' : ''}>員工折抵</option>
                     <option value="consultant" ${profile.participantType === 'consultant' ? 'selected' : ''}>顧問折抵</option>
@@ -3983,13 +4032,63 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
                         </div>
                         <div class="flex items-center justify-between gap-3">
                             <div class="text-[11px] text-slate-500 leading-5">
-                                這裡會直接依估值快照計算 `considerationAmount / sharePrice`，並同步更新持股位置。
+                                這裡會直接依估值快照計算 considerationAmount / sharePrice，並同步更新持股位置。
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="window.fillInvestorLedgerSampleData()" class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-100 active:scale-95">範例</button>
                                 <button onclick="window.issueInvestorEquityFromForm()" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 active:scale-95">發行股權</button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <div class="text-sm font-black text-slate-900">新增原始股東 / 投資人</div>
+                            <div class="text-[11px] text-slate-500 mt-1">先把公司最初的股東、創辦人、員工折抵或外部投資者建檔，再用上方表格維護股數與收款帳號。</div>
+                        </div>
+                        <div class="text-[11px] text-slate-400">這裡建立的是 investor_profiles 的初始資料</div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label>
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">代號 / ID</div>
+                            <input id="new-investor-id" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="founder-001 / investor-001">
+                        </label>
+                        <label>
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">名稱</div>
+                            <input id="new-investor-name" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="王小明">
+                        </label>
+                        <label>
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">Email</div>
+                            <input id="new-investor-email" type="email" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="founder@example.com">
+                        </label>
+                        <label>
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">身份</div>
+                            <select id="new-investor-participant" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                <option value="founder">原始股東 / Founder</option>
+                                <option value="investor">外部投資者</option>
+                                <option value="employee">員工折抵</option>
+                                <option value="consultant">顧問折抵</option>
+                                <option value="advisor">顧問 / Advisor</option>
+                            </select>
+                        </label>
+                        <label>
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">初始股數</div>
+                            <input id="new-investor-share" type="number" min="0" step="1" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="1000000">
+                        </label>
+                        <label>
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">股利帳號</div>
+                            <input id="new-investor-payout" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="銀行帳號 / Wallet / 轉帳資訊">
+                        </label>
+                        <label class="md:col-span-2">
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">備註</div>
+                            <textarea id="new-investor-notes" rows="2" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="例如：創辦人初始持股 / 員工認股 / 顧問折抵"></textarea>
+                        </label>
+                    </div>
+                    <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="text-[11px] text-slate-500">如果是原始股東，建議把身份設成 founder，並直接輸入初始股數。</div>
+                        <button onclick="window.createInvestorProfileFromForm()" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-700 active:scale-95">新增股東 / 投資人</button>
                     </div>
                 </div>
 
@@ -4186,6 +4285,38 @@ window.syncInvestorManagementDefaults = function () {
     }
 };
 
+window.createInvestorProfileFromForm = async function () {
+    const payload = {
+        investorId: document.getElementById('new-investor-id')?.value || '',
+        investorName: document.getElementById('new-investor-name')?.value || '',
+        investorEmail: document.getElementById('new-investor-email')?.value || '',
+        participantType: document.getElementById('new-investor-participant')?.value || 'founder',
+        shareUnits: Number(document.getElementById('new-investor-share')?.value || 0),
+        payoutAccount: document.getElementById('new-investor-payout')?.value || '',
+        notes: document.getElementById('new-investor-notes')?.value || '',
+        enabled: true
+    };
+
+    if (!payload.investorId) {
+        alert('請輸入代號 / ID');
+        return;
+    }
+
+    if (!Number.isFinite(payload.shareUnits) || payload.shareUnits < 0) {
+        alert('請輸入有效的初始股數');
+        return;
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'upsertInvestorProfile');
+        await fn(payload);
+        notify('原始股東 / 投資人已建立', 'success');
+        await loadInvestorProfiles();
+    } catch (e) {
+        alert(`新增失敗：${e.message}`);
+    }
+};
+
 window.fillInvestorLedgerSampleData = function () {
     const today = new Date().toISOString().slice(0, 10);
     const fields = {
@@ -4222,7 +4353,7 @@ window.fillInvestorLedgerSampleData = function () {
 
     const locked = document.getElementById('valuation-locked');
     if (locked) locked.checked = true;
-    vibeShowToast('已載入範例資料', 'success');
+    notify('已載入範例資料', 'success');
 };
 
 window.saveValuationSnapshot = async function () {
@@ -4253,7 +4384,7 @@ window.saveValuationSnapshot = async function () {
     try {
         const fn = httpsCallable(functions, 'upsertValuationSnapshot');
         await fn(payload);
-        vibeShowToast('估值快照已儲存', 'success');
+        notify('估值快照已儲存', 'success');
         await loadInvestorProfiles();
     } catch (e) {
         alert(`儲存估值失敗：${e.message}`);
@@ -4290,7 +4421,7 @@ window.issueInvestorEquityFromForm = async function () {
     try {
         const fn = httpsCallable(functions, 'issueInvestorEquity');
         await fn(payload);
-        vibeShowToast('股權已發行', 'success');
+        notify('股權已發行', 'success');
         await loadInvestorProfiles();
     } catch (e) {
         alert(`發行股權失敗：${e.message}`);
@@ -4321,7 +4452,7 @@ window.saveInvestorProfile = async function (investorId) {
     try {
         const fn = httpsCallable(functions, 'upsertInvestorProfile');
         await fn(payload);
-        vibeShowToast(`已儲存投資人：${investorId}`, 'success');
+        notify(`已儲存投資人：${investorId}`, 'success');
         await loadInvestorProfiles();
     } catch (e) {
         alert(`儲存投資人失敗：${e.message}`);
@@ -4353,7 +4484,7 @@ window.submitInvestorFinanceEvent = async function () {
             note,
             occurredAtDate: dateValue ? new Date(`${dateValue}T00:00:00`) : new Date()
         });
-        vibeShowToast('投資人事件已新增', 'success');
+        notify('投資人事件已新增', 'success');
         await loadInvestorProfiles();
     } catch (e) {
         alert(`新增事件失敗：${e.message}`);
@@ -4372,7 +4503,7 @@ window.settleInvestorYear = async function () {
     try {
         const fn = httpsCallable(functions, 'settleAnnualInvestorDividends');
         const res = await fn({ year });
-        vibeShowToast(`年度結算完成：${res.data?.settlementCount || 0} 位投資人`, 'success');
+        notify(`年度結算完成：${res.data?.settlementCount || 0} 位投資人`, 'success');
         await loadInvestorProfiles();
     } catch (e) {
         alert(`年度結算失敗：${e.message}`);
@@ -5215,10 +5346,10 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
     if (!inviteKitEl) return;
 
     const { filterUnitId } = getCurrentDashboardContext();
-    const isQualifiedTutor = !!currentDashboardPermissions.isQualifiedTutor;
+    const isTutor = !!currentDashboardPermissions.isQualifiedTutor || (myRole === 'admin' && adminTutorMode);
     const isUnitContext = !!filterUnitId;
 
-    if (!isQualifiedTutor) {
+    if (!isTutor) {
         inviteKitEl.innerHTML = '';
         inviteKitEl.classList.add('hidden');
         return;
@@ -5229,8 +5360,10 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
 
     if (!isUnitContext) {
         inviteKitEl.innerHTML = `
-            <div class="text-center py-10 text-gray-400">
-                ${escapeHtml(inviteKit.message || '請先切換到特定課程單元，才能生成專屬招生邀請工具。')}
+            <div class="space-y-1 font-sans">
+                <p class="text-gray-500 text-sm font-bold">專屬作業資訊 (Promo Code / 邀請連結)</p>
+                <p class="text-gray-400 text-sm mt-2 font-medium">請先從上方切換單元</p>
+                <p class="text-[10px] text-gray-300 mt-1 font-normal">每一單元皆有專屬作業連結</p>
             </div>
         `;
         return;
@@ -5238,8 +5371,9 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
 
     if (!inviteKit.ready) {
         inviteKitEl.innerHTML = `
-            <div class="text-center py-10 text-gray-400">
-                ${escapeHtml(inviteKit.message)}
+            <div class="space-y-1 font-sans">
+                <p class="text-gray-500 text-sm font-bold">專屬作業資訊 (Promo Code / 邀請連結)</p>
+                <p class="text-orange-500 text-sm font-bold mt-2">${escapeHtml(inviteKit.message)}</p>
             </div>
         `;
         return;
