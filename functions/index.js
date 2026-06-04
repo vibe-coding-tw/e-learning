@@ -2817,7 +2817,7 @@ exports.upsertRevenueSharePolicy = onCall(async (request) => {
     const policyId = normalizeText(payload.policyId || '');
     assertRequiredValue(policyId, 'policyId is required');
     if (policyId !== DEFAULT_REVENUE_SHARE_POLICY.policyId) {
-        throw new HttpsError('failed-precondition', 'Only default-v1 is supported.');
+        throw new HttpsError('failed-precondition', 'Only the default revenue sharing policy is supported.');
     }
 
     const asRate = (v, fallback = 0) => {
