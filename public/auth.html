@@ -67,15 +67,17 @@
 
         async function startGoogleLogin() {
             try {
-                if (isLocalDev()) {
-                    await signInWithPopup(auth, loginProvider);
-                    return;
-                }
-
-                await signInWithRedirect(auth, loginProvider);
+                // Try popup login first in all environments. This is much more reliable
+                // on custom domains under modern browser privacy restrictions (blocking third-party cookies).
+                await signInWithPopup(auth, loginProvider);
             } catch (error) {
-                console.error("[Auth] Google login failed:", error);
-                showError("Google 登入失敗，請返回首頁後再試一次。");
+                console.warn("[Auth] Google popup login failed or blocked, trying redirect...", error);
+                try {
+                    await signInWithRedirect(auth, loginProvider);
+                } catch (redirectError) {
+                    console.error("[Auth] Google redirect login failed:", redirectError);
+                    showError("Google 登入失敗，請返回首頁後再試一次。");
+                }
             }
         }
 

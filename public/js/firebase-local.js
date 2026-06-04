@@ -4,7 +4,9 @@ import { connectFunctionsEmulator } from "https://www.gstatic.com/firebasejs/12.
 
 export const firebaseConfig = {
     apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
-    authDomain: "e-learning-942f7.firebaseapp.com",
+    authDomain: (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+        ? "e-learning-942f7.firebaseapp.com"
+        : window.location.hostname,
     projectId: "e-learning-942f7",
     storageBucket: "e-learning-942f7.firebasestorage.app",
     messagingSenderId: "878397058574",

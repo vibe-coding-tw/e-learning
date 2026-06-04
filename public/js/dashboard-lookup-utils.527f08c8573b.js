@@ -1,8 +1,5 @@
 (function () {
     const LEGACY_UNIT_TO_CANONICAL_UNIT = {
-        "01-master-getting-started.html": "common-developer-identity.html",
-        "02-master-ai-agents.html": "common-agent-mode.html",
-        "03-master-wifi-motor.html": "common-github-classroom.html",
         "01-unit-vscode-online.html": "common-vscode-online.html",
         "01-unit-vscode-setup.html": "common-vscode-setup.html",
         "02-unit-agent-mode.html": "common-agent-mode.html",
@@ -11,6 +8,41 @@
         "03-unit-github-classroom.html": "common-github-classroom.html",
         "03-unit-motor-ramping.html": "common-motor-ramping.html",
         "03-unit-wifi-setup.html": "common-wifi-setup.html"
+    };
+    const LEGACY_MASTER_TO_CANONICAL = {
+        "01-master-getting-started.html": "common-developer-identity.html",
+        "02-master-ai-agents.html": "common-agent-mode.html",
+        "03-master-wifi-motor.html": "common-github-classroom.html",
+        "adv-01-master-s3-cam.html": "adv-01-unit-jpeg-quality.html",
+        "adv-02-master-video.html": "adv-02-unit-bandwidth-fps.html",
+        "adv-03-master-ble-advanced.html": "adv-03-unit-ble-mtu.html",
+        "adv-04-master-sensors.html": "adv-04-unit-filter-algorithms.html",
+        "adv-05-master-cv.html": "adv-05-unit-centroid-error.html",
+        "adv-06-master-cv-advanced.html": "adv-06-unit-centroid-algorithm.html",
+        "adv-07-master-ui-framework.html": "adv-07-unit-chart-canvas.html",
+        "adv-08-master-image-processing.html": "adv-08-unit-color-spaces.html",
+        "adv-09-master-ai-recognition.html": "adv-09-unit-cnn-audio.html",
+        "adv-10-master-diff-drive.html": "adv-10-unit-api-design.html",
+        "adv-11-master-photoelectric.html": "adv-11-unit-hardware-interrupts.html",
+        "adv-12-master-pid.html": "adv-12-unit-code-logic.html",
+        "adv-13-master-robustness.html": "adv-13-unit-robustness.html",
+        "adv-14-master-debugging-art.html": "adv-14-unit-debugging-art.html",
+        "adv-15-master-architecture.html": "adv-15-unit-ble-async.html",
+        "basic-01-master-environment.html": "basic-01-unit-drivers-ports.html",
+        "basic-02-master-ota-architecture.html": "basic-02-unit-ota-principles.html",
+        "basic-03-master-io-mapping.html": "basic-03-unit-adc-resolution.html",
+        "basic-04-master-pwm-control.html": "basic-04-unit-h-bridge.html",
+        "basic-05-master-ble-gatt.html": "basic-05-unit-advertising-connection.html",
+        "basic-06-master-http-web.html": "basic-06-unit-cors-security.html",
+        "basic-07-master-wifi-modes.html": "basic-07-unit-async-webserver.html",
+        "basic-08-master-joystick-math.html": "basic-08-unit-joystick-mapping.html",
+        "basic-09-master-multitasking.html": "basic-09-unit-hardware-timer.html",
+        "basic-10-master-fsm.html": "basic-10-unit-fsm.html",
+        "start-01-master-web-app.html": "start-01-unit-flexbox-layout.html",
+        "start-02-master-web-ble.html": "start-02-unit-ble-async.html",
+        "start-03-master-remote-control.html": "start-03-unit-control-panel.html",
+        "start-04-master-touch-events.html": "start-04-unit-long-press.html",
+        "start-05-master-joystick-lab.html": "start-05-unit-canvas-joystick.html"
     };
     const CANONICAL_UNIT_TO_LEGACY_UNITS = Object.entries(LEGACY_UNIT_TO_CANONICAL_UNIT).reduce((acc, [legacy, canonical]) => {
         if (!acc[canonical]) acc[canonical] = [];
@@ -85,7 +117,12 @@
         const raw = String(unitId).trim();
         const normalized = raw.toLowerCase();
         const stripped = normalized.replace(/\.html$/i, "");
-        const canonical = LEGACY_UNIT_TO_CANONICAL_UNIT[`${stripped}.html`] || LEGACY_UNIT_TO_CANONICAL_UNIT[raw] || raw;
+        const rawWithHtml = stripped + ".html";
+        const canonical = LEGACY_UNIT_TO_CANONICAL_UNIT[rawWithHtml] || 
+            LEGACY_UNIT_TO_CANONICAL_UNIT[raw] || 
+            LEGACY_MASTER_TO_CANONICAL[rawWithHtml] || 
+            LEGACY_MASTER_TO_CANONICAL[raw] || 
+            raw;
         const canonicalNoExt = String(canonical).replace(/\.html$/i, "");
         const legacyAliases = CANONICAL_UNIT_TO_LEGACY_UNITS[`${canonicalNoExt}.html`] || CANONICAL_UNIT_TO_LEGACY_UNITS[canonical] || [];
         const candidates = [
@@ -158,14 +195,17 @@
     function normalizeTutorAdminUnitId(unitId) {
         const raw = String(unitId || '').trim();
         if (!raw) return raw;
+        const rawWithHtml = raw.endsWith('.html') ? raw : `${raw}.html`;
         if (LEGACY_UNIT_TO_CANONICAL_UNIT[raw]) return LEGACY_UNIT_TO_CANONICAL_UNIT[raw];
-        if (LEGACY_UNIT_TO_CANONICAL_UNIT[raw.replace(/\.html$/i, '.html')]) {
-            return LEGACY_UNIT_TO_CANONICAL_UNIT[raw.replace(/\.html$/i, '.html')];
-        }
-        if (/^(?:tw|en)-/i.test(raw)) return raw.replace(/^(?:tw|en)-/i, '');
-        if (raw === '02-unit-classroom-workflow.html') return 'common-github-classroom.html';
-        if (raw.startsWith('04-')) return raw.replace(/^04-/, '02-');
-        return raw;
+        if (LEGACY_UNIT_TO_CANONICAL_UNIT[rawWithHtml]) return LEGACY_UNIT_TO_CANONICAL_UNIT[rawWithHtml];
+        if (LEGACY_MASTER_TO_CANONICAL[raw]) return LEGACY_MASTER_TO_CANONICAL[raw];
+        if (LEGACY_MASTER_TO_CANONICAL[rawWithHtml]) return LEGACY_MASTER_TO_CANONICAL[rawWithHtml];
+        
+        let result = raw;
+        if (/^(?:tw|en)-/i.test(result)) result = result.replace(/^(?:tw|en)-/i, '');
+        if (result === '02-unit-classroom-workflow.html') return 'common-github-classroom.html';
+        if (result.startsWith('04-')) return result.replace(/^04-/, '02-');
+        return result;
     }
 
     function normalizeTutorIdentifier(value) {
