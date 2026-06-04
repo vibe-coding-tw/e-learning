@@ -5763,11 +5763,6 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
     if (!isUnitContext) {
         inviteKitEl.innerHTML = `
             ${tutorInfoHtml}
-            <div class="space-y-1 font-sans p-4 bg-amber-50 border border-amber-100 rounded-3xl">
-                <p class="text-gray-500 text-sm font-bold">專屬作業資訊 (Promo Code / 邀請連結)</p>
-                <p class="text-gray-400 text-sm mt-2 font-medium">請先從上方切換單元</p>
-                <p class="text-[10px] text-gray-300 mt-1 font-normal">每一單元皆有專屬作業連結</p>
-            </div>
         `;
         return;
     }
@@ -5775,10 +5770,6 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
     if (!inviteKit.ready) {
         inviteKitEl.innerHTML = `
             ${tutorInfoHtml}
-            <div class="space-y-1 font-sans p-4 bg-orange-50 border border-orange-100 rounded-3xl">
-                <p class="text-gray-500 text-sm font-bold">專屬作業資訊 (Promo Code / 邀請連結)</p>
-                <p class="text-orange-500 text-sm font-bold mt-2">${escapeHtml(inviteKit.message)}</p>
-            </div>
         `;
         return;
     }
