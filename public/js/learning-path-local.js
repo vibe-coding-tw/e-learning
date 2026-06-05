@@ -89,7 +89,7 @@ function translateLessonLabel(label = "", uiLocale = "zh-TW") {
   if (!raw) return "";
   if (!uiLocale.startsWith("en")) return raw;
   return raw
-    .replace(/^準備課程/, "Preparation")
+    .replace(/^課前準備/, "Preparation")
     .replace(/^入門/, "Starter")
     .replace(/^基礎/, "Basic")
     .replace(/^進階/, "Advanced")

@@ -76,7 +76,7 @@
             "competitor2": "不只停留在抽象理論，確保有實際硬體操作。",
             "competitor3": "不是無法提供師資培訓與系統化教材支持的單一產品。",
             "course_links_title": "課程連結",
-            "prepare_title": "準備課程",
+            "prepare_title": "課前準備",
             "prepare_desc": "工欲善其事，必先利其器。協助您完成開發環境建置、硬體檢測與必要工具安裝，為學習之旅做好萬全準備。",
             "prepare_btn": "前往準備 &rarr;",
             "starter_title": "入門課程",
