@@ -38,6 +38,46 @@ const normalizeCanonicalUnitFilenameForRoute = REPO_UTILS.normalizeCanonicalRepo
     if (/^prepare-\d+-(.+)$/i.test(v)) return v.replace(/^prepare-\d+-/i, 'common-');
     return v;
 };
+
+function getCourseFamilyForCoursePage(file = '') {
+    const normalizedFile = normalizeLooseKey(file);
+    const lessons = Array.isArray(window.globalLessonsData) ? window.globalLessonsData : [];
+
+    const matchedLesson = lessons.find((lesson) => {
+        const keys = new Set();
+        const add = (value) => {
+            if (!value) return;
+            keys.add(normalizeLooseKey(value));
+        };
+
+        add(lesson?.courseKey);
+        add(lesson?.courseId);
+        add(lesson?.id);
+        add(lesson?.entryUnitId);
+        add(lesson?.classroomUrl);
+        if (Array.isArray(lesson?.courseUnits)) lesson.courseUnits.forEach(add);
+        return keys.has(normalizedFile);
+    }) || null;
+
+    const lessonKey = String(
+        matchedLesson?.courseKey ||
+        matchedLesson?.courseId ||
+        matchedLesson?.id ||
+        ''
+    ).trim().toLowerCase();
+
+    if (lessonKey.startsWith('car-starter')) return 'starter';
+    if (lessonKey.startsWith('car-basic')) return 'basic';
+    if (lessonKey.startsWith('car-advanced')) return 'advanced';
+    if (lessonKey.startsWith('common')) return 'prepare';
+
+    if (normalizedFile.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(normalizedFile)) return 'starter';
+    if (normalizedFile.startsWith('basic-') || /^(?:tw|en|car-basic)-/i.test(normalizedFile)) return 'basic';
+    if (normalizedFile.startsWith('adv-') || normalizedFile.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(normalizedFile)) return 'advanced';
+    if (normalizedFile.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(normalizedFile)) return 'prepare';
+
+    return '';
+}
 function canonicalLearningPathHref(pathKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);
     return `/learning-path.html?path=${encodeURIComponent(canonical || 'common')}`;
@@ -333,10 +373,11 @@ function normalizeCourseTopNav() {
         const topNav = document.querySelector('.ms-topnav');
         if (!topNav) return;
 
-        const isStarter = file.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(file);
-        const isBasic = file.startsWith('basic-') || /^(?:tw|en|car-basic)-/i.test(file);
-        const isAdvanced = file.startsWith('adv-') || file.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(file);
-        const isPrepare = file.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(file);
+        const metadataFamily = getCourseFamilyForCoursePage(file);
+        const isStarter = metadataFamily ? metadataFamily === 'starter' : (file.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(file));
+        const isBasic = metadataFamily ? metadataFamily === 'basic' : (file.startsWith('basic-') || /^(?:tw|en|car-basic)-/i.test(file));
+        const isAdvanced = metadataFamily ? metadataFamily === 'advanced' : (file.startsWith('adv-') || file.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(file));
+        const isPrepare = metadataFamily ? metadataFamily === 'prepare' : (file.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(file));
         const targetHref = isStarter
             ? canonicalLearningPathHref('car-starter')
             : isBasic
@@ -392,7 +433,7 @@ function normalizeCourseTopNav() {
                 navLabel.setAttribute('href', `${canonicalLearningPathHref('car-advanced')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             } else if (isPrepare) {
-                navLabel.textContent = translate('prepare_title', '準備課程');
+                navLabel.textContent = translate('prepare_title', '課前準備');
                 navLabel.setAttribute('href', `${canonicalLearningPathHref('common')}${langQuery}`);
                 navLabel.setAttribute('target', '_top');
             }
@@ -505,7 +546,6 @@ function normalizeCourseTopNav() {
                         targetFile = currentFile.replace(/^tw-/, 'en-');
                     } else if (currentFile.startsWith('start-')) {
                         const lookup = {
-                            'start-01-unit-html5-basics.html': 'car-starter-flexbox-layout.html',
                             'start-01-unit-flexbox-layout.html': 'car-starter-flexbox-layout.html',
                             'start-01-unit-ui-ux-standards.html': 'car-starter-ui-ux-standards.html',
                             'start-02-unit-ble-security.html': 'car-starter-ble-security.html',
@@ -564,7 +604,8 @@ function normalizeCourseBreadcrumbs() {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
         if (!file.endsWith('.html')) return;
 
-        const isStarter = file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file);
+        const metadataFamily = getCourseFamilyForCoursePage(file);
+        const isStarter = metadataFamily ? metadataFamily === 'starter' : (file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file));
         if (!isStarter) return;
 
         const breadcrumb = document.querySelector('.ms-breadcrumb');

@@ -401,9 +401,23 @@ async function loadDashboard() {
 
         const isQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
 
-        const isPaidStudent = hasUnitContext
+        let isPaidStudent = hasUnitContext
             ? await hasPaidStudentAccessForUnit(filterCourseId, filterUnitId)
             : hasPaidAnything;
+
+        const activeLesson = resolveLessonByAnyKey(filterCourseId) || resolveLessonByAnyKey(filterUnitId) || null;
+        const activeLessonPrice = activeLesson
+            ? Math.max(
+                Number(getLessonBusinessPrice(activeLesson, "zh-TW").amount || 0),
+                Number(getLessonBusinessPrice(activeLesson, "en").amount || 0)
+            )
+            : null;
+        const isFreeCourseContext = !!(hasUnitContext && activeLesson && Number(activeLessonPrice) === 0);
+
+        if (!isAdmin && !isQualifiedTutor && !isPaidStudent && isFreeCourseContext) {
+            console.log(`[Dashboard] Free course context detected for ${filterCourseId || filterUnitId}; allowing student dashboard access.`);
+            isPaidStudent = true;
+        }
             
         updateCurrentDashboardPermissions({ isAdmin, isQualifiedTutor, isPaidStudent });
         setupRealTimeAssignmentsListener({ isAdmin, isQualifiedTutor, filterUnitId, filterCourseId });
@@ -784,12 +798,16 @@ function hasQualifiedTutorAccessForUnit(fileName, courseId, email) {
 }
 
 async function hasPaidStudentAccessForUnit(courseId, unitId) {
-    if (!courseId || !unitId || !auth.currentUser) return false;
+    if (!unitId || !auth.currentUser) return false;
 
     try {
+        const resolvedCourseId = courseId
+            || findParentCourseIdByUnit(unitId, allLessons)
+            || (resolveLessonByAnyKey(unitId) ? getCanonicalLessonIdentity(resolveLessonByAnyKey(unitId)) : null);
+        if (!resolvedCourseId) return false;
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
         const response = await checkAuthFunction({
-            pageId: courseId,
+            pageId: resolvedCourseId,
             fileName: unitId,
             tutorMode: false
         });
@@ -1517,6 +1535,280 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     // [V8.1] GitHub README loading moved to renderAssignments for better container management
     renderAssignments(displayAssignments, "", { showGuide: false });
+
+    // Render Financial Statements (P&L and Balance Sheet) at the bottom of the overview tab
+    if (!filterUnitId && myRole === 'admin') {
+        renderFinanceStatements(data);
+    }
+}
+
+/**
+ * Renders the Profit & Loss Statement and Balance Sheet dynamically from real order data
+ * @param {Object} data The dashboard overview data returned from backend
+ */
+function renderFinanceStatements(data) {
+    const plPlaceholder = document.getElementById('overview-pl-statement');
+    const bsPlaceholder = document.getElementById('overview-balance-sheet');
+    if (!plPlaceholder || !bsPlaceholder) return;
+
+    // 1. Gather all successful unique orders
+    const uniqueOrders = new Map();
+    const allStudents = data.students || [];
+    allStudents.forEach(student => {
+        (student.orderRecords || []).forEach(order => {
+            if (order.id && (order.status === 'SUCCESS' || order.paidAt)) {
+                uniqueOrders.set(order.id, {
+                    ...order,
+                    email: student.email || '未提供'
+                });
+            }
+        });
+    });
+
+    const ordersList = Array.from(uniqueOrders.values());
+
+    // 2. Setup standard rates / variables
+    const tutorRate = 0.20;
+    const tutorUplineRate = 0.20;
+    const gatewayFeeRate = 0.032;
+    const hardwareCOGSPercent = 0.62;
+
+    // Create user by email index
+    const userByEmail = {};
+    allStudents.forEach(s => {
+        if (s.email) {
+            userByEmail[s.email.toLowerCase().trim()] = s;
+        }
+    });
+
+    // Helper: trace upline tutor recursively
+    function getTutorUpline(email) {
+        const normalized = String(email || '').trim().toLowerCase();
+        const tutorUser = userByEmail[normalized];
+        if (tutorUser && tutorUser.tutorEmail) {
+            return tutorUser.tutorEmail.toLowerCase().trim();
+        }
+        return 'info@vibe-coding.tw';
+    }
+
+    // 3. Compute variables
+    let courseRevenue = 0;
+    let hardwareRevenue = 0;
+    let totalTutorShare = 0;
+    let totalHardwareCOGS = 0;
+
+    ordersList.forEach(order => {
+        const items = order.items || {};
+        Object.entries(items).forEach(([itemKey, itemValue]) => {
+            const quantity = parseInt(itemValue?.quantity || 1, 10) || 1;
+            const price = parseFloat(itemValue?.price || 0) || 0;
+            const amount = price * quantity;
+            if (amount <= 0) return;
+
+            const isPhysical = itemValue?.isPhysical === true || itemKey === 'esp32-c3' || itemKey === 'esp32-s3';
+
+            if (isPhysical) {
+                hardwareRevenue += amount;
+                totalHardwareCOGS += amount * hardwareCOGSPercent;
+            } else {
+                courseRevenue += amount;
+            }
+
+            // Calculate Tutor sharing recursively
+            const initialTutor = String(
+                itemValue?.referredTutorEmail ||
+                itemValue?.referralTutor ||
+                'info@vibe-coding.tw'
+            ).trim().toLowerCase();
+
+            let currentTutor = initialTutor;
+            let currentShare = amount * tutorRate;
+
+            while (currentTutor && currentShare >= 0.01) {
+                totalTutorShare += currentShare;
+                if (currentTutor === 'info@vibe-coding.tw') break;
+                currentTutor = getTutorUpline(currentTutor);
+                currentShare = currentShare * tutorUplineRate;
+            }
+        });
+    });
+
+    // Standardize total calculations
+    courseRevenue = Math.round(courseRevenue * 100) / 100;
+    hardwareRevenue = Math.round(hardwareRevenue * 100) / 100;
+    const totalRevenue = courseRevenue + hardwareRevenue;
+
+    totalTutorShare = Math.round(totalTutorShare * 100) / 100;
+    const totalGatewayFees = Math.round(totalRevenue * gatewayFeeRate * 100) / 100;
+    totalHardwareCOGS = Math.round(totalHardwareCOGS * 100) / 100;
+    const totalCOGS = totalTutorShare + totalGatewayFees + totalHardwareCOGS;
+
+    const grossProfit = totalRevenue - totalCOGS;
+    const grossMarginPct = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+    const totalOPEX = 0;
+    const netOperatingIncome = grossProfit - totalOPEX;
+
+    // Reconstruct Balance Sheet variables
+    const totalAssets = totalRevenue;
+    const tutorPayable = totalTutorShare;
+    const gatewayPayable = totalGatewayFees;
+    const hardwarePayable = totalHardwareCOGS;
+    const totalLiabilities = tutorPayable + gatewayPayable + hardwarePayable;
+    const retainedEarnings = netOperatingIncome;
+    const totalEquity = retainedEarnings;
+
+    const issuedShares = 10000000;
+    const navPerShare = issuedShares > 0 ? totalEquity / issuedShares : 0;
+
+    // 4. Render HTML for Profit & Loss
+    plPlaceholder.innerHTML = `
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                    <tr class="border-b text-gray-500 font-medium">
+                        <th class="py-2">項目 (Financial Items)</th>
+                        <th class="py-2 text-right">金額 (TWD)</th>
+                        <th class="py-2 text-right">佔比 (Ratio)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-gray-700">
+                    <tr>
+                        <td class="py-2 font-semibold">總營業收入 (Total Revenue)</td>
+                        <td class="py-2 text-right font-semibold">$${totalRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-2 text-right font-semibold">100.00%</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">├ 數位課程 (Digital Course)</td>
+                        <td class="py-1.5 text-right">$${courseRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((courseRevenue / totalRevenue) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">└ 實體硬體 (Physical Hardware)</td>
+                        <td class="py-1.5 text-right">$${hardwareRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((hardwareRevenue / totalRevenue) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 font-semibold">營業成本 (Total COGS)</td>
+                        <td class="py-2 text-right font-semibold">$${totalCOGS.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-2 text-right font-semibold">${totalRevenue > 0 ? ((totalCOGS / totalRevenue) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">├ 導師分潤 (Tutor Share)</td>
+                        <td class="py-1.5 text-right">$${totalTutorShare.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalTutorShare / totalRevenue) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">├ 金流交易費 (Gateway Fees)</td>
+                        <td class="py-1.5 text-right">$${totalGatewayFees.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalGatewayFees / totalRevenue) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">└ 硬體製造成本 (Hardware COGS)</td>
+                        <td class="py-1.5 text-right">$${totalHardwareCOGS.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalHardwareCOGS / totalRevenue) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="bg-blue-50/50 font-bold text-blue-900">
+                        <td class="py-2">營業毛利 (Gross Profit)</td>
+                        <td class="py-2 text-right">$${grossProfit.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-2 text-right">${grossMarginPct.toFixed(2)}%</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 font-semibold">營業費用 (Total OPEX)</td>
+                        <td class="py-2 text-right font-semibold">$0.00</td>
+                        <td class="py-2 text-right font-semibold">0.00%</td>
+                    </tr>
+                    <tr class="bg-blue-50/70 font-bold text-blue-950 border-t-2 border-blue-200">
+                        <td class="py-2.5">營業淨利 (EBITDA / Net Income)</td>
+                        <td class="py-2.5 text-right">$${netOperatingIncome.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-2.5 text-right">${grossMarginPct.toFixed(2)}%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    // 5. Render HTML for Balance Sheet
+    bsPlaceholder.innerHTML = `
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                    <tr class="border-b text-gray-500 font-medium">
+                        <th class="py-2">科目 (Accounting Items)</th>
+                        <th class="py-2 text-right">金額 (TWD)</th>
+                        <th class="py-2 text-right">佔比 (Ratio)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-gray-700">
+                    <tr class="bg-gray-50/50 font-bold">
+                        <td class="py-2" colspan="3">【資產 (Assets)】</td>
+                    </tr>
+                    <tr>
+                        <td class="py-1.5 pl-4">現金及約當現金 (Cash)</td>
+                        <td class="py-1.5 text-right">$${totalAssets.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">100.00%</td>
+                    </tr>
+                    <tr class="font-semibold text-gray-900">
+                        <td class="py-2">資產總計 (Total Assets)</td>
+                        <td class="py-2 text-right">$${totalAssets.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-2 text-right">100.00%</td>
+                    </tr>
+                    
+                    <tr class="bg-gray-50/50 font-bold">
+                        <td class="py-2" colspan="3">【負債 (Liabilities)】</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">├ 應付導師分潤 (Tutor Share Payable)</td>
+                        <td class="py-1.5 text-right">$${tutorPayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalAssets > 0 ? ((tutorPayable / totalAssets) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">├ 應付金流手續費 (Gateway Payable)</td>
+                        <td class="py-1.5 text-right">$${gatewayPayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalAssets > 0 ? ((gatewayPayable / totalAssets) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">└ 應付履約成本 (Hardware Payable)</td>
+                        <td class="py-1.5 text-right">$${hardwarePayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalAssets > 0 ? ((hardwarePayable / totalAssets) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="font-semibold text-gray-900">
+                        <td class="py-2">負債總計 (Total Liabilities)</td>
+                        <td class="py-2 text-right">$${totalLiabilities.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-2 text-right">${totalAssets > 0 ? ((totalLiabilities / totalAssets) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+
+                    <tr class="bg-gray-50/50 font-bold">
+                        <td class="py-2" colspan="3">【權益 (Equity)】</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">├ 原始資本 (Paid-in Capital)</td>
+                        <td class="py-1.5 text-right">$0.00</td>
+                        <td class="py-1.5 text-right">0.00%</td>
+                    </tr>
+                    <tr class="text-gray-500">
+                        <td class="py-1.5 pl-4">└ 保留盈餘 (Retained Earnings)</td>
+                        <td class="py-1.5 text-right">$${retainedEarnings.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-1.5 text-right">${totalAssets > 0 ? ((retainedEarnings / totalAssets) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="bg-emerald-50/50 font-bold text-emerald-900 border-t border-emerald-200">
+                        <td class="py-2">權益總額 / 淨資產 (Total Equity)</td>
+                        <td class="py-2 text-right">$${totalEquity.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-2 text-right">${totalAssets > 0 ? ((totalEquity / totalAssets) * 100).toFixed(2) : 0}%</td>
+                    </tr>
+                    <tr class="bg-emerald-50/70 font-bold text-emerald-950 border-t-2 border-emerald-200">
+                        <td class="py-2.5">負債與權益總額 (Liabilities & Equity)</td>
+                        <td class="py-2.5 text-right">$${(totalLiabilities + totalEquity).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-2.5 text-right">100.00%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-4 p-3 bg-emerald-50/40 rounded-xl border border-emerald-100 flex justify-between items-center text-xs font-semibold text-emerald-800">
+            <span>發行股份: ${issuedShares.toLocaleString('zh-TW')} 股</span>
+            <span>每股淨值 (NAV): $${navPerShare.toFixed(5)} TWD</span>
+        </div>
+    `;
 }
 
 // --- Global Toggle Functions ---

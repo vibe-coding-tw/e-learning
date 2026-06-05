@@ -12,9 +12,9 @@
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
   <script type="module" src="./js/nav-component.6c6a53ae9fda.js"></script>
-  <script src="./js/dashboard-lookup-utils.b25d4a98b6b1.js"></script>
+  <script src="./js/dashboard-lookup-utils.527f08c8573b.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
-  <script src="./js/course-shared.19f8ad71455c.js"></script>
+  <script src="./js/course-shared.ecbd4e826fd2.js"></script>
   <script src="./js/pricing-utils.e362733979a2.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
@@ -244,7 +244,7 @@
       if (!raw) return "";
       if (!uiLocale.startsWith("en")) return raw;
       return raw
-        .replace(/^準備課程/, "Preparation")
+        .replace(/^課前準備/, "Preparation")
         .replace(/^入門/, "Starter")
         .replace(/^基礎/, "Basic")
         .replace(/^進階/, "Advanced")
@@ -690,7 +690,12 @@
       if (isFreeCourse && user) return updateCardAction(card, "AUTHORIZED");
       const tutorModeActive = localStorage.getItem("adminTutorMode") === "true";
       try {
-        const result = await checkAuthFunction({ pageId: authPageId, tutorMode: tutorModeActive });
+        const result = await checkAuthFunction({
+          // pageId should stay on the course card identity, while fileName carries the entry unit.
+          pageId: courseId || authPageId,
+          fileName: authPageId,
+          tutorMode: tutorModeActive
+        });
         updateCardAction(card, result?.data?.authorized ? "AUTHORIZED" : "UNAUTHORIZED");
       } catch (_) {
         updateCardAction(card, "UNAUTHORIZED");

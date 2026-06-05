@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.5eae20d48a60.js"></script>
+    <script src="./js/i18n-helper.60b4ee502ff2.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -940,10 +940,10 @@
                     returnUrl: window.location.origin + '/payment-return.html'
                 });
 
-                const data = response.data;
+                const data = response?.data ?? response ?? null;
+                const resData = data?.result ?? data;
 
-                if (data && data.result) {
-                    const resData = data.result;
+                if (resData && (resData.gateway === "STRIPE" || resData.paymentParams || resData.sessionUrl)) {
                     if (resData.gateway === "STRIPE") {
                         console.log("Stripe Checkout URL received, redirecting...");
                         checkoutBtn.textContent = '🚀 Redirecting to Stripe...';
@@ -956,7 +956,9 @@
                         throw new Error('無法取得交易參數。');
                     }
                 } else {
-                    throw new Error('金流伺服器回傳格式不正確。');
+                    console.error('[Checkout] Unexpected payment response shape:', response);
+                    const receivedKeys = Object.keys(resData || data || {}).join(', ') || 'none';
+                    throw new Error(`金流伺服器回傳格式不正確（收到欄位：${receivedKeys}）。`);
                 }
 
             } catch (error) {
