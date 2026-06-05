@@ -1,0 +1,810 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+import { firebaseConfig, connectFirebaseEmulators } from "./firebase-local.js?v=3";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const functions = getFunctions(app, 'asia-east1');
+connectFirebaseEmulators({ auth, functions });
+
+const state = {
+    user: null,
+    portal: null,
+    distributorId: '',
+    selectedDistributorId: '',
+    accessibleDistributors: [],
+    priceBooks: [],
+    orders: [],
+    tutors: [],
+    settlement: null,
+    priceBookFilter: 'all',
+    priceBookSearch: '',
+    selectedPriceBookId: ''
+};
+
+window.__distributorPriceBookCache = window.__distributorPriceBookCache || {};
+
+function el(id) {
+    return document.getElementById(id);
+}
+
+function escapeHtml(value = '') {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function toast(message, tone = 'info') {
+    const hostId = 'portal-toast-host';
+    let host = document.getElementById(hostId);
+    if (!host) {
+        host = document.createElement('div');
+        host.id = hostId;
+        host.className = 'fixed top-4 right-4 z-[100000] flex flex-col gap-2 pointer-events-none';
+        document.body.appendChild(host);
+    }
+
+    const toneClass = tone === 'success'
+        ? 'bg-emerald-600 border-emerald-700'
+        : tone === 'error'
+            ? 'bg-rose-600 border-rose-700'
+            : 'bg-slate-900 border-slate-800';
+
+    const node = document.createElement('div');
+    node.className = `pointer-events-auto max-w-sm rounded-2xl border px-4 py-3 text-sm font-semibold text-white shadow-xl ${toneClass}`;
+    node.textContent = message;
+    host.appendChild(node);
+    window.setTimeout(() => node.remove(), 2400);
+}
+
+function formatDateTime(value) {
+    if (!value) return '—';
+    try {
+        if (typeof value.toDate === 'function') return value.toDate().toLocaleString();
+        if (typeof value.seconds === 'number') return new Date(value.seconds * 1000).toLocaleString();
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
+    } catch (_) {
+        return String(value || '—');
+    }
+}
+
+function getFormValue(id) {
+    return el(id)?.value?.trim?.() || '';
+}
+
+function setFormValue(id, value) {
+    const input = el(id);
+    if (!input) return;
+    if (input.type === 'checkbox') {
+        input.checked = !!value;
+    } else {
+        input.value = value ?? '';
+    }
+}
+
+function setText(id, value) {
+    const node = el(id);
+    if (!node) return;
+    node.textContent = value == null ? '—' : String(value);
+}
+
+function parseDateMillis(value) {
+    if (!value) return 0;
+    try {
+        if (typeof value.toDate === 'function') return value.toDate().getTime();
+        if (typeof value.seconds === 'number') return value.seconds * 1000;
+        if (value instanceof Date) return value.getTime();
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+    } catch (_) {
+        return 0;
+    }
+}
+
+function isPromoActive(book = {}) {
+    if (book.promoPrice == null || book.promoPrice === '') return false;
+    const now = Date.now();
+    const from = parseDateMillis(book.promoEffectiveFrom);
+    const to = parseDateMillis(book.promoEffectiveTo);
+    if (from && now < from) return false;
+    if (to && now > to) return false;
+    return true;
+}
+
+function setLoading(loading) {
+    el('portal-loading')?.classList.toggle('hidden', !loading);
+}
+
+function showDenied(message) {
+    setLoading(false);
+    el('portal-app')?.classList.add('hidden');
+    const denied = el('portal-denied');
+    if (denied) {
+        denied.classList.remove('hidden');
+        const msg = el('portal-denied-message');
+        if (msg && message) msg.textContent = message;
+    }
+}
+
+function showApp() {
+    setLoading(false);
+    el('portal-denied')?.classList.add('hidden');
+    el('portal-app')?.classList.remove('hidden');
+}
+
+function formatMoney(value = 0, currency = 'TWD') {
+    const amount = Number(value || 0);
+    return `${amount.toLocaleString()} ${currency || 'TWD'}`;
+}
+
+function distributorLabel(distributor = {}) {
+    const name = String(distributor?.name || distributor?.id || '').trim();
+    const currency = String(distributor?.defaultCurrency || '').trim();
+    const regions = Array.isArray(distributor?.regions) && distributor.regions.length
+        ? distributor.regions.join(', ')
+        : '';
+    const parts = [];
+    if (currency) parts.push(currency);
+    if (regions) parts.push(regions);
+    return parts.length ? `${name} · ${parts.join(' · ')}` : name;
+}
+
+function updateSummary(items = []) {
+    const activeCount = items.filter((item) => item && item.isActive !== false).length;
+    const promoCount = items.filter((item) => item && item.isActive !== false && isPromoActive(item)).length;
+    const lastUpdated = items[0]?.updatedAt || items[0]?.createdAt || null;
+    setText('portal-pricebook-count', String(items.length));
+    setText('portal-pricebook-active-count', String(activeCount));
+    setText('portal-pricebook-promo-count', String(promoCount));
+    setText('portal-pricebook-count-stat', String(items.length));
+    setText('portal-pricebook-active-count-stat', String(activeCount));
+    setText('portal-pricebook-promo-count-stat', String(promoCount));
+    setText('portal-last-updated', items.length ? formatDateTime(lastUpdated) : '—');
+    setText('portal-pricebook-last-updated-stat', items.length ? formatDateTime(lastUpdated) : '—');
+    setText('portal-current-version', items[0]?.version || '—');
+    setText('portal-seedable-product-count', String(state.portal?.seedableProductCount || 0));
+    setText('portal-seedable-product-count-stat', String(state.portal?.seedableProductCount || 0));
+}
+
+function getFilteredPriceBooks(items = []) {
+    const filter = String(state.priceBookFilter || 'all');
+    const search = String(state.priceBookSearch || '').trim().toLowerCase();
+
+    return (Array.isArray(items) ? items : []).filter((book) => {
+        if (filter === 'active' && book.isActive === false) return false;
+        if (filter === 'promo' && !isPromoActive(book)) return false;
+        if (search) {
+            const haystack = [
+                book.id,
+                book.priceBookId,
+                book.productId,
+                book.distributorId,
+                book.version,
+                book.currency,
+                book.salePrice,
+                book.promoPrice
+            ].map((value) => String(value ?? '')).join(' ').toLowerCase();
+            if (!haystack.includes(search)) return false;
+        }
+        return true;
+    });
+}
+
+function updatePortalOverview() {
+    const orderSummary = state.portal?.orderSummary || {};
+    const tutorSummary = state.portal?.tutorSummary || {};
+    const settlementSummary = state.portal?.settlement?.summary || {};
+    const settlementPeriod = state.portal?.settlement?.period || settlementSummary.period || '—';
+
+    setText('portal-order-count', String(orderSummary.totalOrders || 0));
+    setText('portal-pending-shipment-count', String(orderSummary.pendingShipmentCount || 0));
+    setText('portal-tutor-count', String(tutorSummary.tutorCount || 0));
+    setText('portal-settlement-paid-total', formatMoney(settlementSummary.paidTotal || 0));
+    setText('portal-settlement-paid-total-detail', formatMoney(settlementSummary.paidTotal || 0));
+    setText('portal-settlement-planned-total', formatMoney(settlementSummary.plannedTotal || 0));
+    setText('portal-settlement-blocked-total', formatMoney(settlementSummary.blockedTotal || 0));
+    setText('portal-settlement-row-count', String(settlementSummary.rowCount || 0));
+    setText('portal-settlement-period', settlementPeriod || '—');
+
+    const orderSummaryEl = el('portal-order-summary');
+    if (orderSummaryEl) {
+        orderSummaryEl.textContent = orderSummary.totalOrders
+            ? `共 ${orderSummary.totalOrders} 筆成功訂單，待出貨 ${orderSummary.pendingShipmentCount || 0} 筆。`
+            : '目前沒有可顯示的訂單。';
+    }
+
+    const tutorSummaryEl = el('portal-tutor-summary');
+    if (tutorSummaryEl) {
+        tutorSummaryEl.textContent = tutorSummary.tutorCount
+            ? `共 ${tutorSummary.tutorCount} 位 Tutor，授權單元 ${tutorSummary.authorizedUnitCount || 0} 個。`
+            : '目前沒有可顯示的 Tutor 綁定資料。';
+    }
+}
+
+function renderDistributorTabs(distributors = []) {
+    const tabs = el('portal-distributor-tabs');
+    const summary = el('portal-distributor-tabs-summary');
+    if (!tabs || !summary) return;
+
+    const items = Array.isArray(distributors) ? distributors : [];
+    if (!items.length) {
+        tabs.innerHTML = '<div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">尚無可切換的經銷商。</div>';
+        summary.textContent = '目前沒有可顯示的經銷商。';
+        return;
+    }
+
+    summary.textContent = items.length > 1
+        ? `共 ${items.length} 個經銷商，可點擊切換不同價格表。`
+        : `目前只有 ${distributorLabel(items[0])}。`;
+
+    tabs.innerHTML = items.map((distributor) => {
+        const id = String(distributor.id || '').trim();
+        const active = id && id === String(state.selectedDistributorId || state.distributorId || '').trim();
+        return `
+            <button
+                onclick="window.distributorPortalSelectDistributor('${escapeHtml(id)}')"
+                class="rounded-full border px-4 py-2 text-xs font-bold transition ${active ? 'border-slate-900 bg-slate-900 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}"
+                title="${escapeHtml(distributorLabel(distributor))}"
+            >
+                ${escapeHtml(distributor.name || distributor.id || '—')}
+            </button>
+        `;
+    }).join('');
+}
+
+function renderPriceBooks(items = []) {
+    const cache = {};
+    (Array.isArray(items) ? items : []).forEach((book) => {
+        const id = String(book?.id || book?.priceBookId || '').trim();
+        if (!id) return;
+        cache[id] = { ...book, id };
+    });
+    window.__distributorPriceBookCache = cache;
+
+    const filteredItems = getFilteredPriceBooks(items);
+    updateSummary(items);
+    updatePriceBookFilterButtons();
+    const tbody = el('portal-pricebook-table-body');
+    if (!tbody) return;
+
+    if (!filteredItems.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚未載入或沒有符合條件的價格表</td></tr>';
+        const priceBooksSummary = el('portal-pricebook-tabs-summary');
+        if (priceBooksSummary) priceBooksSummary.textContent = '目前沒有可顯示的價格表。';
+        const title = el('portal-pricebook-tabs-title');
+        if (title) title.textContent = '尚未選擇價格表';
+        return;
+    }
+
+    const selectedId = String(state.selectedPriceBookId || '').trim();
+    const selected = filteredItems.find((book) => String(book.id || book.priceBookId || '').trim() === selectedId) || filteredItems[0];
+    state.selectedPriceBookId = String(selected?.id || selected?.priceBookId || '').trim();
+
+    tbody.innerHTML = filteredItems.map((book) => {
+        const id = String(book.id || book.priceBookId || '').trim();
+        const isActiveRow = id === state.selectedPriceBookId;
+        const activeBadge = book.isActive !== false
+            ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+            : 'bg-slate-100 text-slate-600 border-slate-200';
+        const priceText = `${Number(book.salePrice || 0).toLocaleString()} ${escapeHtml(book.currency || 'TWD')}`;
+        const promoText = book.promoPrice != null && book.promoPrice !== ''
+            ? `${Number(book.promoPrice || 0).toLocaleString()} ${escapeHtml(book.currency || 'TWD')}`
+            : '—';
+        const displayText = isPromoActive(book) && book.promoPrice != null && book.promoPrice !== ''
+            ? `${Number(book.promoPrice || 0).toLocaleString()} ${escapeHtml(book.currency || 'TWD')}（促銷）`
+            : priceText;
+        const promoBadge = isPromoActive(book)
+            ? '<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">促銷中</span>'
+            : (book.promoPrice != null && book.promoPrice !== ''
+                ? '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">未生效</span>'
+                : '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">無促銷</span>');
+        return `
+            <tr
+                class="cursor-pointer transition ${isActiveRow ? 'bg-slate-50/80' : 'hover:bg-slate-50/80'}"
+                onclick="window.distributorPortalOpenPriceBookModal('${escapeHtml(id)}')"
+            >
+                <td class="px-4 py-4 align-top">
+                    <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(id || '—')}</div>
+                    <div class="mt-1 font-bold text-slate-900">${escapeHtml(book.productId || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">更新：${escapeHtml(formatDateTime(book.updatedAt))}</div>
+                </td>
+                <td class="px-4 py-4 align-top">
+                    <div class="font-semibold text-slate-900">${escapeHtml(priceText)}</div>
+                    <div class="mt-1 text-[11px] text-slate-500">活動價：${escapeHtml(promoText)}</div>
+                    <div class="mt-1 flex items-center gap-2">${promoBadge}</div>
+                </td>
+                <td class="px-4 py-4 align-top">
+                    <div class="text-sm font-bold text-slate-900">${escapeHtml(book.version || 'v1')}</div>
+                    <span class="mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${activeBadge}">
+                        ${book.isActive !== false ? '啟用中' : '停用'}
+                    </span>
+                </td>
+                <td class="px-4 py-4 align-top text-sm text-slate-600">
+                    <div>主價格：${escapeHtml(formatDateTime(book.effectiveFrom))}</div>
+                    <div class="mt-1">主價格迄：${escapeHtml(formatDateTime(book.effectiveTo))}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">促銷：${escapeHtml(formatDateTime(book.promoEffectiveFrom))} ~ ${escapeHtml(formatDateTime(book.promoEffectiveTo))}</div>
+                </td>
+                <td class="px-4 py-4 align-top text-right">
+                    <button onclick="event.stopPropagation(); window.distributorPortalOpenPriceBookModal('${escapeHtml(id)}')" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
+                        編輯
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    const priceBooksSummary = el('portal-pricebook-tabs-summary');
+    if (priceBooksSummary) {
+        priceBooksSummary.textContent = `目前顯示 ${filteredItems.length} 筆價格表，點擊每一列即可開啟 modal 編輯。`;
+    }
+    const title = el('portal-pricebook-tabs-title');
+    if (title) title.textContent = `${selected?.productId || selected?.id || '尚未選擇價格表'}`;
+}
+
+function updatePriceBookFilterButtons() {
+    const buttons = Array.from(document.querySelectorAll('[data-pricebook-filter]'));
+    buttons.forEach((button) => {
+        const filter = String(button.dataset.pricebookFilter || 'all');
+        const isActive = filter === String(state.priceBookFilter || 'all');
+        button.className = isActive
+            ? 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-950 text-white shadow-sm'
+            : 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-slate-850';
+    });
+}
+
+window.distributorPortalSetPriceBookFilter = function(filter = 'all') {
+    state.priceBookFilter = String(filter || 'all');
+    updatePriceBookFilterButtons();
+    renderPriceBooks(state.priceBooks);
+};
+
+window.distributorPortalSearchPriceBooks = function() {
+    state.priceBookSearch = el('portal-pricebook-search-input')?.value?.trim?.() || '';
+    renderPriceBooks(state.priceBooks);
+};
+
+window.distributorPortalResolvePriceDisplay = function(book = {}) {
+    const base = `${Number(book.salePrice || 0).toLocaleString()} ${book.currency || 'TWD'}`;
+    if (isPromoActive(book) && book.promoPrice != null && book.promoPrice !== '') {
+        return `${Number(book.promoPrice || 0).toLocaleString()} ${book.currency || 'TWD'}（促銷）`;
+    }
+    return base;
+};
+
+window.distributorPortalSeedFromLessons = async function() {
+    const distributorId = state.distributorId || getFormValue('portal-distributor-id-input');
+    if (!distributorId) {
+        toast('請先載入經銷商 ID。', 'error');
+        return;
+    }
+
+    const button = document.querySelector('button[onclick="window.distributorPortalSeedFromLessons()"]');
+    const originalText = button?.textContent || '';
+    if (button) {
+        button.disabled = true;
+        button.textContent = '套用中...';
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'seedDistributorPriceBooksFromLessons');
+        const res = await fn({ distributorId });
+        if (!res?.data?.success) {
+            throw new Error(res?.data?.message || '套用失敗');
+        }
+        toast(`已套用現有商品：建立 ${res.data.created || 0} 筆、更新 ${res.data.updated || 0} 筆、略過 ${res.data.skipped || 0} 筆`, 'success');
+        await loadPriceBooks();
+    } catch (e) {
+        console.error('[DistributorPortal] seed failed:', e);
+        toast(`套用現有商品失敗：${e.message || 'unknown error'}`, 'error');
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    }
+};
+
+function renderOrders(items = []) {
+    const tbody = el('portal-order-table-body');
+    if (!tbody) return;
+
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚未載入履約訂單</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = items.map((order) => {
+        const fulfillment = String(order.fulfillmentStatus || 'PENDING').toUpperCase();
+        const fulfillmentBadge = fulfillment === 'SHIPPED'
+            ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+            : fulfillment === 'PENDING'
+                ? 'bg-amber-100 text-amber-700 border-amber-200'
+                : 'bg-slate-100 text-slate-600 border-slate-200';
+        const productNames = Array.isArray(order.items) && order.items.length ? order.items.join('、') : '—';
+        const hasPhysicalBadge = order.hasPhysical
+            ? '<span class="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">含實體商品</span>'
+            : '<span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">純數位</span>';
+
+        return `
+            <tr class="hover:bg-slate-50/80 transition">
+                <td class="px-4 py-4 align-top">
+                    <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(order.orderNumber || order.id || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">訂單：${escapeHtml(order.id || '—')}</div>
+                </td>
+                <td class="px-4 py-4 align-top">
+                    <div class="font-semibold text-slate-900">${escapeHtml(formatMoney(order.amount || 0, order.currency || 'TWD'))}</div>
+                    <div class="mt-1 text-[11px] text-slate-500 break-words">${escapeHtml(productNames)}</div>
+                </td>
+                <td class="px-4 py-4 align-top">
+                    <div class="text-sm text-slate-700">付款：${escapeHtml(formatDateTime(order.paidAt))}</div>
+                    <div class="mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${fulfillmentBadge}">
+                        ${escapeHtml(fulfillment)}
+                    </div>
+                    <div class="mt-2">${hasPhysicalBadge}</div>
+                </td>
+                <td class="px-4 py-4 align-top text-sm text-slate-600">
+                    <div>收件人：${escapeHtml(order.shippingContact?.name || '—')} / ${escapeHtml(order.shippingContact?.phone || '—')}</div>
+                    <div class="mt-1 break-words">地址：${escapeHtml(order.shippingAddress || '—')}</div>
+                </td>
+                <td class="px-4 py-4 align-top text-sm text-slate-600">
+                    <div>PriceBook：${escapeHtml(order.priceBookId || '—')}</div>
+                    <div class="mt-1">Version：${escapeHtml(order.pricingVersion || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">物流：${escapeHtml(order.needsShipment ? '待處理' : '已完成/不需出貨')}</div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderTutors(items = []) {
+    const tbody = el('portal-tutor-table-body');
+    if (!tbody) return;
+
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="py-10 text-center text-slate-400 italic">尚未載入 Tutor 綁定資料</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = items.map((tutor) => {
+        const status = String(tutor.status || 'ACTIVE').toUpperCase();
+        const statusBadge = status === 'ACTIVE'
+            ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+            : 'bg-slate-100 text-slate-600 border-slate-200';
+        return `
+            <tr class="hover:bg-slate-50/80 transition">
+                <td class="px-4 py-4 align-top">
+                    <div class="font-semibold text-slate-900">${escapeHtml(tutor.name || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">Distributor：${escapeHtml(tutor.distributorId || '—')}</div>
+                </td>
+                <td class="px-4 py-4 align-top">
+                    <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(tutor.email || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-500">Payout：${escapeHtml(tutor.payoutAccount || '—')}</div>
+                </td>
+                <td class="px-4 py-4 align-top text-sm text-slate-700">
+                    <div class="font-bold text-slate-900">${escapeHtml(String(tutor.authorizedUnitCount || 0))}</div>
+                    <div class="mt-1 text-[11px] text-slate-500">授權單元 / ${escapeHtml(String(tutor.tutorConfigCount || 0))} 組設定</div>
+                </td>
+                <td class="px-4 py-4 align-top">
+                    <span class="inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${statusBadge}">
+                        ${escapeHtml(status)}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderSettlement(rows = []) {
+    const tbody = el('portal-settlement-table-body');
+    if (!tbody) return;
+
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚未載入月結報表</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = rows.map((row) => {
+        return `
+            <tr class="hover:bg-slate-50/80 transition">
+                <td class="px-4 py-4 align-top">
+                    <div class="font-semibold text-slate-900">${escapeHtml(row.name || row.email || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">${escapeHtml(row.email || '—')}</div>
+                </td>
+                <td class="px-4 py-4 align-top font-semibold text-emerald-700">${escapeHtml(formatMoney(row.paidTotal || 0))}</td>
+                <td class="px-4 py-4 align-top font-semibold text-slate-900">${escapeHtml(formatMoney(row.plannedTotal || 0))}</td>
+                <td class="px-4 py-4 align-top font-semibold text-amber-700">${escapeHtml(formatMoney(row.blockedTotal || 0))}</td>
+                <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(String(row.rowCount || 0))}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderPortalData() {
+    updatePortalOverview();
+    renderOrders(state.orders);
+    renderTutors(state.tutors);
+    renderSettlement(state.settlement?.rows || []);
+}
+
+function clearForm() {
+    setFormValue('portal-pricebook-id', '');
+    setFormValue('portal-product-id', '');
+    setFormValue('portal-currency', 'TWD');
+    setFormValue('portal-sale-price', '');
+    setFormValue('portal-promo-price', '');
+    setFormValue('portal-version', 'v1');
+    setFormValue('portal-effective-from', '');
+    setFormValue('portal-effective-to', '');
+    setFormValue('portal-promo-effective-from', '');
+    setFormValue('portal-promo-effective-to', '');
+    setFormValue('portal-active', true);
+    const scopeNote = el('portal-scope-note');
+    if (scopeNote) scopeNote.textContent = '表單已清空。';
+    const stateEl = el('portal-form-state');
+    if (stateEl) stateEl.textContent = '準備新增價格表。';
+}
+
+function populateForm(book = {}) {
+    setFormValue('portal-pricebook-id', book.id || '');
+    setFormValue('portal-distributor-id-input', book.distributorId || state.distributorId || '');
+    setFormValue('portal-product-id', book.productId || '');
+    setFormValue('portal-currency', book.currency || 'TWD');
+    setFormValue('portal-sale-price', book.salePrice != null ? book.salePrice : '');
+    setFormValue('portal-promo-price', book.promoPrice != null ? book.promoPrice : '');
+    setFormValue('portal-version', book.version || 'v1');
+    setFormValue('portal-effective-from', book.effectiveFrom ? new Date(book.effectiveFrom.seconds ? book.effectiveFrom.seconds * 1000 : book.effectiveFrom).toISOString().slice(0, 16) : '');
+    setFormValue('portal-effective-to', book.effectiveTo ? new Date(book.effectiveTo.seconds ? book.effectiveTo.seconds * 1000 : book.effectiveTo).toISOString().slice(0, 16) : '');
+    setFormValue('portal-promo-effective-from', book.promoEffectiveFrom ? new Date(book.promoEffectiveFrom.seconds ? book.promoEffectiveFrom.seconds * 1000 : book.promoEffectiveFrom).toISOString().slice(0, 16) : '');
+    setFormValue('portal-promo-effective-to', book.promoEffectiveTo ? new Date(book.promoEffectiveTo.seconds ? book.promoEffectiveTo.seconds * 1000 : book.promoEffectiveTo).toISOString().slice(0, 16) : '');
+    setFormValue('portal-active', book.isActive !== false);
+    const stateEl = el('portal-form-state');
+    if (stateEl) stateEl.textContent = `編輯中：${book.id || book.productId || '未命名價格表'}`;
+}
+
+function renderDistributorContext() {
+    renderDistributorTabs(state.accessibleDistributors);
+}
+
+function showPriceBookModal(open = true) {
+    const modal = el('portal-pricebook-modal');
+    if (!modal) return;
+    modal.classList.toggle('hidden', !open);
+    modal.style.display = open ? 'flex' : 'none';
+    document.body.classList.toggle('modal-open', open);
+}
+
+async function loadPortalData(distributorId = '') {
+    const fn = httpsCallable(functions, 'getDistributorPortalData');
+    const payload = distributorId ? { distributorId } : {};
+    const res = await fn(payload);
+    state.portal = res.data || {};
+    state.accessibleDistributors = Array.isArray(state.portal?.accessibleDistributors) ? state.portal.accessibleDistributors : [];
+    state.selectedDistributorId = String(state.portal?.selectedDistributorId || state.portal?.myDistributorId || distributorId || '').trim();
+    state.distributorId = state.selectedDistributorId || String(state.portal?.myDistributorId || '').trim();
+    state.orders = Array.isArray(state.portal?.orders) ? state.portal.orders : [];
+    state.tutors = Array.isArray(state.portal?.tutors) ? state.portal.tutors : [];
+    state.settlement = state.portal?.settlement || null;
+
+    const role = String(state.portal?.role || 'user');
+    el('portal-role').textContent = role;
+    el('portal-distributor-id').textContent = state.distributorId || '—';
+    const scopeNote = el('portal-scope-note');
+    if (scopeNote) {
+        scopeNote.textContent = state.distributorId
+            ? `目前登入帳號所屬經銷商：${state.distributorId}`
+            : '尚未設定經銷商歸屬。管理員可手動切換 distributorId。';
+    }
+
+    const distributorInput = el('portal-distributor-id-input');
+    if (distributorInput) {
+        if (state.distributorId) distributorInput.value = state.distributorId;
+        distributorInput.readOnly = role !== 'admin' && !!state.distributorId;
+    }
+
+    if (!state.portal?.canManagePricing) {
+        showDenied('這個帳號沒有可管理的經銷商歸屬，無法進入經銷商入口。');
+        return;
+    }
+
+    renderDistributorContext();
+    renderPortalData();
+    showApp();
+}
+
+async function loadPriceBooks() {
+    const distributorId = getFormValue('portal-distributor-id-input') || state.selectedDistributorId || state.distributorId;
+    if (!distributorId) {
+        state.priceBooks = [];
+        renderPriceBooks([]);
+        el('portal-summary').textContent = '請先輸入經銷商 ID。';
+        return;
+    }
+
+    el('portal-summary').textContent = `載入經銷商 ${distributorId} 的價格表中...`;
+    try {
+        const fn = httpsCallable(functions, 'getDistributorPriceBooks');
+        const res = await fn({ distributorId });
+        state.distributorId = distributorId;
+        state.selectedDistributorId = distributorId;
+        state.priceBooks = Array.isArray(res?.data?.items) ? res.data.items : [];
+        renderPriceBooks(state.priceBooks);
+        setText('portal-summary', `目前經銷商：${distributorId}，共 ${state.priceBooks.length} 筆價格表。`);
+    } catch (e) {
+        console.error('[DistributorPortal] load failed:', e);
+        state.priceBooks = [];
+        renderPriceBooks([]);
+        setText('portal-summary', `載入失敗：${e.message || 'unknown error'}`);
+        toast(`載入失敗：${e.message || 'unknown error'}`, 'error');
+    }
+}
+
+async function loadDistributorContext(distributorId = '') {
+    const targetDistributorId = String(distributorId || state.selectedDistributorId || state.distributorId || '').trim();
+    if (!targetDistributorId && state.accessibleDistributors.length === 0) {
+        return loadPortalData('');
+    }
+    await loadPortalData(targetDistributorId);
+    await loadPriceBooks();
+}
+
+async function saveForm() {
+    const distributorId = getFormValue('portal-distributor-id-input') || state.selectedDistributorId || state.distributorId;
+    const priceBookId = getFormValue('portal-pricebook-id');
+    const productId = getFormValue('portal-product-id');
+    const currency = getFormValue('portal-currency') || 'TWD';
+    const salePrice = Number(getFormValue('portal-sale-price'));
+    const promoRaw = getFormValue('portal-promo-price');
+    const promoPrice = promoRaw === '' ? null : Number(promoRaw);
+    const version = getFormValue('portal-version') || 'v1';
+    const effectiveFrom = getFormValue('portal-effective-from');
+    const effectiveTo = getFormValue('portal-effective-to');
+    const promoEffectiveFrom = getFormValue('portal-promo-effective-from');
+    const promoEffectiveTo = getFormValue('portal-promo-effective-to');
+    const isActive = !!el('portal-active')?.checked;
+
+    if (!distributorId || !productId) {
+        toast('請先輸入經銷商 ID 與產品 ID。', 'error');
+        return;
+    }
+    if (!Number.isFinite(salePrice) || salePrice < 0) {
+        toast('售價必須是非負數字。', 'error');
+        return;
+    }
+    if (promoPrice != null && (!Number.isFinite(promoPrice) || promoPrice < 0 || promoPrice > salePrice)) {
+        toast('活動價必須是非負數字，且不可大於售價。', 'error');
+        return;
+    }
+    if (promoPrice != null && (!promoEffectiveFrom || !promoEffectiveTo)) {
+        toast('若有促銷價，請同時填寫促銷開始與促銷結束時間。', 'error');
+        return;
+    }
+    if (promoPrice != null && promoEffectiveFrom && promoEffectiveTo && new Date(promoEffectiveTo).getTime() < new Date(promoEffectiveFrom).getTime()) {
+        toast('促銷結束時間不可早於促銷開始時間。', 'error');
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="window.distributorPortalSaveForm()"]');
+    const originalText = btn?.textContent || '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'upsertDistributorPriceBook');
+        const payload = {
+            distributorId,
+            priceBookId,
+            productId,
+            currency,
+            salePrice,
+            ...(promoPrice != null ? { promoPrice } : {}),
+            version,
+            isActive,
+            ...(effectiveFrom ? { effectiveFrom: new Date(effectiveFrom).toISOString() } : {}),
+            ...(effectiveTo ? { effectiveTo: new Date(effectiveTo).toISOString() } : {}),
+            ...(promoPrice != null && promoEffectiveFrom ? { promoEffectiveFrom: new Date(promoEffectiveFrom).toISOString() } : {}),
+            ...(promoPrice != null && promoEffectiveTo ? { promoEffectiveTo: new Date(promoEffectiveTo).toISOString() } : {})
+        };
+        const res = await fn(payload);
+        if (!res?.data?.success) {
+            throw new Error(res?.data?.message || '儲存失敗');
+        }
+        toast(`已儲存經銷商價格表：${productId}`, 'success');
+        await loadPriceBooks();
+        state.selectedPriceBookId = res.data.priceBookId || priceBookId || '';
+        showPriceBookModal(true);
+        populateForm({
+            id: res.data.priceBookId || priceBookId || '',
+            distributorId,
+            productId,
+            currency,
+            salePrice,
+            promoPrice,
+            version,
+            effectiveFrom: effectiveFrom ? new Date(effectiveFrom).toISOString() : '',
+            effectiveTo: effectiveTo ? new Date(effectiveTo).toISOString() : '',
+            promoEffectiveFrom: promoEffectiveFrom ? new Date(promoEffectiveFrom).toISOString() : '',
+            promoEffectiveTo: promoEffectiveTo ? new Date(promoEffectiveTo).toISOString() : '',
+            isActive
+        });
+    } catch (e) {
+        console.error('[DistributorPortal] save failed:', e);
+        toast(`儲存失敗：${e.message}`, 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+}
+
+window.distributorPortalClearForm = clearForm;
+window.distributorPortalLoadPriceBooks = loadPriceBooks;
+window.distributorPortalSaveForm = saveForm;
+window.distributorPortalSelectDistributor = async function (distributorId = '') {
+    const target = String(distributorId || '').trim();
+    if (!target) return;
+    state.selectedDistributorId = target;
+    state.distributorId = target;
+    const input = el('portal-distributor-id-input');
+    if (input) input.value = target;
+    await loadDistributorContext(target);
+};
+window.distributorPortalOpenPriceBookModal = function (priceBookId = '') {
+    const normalizedId = String(priceBookId || '').trim();
+    const cached = normalizedId
+        ? state.priceBooks.find((book) => String(book.id || book.priceBookId || '').trim() === normalizedId)
+            || window.__distributorPriceBookCache?.[normalizedId]
+            || null
+        : null;
+    if (cached) {
+        state.selectedPriceBookId = normalizedId;
+        populateForm(cached);
+    } else {
+        state.selectedPriceBookId = '';
+        clearForm();
+    }
+    showPriceBookModal(true);
+    const input = el('portal-product-id');
+    input?.focus?.();
+};
+window.distributorPortalClosePriceBookModal = function () {
+    showPriceBookModal(false);
+};
+window.distributorPortalPopulateById = function (priceBookId) {
+    const normalizedId = String(priceBookId || '').trim();
+    const cached = state.priceBooks.find((book) => String(book.id || book.priceBookId || '').trim() === normalizedId);
+    const fallback = cached || window.__distributorPriceBookCache?.[normalizedId] || null;
+    if (!fallback) {
+        toast('找不到這筆價格表，請重新載入後再試。', 'error');
+        return;
+    }
+    state.selectedPriceBookId = normalizedId;
+    populateForm(fallback);
+    setText('portal-form-state', `已載入：${fallback.id || fallback.productId || '未命名價格表'}`);
+    showPriceBookModal(true);
+    document.getElementById('portal-product-id')?.focus?.();
+};
+
+onAuthStateChanged(auth, async (user) => {
+    state.user = user || null;
+    if (!user) {
+        showDenied('請先登入後再使用 Distributor Portal。');
+        return;
+    }
+
+    setLoading(true);
+    try {
+        await loadPortalData();
+        if (state.distributorId) await loadPriceBooks();
+    } catch (e) {
+        console.error('[DistributorPortal] bootstrap failed:', e);
+        showDenied(`無法載入經銷商入口：${e.message || 'unknown error'}`);
+    }
+});
