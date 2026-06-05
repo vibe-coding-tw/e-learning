@@ -1077,8 +1077,9 @@ function renderStudentDashboard(data, filterUnitId = null) {
                         ${displayAssignments.length > 0 ? displayAssignments.map(a => `
                             <tr class="hover:bg-gray-50">
                                 <td class="py-3 px-2">
-                                    <div class="font-bold text-gray-800 mb-0.5">${escapeHtml(a.assignmentTitle || a.title || "未指定任務")}</div>
-                                    <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(window.formatUnitIdForUI(a.unitId))}</div>
+                                    <!-- 顯示課程單元名稱為主標題，特定作業任務為副標題 -->
+                                    <div class="font-bold text-gray-800 mb-0.5 capitalize">${escapeHtml(window.formatUnitIdForUI(a.unitId))}</div>
+                                    <div class="text-[10px] text-gray-400">${escapeHtml(a.assignmentTitle || a.title || "未指定任務")}</div>
                                 </td>
                                 <td class="py-3 px-2 text-gray-500 text-xs">${a.submittedAt ? new Date(a.submittedAt.seconds * 1000).toLocaleString() : '-'}</td>
                                 <td class="py-3 px-2">
@@ -2089,10 +2090,11 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2">
-                <div class="text-[10px] text-gray-400 capitalize mb-0.5">
+                <!-- 顯示課程單元名稱為主標題，特定作業任務為副標題 -->
+                <div class="font-bold text-gray-800 text-xs md:text-sm capitalize mb-0.5">
                     ${escapeHtml(window.formatUnitIdForUI(a.unitId))}
                 </div>
-                <div class="font-bold text-gray-800 text-xs md:text-sm">
+                <div class="text-[10px] text-gray-400">
                     ${escapeHtml(a.title || a.assignmentTitle || unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || "未指定任務")}
                 </div>
             </td>
@@ -3380,7 +3382,12 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
         }
         currentGradingAssignment = assignment;
 
-        if (titleEl) titleEl.innerText = assignment.assignmentTitle || assignment.title || "評分作業";
+        if (titleEl) {
+            // 評分視窗標題同時顯示課程單元與作業任務名稱
+            const unitName = window.formatUnitIdForUI(assignment.unitId);
+            const taskTitle = assignment.assignmentTitle || assignment.title || "評分作業";
+            titleEl.innerText = `${unitName} - ${taskTitle}`;
+        }
 
         idInput.value = id;
         scoreInput.value = assignment.grade || '';
