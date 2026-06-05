@@ -65,6 +65,7 @@ function formatDateTime(value) {
     if (!value) return '—';
     try {
         if (typeof value.toDate === 'function') return value.toDate().toLocaleString();
+        if (typeof value._seconds === 'number') return new Date(value._seconds * 1000).toLocaleString();
         if (typeof value.seconds === 'number') return new Date(value.seconds * 1000).toLocaleString();
         const d = new Date(value);
         return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
@@ -549,6 +550,30 @@ function clearForm() {
     if (stateEl) stateEl.textContent = '準備新增價格表。';
 }
 
+// 安全格式化日期時間供 datetime-local 輸入欄位使用，防止 _seconds / seconds JSON 解析錯誤
+function formatDateForInput(dateVal) {
+    if (!dateVal) return '';
+    try {
+        let ms = 0;
+        if (typeof dateVal.toDate === 'function') {
+            ms = dateVal.toDate().getTime();
+        } else if (typeof dateVal._seconds === 'number') {
+            ms = dateVal._seconds * 1000;
+        } else if (typeof dateVal.seconds === 'number') {
+            ms = dateVal.seconds * 1000;
+        } else {
+            const parsed = new Date(dateVal).getTime();
+            if (Number.isFinite(parsed)) ms = parsed;
+        }
+        if (ms > 0) {
+            return new Date(ms).toISOString().slice(0, 16);
+        }
+    } catch (e) {
+        console.warn('[DistributorPortal] Failed to parse date:', dateVal, e);
+    }
+    return '';
+}
+
 function populateForm(book = {}) {
     setFormValue('portal-pricebook-id', book.id || '');
     setFormValue('portal-distributor-id-input', book.distributorId || state.distributorId || '');
@@ -557,10 +582,10 @@ function populateForm(book = {}) {
     setFormValue('portal-sale-price', book.salePrice != null ? book.salePrice : '');
     setFormValue('portal-promo-price', book.promoPrice != null ? book.promoPrice : '');
     setFormValue('portal-version', book.version || 'v1');
-    setFormValue('portal-effective-from', book.effectiveFrom ? new Date(book.effectiveFrom.seconds ? book.effectiveFrom.seconds * 1000 : book.effectiveFrom).toISOString().slice(0, 16) : '');
-    setFormValue('portal-effective-to', book.effectiveTo ? new Date(book.effectiveTo.seconds ? book.effectiveTo.seconds * 1000 : book.effectiveTo).toISOString().slice(0, 16) : '');
-    setFormValue('portal-promo-effective-from', book.promoEffectiveFrom ? new Date(book.promoEffectiveFrom.seconds ? book.promoEffectiveFrom.seconds * 1000 : book.promoEffectiveFrom).toISOString().slice(0, 16) : '');
-    setFormValue('portal-promo-effective-to', book.promoEffectiveTo ? new Date(book.promoEffectiveTo.seconds ? book.promoEffectiveTo.seconds * 1000 : book.promoEffectiveTo).toISOString().slice(0, 16) : '');
+    setFormValue('portal-effective-from', formatDateForInput(book.effectiveFrom));
+    setFormValue('portal-effective-to', formatDateForInput(book.effectiveTo));
+    setFormValue('portal-promo-effective-from', formatDateForInput(book.promoEffectiveFrom));
+    setFormValue('portal-promo-effective-to', formatDateForInput(book.promoEffectiveTo));
     setFormValue('portal-active', book.isActive !== false);
     const stateEl = el('portal-form-state');
     if (stateEl) stateEl.textContent = `編輯中：${book.id || book.productId || '未命名價格表'}`;
