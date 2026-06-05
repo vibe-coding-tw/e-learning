@@ -1528,6 +1528,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     }
 
     renderChart(chartData);
+    renderPaymentsChart(data.students);
     // [V8.1] GitHub README loading moved to renderAssignments for better container management
 
     // [V15.11] Ensure README is refreshed for Admin Overview as well
@@ -2246,6 +2247,37 @@ function renderChart(students) {
             datasets: [{
                 data: [totalVideo, totalDoc, totalPage],
                 backgroundColor: ['#3b82f6', '#a855f7', '#9ca3af'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+/**
+ * Renders the Payment Status doughnut chart on the overview tab
+ * @param {Array} students List of students with orderRecords
+ */
+function renderPaymentsChart(students) {
+    const canvas = document.getElementById('chart-payments');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const totalPaid = students.filter(s => (s.orderRecords || []).length > 0).length;
+    const totalTrial = students.length - totalPaid;
+
+    if (charts.payments) charts.payments.destroy();
+
+    charts.payments = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['已付費 (Paid)', '試用/免費 (Trial/Free)'],
+            datasets: [{
+                data: [totalPaid, totalTrial],
+                backgroundColor: ['#10b981', '#ef4444'], // Emerald Green and Red
                 borderWidth: 0
             }]
         },
