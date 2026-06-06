@@ -202,8 +202,15 @@ function updatePortalOverview() {
     const settlementSummary = state.portal?.settlement?.summary || {};
     const settlementPeriod = state.portal?.settlement?.period || settlementSummary.period || '—';
 
-    setText('portal-order-count', String(orderSummary.totalOrders || 0));
-    setText('portal-pending-shipment-count', String(orderSummary.pendingShipmentCount || 0));
+    // Calculate physical-only order statistics
+    const physicalOrders = state.orders.filter(o => o.hasPhysical);
+    const pendingPhysicalCount = physicalOrders.filter(o => {
+        const status = String(o.fulfillmentStatus || 'PENDING').toUpperCase();
+        return status === 'PENDING';
+    }).length;
+
+    setText('portal-order-count', String(physicalOrders.length));
+    setText('portal-pending-shipment-count', String(pendingPhysicalCount));
     setText('portal-tutor-count', String(tutorSummary.tutorCount || 0));
     setText('portal-settlement-paid-total', formatMoney(settlementSummary.paidTotal || 0));
     setText('portal-settlement-paid-total-detail', formatMoney(settlementSummary.paidTotal || 0));
@@ -214,9 +221,9 @@ function updatePortalOverview() {
 
     const orderSummaryEl = el('portal-order-summary');
     if (orderSummaryEl) {
-        orderSummaryEl.textContent = orderSummary.totalOrders
-            ? `共 ${orderSummary.totalOrders} 筆成功訂單，待出貨 ${orderSummary.pendingShipmentCount || 0} 筆。`
-            : '目前沒有可顯示的訂單。';
+        orderSummaryEl.textContent = physicalOrders.length
+            ? `共 ${physicalOrders.length} 筆實體商品訂單，待出貨 ${pendingPhysicalCount} 筆。`
+            : '目前沒有可顯示的實體商品訂單。';
     }
 
     const tutorSummaryEl = el('portal-tutor-summary');
@@ -414,12 +421,15 @@ function renderOrders(items = []) {
     const tbody = el('portal-order-table-body');
     if (!tbody) return;
 
-    if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚未載入履約訂單</td></tr>';
+    // Filter to only display orders that contain physical items
+    const physicalOrders = items.filter(order => order.hasPhysical);
+
+    if (!physicalOrders.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">目前無實體商品履約訂單</td></tr>';
         return;
     }
 
-    tbody.innerHTML = items.map((order) => {
+    tbody.innerHTML = physicalOrders.map((order) => {
         const fulfillment = String(order.fulfillmentStatus || 'PENDING').toUpperCase();
         const fulfillmentBadge = fulfillment === 'SHIPPED'
             ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
@@ -432,7 +442,11 @@ function renderOrders(items = []) {
             : '<span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">純數位</span>';
 
         return `
-            <tr class="hover:bg-slate-50/80 transition">
+            <tr
+                class="cursor-pointer transition hover:bg-slate-50/85"
+                onclick="window.distributorPortalOpenFulfillmentModal('${escapeHtml(order.id)}')"
+                title="點擊編輯出貨狀態"
+            >
                 <td class="px-4 py-4 align-top">
                     <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(order.orderNumber || order.id || '—')}</div>
                     <div class="mt-1 text-[11px] text-slate-400">訂單：${escapeHtml(order.id || '—')}</div>
@@ -451,6 +465,12 @@ function renderOrders(items = []) {
                 <td class="px-4 py-4 align-top text-sm text-slate-600">
                     <div>收件人：${escapeHtml(order.shippingContact?.name || '—')} / ${escapeHtml(order.shippingContact?.phone || '—')}</div>
                     <div class="mt-1 break-words">地址：${escapeHtml(order.shippingAddress || '—')}</div>
+                    ${order.logistics?.carrier || order.logistics?.trackingNumber ? `
+                        <div class="mt-2 rounded-lg bg-slate-100 p-2 text-xs">
+                            <div class="font-bold text-slate-700">物流追蹤</div>
+                            <div class="mt-0.5">${escapeHtml(order.logistics.carrier || '—')} / ${escapeHtml(order.logistics.trackingNumber || '—')}</div>
+                        </div>
+                    ` : ''}
                 </td>
                 <td class="px-4 py-4 align-top text-sm text-slate-600">
                     <div>PriceBook：${escapeHtml(order.priceBookId || '—')}</div>
@@ -815,6 +835,87 @@ window.distributorPortalPopulateById = function (priceBookId) {
     setText('portal-form-state', `已載入：${fallback.id || fallback.productId || '未命名價格表'}`);
     showPriceBookModal(true);
     document.getElementById('portal-product-id')?.focus?.();
+};
+
+function showFulfillmentModal(open = true) {
+    const modal = el('portal-fulfillment-modal');
+    if (!modal) return;
+    modal.classList.toggle('hidden', !open);
+    modal.style.display = open ? 'flex' : 'none';
+    document.body.classList.toggle('modal-open', open);
+}
+
+window.distributorPortalOpenFulfillmentModal = function (orderId) {
+    const order = state.orders.find(o => o.id === orderId);
+    if (!order) {
+        toast('找不到該筆訂單資訊。', 'error');
+        return;
+    }
+    state.selectedOrderId = orderId;
+    
+    setText('portal-fulfill-order-number', order.orderNumber || order.id || '—');
+    const productNames = Array.isArray(order.items) && order.items.length ? order.items.join('、') : '—';
+    setText('portal-fulfill-products', productNames);
+    
+    const shippingName = order.shippingContact?.name || '—';
+    const shippingPhone = order.shippingContact?.phone || '—';
+    const shippingAddr = order.shippingAddress || '—';
+    setText('portal-fulfill-shipping', `${shippingName} / ${shippingPhone}\n地址：${shippingAddr}`);
+
+    const status = String(order.fulfillmentStatus || 'PENDING').toUpperCase();
+    setFormValue('portal-fulfill-status', status);
+    setFormValue('portal-fulfill-carrier', order.logistics?.carrier || '');
+    setFormValue('portal-fulfill-tracking-number', order.logistics?.trackingNumber || '');
+
+    showFulfillmentModal(true);
+};
+
+window.distributorPortalCloseFulfillmentModal = function () {
+    showFulfillmentModal(false);
+};
+
+window.distributorPortalSaveFulfillment = async function () {
+    const orderId = state.selectedOrderId;
+    if (!orderId) {
+        toast('請選擇要維護的訂單。', 'error');
+        return;
+    }
+
+    const fulfillmentStatus = getFormValue('portal-fulfill-status') || 'PENDING';
+    const carrier = getFormValue('portal-fulfill-carrier');
+    const trackingNumber = getFormValue('portal-fulfill-tracking-number');
+
+    const btn = el('portal-fulfill-save-btn');
+    const originalText = btn?.textContent || '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'updateOrderFulfillmentStatus');
+        const res = await fn({
+            orderId,
+            fulfillmentStatus,
+            carrier,
+            trackingNumber
+        });
+        if (!res?.data?.success) {
+            throw new Error(res?.data?.message || '更新出貨狀態失敗');
+        }
+        toast('出貨狀態更新成功！', 'success');
+        showFulfillmentModal(false);
+        setLoading(true);
+        await loadPortalData(state.selectedDistributorId || state.distributorId);
+    } catch (e) {
+        console.error('[DistributorPortal] save fulfillment failed:', e);
+        toast(`更新失敗：${e.message || 'unknown error'}`, 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
 };
 
 onAuthStateChanged(auth, async (user) => {

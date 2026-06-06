@@ -373,6 +373,71 @@
         </div>
     </div>
 
-    <script type="module" src="./js/distributor-portal.d38df826f293.js"></script>
+    <!-- 履約狀態維護彈出視窗 -->
+    <div id="portal-fulfillment-modal" class="fixed inset-0 z-[99999] hidden items-center justify-center px-4 py-6" style="display:none;">
+        <div class="absolute inset-0 bg-slate-950/60" onclick="window.distributorPortalCloseFulfillmentModal()"></div>
+        <div class="relative z-[81] w-full max-w-2xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-slate-50/50">
+                <div>
+                    <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Order Fulfillment</div>
+                    <h3 class="mt-1 text-2xl font-black text-slate-900">履約狀態維護</h3>
+                    <p class="mt-1 text-sm text-slate-500">更新訂單的出貨與物流狀態。</p>
+                </div>
+                <button onclick="window.distributorPortalCloseFulfillmentModal()" class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50">
+                    關閉
+                </button>
+            </div>
+            <div class="px-6 py-5 space-y-4">
+                <!-- 訂單資訊 (唯讀) -->
+                <div class="grid grid-cols-2 gap-4 rounded-2xl bg-slate-50 p-4 text-sm">
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">訂單編號</div>
+                        <div id="portal-fulfill-order-number" class="mt-1 font-mono font-bold text-slate-900">—</div>
+                    </div>
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">購買產品</div>
+                        <div id="portal-fulfill-products" class="mt-1 font-bold text-slate-900">—</div>
+                    </div>
+                    <div class="col-span-2">
+                        <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">收件資訊</div>
+                        <div id="portal-fulfill-shipping" class="mt-1 text-slate-700 whitespace-pre-line">—</div>
+                    </div>
+                </div>
+
+                <!-- 編輯表單 -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label class="sm:col-span-2">
+                        <div class="mb-1 text-[11px] font-bold text-slate-500">出貨狀態</div>
+                        <select id="portal-fulfill-status" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            <option value="PENDING">PENDING (待出貨)</option>
+                            <option value="SHIPPED">SHIPPED (已出貨)</option>
+                            <option value="DELIVERED">DELIVERED (已送達)</option>
+                            <option value="CANCELLED">CANCELLED (已取消)</option>
+                        </select>
+                    </label>
+                    <label>
+                        <div class="mb-1 text-[11px] font-bold text-slate-500">物流商 (Carrier)</div>
+                        <input id="portal-fulfill-carrier" type="text" placeholder="例如：中華郵政、黑貓宅急便" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                    </label>
+                    <label>
+                        <div class="mb-1 text-[11px] font-bold text-slate-500">物流追蹤單號 (Tracking Number)</div>
+                        <input id="portal-fulfill-tracking-number" type="text" placeholder="輸入快遞/掛號單號" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                    </label>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4">
+                    <button onclick="window.distributorPortalCloseFulfillmentModal()" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                        取消
+                    </button>
+                    <button id="portal-fulfill-save-btn" onclick="window.distributorPortalSaveFulfillment()" class="rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white hover:bg-slate-700 transition active:scale-95">
+                        儲存出貨狀態
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/distributor-portal.bee2e489689e.js"></script>
 </body>
 </html>
