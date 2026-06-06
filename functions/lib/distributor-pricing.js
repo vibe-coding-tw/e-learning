@@ -67,7 +67,7 @@ function findLessonByProductId(lessons = [], productId = "") {
 function normalizePriceBookDoc(doc = {}, { distributorId = "", productId = "" } = {}) {
     const salePrice = normalizeMoney(doc.salePrice);
     const promoPrice = doc.promoPrice == null ? null : normalizeMoney(doc.promoPrice);
-    const currency = normalizeCurrency(doc.currency, "TWD");
+    const currency = normalizeCurrency(doc.currency, "USD");
     return {
         distributorId: normalizeText(doc.distributorId || distributorId),
         productId: normalizeText(doc.productId || productId),

@@ -65,34 +65,43 @@ function buildProductId(lesson = {}) {
   );
 }
 
+function getHardcodedDefaultPrice(productId, currency = "TWD") {
+  const isUsd = currency === "USD";
+  const pid = String(productId || '').toLowerCase();
+  
+  if (pid.startsWith('car-starter-') || pid.startsWith('start-')) {
+    return isUsd ? 40 : 1200;
+  }
+  if (pid.startsWith('car-basic-') || pid.startsWith('basic-')) {
+    return isUsd ? 50 : 1500;
+  }
+  if (pid.startsWith('car-advanced-') || pid.startsWith('adv-') || pid.startsWith('advanced-')) {
+    return isUsd ? 60 : 1800;
+  }
+  if (pid === 'esp32-c3') {
+    return isUsd ? 60 : 1600;
+  }
+  if (pid === 'esp32-s3') {
+    return isUsd ? 130 : 3600;
+  }
+  return 0;
+}
+
 function buildSeedableProducts(lessons = [], currency = "TWD") {
   const normalizedCurrency = String(currency || "TWD").toUpperCase() === "USD" ? "USD" : "TWD";
-  const locale = normalizedCurrency === "USD" ? "en" : "zh-TW";
 
   return (Array.isArray(lessons) ? lessons : [])
-    .filter((lesson) => lesson && (
-      lesson.isPhysical === true
-      || lesson.price != null
-      || lesson.price_twd != null
-      || lesson.price_usd != null
-      || lesson.pricing
-      || lesson.prices
-      || lesson.priceByLocale
-      || lesson.priceByRegion
-      || lesson.priceMap
-      || lesson.priceLocales
-      || lesson.pricesByRegion
-    ))
     .map((lesson) => {
-      const resolvedPrice = resolveLessonPrice(lesson, locale);
+      const productId = buildProductId(lesson);
+      const salePrice = getHardcodedDefaultPrice(productId, normalizedCurrency);
       return {
         lessonId: normalizeText(lesson.id),
-        productId: buildProductId(lesson),
-        title: lesson.title || lesson.name || buildProductId(lesson) || "未命名商品",
+        productId: productId,
+        title: lesson.title || lesson.name || productId || "未命名商品",
         isPhysical: lesson.isPhysical === true,
-        currency: resolvedPrice.currency || normalizedCurrency,
-        salePrice: normalizeMoney(resolvedPrice.amount),
-        pricingVersion: lesson.pricingVersion || lesson.pricingSource || "legacy",
+        currency: normalizedCurrency,
+        salePrice: salePrice,
+        pricingVersion: "v1",
       };
     })
     .filter((item) => item.productId && Number.isFinite(item.salePrice) && item.salePrice >= 0);

@@ -449,7 +449,7 @@ function normalizeCourseTopNav() {
 
         if (targetHref) {
             const navCourseNameId = 'nav-course-name';
-            const shouldShowCourseName = isStarter || isPrepare;
+            const shouldShowCourseName = isStarter || isPrepare || isBasic || isAdvanced;
             let navCourseNameSpan = document.getElementById(navCourseNameId);
             if (shouldShowCourseName) {
                 if (!navCourseNameSpan) {
@@ -506,6 +506,61 @@ function normalizeCourseTopNav() {
                         }
                         navCourseNameSpan.textContent = courseNum
                             ? `${isEn ? `Preparation ${courseNum}: ` : `準備 ${courseNum}：`}${moduleTitle}`
+                            : moduleTitle;
+                    } else if (isBasic) {
+                        const basicMatch = file.match(/^basic-(\d{2})-unit-/i);
+                        if (basicMatch) {
+                            courseNum = basicMatch[1];
+                        } else {
+                            const lookup = {
+                                'esp32-architecture': '01', 'platformio-setup': '01', 'drivers-ports': '01',
+                                'partition-table': '02', 'ota-principles': '02', 'ota-security': '02',
+                                'pinout': '03', 'pullup-debounce': '03', 'adc-resolution': '03',
+                                'pwm-basics': '04', 'h-bridge': '04', 'ledc-syntax': '04',
+                                'gatt-structure': '05', 'advertising-connection': '05', 'ble-properties': '05',
+                                'fetch-api': '06', 'http-request': '06', 'cors-security': '06',
+                                'wifi-ap-sta': '07', 'http-lifecycle': '07', 'async-webserver': '07',
+                                'joystick-mapping': '08', 'unicycle-model': '08', 'response-curves': '08',
+                                'millis': '09', 'hardware-timer': '09', 'sampling-rate': '09',
+                                'fsm': '10', 'ui-design': '10', 'state-consistency': '10'
+                            };
+                            const suffixMatch = file.match(/^(?:tw|en|car-basic)-(.+)\.html$/i);
+                            if (suffixMatch && lookup[suffixMatch[1]]) {
+                                courseNum = lookup[suffixMatch[1]];
+                            }
+                        }
+                        navCourseNameSpan.textContent = courseNum
+                            ? `${isEn ? `Basic ${courseNum}: ` : `基礎 ${courseNum}：`}${moduleTitle}`
+                            : moduleTitle;
+                    } else if (isAdvanced) {
+                        const advMatch = file.match(/^(?:adv|advanced)-(\d{2})-unit-/i);
+                        if (advMatch) {
+                            courseNum = advMatch[1];
+                        } else {
+                            const lookup = {
+                                's3-interfaces': '01', 'mjpeg-stream': '01', 'jpeg-quality': '01',
+                                'video-streaming': '02', 'canvas-image': '02', 'bandwidth-fps': '02',
+                                'ble-notify': '03', 'json-serialization': '03', 'ble-mtu': '03',
+                                'i2c-spi': '04', 'json-rest': '04', 'filter-algorithms': '04',
+                                'feature-extraction': '05', 'centroid-error': '05', 'closed-loop': '05',
+                                'threshold-filter': '06', 'centroid-algorithm': '06', 'hsv-math': '06', 'look-ahead': '06',
+                                'ui-framework': '07', 'chart-canvas': '07', 'json-parsing': '07', 'event-polling': '07',
+                                'color-spaces': '08', 'error-calculation': '08', 'p-control': '08', 'mobilenet-ssd': '08',
+                                'cnn-audio': '09', 'teachable-machine': '09', 'webspeech-api': '09', 'flow-control': '09',
+                                'icc-geometry': '10', 'api-design': '10', 'pwm-limits': '10',
+                                'sensor-principles': '11', 'hardware-interrupts': '11', 'speed-algorithms': '11',
+                                'pid-control': '12', 'pid-math': '12', 'code-logic': '12',
+                                'robustness': '13', 'system-perf': '13', 'technical-narrative': '13',
+                                'debugging-art': '14', 'kpi-definition': '14', 'refactoring': '14',
+                                'data-flow': '15', 'ble-async': '15', 'pid-simulation': '15', 'image-dma': '15'
+                            };
+                            const suffixMatch = file.match(/^(?:tw|en|car-advanced)-(.+)\.html$/i);
+                            if (suffixMatch && lookup[suffixMatch[1]]) {
+                                courseNum = lookup[suffixMatch[1]];
+                            }
+                        }
+                        navCourseNameSpan.textContent = courseNum
+                            ? `${isEn ? `Advanced ${courseNum}: ` : `進階 ${courseNum}：`}${moduleTitle}`
                             : moduleTitle;
                     }
                 }
@@ -874,7 +929,13 @@ function upgradeLegacyStartUnitToMsLayout() {
 function applyStartUnitModernTheme() {
     try {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        if (!/^start-\d{2}-unit-.*\.html$/.test(file)) return;
+        const metadataFamily = getCourseFamilyForCoursePage(file);
+        const isStarter = metadataFamily ? metadataFamily === 'starter' : (file.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(file));
+        const isBasic = metadataFamily ? metadataFamily === 'basic' : (file.startsWith('basic-') || /^(?:tw|en|car-basic)-/i.test(file));
+        const isAdvanced = metadataFamily ? metadataFamily === 'advanced' : (file.startsWith('adv-') || file.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(file));
+        const isPrepare = metadataFamily ? metadataFamily === 'prepare' : (file.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(file));
+
+        if (!isStarter && !isBasic && !isAdvanced && !isPrepare) return;
         if (document.getElementById('start-unit-modern-theme')) return;
 
         const style = document.createElement('style');
@@ -1273,8 +1334,10 @@ async function vibeFetchLessons() {
         const functions = window.getFunctions(window.vibeApp, 'asia-east1');
         const getLessonsFunc = window.httpsCallable(functions, 'getLessonsMetadata');
         
-        console.log("[CourseShared] Fetching lessons metadata from Firestore...");
-        const result = await getLessonsFunc();
+        const distributorId = localStorage.getItem('vibe_user_preferred_distributor')
+                           || localStorage.getItem('preferredDistributorId')
+                           || '';
+        const result = await getLessonsFunc({ distributorId });
         
         if (result.data && result.data.lessons) {
             window.globalLessonsData = result.data.lessons;
@@ -1989,7 +2052,10 @@ async function initFirebaseFeatures() {
         if (!globalLessonsData || globalLessonsData.length === 0) {
             try {
                 const getLessonsFunc = httpsCallable(functions, 'getLessonsMetadata');
-                const result = await getLessonsFunc();
+                const distributorId = localStorage.getItem('vibe_user_preferred_distributor')
+                                   || localStorage.getItem('preferredDistributorId')
+                                   || '';
+                const result = await getLessonsFunc({ distributorId });
                 if (result.data && result.data.lessons) {
                         globalLessonsData = result.data.lessons;
                         window.globalLessonsData = globalLessonsData;

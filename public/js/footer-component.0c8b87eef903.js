@@ -28,15 +28,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.detectUiLocale === 'function') {
         isZh = window.detectUiLocale().startsWith('zh');
     } else {
-        try {
-            const stored = localStorage.getItem('vibe_user_locale');
-            if (stored) {
-                isZh = stored.trim().toLowerCase().startsWith('zh');
-            } else {
-                const navLang = String(navigator.language || "").toLowerCase();
-                isZh = navLang.startsWith('zh');
-            }
-        } catch (_) {}
+        const detectLocalFallback = () => {
+            try {
+                const pathname = window.location.pathname;
+                if (pathname.includes('/en/')) return false;
+                if (pathname.includes('/tw/') || pathname.includes('/zh-TW/')) return true;
+                const filename = pathname.split('/').pop() || '';
+                if (filename.startsWith('en-')) return false;
+                if (filename.startsWith('tw-')) return true;
+            } catch (_) {}
+            try {
+                const stored = localStorage.getItem('vibe_user_locale');
+                if (stored) {
+                    return stored.trim().toLowerCase().startsWith('zh');
+                }
+            } catch (_) {}
+            const navLang = String(navigator.language || "").toLowerCase();
+            return navLang.startsWith('zh');
+        };
+        isZh = detectLocalFallback();
     }
 
     const LOCALIZED_SITE_PAGES = {
@@ -49,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
             en: { href: '/en/tutors.html', label: 'Tutor Guide' },
         },
     };
-    const LOCALIZED_PAGE_EXISTS_CACHE = new Map();
     const localeBucket = (locale = '') => (String(locale || '').toLowerCase().startsWith('zh') ? 'zh' : 'en');
     const resolveLocalizedSitePageMeta = (pageKey = '', locale = 'zh-TW') => {
         const page = LOCALIZED_SITE_PAGES[pageKey];
@@ -57,41 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const bucket = localeBucket(locale);
         return page[bucket] || page.en || page.zh || null;
     };
-    const probePageExists = (path = '') => {
-        const normalized = String(path || '').trim();
-        if (!normalized) return Promise.resolve(false);
-        const url = new URL(normalized, window.location.origin).toString();
-        if (LOCALIZED_PAGE_EXISTS_CACHE.has(url)) return LOCALIZED_PAGE_EXISTS_CACHE.get(url);
-        const probe = fetch(url, { method: 'HEAD', cache: 'no-store' }).then((resp) => resp.ok).catch(() => false);
-        LOCALIZED_PAGE_EXISTS_CACHE.set(url, probe);
-        return probe;
-    };
-    const hydrateLocalizedSitePages = async (rootNode, locale = 'zh-TW') => {
+    const hydrateLocalizedSitePages = (rootNode, locale = 'zh-TW') => {
         const scope = rootNode && typeof rootNode.querySelectorAll === 'function' ? rootNode : document;
         const elements = scope.querySelectorAll('[data-localized-page]');
         if (!elements.length) return;
-        const pageKeys = Array.from(new Set(Array.from(elements).map((el) => el.getAttribute('data-localized-page')).filter(Boolean)));
-        const resolved = {};
-        await Promise.all(pageKeys.map(async (pageKey) => {
-            const page = LOCALIZED_SITE_PAGES[pageKey];
-            if (!page) return;
-            const preferredBucket = localeBucket(locale);
-            const fallbackBucket = preferredBucket === 'zh' ? 'en' : 'zh';
-            const preferred = page[preferredBucket] || page.en || page.zh || null;
-            const fallback = page[fallbackBucket] || page.en || page.zh || null;
-            if (preferred && await probePageExists(preferred.href)) {
-                resolved[pageKey] = { ...preferred, locale: preferredBucket };
-                return;
-            }
-            if (fallback && await probePageExists(fallback.href)) {
-                resolved[pageKey] = { ...fallback, locale: fallbackBucket };
-                return;
-            }
-            resolved[pageKey] = preferred ? { ...preferred, locale: preferredBucket } : fallback ? { ...fallback, locale: fallbackBucket } : null;
-        }));
         elements.forEach((el) => {
             const pageKey = el.getAttribute('data-localized-page');
-            const meta = resolved[pageKey] || resolveLocalizedSitePageMeta(pageKey, locale);
+            const meta = resolveLocalizedSitePageMeta(pageKey, locale);
             if (!meta) return;
             if (el.tagName === 'A') el.setAttribute('href', meta.href);
             const labelNode = el.querySelector('[data-localized-label]');

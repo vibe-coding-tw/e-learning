@@ -713,9 +713,113 @@ async function seed() {
 
   for (const data of normalizedCourses) {
     const { id, ...payload } = data;
+    // Strip legacy pricing fields from metadata_lessons documents
+    delete payload.price;
+    delete payload.pricing;
+    delete payload.prices;
+    delete payload.priceByLocale;
+    delete payload.priceByRegion;
+    delete payload.priceMap;
+    delete payload.price_twd;
+    delete payload.price_usd;
+    delete payload.currency;
     await db.collection('metadata_lessons').doc(id).set(payload);
     console.log(`  ✅ ${id} (courseId: ${payload.courseId})`);
   }
+
+  // Seed default distributors
+  const DEFAULT_DISTRIBUTORS = [
+    {
+      id: "default-twd",
+      name: "預設台幣經銷商",
+      defaultCurrency: "TWD",
+      regions: ["tw"],
+      locale: "zh-TW",
+    },
+    {
+      id: "default-usd",
+      name: "預設美金經銷商",
+      defaultCurrency: "USD",
+      regions: ["en"],
+      locale: "en",
+    },
+  ];
+
+  for (const dist of DEFAULT_DISTRIBUTORS) {
+    await db.collection("distributors").doc(dist.id).set({
+      name: dist.name,
+      status: "ACTIVE",
+      regions: dist.regions,
+      defaultCurrency: dist.defaultCurrency,
+      pricePolicyMode: "GUIDED",
+      settlementMethod: "monthly_snapshot",
+      locale: dist.locale,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    console.log(`  🏢 Distributor Seeded: ${dist.id}`);
+  }
+
+  // Seed default price books for all items
+  for (const c of normalizedCourses) {
+    const productId = c.courseId || c.productId || c.id;
+    if (!productId) continue;
+
+    let twPrice = 0;
+    let usdPrice = 0;
+    const cat = String(c.category || '').toLowerCase();
+    if (cat === 'started') {
+      twPrice = 1200;
+      usdPrice = 40;
+    } else if (cat === 'basic') {
+      twPrice = 1500;
+      usdPrice = 50;
+    } else if (cat === 'advanced') {
+      twPrice = 1800;
+      usdPrice = 60;
+    } else if (productId === 'esp32-c3') {
+      twPrice = 1600;
+      usdPrice = 60;
+    } else if (productId === 'esp32-s3') {
+      twPrice = 3600;
+      usdPrice = 130;
+    }
+
+    const buildPriceBookId = (distributorId, prodId) => {
+      return `${distributorId}_${prodId}`
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/gi, '-');
+    };
+
+    const twBookId = buildPriceBookId('default-twd', productId);
+    const usdBookId = buildPriceBookId('default-usd', productId);
+
+    await Promise.all([
+      db.collection('dealer_price_books').doc(twBookId).set({
+        distributorId: 'default-twd',
+        productId,
+        currency: 'TWD',
+        salePrice: twPrice,
+        isActive: true,
+        version: 'v1',
+        updatedBy: 'seed-emulator',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      }),
+      db.collection('dealer_price_books').doc(usdBookId).set({
+        distributorId: 'default-usd',
+        productId,
+        currency: 'USD',
+        salePrice: usdPrice,
+        isActive: true,
+        version: 'v1',
+        updatedBy: 'seed-emulator',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+    ]);
+  }
+  console.log(`  🪙 Seeded default TWD & USD price books for all items.`);
 
   // Seed user document with defaults
   await db.collection('users').doc(TEST_USER_UID).set({

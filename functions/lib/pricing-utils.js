@@ -1,12 +1,8 @@
 function normalizeLocale(raw = "") {
     const v = String(raw || "").trim().toLowerCase();
-    if (!v) return "zh-TW";
+    if (!v) return "en";
     if (v.startsWith("zh")) return "zh-TW";
     return "en";
-}
-
-function regionFromLocale(locale = "") {
-    return normalizeLocale(locale) === "en" ? "en" : "tw";
 }
 
 function normalizeCurrency(raw = "", fallback = "") {
@@ -73,64 +69,95 @@ function priceCatalogFromLesson(lesson = {}) {
         || null;
 }
 
-function lookupCatalogPrice(catalog, locale = "zh-TW") {
+function lookupCatalogPrice(catalog, currencyHint = "") {
     if (!isPriceEntryObject(catalog)) return null;
-    const normalizedLocale = normalizeLocale(locale);
-    const region = regionFromLocale(normalizedLocale);
+    const normalizedCurrencyHint = normalizeCurrency(currencyHint, "");
     const candidates = [
-        normalizedLocale,
-        region,
-        normalizedLocale.toLowerCase(),
-        region.toLowerCase(),
-        normalizedLocale === "en" ? "en-US" : "zh-TW",
-        normalizedLocale === "en" ? "USD" : "TWD",
-        normalizedLocale === "en" ? "usd" : "twd",
-        normalizedLocale === "en" ? "us" : "tw",
-        normalizedLocale === "en" ? "en" : "zh",
-        normalizedLocale === "en" ? "english" : "chinese",
+        "default",
+        "base",
+        "price",
+        "salePrice",
+        "amount",
+        "current",
+        "primary",
     ];
+    const hintCandidates = [];
+    if (normalizedCurrencyHint) {
+        hintCandidates.push(
+            normalizedCurrencyHint,
+            normalizedCurrencyHint.toLowerCase()
+        );
+        if (normalizedCurrencyHint === "TWD") {
+            hintCandidates.push("tw", "TW", "zh-TW", "zh-tw");
+        }
+        if (normalizedCurrencyHint === "USD") {
+            hintCandidates.push("us", "US", "en", "en-US", "en-us");
+        }
+    }
+    candidates.push(...hintCandidates);
+    candidates.push(
+        "TWD",
+        "USD",
+        "HKD",
+        "JPY",
+        "CNY",
+        "twd",
+        "usd",
+        "hkd",
+        "jpy",
+        "cny",
+        "tw",
+        "us"
+    );
 
     for (const key of candidates) {
         if (catalog[key] == null) continue;
-        const entry = readPriceEntry(catalog[key], normalizedLocale === "en" ? "USD" : "TWD");
+        const entry = readPriceEntry(catalog[key], "");
         if (entry) return { ...entry, source: `catalog:${key}` };
+    }
+
+    const fallbackKey = Object.keys(catalog).find((key) => catalog[key] != null);
+    if (fallbackKey) {
+        const entry = readPriceEntry(catalog[fallbackKey], "");
+        if (entry) return { ...entry, source: `catalog:${fallbackKey}` };
     }
 
     return null;
 }
 
-function resolveLessonPrice(lesson = {}, locale = "zh-TW") {
-    const normalizedLocale = normalizeLocale(locale);
+function resolveLessonPrice(lesson = {}, currencyHint = "") {
     const catalog = priceCatalogFromLesson(lesson);
-    const catalogHit = lookupCatalogPrice(catalog, normalizedLocale);
+    const normalizedCurrencyHint = normalizeCurrency(
+        lesson.currency || lesson.price_currency || lesson.priceCurrency || lesson.currencyCode || "",
+        ""
+    );
+    const catalogHit = lookupCatalogPrice(catalog, normalizedCurrencyHint || currencyHint);
     if (catalogHit) return catalogHit;
 
-    if (normalizedLocale === "en") {
-        if (lesson.price_usd != null) {
-            return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
-        }
-        if (lesson.price_twd != null) {
-            return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
-        }
-    } else {
-        if (lesson.price_twd != null) {
-            return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
-        }
-        if (lesson.price_usd != null) {
-            return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
-        }
+    const effectiveCurrencyHint = normalizedCurrencyHint || normalizeCurrency(currencyHint, "");
+
+    if (effectiveCurrencyHint === "USD" && lesson.price_usd != null) {
+        return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
+    }
+    if (effectiveCurrencyHint === "TWD" && lesson.price_twd != null) {
+        return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
+    }
+    if (lesson.price_usd != null) {
+        return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
+    }
+    if (lesson.price_twd != null) {
+        return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
     }
 
-    const fallbackCurrency = normalizeCurrency(lesson.currency, normalizedLocale === "en" ? "USD" : "TWD");
+    const fallbackCurrency = effectiveCurrencyHint || normalizeCurrency(lesson.currency, "");
     return {
         amount: normalizeAmount(lesson.price),
-        currency: fallbackCurrency || (normalizedLocale === "en" ? "USD" : "TWD"),
+        currency: fallbackCurrency,
         source: "legacy:price",
     };
 }
 
-function resolveCartPrice(item = {}, locale = "zh-TW") {
-    const normalizedLocale = normalizeLocale(locale);
+function resolveCartPrice(item = {}, currencyHint = "") {
     const explicitCurrency = normalizeCurrency(item.price_currency || item.currency || item.priceCurrency || "");
     if (item.price != null && explicitCurrency) {
         return {
@@ -158,7 +185,7 @@ function resolveCartPrice(item = {}, locale = "zh-TW") {
 
     return {
         amount: normalizeAmount(item.price),
-        currency: normalizeCurrency(item.currency, normalizedLocale === "en" ? "USD" : "TWD"),
+        currency: normalizeCurrency(item.currency, ""),
         source: "cart:legacy",
     };
 }
@@ -166,7 +193,7 @@ function resolveCartPrice(item = {}, locale = "zh-TW") {
 function formatPrice(priceEntry = {}, locale = "zh-TW") {
     const normalizedLocale = normalizeLocale(locale);
     const amount = normalizeAmount(priceEntry.amount ?? priceEntry);
-    const currency = normalizeCurrency(priceEntry.currency, normalizedLocale === "en" ? "USD" : "TWD");
+    const currency = normalizeCurrency(priceEntry.currency, "");
     if (amount <= 0) return normalizedLocale === "en" ? "Free" : "免費";
 
     try {

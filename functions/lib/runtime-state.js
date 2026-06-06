@@ -12,7 +12,9 @@ async function getContentRuntimeConfig(db) {
         repoOwner: "vibe-coding-tw",
         repoName: "content-repo",
         contentVersion: "main",
-        defaultLocale: "zh-TW",
+        defaultLocale: "en",
+        defaultRegion: "US",
+        defaultDistributorId: "default-usd",
         fallbackEnabled: true,
         cacheTtlSec: 300
     };
@@ -25,7 +27,9 @@ async function getContentRuntimeConfig(db) {
                 repoOwner: String(data.repoOwner || defaults.repoOwner).trim(),
                 repoName: String(data.repoName || defaults.repoName).trim(),
                 contentVersion: String(data.contentVersion || defaults.contentVersion).trim() || "main",
-                defaultLocale: String(data.defaultLocale || defaults.defaultLocale).trim() || "zh-TW",
+                defaultLocale: String(data.defaultLocale || defaults.defaultLocale).trim() || "en",
+                defaultRegion: String(data.defaultRegion || defaults.defaultRegion).trim() || "US",
+                defaultDistributorId: String(data.defaultDistributorId || defaults.defaultDistributorId).trim() || "default-usd",
                 fallbackEnabled: data.fallbackEnabled !== false,
                 cacheTtlSec: Math.max(30, Number(data.cacheTtlSec || defaults.cacheTtlSec))
             };

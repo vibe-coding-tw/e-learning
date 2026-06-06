@@ -18,6 +18,7 @@
   - Runtime version selection (`contentVersion`)
 - External repo (`vibe-coding-tw/content-repo`)：
   - Course HTML content（primary，所有語系）
+  - Localized support entry pages (`/tw/students.html`, `/en/students.html`, `/tw/tutors.html`, `/en/tutors.html`) are fetched on demand through `serveCourse` from `content-repo/public/en/` or `content-repo/public/zh-TW/` and are not stored as local mirror files in this repo.
 
 ---
 
@@ -32,7 +33,7 @@ Fields:
 - `repoOwner`: `string`（`vibe-coding-tw`）
 - `repoName`: `string`（`content-repo`）
 - `contentVersion`: `string`（pinned commit SHA，建議使用）
-- `defaultLocale`: `string`（`zh-TW`）
+- `defaultLocale`: `string`（`en`）
 - `fallbackEnabled`: `boolean`（僅控制是否允許退回較舊的 pinned 版本）
 - `cacheTtlSec`: `number`（建議 `300`）
 - `updatedAt`: Firestore Timestamp

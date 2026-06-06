@@ -55,6 +55,8 @@ Currency does not follow:
 - browser locale
 - course content locale
 
+UI language may still be used for translated labels and number formatting, but not for choosing a price amount or currency source.
+
 ## 3. Recommended Binding Flow
 
 ### 3.1 First visit
@@ -156,3 +158,26 @@ Recommended frozen fields:
 3. A user can change region and receive a new recommended distributor.
 4. Checkout freezes one distributor and one currency per order.
 5. Admins can update region routing without rewriting product price books.
+
+## 9. Implementation Roadmap
+
+### 9.1 Immediate rollout
+
+1. Auto-prefill `region` on first visit.
+2. Show the recommended distributor for that region.
+3. Freeze `region`, `distributorId`, and `priceBookId` at checkout.
+4. Recalculate quote when `region` changes.
+5. Keep consumer-facing prices as all-in totals.
+
+### 9.2 Preference capture
+
+1. Persist `preferredRegion` after a successful checkout.
+2. Persist `preferredDistributorId` after a successful checkout or manual save.
+3. Record `last_success_region` locally and in user profile when available.
+4. Allow explicit override from the cart or account settings.
+
+### 9.3 Data and reporting
+
+1. Add reporting for region distribution and distributor routing.
+2. Track same-region price dispersion.
+3. Add weighted recommendation inputs such as shipping country, history, tutor binding, and inventory.

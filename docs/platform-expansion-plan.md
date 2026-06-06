@@ -71,9 +71,9 @@ For `metadata_lessons`:
     3. `navLabelZh/En`
     4. `learningPathLabel|categoryLabel|navLabel`
   - fallback: key humanization if no label is configured.
-- Pricing is resolved from Firestore multi-region fields and is not derived by client-side FX conversion.
-  - `tw` / `zh-TW` should resolve to TWD amounts.
-  - `en` should resolve to USD amounts.
+- Pricing is resolved from Firestore distributor pricing / price book data and is not derived by client-side FX conversion.
+  - Language must not be used as a price selector.
+  - Historical locale-keyed fields may still exist for compatibility, but new pricing flows should rely on distributor price books and frozen checkout quotes.
   - Course families should keep matching pricing across course metadata, cart items, and fulfillment records.
 
 For `users`:
@@ -99,6 +99,7 @@ Language selection in the catalog should remain a content concern only; checkout
   - `price_twd` / `price_usd`
 - Frontend and backend price resolvers must prefer Firestore values over local conversion logic.
 - Distributor checkout quotes should ignore locale-based currency fallbacks once a price book is available.
+- `priceByLocale` and `priceByRegion` remain compatibility aliases only; new logic should not depend on them.
 
 ### 2.4 Naming strategy
 

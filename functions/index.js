@@ -708,7 +708,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
 
         const isStripe = gateway === 'STRIPE';
         const normalizedOrderRegion = normalizeRoutingRegionCode(region || '');
-        const orderContentLocale = normalizeText(locale || 'zh-TW') || 'zh-TW';
+        const orderContentLocale = normalizeText(locale || 'en') || 'en';
         const expectedCurrency = isStripe ? 'USD' : 'TWD';
         const pricingAwareItems = {};
         let settlementAmount = 0;
@@ -1378,20 +1378,110 @@ async function getLessons() {
         console.log(`Firestore snapshot size: ${lessonsSnap.size}`);
 
         if (!lessonsSnap.empty) {
-            cachedLessons = lessonsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const rawLessons = lessonsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
             // Sort manually while we still have orderWeight
-            cachedLessons.sort((a,b) => (a.orderWeight || 0) - (b.orderWeight || 0));
+            rawLessons.sort((a,b) => (a.orderWeight || 0) - (b.orderWeight || 0));
 
-            // Clean up internal fields AFTER sort
-            cachedLessons = cachedLessons.map(d => {
+            // Load all default-usd and default-twd price books
+            let defaultPriceBooks = [];
+            let defaultTwdPriceBooks = [];
+            try {
+                const [usdSnap, twdSnap] = await Promise.all([
+                    db.collection("dealer_price_books")
+                        .where("distributorId", "==", "default-usd")
+                        .get(),
+                    db.collection("dealer_price_books")
+                        .where("distributorId", "==", "default-twd")
+                        .get()
+                ]);
+                usdSnap.forEach(doc => {
+                    defaultPriceBooks.push({ id: doc.id, ...doc.data() });
+                });
+                twdSnap.forEach(doc => {
+                    defaultTwdPriceBooks.push({ id: doc.id, ...doc.data() });
+                });
+            } catch (pbErr) {
+                console.warn("[getLessons] Failed to fetch default price books:", pbErr.message);
+            }
+
+            const getActiveBooks = (matching) => {
+                return matching.filter(book => {
+                    if (book.isActive === false) return false;
+                    const effectiveFromMs = book.effectiveFrom?.toMillis ? book.effectiveFrom.toMillis() : (book.effectiveFrom?.seconds ? book.effectiveFrom.seconds * 1000 : 0);
+                    const effectiveToMs = book.effectiveTo?.toMillis ? book.effectiveTo.toMillis() : (book.effectiveTo?.seconds ? book.effectiveTo.seconds * 1000 : 0);
+                    const nowMs = Date.now();
+                    if (effectiveFromMs && effectiveFromMs > nowMs) return false;
+                    if (effectiveToMs && effectiveToMs < nowMs) return false;
+                    return true;
+                });
+            };
+
+            const sortBooks = (books) => {
+                books.sort((a, b) => {
+                    const aFrom = a.effectiveFrom?.toMillis ? a.effectiveFrom.toMillis() : (a.effectiveFrom?.seconds ? a.effectiveFrom.seconds * 1000 : 0);
+                    const bFrom = b.effectiveFrom?.toMillis ? b.effectiveFrom.toMillis() : (b.effectiveFrom?.seconds ? b.effectiveFrom.seconds * 1000 : 0);
+                    return bFrom - aFrom;
+                });
+            };
+
+            cachedLessons = rawLessons.map(lesson => {
+                const d = { ...lesson };
                 delete d.updatedAt;
                 delete d.orderWeight;
+
+                // Join default-usd price book if exists
+                const matchingUsd = defaultPriceBooks.filter(book => {
+                    return findLessonByProductId([d], book.productId) !== null;
+                });
+                const activeUsd = getActiveBooks(matchingUsd);
+                sortBooks(activeUsd);
+
+                // Join default-twd price book if exists
+                const matchingTwd = defaultTwdPriceBooks.filter(book => {
+                    return findLessonByProductId([d], book.productId) !== null;
+                });
+                const activeTwd = getActiveBooks(matchingTwd);
+                sortBooks(activeTwd);
+
+                let usdAmount = null;
+                let twdAmount = null;
+                let isPromoActive = false;
+
+                if (activeUsd.length > 0) {
+                    const resolvedAmount = resolvePriceBookAmount(activeUsd[0]);
+                    usdAmount = resolvedAmount.amount;
+                    isPromoActive = resolvedAmount.isPromoActive;
+                }
+                if (activeTwd.length > 0) {
+                    const resolvedAmount = resolvePriceBookAmount(activeTwd[0]);
+                    twdAmount = resolvedAmount.amount;
+                    if (usdAmount === null) {
+                        isPromoActive = resolvedAmount.isPromoActive;
+                    }
+                }
+
+                d.price_usd = usdAmount;
+                d.price_twd = twdAmount;
+
+                // Baseline fallback (default to USD if available, otherwise TWD)
+                if (usdAmount !== null) {
+                    d.price = usdAmount;
+                    d.currency = "USD";
+                } else if (twdAmount !== null) {
+                    d.price = twdAmount;
+                    d.currency = "TWD";
+                } else {
+                    d.price = 0;
+                    d.currency = "USD";
+                }
+                d.isPromoActive = isPromoActive;
+
                 return withAssignmentUrlAliases(d);
             });
             
             lastFetchTime = Date.now();
-            console.log(`[getLessons] Successfully loaded ${cachedLessons.length} lessons.`);
+            console.log(`[getLessons] Successfully loaded ${cachedLessons.length} lessons and joined default price books.`);
             return cachedLessons;
         } else {
             console.warn("[getLessons] Firestore 'metadata_lessons' collection is EMPTY!");
@@ -2067,16 +2157,6 @@ exports.getLessonsMetadata = onCall(async (request) => {
                         const chosenBook = activeBooks[0];
                         const resolvedAmount = resolvePriceBookAmount(chosenBook);
                         
-                        // Clear headquarters legacy catalog/locale pricing on the client response
-                        const catalogFields = [
-                            'pricing', 'prices', 'priceByLocale', 'priceByRegion',
-                            'priceMap', 'localizedPrices', 'localizedPricing',
-                            'priceLocales', 'pricesByRegion'
-                        ];
-                        catalogFields.forEach(f => {
-                            delete clonedLesson[f];
-                        });
-                        
                         const amount = resolvedAmount.amount;
                         const currency = String(resolvedAmount.currency || "").toUpperCase();
                         
@@ -2105,6 +2185,20 @@ exports.getLessonsMetadata = onCall(async (request) => {
             console.error(`[getLessonsMetadata] Failed to resolve distributor pricing overrides:`, err);
         }
     }
+
+    // Always clean up legacy pricing fields for all returned lessons to keep client payload clean
+    const catalogFields = [
+        'pricing', 'prices', 'priceByLocale', 'priceByRegion',
+        'priceMap', 'localizedPrices', 'localizedPricing',
+        'priceLocales', 'pricesByRegion'
+    ];
+    lessons = lessons.map(lesson => {
+        const clonedLesson = { ...lesson };
+        catalogFields.forEach(f => {
+            delete clonedLesson[f];
+        });
+        return clonedLesson;
+    });
     
     let categoryLabels = {};
     try {
@@ -2181,23 +2275,39 @@ exports.updateSystemConfig = onCall(async (request) => {
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     assertAdminRole(userData.role);
 
-    const { contentVersion } = data || {};
+    const { contentVersion, defaultRegion, defaultDistributorId, defaultLocale } = data || {};
+    const updates = {};
+
     if (contentVersion !== undefined) {
         if (typeof contentVersion !== 'string' || contentVersion.trim().length < 7) {
             throw new HttpsError('invalid-argument', 'invalid-content-version-hash');
         }
+        updates.contentVersion = contentVersion.trim();
+    }
+
+    if (defaultRegion !== undefined) {
+        updates.defaultRegion = String(defaultRegion || '').trim().toUpperCase();
+    }
+
+    if (defaultDistributorId !== undefined) {
+        updates.defaultDistributorId = String(defaultDistributorId || '').trim();
+    }
+
+    if (defaultLocale !== undefined) {
+        updates.defaultLocale = String(defaultLocale || '').trim();
+    }
+
+    if (Object.keys(updates).length > 0) {
+        updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+        updates.updatedBy = auth.uid;
         
-        // 寫入 metadata_settings/content_runtime
-        await db.collection('metadata_settings').doc('content_runtime').set({
-            contentVersion: contentVersion.trim(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedBy: auth.uid
-        }, { merge: true });
-        
-        console.log(`[updateSystemConfig] ✅ Updated contentVersion to ${contentVersion} by uid=${auth.uid}`);
-        
-        // 自動清除快取
-        await purgeContentCacheHelper(db);
+        await db.collection('metadata_settings').doc('content_runtime').set(updates, { merge: true });
+        console.log(`[updateSystemConfig] ✅ Updated config to ${JSON.stringify(updates)} by uid=${auth.uid}`);
+
+        // 自動清除快取 (若更新了內容版本)
+        if (contentVersion !== undefined) {
+            await purgeContentCacheHelper(db);
+        }
     }
 
     return { success: true };
@@ -2352,6 +2462,21 @@ exports.upsertLessonPricing = onCall(async (request) => {
     assertRequiredValue(courseId, 'missing-course-id');
     assertRequiredValue(pricing && typeof pricing === 'object', 'missing-pricing');
 
+    const cleanProductId = String(courseId).trim();
+
+    // Verify product exists in metadata_lessons
+    const docSnap = await db.collection('metadata_lessons').doc(cleanProductId).get();
+    if (!docSnap.exists) {
+        // Fallback checks
+        const lessonsSnap = await db.collection('metadata_lessons')
+            .where('courseId', '==', cleanProductId)
+            .limit(1)
+            .get();
+        if (lessonsSnap.empty) {
+            throw new HttpsError('not-found', `lesson-not-found: ${cleanProductId}`);
+        }
+    }
+
     const normalizePriceEntry = (entry, fallbackCurrency) => {
         const rawAmount = Number(entry?.amount ?? entry?.price ?? entry?.value ?? 0);
         const amount = Number.isFinite(rawAmount) && rawAmount >= 0 ? rawAmount : 0;
@@ -2362,62 +2487,58 @@ exports.upsertLessonPricing = onCall(async (request) => {
 
     const tw = normalizePriceEntry(pricing.tw, 'TWD');
     const en = normalizePriceEntry(pricing.en, 'USD');
-    const pricePayload = {
-        pricing: {
-            tw,
-            en
-        },
-        priceByLocale: {
-            'zh-TW': tw,
-            en
-        },
-        priceByRegion: {
-            tw,
-            en
-        },
-        priceMap: {
-            tw,
-            en
-        },
-        prices: {
-            tw: tw.amount,
-            en: en.amount
-        },
-        price_twd: tw.amount,
-        price_usd: en.amount,
-        currency: tw.currency || 'TWD',
-        pricingVersion: 'v2',
-        pricingUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        pricingUpdatedBy: auth.uid,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+
+    const buildPriceBookId = (distributorId, productId) => {
+        return `${distributorId}_${productId}`
+            .toLowerCase()
+            .replace(/[^a-z0-9_-]/gi, '-');
     };
 
-    const lessonsSnap = await db.collection('metadata_lessons')
-        .where('courseId', '==', courseId)
-        .limit(1)
-        .get();
+    const twPriceBookId = buildPriceBookId('default-twd', cleanProductId);
+    const enPriceBookId = buildPriceBookId('default-usd', cleanProductId);
 
-    let lessonDocRef = null;
-    if (!lessonsSnap.empty) {
-        lessonDocRef = lessonsSnap.docs[0].ref;
-    } else {
-        const docSnap = await db.collection('metadata_lessons').doc(courseId).get();
-        if (docSnap.exists) {
-            lessonDocRef = docSnap.ref;
-        }
-    }
+    const twRef = db.collection('dealer_price_books').doc(twPriceBookId);
+    const enRef = db.collection('dealer_price_books').doc(enPriceBookId);
 
-    if (!lessonDocRef) {
-        throw new HttpsError('not-found', `lesson-not-found: ${courseId}`);
-    }
+    const [twSnap, enSnap] = await Promise.all([twRef.get(), enRef.get()]);
 
-    await lessonDocRef.set(pricePayload, { merge: true });
-    console.log(`[upsertLessonPricing] ✅ Updated pricing for courseId=${courseId} by uid=${auth.uid}`);
+    const twCreatedAt = twSnap.exists && twSnap.data()?.createdAt ? twSnap.data().createdAt : admin.firestore.FieldValue.serverTimestamp();
+    const enCreatedAt = enSnap.exists && enSnap.data()?.createdAt ? enSnap.data().createdAt : admin.firestore.FieldValue.serverTimestamp();
+
+    await Promise.all([
+        twRef.set({
+            distributorId: 'default-twd',
+            productId: cleanProductId,
+            currency: 'TWD',
+            salePrice: tw.amount,
+            isActive: true,
+            version: 'v1',
+            updatedBy: auth.uid,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: twCreatedAt
+        }, { merge: true }),
+        enRef.set({
+            distributorId: 'default-usd',
+            productId: cleanProductId,
+            currency: 'USD',
+            salePrice: en.amount,
+            isActive: true,
+            version: 'v1',
+            updatedBy: auth.uid,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: enCreatedAt
+        }, { merge: true })
+    ]);
+
+    console.log(`[upsertLessonPricing] ✅ Updated default price books for productId=${cleanProductId} by uid=${auth.uid}`);
 
     return {
         success: true,
-        courseId,
-        pricing: pricePayload.pricing
+        courseId: cleanProductId,
+        pricing: {
+            tw,
+            en
+        }
     };
 });
 
@@ -2617,7 +2738,7 @@ exports.resolveDistributorCheckoutQuote = onCall(async (request) => {
         region: payload.region || "",
         customerId: payload.customerId || auth.uid || "",
         productId: payload.productId || payload.courseId || payload.itemId || "",
-        locale: payload.locale || "zh-TW",
+        locale: payload.locale || "en",
         priceBookId: payload.priceBookId || ""
     });
 
@@ -2629,12 +2750,18 @@ exports.resolveDistributorCheckoutQuote = onCall(async (request) => {
 
 exports.getDistributorRoutingOptions = onCall(async (request) => {
     const { auth, data } = request;
-    assertAuthenticated(auth);
-
     const db = admin.firestore();
-    const userDoc = await db.collection('users').doc(auth.uid).get();
-    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-    const requestedRegion = normalizeRoutingRegionCode(data?.region || userData.preferredRegion || userData.region || '');
+    const runtimeConfig = await getContentRuntimeConfig(db);
+    const defaultRegion = runtimeConfig.defaultRegion || 'US';
+    const defaultDistributorId = runtimeConfig.defaultDistributorId || 'default-usd';
+
+    let userData = {};
+    if (auth && auth.uid) {
+        const userDoc = await db.collection('users').doc(auth.uid).get();
+        if (userDoc.exists) userData = userDoc.data() || {};
+    }
+
+    const requestedRegion = normalizeRoutingRegionCode(data?.region || userData.preferredRegion || userData.region || defaultRegion);
     const distributorSnap = await db.collection('distributors').get();
     const distributors = [];
     distributorSnap.forEach((doc) => {
@@ -2653,7 +2780,7 @@ exports.getDistributorRoutingOptions = onCall(async (request) => {
     const recommendation = chooseRecommendedDistributor(distributors, {
         regionCode: requestedRegion,
         preferredDistributorId: userData.preferredDistributorId || getUserDistributorScope(userData),
-        ruleDefaultDistributorId: ruleData.defaultDistributorId || '',
+        ruleDefaultDistributorId: ruleData.defaultDistributorId || defaultDistributorId,
         ruleBackupDistributorIds: ruleData.backupDistributorIds || []
     });
     const selectedDistributor = recommendation.distributor || null;
@@ -3397,7 +3524,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         if (pathLocale) chain.push(pathLocale);
         if (queryLocale && !chain.includes(queryLocale)) chain.push(queryLocale);
         if (headerPrimary && !chain.includes(headerPrimary)) chain.push(headerPrimary);
-        const defaultLocale = normalizeLocale(runtimeConfig?.defaultLocale || "zh-TW") || "zh-TW";
+        const defaultLocale = normalizeLocale(runtimeConfig?.defaultLocale || "en") || "en";
         if (!chain.includes(defaultLocale)) chain.push(defaultLocale);
         return chain;
     };
@@ -3605,28 +3732,29 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
             return res.status(404).send("File not found.");
         }
 
-        // [NEW] Normalize legacy hashed core script links to stable runtime assets.
+        // [NEW] Normalize legacy hashed core script links to stable runtime assets with cache-busting version parameter.
+        const vSuffix = `?v=${runtimeConfig?.contentVersion ? runtimeConfig.contentVersion.slice(0, 8) : 'latest'}`;
         content = content
-            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/i18n-helper\.[0-9a-f]{12}\.js["']/gi, 'src="/js/i18n-helper.js"')
-            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/nav-component\.[0-9a-f]{12}\.js["']/gi, 'src="/js/nav-component.js"')
-            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/course-shared\.[0-9a-f]{12}\.js["']/gi, 'src="/js/course-shared.js"')
-            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/pricing-utils\.[0-9a-f]{12}\.js["']/gi, 'src="/js/pricing-utils.js"')
-            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/footer-component\.[0-9a-f]{12}\.js["']/gi, 'src="/js/footer-component.js"')
-            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?style\.[0-9a-f]{12}\.css["']/gi, 'href="/style.css"')
-            .replace(/\/js\/course-shared\.[0-9a-f]{12}\.js\b/gi, '/js/course-shared.js')
-            .replace(/\/js\/nav-component\.[0-9a-f]{12}\.js\b/gi, '/js/nav-component.js');
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/i18n-helper\.[0-9a-f]{12}\.js["']/gi, `src="/js/i18n-helper.js${vSuffix}"`)
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/nav-component\.[0-9a-f]{12}\.js["']/gi, `src="/js/nav-component.js${vSuffix}"`)
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/course-shared\.[0-9a-f]{12}\.js["']/gi, `src="/js/course-shared.js${vSuffix}"`)
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/pricing-utils\.[0-9a-f]{12}\.js["']/gi, `src="/js/pricing-utils.js${vSuffix}"`)
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/footer-component\.[0-9a-f]{12}\.js["']/gi, `src="/js/footer-component.js${vSuffix}"`)
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?style\.[0-9a-f]{12}\.css["']/gi, `href="/style.css${vSuffix}"`)
+            .replace(/\/js\/course-shared\.[0-9a-f]{12}\.js\b/gi, `/js/course-shared.js${vSuffix}`)
+            .replace(/\/js\/nav-component\.[0-9a-f]{12}\.js\b/gi, `/js/nav-component.js${vSuffix}`);
 
         // Ensure core course scripts are always present even when content-repo omits them.
         const hasStableCourseSharedScript = /\/js\/course-shared\.js/i.test(content);
         const hasStableNavComponentScript = /\/js\/nav-component\.js/i.test(content);
         const runtimeScripts = [];
         if (!hasStableCourseSharedScript) {
-            runtimeScripts.push('<script src="/js/course-shared.js"></script>');
+            runtimeScripts.push(`<script src="/js/course-shared.js${vSuffix}"></script>`);
         }
         if (!hasStableNavComponentScript) {
-            runtimeScripts.push('<script type="module" src="/js/nav-component.js"></script>');
+            runtimeScripts.push(`<script type="module" src="/js/nav-component.js${vSuffix}"></script>`);
         }
-        console.log(`[serveCourse] content_source=${resolvedSource} file=${finalServeName}`);
+        console.log(`[serveCourse] content_source=${resolvedSource} file=${finalServeName} version=${vSuffix}`);
         const firebaseConfig = {
             apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
             authDomain: "e-learning-942f7.firebaseapp.com",
@@ -4933,8 +5061,8 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         const preferredLocales = [];
         if (data.locale) preferredLocales.push(data.locale);
         if (userData.locale && !preferredLocales.includes(userData.locale)) preferredLocales.push(userData.locale);
-        if (!preferredLocales.includes("zh-TW")) preferredLocales.push("zh-TW");
         if (!preferredLocales.includes("en")) preferredLocales.push("en");
+        if (!preferredLocales.includes("zh-TW")) preferredLocales.push("zh-TW");
 
         // If admin is in Tutor Mode, ensure all courses are considered for guide aggregation.
         if (requesterRole === 'admin' && data.tutorMode !== false) {
@@ -5484,7 +5612,11 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             try {
                 const configDoc = await db.collection('metadata_settings').doc('content_runtime').get();
                 if (configDoc.exists) {
-                    result.contentVersion = configDoc.data().contentVersion || "";
+                    const cData = configDoc.data() || {};
+                    result.contentVersion = cData.contentVersion || "";
+                    result.defaultRegion = cData.defaultRegion || "US";
+                    result.defaultDistributorId = cData.defaultDistributorId || "default-usd";
+                    result.defaultLocale = cData.defaultLocale || "en";
                 }
             } catch (err) {
                 console.warn("[getDashboardData] Failed to fetch content_runtime version:", err.message);
@@ -5884,7 +6016,7 @@ exports.onUserCreated = functionsV1.region(REGION).auth.user().onCreate(async (u
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 30);
 
-        const expiryDateStr = expiryDate.toLocaleDateString('zh-TW', {
+        const expiryDateStr = expiryDate.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'

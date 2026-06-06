@@ -263,6 +263,15 @@ async function run() {
     // 1. Write the 9 cards
     for (const docData of processed) {
       const { id, ...payload } = docData;
+      delete payload.price;
+      delete payload.pricing;
+      delete payload.prices;
+      delete payload.priceByLocale;
+      delete payload.priceByRegion;
+      delete payload.priceMap;
+      delete payload.price_twd;
+      delete payload.price_usd;
+      delete payload.currency;
       await db.collection("metadata_lessons").doc(id).set(payload);
       console.log(`  ✅ Written card: ${id}`);
     }
@@ -274,6 +283,15 @@ async function run() {
     // 3. Write the specs
     for (const spec of processedSpecs) {
       const { id, ...payload } = spec;
+      delete payload.price;
+      delete payload.pricing;
+      delete payload.prices;
+      delete payload.priceByLocale;
+      delete payload.priceByRegion;
+      delete payload.priceMap;
+      delete payload.price_twd;
+      delete payload.price_usd;
+      delete payload.currency;
       await db.collection("metadata_lessons").doc(id).set(payload);
       console.log(`  ✅ Written spec: ${id}`);
     }

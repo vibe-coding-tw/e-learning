@@ -204,3 +204,5 @@ Recommended composite indexes:
 1. Backfill new fields into existing orders before enabling distributor-specific pricing.
 2. Do not infer distributor ownership from region alone.
 3. Keep platform suggested prices in `products` only; do not overwrite distributor price books with them.
+4. Existing users should have `preferredRegion` and `preferredDistributorId` backfilled from their current `region` and routing rules before enabling sticky routing UX.
+5. Treat `priceByLocale` and `priceByRegion` as compatibility aliases only; do not use UI language as a live price selector.

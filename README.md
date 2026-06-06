@@ -119,7 +119,7 @@ firebase deploy --project e-learning-942f7
 
 > 收尾原則：內部命名維持中性語意；歷史相容欄位先保留，API 回傳欄位最後再 cutover。
 >
-> `public/en/` 與 `public/tw/` 的鏡像輸出已退役，不再由本 repo 生成；請直接維護 `public/` 與 `functions/private_courses/` 中的站點資產。
+> `public/en/` 與 `public/tw/` 的學生 / 導師入口不再保留本地鏡像頁面；這四個入口改由 `serveCourse` 即時從外部 `content-repo/public/en|zh-TW` 取得內容。請直接維護 `content-repo` 中的對應頁面，並以 `contentVersion` 進行版本鎖定。`students` / `tutors` 的繁中與英文入口不要再導去 `learning-path.html` 或 `index.html#core-values`。
 >
 > `learning-path` 目前直接讀 Firestore 的 `metadata_lessons`，不再使用 `public/data/metadata_lessons.local.json` 這類本地 fallback。
 
