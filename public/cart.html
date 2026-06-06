@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.5a0ca1b218e8.js"></script>
+    <script src="./js/i18n-helper.e9bc83ee6a21.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -46,7 +46,7 @@
 
             <div id="cart-summary" class="mt-8 pt-4 border-t-2 border-dashed border-gray-200">
                 <div class="flex justify-between items-center text-2xl font-bold text-gray-800">
-                    <span data-i18n="cart_total_label">總金額 (TWD):</span>
+                    <span id="cart-total-label">總金額 (TWD):</span>
                     <span id="cart-total">0</span>
                 </div>
                 <p id="cart-total-note" class="mt-2 text-sm text-slate-500">價格已含稅與運費，結帳金額即為實付總額。</p>
@@ -356,10 +356,33 @@
             } catch (error) {
                 console.warn('Failed to load distributor routing options:', error);
                 if (routingPreferenceSection) routingPreferenceSection.classList.remove('hidden');
-                const fallbackRegion = getPreferredRegion() || 'TW';
-                setRoutingPreferenceLocal(fallbackRegion, getPreferredDistributorId());
-                if (preferredRegionSelect) preferredRegionSelect.value = fallbackRegion;
-                setRoutingStatus('無法載入推薦清單，請先手動設定偏好。', 'error');
+                
+                const targetRegion = (region || getPreferredRegion() || 'TW').toUpperCase();
+                const allFallbackDistributors = [
+                    { id: 'default-twd', name: '預設台幣經銷商', regions: ['TW'] },
+                    { id: 'default-usd', name: '預設美金經銷商', regions: ['US'] }
+                ];
+                const filteredDistributors = allFallbackDistributors.filter(d => 
+                    d.regions.includes(targetRegion)
+                );
+                
+                const fallbackSnapshot = {
+                    regions: ['TW', 'US'],
+                    eligibleDistributors: filteredDistributors.length ? filteredDistributors : allFallbackDistributors,
+                    recommendation: {
+                        distributorId: targetRegion === 'TW' ? 'default-twd' : 'default-usd',
+                        distributorName: targetRegion === 'TW' ? '預設台幣經銷商' : '預設美金經銷商',
+                        reason: 'local-fallback'
+                    },
+                    userPreference: {
+                        preferredRegion: targetRegion,
+                        preferredDistributorId: getPreferredDistributorId() || (targetRegion === 'TW' ? 'default-twd' : 'default-usd')
+                    }
+                };
+                renderDistributorOptions(fallbackSnapshot);
+                
+                setRoutingPreferenceLocal(targetRegion, fallbackSnapshot.userPreference.preferredDistributorId);
+                setRoutingStatus('無法載入推薦清單，已載入預設地區設定。', 'error');
             }
         }
 
@@ -567,8 +590,7 @@
                 emptyMsg.style.display = 'none';
             }
 
-            const storedLocale = localStorage.getItem('vibe_user_locale') || '';
-            const isEn = storedLocale.startsWith('en');
+            const isEn = String(window.currentLocale || '').startsWith('en');
             const preferredRegion = getPreferredRegion();
             const currencies = new Set();
             for (const [id, item] of Object.entries(cart)) {
@@ -615,11 +637,11 @@
                 expectedCurrency = '';
             }
 
-            const cartTotalLabel = document.querySelector('[data-i18n="cart_total_label"]');
+            const cartTotalLabel = document.getElementById('cart-total-label');
             if (cartTotalLabel) {
                 cartTotalLabel.textContent = expectedCurrency
-                    ? (isEn ? `Total (${expectedCurrency}, tax & shipping included):` : `總金額 (${expectedCurrency}，含稅含運):`)
-                    : (isEn ? 'Total (tax & shipping included):' : '總金額（含稅含運）:');
+                    ? window.t('cart_total_with_currency', `總金額 (${expectedCurrency}，含稅含運):`).replace('{currency}', expectedCurrency)
+                    : window.t('cart_total_no_currency', '總金額（含稅含運）:');
             }
 
             const shippingAmount = hasPhysical ? (preferredRegion && preferredRegion !== 'TW' ? 15 : 450) : 0;
