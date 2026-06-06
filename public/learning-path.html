@@ -12,7 +12,7 @@
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
   <script type="module" src="./js/nav-component.6c6a53ae9fda.js"></script>
-  <script src="./js/dashboard-lookup-utils.527f08c8573b.js"></script>
+  <script src="./js/dashboard-lookup-utils.35d63fe776d1.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
   <script src="./js/course-shared.ecbd4e826fd2.js"></script>
   <script src="./js/pricing-utils.e362733979a2.js"></script>
@@ -958,7 +958,7 @@
         const listHtml = contentList.length
           ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
           : `<p class="text-sm text-slate-500">${summary}</p>`;
-        const objectPos = hardwareId === "car-intro" ? "50% 50%" : (hardwareId === "car-advanced" ? "50% 28%" : "50% 50%");
+        const objectPos = hardwareId === "car-intro" ? "50% 50%" : (hardwareId === "car-advanced" ? "50% 28%" : ((hardwareId.includes("esp32") || hardwareId.includes("chassis")) ? "50% 12%" : "50% 50%"));
         const objectScale = hardwareId === "car-advanced" ? "scale(1.08)" : (hardwareId === "car-intro" ? "scale(1.02)" : "scale(1)");
         const imageHtml = imageUrl
           ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-white mb-3 h-56"><img src="${imageUrl}" alt="${displayTitle}" class="w-full h-full object-cover" style="object-position:${objectPos}; transform:${objectScale};"></div>`
