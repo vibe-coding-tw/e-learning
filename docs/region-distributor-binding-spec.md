@@ -63,12 +63,14 @@ Currency does not follow:
 2. Look up eligible distributors for that region.
 3. Pick the best match using priority rules.
 4. Persist the choice to the user profile.
+5. When no explicit preference exists, the UI may prefill `region` from the last successful checkout, shipping country, or locale fallback before showing a selector.
 
 ### 3.2 Repeat visit
 
 1. Reuse `preferredDistributorId` when still valid.
 2. Fall back to region rules if the previous distributor is inactive.
 3. Allow manual override only when more than one distributor is eligible.
+4. If the user has not explicitly chosen a region, the frontend may auto-adjust it from shipping country changes and keep a local last-successful-region cache.
 
 ### 3.3 Checkout
 
@@ -87,6 +89,14 @@ Recommended distributor selection order:
 4. Region default distributor
 5. Region backup distributor ranked by availability or business priority
 6. Manual selection when ambiguous
+
+Recommended region default order:
+
+1. Explicit saved region from user profile or local preference
+2. Last successful checkout region
+3. Shipping country inferred region
+4. Locale-based fallback as a last resort
+5. Platform default region
 
 ## 5. Recommended Firestore Additions
 
@@ -137,6 +147,7 @@ Recommended frozen fields:
 2. Language selector should only change content and UI text.
 3. Price labels should use the currency returned by quote, not locale fallback.
 4. If a cart mixes distributors or currencies, the UI should ask the user to split the checkout.
+5. The UI should display the reason for the chosen region when it auto-prefills, such as saved preference, last successful checkout, or shipping country.
 
 ## 8. Acceptance Criteria
 
@@ -145,4 +156,3 @@ Recommended frozen fields:
 3. A user can change region and receive a new recommended distributor.
 4. Checkout freezes one distributor and one currency per order.
 5. Admins can update region routing without rewriting product price books.
-
