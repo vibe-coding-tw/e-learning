@@ -296,6 +296,102 @@
                         </table>
                     </div>
                 </div>
+                <div id="distributor-pricebook-container" class="space-y-6">
+                    <div class="card p-0 overflow-hidden">
+                        <div class="px-6 py-6 border-b border-gray-100 bg-white rounded-t-3xl flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">經銷商 Business Settings & Pricing Policy</h3>
+                                <p class="text-sm text-gray-500 mt-1">先載入經銷商 ID，再維護該經銷商自己的硬體售價、活動價與生效區間。</p>
+                            </div>
+                            <div class="text-xs text-gray-400 font-medium">資料只寫入該經銷商的 `dealer_price_books`，不覆蓋總部的課程定價</div>
+                        </div>
+
+                        <div class="p-6 space-y-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <label class="md:col-span-2">
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">經銷商 ID</div>
+                                            <input id="distributor-pricebook-distributor-id" type="text" placeholder="dist-001" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <div class="flex items-end gap-2">
+                                            <button onclick="window.loadDistributorPriceBooks()" class="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 active:scale-95">載入設定</button>
+                                        </div>
+                                        <label class="md:col-span-2">
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">價格表 ID（留白則自動產生）</div>
+                                            <input id="distributor-pricebook-id" type="text" placeholder="dist-001_prod-001" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <label>
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">產品 ID / SKU</div>
+                                            <input id="distributor-pricebook-product-id" type="text" placeholder="prod-001" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <label>
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">幣別</div>
+                                            <input id="distributor-pricebook-currency" type="text" value="TWD" placeholder="TWD" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <label>
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">售價</div>
+                                            <input id="distributor-pricebook-sale-price" type="number" min="0" step="0.01" placeholder="12900" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <label>
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">活動價</div>
+                                            <input id="distributor-pricebook-promo-price" type="number" min="0" step="0.01" placeholder="11900" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <label>
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">版本</div>
+                                            <input id="distributor-pricebook-version" type="text" value="v1" placeholder="v1" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <label>
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">生效日</div>
+                                            <input id="distributor-pricebook-effective-from" type="datetime-local" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <label>
+                                            <div class="text-[11px] font-bold text-slate-500 mb-1">失效日</div>
+                                            <input id="distributor-pricebook-effective-to" type="datetime-local" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        </label>
+                                        <label class="flex items-center gap-2 pt-6">
+                                            <input id="distributor-pricebook-active" type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="text-sm font-semibold text-slate-700">啟用</span>
+                                        </label>
+                                    </div>
+                                    <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div id="distributor-pricebook-form-state" class="text-xs text-slate-500">尚未選擇經銷商。</div>
+                                        <div class="flex gap-2">
+                                            <button onclick="window.clearDistributorPriceBookForm()" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">清空</button>
+                                            <button onclick="window.saveDistributorPriceBookFromForm()" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-700 active:scale-95">儲存價格表</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                    <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">載入狀態</div>
+                                    <div id="distributor-pricebook-summary" class="mt-2 text-sm text-slate-600 leading-6">輸入經銷商 ID 後即可載入。</div>
+                                    <div class="mt-4 grid grid-cols-2 gap-3 text-[11px] text-slate-500">
+                                        <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2">價格表數：<span id="distributor-pricebook-count" class="font-mono font-bold text-slate-700">0</span></div>
+                                        <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2">啟用中：<span id="distributor-pricebook-active-count" class="font-mono font-bold text-slate-700">0</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100 bg-slate-50">
+                                            <th class="py-3 px-4">價格表 ID</th>
+                                            <th class="py-3 px-4">產品</th>
+                                            <th class="py-3 px-4">售價 / 活動價</th>
+                                            <th class="py-3 px-4">版本 / 狀態</th>
+                                            <th class="py-3 px-4">生效區間</th>
+                                            <th class="py-3 px-4 text-right">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="distributor-pricebook-table-body" class="divide-y divide-slate-100 text-sm">
+                                        <tr><td colspan="6" class="py-10 text-center text-slate-400 italic">尚未載入經銷商價格表</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 
@@ -307,39 +403,7 @@
                     <div id="business-revenue-policies"></div>
                 </div>
 
-                <!-- 3. 業務分潤與定價策略 (Business Settings & Pricing Policy) -->
-                <div id="business-settings-container" class="card p-0">
-                    <div id="business-header" class="px-6 py-6 border-b border-gray-100 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-white rounded-t-3xl">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800">業務分潤與定價策略 (Business Settings & Pricing Policy)</h3>
-                            <p class="text-sm text-gray-500 mt-1">課程價格、分潤策略與營運規則集中管理</p>
-                        </div>
-                        <div class="text-xs text-gray-400 font-medium">
-                            只保留資料驅動設定，環境變數仍由 `.env` / Secret Manager 管理
-                        </div>
-                    </div>
 
-                    <div class="p-6 space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">課程總數</div>
-                                <div class="mt-2 text-3xl font-black text-slate-900" id="business-stat-lesson-count">0</div>
-                            </div>
-                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                                <div class="text-xs font-bold text-emerald-600 uppercase tracking-widest">有價格資料</div>
-                                <div class="mt-2 text-3xl font-black text-emerald-700" id="business-stat-priced-count">0</div>
-                            </div>
-                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                                <div class="text-xs font-bold text-blue-600 uppercase tracking-widest">啟用中的固定設定</div>
-                                <div class="mt-2 text-3xl font-black text-blue-700" id="business-stat-policy-count">0</div>
-                            </div>
-                        </div>
-
-                        <div id="business-pricing-overview" class="space-y-6">
-                            <!-- JS Generated -->
-                        </div>
-                    </div>
-                </div>
 
                 <!-- 1. 系統設定與全域管理 (System Settings) -->
                 <div id="system-settings-container" class="space-y-8 hidden">
@@ -608,9 +672,9 @@
     <script src="./js/footer-component.1c6f334c52a2.js"></script>
     </main>
 
-    <script src="./js/dashboard-lookup-utils.527f08c8573b.js"></script>
+    <script src="./js/dashboard-lookup-utils.35d63fe776d1.js"></script>
     <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
-    <script type="module" src="./js/dashboard.58aa715a3378.js"></script>
+    <script type="module" src="./js/dashboard.6e3590059258.js"></script>
 </body>
 
 </html>

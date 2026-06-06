@@ -375,6 +375,7 @@ async function loadDashboard() {
         // [FIX] Aggregate data (map filename IDs to real Course IDs)
         aggregateData(data);
         dashboardData = data;
+        syncDistributorPriceBookContext();
 
         // [FIX] Ensure allLessons is populated. 
         if (!allLessons || allLessons.length === 0) {
@@ -2546,6 +2547,8 @@ window.buildRevenueToolsHtml = function() {
  */
 window.renderLogisticsTab = function() {
     if (myRole !== 'admin' || !dashboardData) return;
+    normalizeDistributorPriceBookPlacement();
+    syncDistributorPriceBookContext();
     
     const container = document.getElementById('shipments-table-body');
     if (!container) return;
@@ -2554,6 +2557,7 @@ window.renderLogisticsTab = function() {
     
     if (orders.length === 0) {
         container.innerHTML = '<tr><td colspan="7" class="py-10 text-center text-gray-400 italic">尚無硬體產品訂單紀錄</td></tr>';
+        renderDistributorPriceBooksTable();
         return;
     }
 
@@ -2622,6 +2626,10 @@ window.renderLogisticsTab = function() {
             </tr>
         `;
     }).join('');
+    renderDistributorPriceBooksTable();
+    if (String(dashboardData?.myDistributorId || '').trim() && !String(window.__selectedDistributorPricebookDistributorId || '').trim()) {
+        window.loadDistributorPriceBooks();
+    }
 
 };
 
@@ -3932,96 +3940,6 @@ function buildBusinessPricingOverviewHtml() {
             courseId.replace(/\.html$/i, '') ||
             lesson.id ||
             courseId
-        ).trim();
-        const pricingState = getLessonBusinessPricingState(lesson);
-        const priceSource = lesson.pricingVersion || lesson.pricingSource || (lesson.price_usd != null && lesson.price_twd != null ? 'multi-region' : 'legacy');
-        const updatedAt = lesson.pricingUpdatedAt?.seconds
-            ? new Date(lesson.pricingUpdatedAt.seconds * 1000).toLocaleString()
-            : (lesson.pricingUpdatedAt ? new Date(lesson.pricingUpdatedAt).toLocaleString() : '—');
-
-        const isMultiRegion = priceSource === 'multi-region';
-        const isPhysical = lesson.isPhysical === true;
-        
-        // Multi-region or legacy badge
-        const badgeClass = isMultiRegion 
-            ? 'bg-blue-50 text-blue-700 border border-blue-100' 
-            : 'bg-amber-50 text-amber-700 border border-amber-100';
-        const badgeLabel = isMultiRegion ? '🌐 多語系定價' : '📝 舊版單一定價';
-
-        // Type badge (Course vs Hardware)
-        const typeBadgeClass = isPhysical 
-            ? 'bg-purple-50 text-purple-700 border border-purple-100'
-            : 'bg-sky-50 text-sky-700 border border-sky-100';
-        const typeBadgeLabel = isPhysical ? '📦 實體商品 (Hardware)' : '📘 線上課程 (Course)';
-
-        // USD Warning Badge
-        const hasUsdWarning = pricingState.en.amount === 0 && pricingState.tw.amount > 0;
-        const usdWarningBadge = hasUsdWarning 
-            ? `<div class="mt-2 text-[10px] inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold bg-rose-50 text-rose-700 border border-rose-100">
-                ⚠️ 缺美金定價
-               </div>` 
-            : '';
-
-        return `
-            <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition">
-                <td class="py-4 px-6 align-top">
-                    <div class="font-bold text-slate-900">${escapeHtml(title)}</div>
-                    <div class="text-[11px] text-slate-400 font-mono mt-1 break-all">${escapeHtml(displayId)}</div>
-                    <div class="mt-2 flex flex-wrap gap-1.5">
-                        <span class="text-[10px] inline-flex items-center px-2 py-0.5 rounded font-semibold ${typeBadgeClass}">
-                            ${typeBadgeLabel}
-                        </span>
-                        <span class="text-[10px] inline-flex items-center px-2 py-0.5 rounded font-semibold ${badgeClass}">
-                            ${badgeLabel}
-                        </span>
-                    </div>
-                    ${usdWarningBadge}
-                </td>
-                <td class="py-4 px-6 align-top">
-                    ${businessPriceInput(pricingState.tw.amount, 'TWD / tw', `business-price-tw-${safeId}`, 'NT$', safeId)}
-                </td>
-                <td class="py-4 px-6 align-top">
-                    ${businessPriceInput(pricingState.en.amount, 'USD / en', `business-price-en-${safeId}`, '$', safeId)}
-                </td>
-                <td class="py-4 px-6 align-top text-sm text-slate-600">
-                    <div class="font-semibold text-slate-800">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.tw, 'zh-TW') : `TWD ${pricingState.tw.amount}`)}</div>
-                    <div class="mt-1">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.en, 'en') : `USD ${pricingState.en.amount}`)}</div>
-                    <div class="mt-2 text-[11px] text-slate-400">更新：${escapeHtml(updatedAt)}</div>
-                </td>
-                <td class="py-4 px-6 text-right align-top">
-                    <button id="btn-save-price-${safeId}" onclick="window.saveLessonPricing('${escapeHtml(courseId)}')" class="px-3.5 py-2 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-700 transition duration-150 active:scale-95 whitespace-nowrap">儲存</button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-
-    return `
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h4 class="text-sm font-black text-slate-900">課程與商品定價維護</h4>
-                    <p class="text-xs text-slate-500 mt-1">資料直接寫入 Firestore 的 <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">metadata_lessons</code>，英文頁顯示 USD、中文頁顯示 TWD。</p>
-                </div>
-                <div class="text-xs text-slate-400 font-medium">可維護欄位：<code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">pricing</code> / <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">priceByLocale</code></div>
-            </div>
-            
-            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-slate-50/30">
-                <div class="flex flex-wrap items-center gap-3 flex-grow max-w-2xl">
-                    <div class="relative flex-grow max-w-xs">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                            🔍
-                        </span>
-                        <input type="text" id="pricing-search-input" oninput="window.filterPricingTable()" placeholder="搜尋名稱或 ID..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                    </div>
-                    
-                    <!-- Filter Button Group -->
-                    <div class="flex items-center gap-1 border border-slate-200 rounded-xl p-1 bg-white shadow-sm">
-                        <button onclick="window.setPricingFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'all' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">全部商品</button>
-                        <button onclick="window.setPricingFilter('courses')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'courses' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">📘 線上課程</button>
-                        <button onclick="window.setPricingFilter('physical')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'physical' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">📦 實體硬體</button>
-                    </div>
-                </div>
-                <div class="text-xs text-slate-400 font-medium">請在欄位修改後點擊對應列的「儲存變更」</div>
             </div>
 
             <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60">
@@ -4103,6 +4021,292 @@ window.saveLessonPricing = async function(courseId) {
     } catch (e) {
         console.error('[Business] Failed to save lesson pricing:', e);
         alert(`更新價格失敗：${e.message}`);
+    }
+};
+
+window.__loadedDistributorPriceBooks = window.__loadedDistributorPriceBooks || [];
+window.__selectedDistributorPricebookDistributorId = window.__selectedDistributorPricebookDistributorId || '';
+window.__distributorPriceBookUiNormalized = window.__distributorPriceBookUiNormalized || false;
+
+function normalizeDistributorPriceBookPlacement() {
+    if (window.__distributorPriceBookUiNormalized) return;
+    const settingsContainer = document.querySelector('#view-settings #distributor-pricebook-container');
+    const shipmentsContainer = document.querySelector('#view-shipments #distributor-pricebook-container');
+    if (settingsContainer && shipmentsContainer && settingsContainer !== shipmentsContainer) {
+        settingsContainer.remove();
+    }
+    window.__distributorPriceBookUiNormalized = true;
+}
+
+function syncDistributorPriceBookContext() {
+    const distributorId = String(dashboardData?.myDistributorId || '').trim();
+    if (!distributorId) return;
+    const input = document.getElementById('distributor-pricebook-distributor-id');
+    if (input && !String(input.value || '').trim()) {
+        input.value = distributorId;
+    }
+}
+
+function formatDistributorPriceBookDateTime(value) {
+    if (!value) return '—';
+    try {
+        if (typeof value.toDate === 'function') {
+            return value.toDate().toLocaleString();
+        }
+        if (typeof value.seconds === 'number') {
+            return new Date(value.seconds * 1000).toLocaleString();
+        }
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleString();
+    } catch (_) {
+        return String(value || '—');
+    }
+}
+
+function getDistributorPriceBookFormValue(id) {
+    return document.getElementById(id)?.value?.trim?.() || '';
+}
+
+function setDistributorPriceBookFormValue(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') {
+        el.checked = !!value;
+    } else {
+        el.value = value ?? '';
+    }
+}
+
+function buildDistributorPriceBookRow(book = {}) {
+    const id = String(book.id || book.priceBookId || '').trim();
+    const safeId = id.replace(/[^a-z0-9_-]/gi, '-');
+    window.__distributorPriceBookCache = window.__distributorPriceBookCache || {};
+    if (id) {
+        window.__distributorPriceBookCache[id] = {
+            id,
+            distributorId: book.distributorId || '',
+            productId: book.productId || '',
+            currency: book.currency || 'TWD',
+            salePrice: Number(book.salePrice || 0),
+            promoPrice: book.promoPrice != null ? Number(book.promoPrice) : '',
+            version: book.version || 'v1',
+            effectiveFrom: book.effectiveFrom || '',
+            effectiveTo: book.effectiveTo || '',
+            isActive: book.isActive !== false
+        };
+    }
+    const activeBadge = book.isActive !== false
+        ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+        : 'bg-slate-100 text-slate-600 border-slate-200';
+    const priceText = `${Number(book.salePrice || 0).toLocaleString()} ${escapeHtml(book.currency || 'TWD')}`;
+    const promoText = book.promoPrice != null && book.promoPrice !== ''
+        ? `${Number(book.promoPrice || 0).toLocaleString()}`
+        : '—';
+
+    return `
+        <tr class="hover:bg-slate-50/80 transition">
+            <td class="py-4 px-4 align-top">
+                <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(id || '—')}</div>
+                <div class="mt-1 text-[11px] text-slate-400">更新：${escapeHtml(formatDistributorPriceBookDateTime(book.updatedAt))}</div>
+            </td>
+            <td class="py-4 px-4 align-top">
+                <div class="font-bold text-slate-900">${escapeHtml(book.productId || '—')}</div>
+                <div class="mt-1 text-[11px] text-slate-400">經銷商：${escapeHtml(book.distributorId || '—')}</div>
+            </td>
+            <td class="py-4 px-4 align-top">
+                <div class="font-semibold text-slate-900">${escapeHtml(priceText)}</div>
+                <div class="mt-1 text-[11px] text-slate-500">活動價：${escapeHtml(promoText)}</div>
+            </td>
+            <td class="py-4 px-4 align-top">
+                <div class="text-sm font-bold text-slate-900">${escapeHtml(book.version || 'v1')}</div>
+                <span class="mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${activeBadge}">
+                    ${book.isActive !== false ? '啟用中' : '停用'}
+                </span>
+            </td>
+            <td class="py-4 px-4 align-top text-sm text-slate-600">
+                <div>起：${escapeHtml(formatDistributorPriceBookDateTime(book.effectiveFrom))}</div>
+                <div class="mt-1">迄：${escapeHtml(formatDistributorPriceBookDateTime(book.effectiveTo))}</div>
+            </td>
+            <td class="py-4 px-4 align-top text-right">
+                <button data-pricebook-id="${escapeHtml(id)}" onclick="window.populateDistributorPriceBookFormById(this.dataset.pricebookId)" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
+                    編輯
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+function renderDistributorPriceBooksTable() {
+    const tbody = document.getElementById('distributor-pricebook-table-body');
+    const summary = document.getElementById('distributor-pricebook-summary');
+    const countEl = document.getElementById('distributor-pricebook-count');
+    const activeCountEl = document.getElementById('distributor-pricebook-active-count');
+    if (!tbody) return;
+
+    const items = Array.isArray(window.__loadedDistributorPriceBooks) ? window.__loadedDistributorPriceBooks : [];
+    const activeCount = items.filter((item) => item && item.isActive !== false).length;
+    if (countEl) countEl.textContent = String(items.length);
+    if (activeCountEl) activeCountEl.textContent = String(activeCount);
+    if (summary) {
+        const distributorId = window.__selectedDistributorPricebookDistributorId || '';
+        summary.textContent = distributorId
+            ? `目前載入經銷商：${distributorId}，共 ${items.length} 筆價格表。`
+            : '輸入經銷商 ID 後即可載入與維護價格表。';
+    }
+
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400 italic">尚未載入或尚無價格表資料</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = items.map(buildDistributorPriceBookRow).join('');
+}
+
+window.clearDistributorPriceBookForm = function() {
+    setDistributorPriceBookFormValue('distributor-pricebook-id', '');
+    setDistributorPriceBookFormValue('distributor-pricebook-product-id', '');
+    setDistributorPriceBookFormValue('distributor-pricebook-currency', 'TWD');
+    setDistributorPriceBookFormValue('distributor-pricebook-sale-price', '');
+    setDistributorPriceBookFormValue('distributor-pricebook-promo-price', '');
+    setDistributorPriceBookFormValue('distributor-pricebook-version', 'v1');
+    setDistributorPriceBookFormValue('distributor-pricebook-effective-from', '');
+    setDistributorPriceBookFormValue('distributor-pricebook-effective-to', '');
+    setDistributorPriceBookFormValue('distributor-pricebook-active', true);
+    const state = document.getElementById('distributor-pricebook-form-state');
+    if (state) state.textContent = '表單已清空，可新增新的價格表。';
+};
+
+window.populateDistributorPriceBookForm = function(book = {}) {
+    if (!book || typeof book !== 'object') return;
+    setDistributorPriceBookFormValue('distributor-pricebook-id', book.id || '');
+    setDistributorPriceBookFormValue('distributor-pricebook-distributor-id', book.distributorId || window.__selectedDistributorPricebookDistributorId || '');
+    setDistributorPriceBookFormValue('distributor-pricebook-product-id', book.productId || '');
+    setDistributorPriceBookFormValue('distributor-pricebook-currency', book.currency || 'TWD');
+    setDistributorPriceBookFormValue('distributor-pricebook-sale-price', book.salePrice != null ? book.salePrice : '');
+    setDistributorPriceBookFormValue('distributor-pricebook-promo-price', book.promoPrice != null ? book.promoPrice : '');
+    setDistributorPriceBookFormValue('distributor-pricebook-version', book.version || 'v1');
+    setDistributorPriceBookFormValue('distributor-pricebook-effective-from', book.effectiveFrom ? new Date(book.effectiveFrom.seconds ? book.effectiveFrom.seconds * 1000 : book.effectiveFrom).toISOString().slice(0, 16) : '');
+    setDistributorPriceBookFormValue('distributor-pricebook-effective-to', book.effectiveTo ? new Date(book.effectiveTo.seconds ? book.effectiveTo.seconds * 1000 : book.effectiveTo).toISOString().slice(0, 16) : '');
+    setDistributorPriceBookFormValue('distributor-pricebook-active', book.isActive !== false);
+    const state = document.getElementById('distributor-pricebook-form-state');
+    if (state) {
+        state.textContent = `編輯中：${book.id || book.productId || '未命名價格表'}`;
+    }
+};
+
+window.populateDistributorPriceBookFormById = function(priceBookId) {
+    const id = String(priceBookId || '').trim();
+    if (!id) return;
+    const cached = window.__distributorPriceBookCache?.[id];
+    if (cached) {
+        window.populateDistributorPriceBookForm(cached);
+    }
+};
+
+window.loadDistributorPriceBooks = async function() {
+    const distributorId = getDistributorPriceBookFormValue('distributor-pricebook-distributor-id') || String(dashboardData?.myDistributorId || '').trim();
+    const summary = document.getElementById('distributor-pricebook-summary');
+    if (!distributorId) {
+        window.__selectedDistributorPricebookDistributorId = '';
+        window.__loadedDistributorPriceBooks = [];
+        renderDistributorPriceBooksTable();
+        if (summary) summary.textContent = '請先輸入經銷商 ID。';
+        return;
+    }
+
+    if (summary) summary.textContent = `載入經銷商 ${distributorId} 的價格表中...`;
+    try {
+        const fn = httpsCallable(functions, 'getDistributorPriceBooks');
+        const res = await fn({ distributorId });
+        const items = Array.isArray(res?.data?.items) ? res.data.items : [];
+        window.__selectedDistributorPricebookDistributorId = distributorId;
+        window.__loadedDistributorPriceBooks = items;
+        renderDistributorPriceBooksTable();
+        const state = document.getElementById('distributor-pricebook-form-state');
+        if (state) state.textContent = `已載入 ${items.length} 筆價格表，請選擇編輯或新增。`;
+    } catch (e) {
+        console.error('[DistributorPricing] load failed:', e);
+        window.__loadedDistributorPriceBooks = [];
+        renderDistributorPriceBooksTable();
+        if (summary) summary.textContent = `載入失敗：${e.message || 'unknown'}`;
+        alert(`載入經銷商價格表失敗：${e.message}`);
+    }
+};
+
+window.saveDistributorPriceBookFromForm = async function() {
+    const distributorId = getDistributorPriceBookFormValue('distributor-pricebook-distributor-id') || String(dashboardData?.myDistributorId || '').trim();
+    const priceBookId = getDistributorPriceBookFormValue('distributor-pricebook-id');
+    const productId = getDistributorPriceBookFormValue('distributor-pricebook-product-id');
+    const currency = getDistributorPriceBookFormValue('distributor-pricebook-currency') || 'TWD';
+    const salePrice = Number(getDistributorPriceBookFormValue('distributor-pricebook-sale-price'));
+    const promoPriceRaw = getDistributorPriceBookFormValue('distributor-pricebook-promo-price');
+    const promoPrice = promoPriceRaw === '' ? null : Number(promoPriceRaw);
+    const version = getDistributorPriceBookFormValue('distributor-pricebook-version') || 'v1';
+    const effectiveFrom = getDistributorPriceBookFormValue('distributor-pricebook-effective-from');
+    const effectiveTo = getDistributorPriceBookFormValue('distributor-pricebook-effective-to');
+    const isActive = !!document.getElementById('distributor-pricebook-active')?.checked;
+
+    if (!distributorId || !productId) {
+        alert('請先輸入經銷商 ID 與產品 ID。');
+        return;
+    }
+    if (!Number.isFinite(salePrice) || salePrice < 0) {
+        alert('售價必須是非負數字。');
+        return;
+    }
+    if (promoPrice != null && (!Number.isFinite(promoPrice) || promoPrice < 0 || promoPrice > salePrice)) {
+        alert('活動價必須是非負數字，且不可大於售價。');
+        return;
+    }
+
+    const btn = document.querySelector('#distributor-pricebook-container button[onclick="window.saveDistributorPriceBookFromForm()"]');
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'upsertDistributorPriceBook');
+        const payload = {
+            distributorId,
+            priceBookId,
+            productId,
+            currency,
+            salePrice,
+            ...(promoPrice != null ? { promoPrice } : {}),
+            version,
+            isActive,
+            ...(effectiveFrom ? { effectiveFrom: new Date(effectiveFrom).toISOString() } : {}),
+            ...(effectiveTo ? { effectiveTo: new Date(effectiveTo).toISOString() } : {})
+        };
+        const res = await fn(payload);
+        if (!res?.data?.success) {
+            throw new Error(res?.data?.message || '儲存失敗');
+        }
+        notify(`已儲存經銷商價格表：${productId}`, 'success');
+        window.__selectedDistributorPricebookDistributorId = distributorId;
+        await window.loadDistributorPriceBooks();
+        window.populateDistributorPriceBookForm({
+            id: res.data.priceBookId || priceBookId || '',
+            distributorId,
+            productId,
+            currency,
+            salePrice,
+            promoPrice,
+            version,
+            effectiveFrom: effectiveFrom ? new Date(effectiveFrom).toISOString() : '',
+            effectiveTo: effectiveTo ? new Date(effectiveTo).toISOString() : '',
+            isActive
+        });
+    } catch (e) {
+        console.error('[DistributorPricing] save failed:', e);
+        alert(`儲存經銷商價格表失敗：${e.message}`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
     }
 };
 
@@ -5267,7 +5471,7 @@ window.settleInvestorYear = async function () {
 
 async function renderBusinessTab() {
     if (myRole !== 'admin' || !dashboardData) return;
-    renderBusinessPricingOverview();
+    normalizeDistributorPriceBookPlacement();
 
     // Render Policy Admin at the top
     const revenuePolicyContainer = document.getElementById('business-revenue-policies');
