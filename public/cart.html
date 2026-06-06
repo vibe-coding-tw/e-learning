@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.e9bc83ee6a21.js"></script>
+    <script src="./js/i18n-helper.06943c8663bd.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -45,36 +45,50 @@
             <p id="empty-cart-msg" class="text-gray-500 italic text-center pt-4" data-i18n="empty_cart_msg">購物車是空的！請回到課程頁面選購。</p>
 
             <div id="cart-summary" class="mt-8 pt-4 border-t-2 border-dashed border-gray-200">
-                <div class="flex justify-between items-center text-2xl font-bold text-gray-800">
+                <div class="space-y-2 mb-4 text-sm text-slate-600">
+                    <div class="flex justify-between">
+                        <span data-i18n="cart_subtotal_label">商品小計:</span>
+                        <span id="cart-subtotal" class="font-mono">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span data-i18n="cart_shipping_label">運費:</span>
+                        <span id="cart-shipping" class="font-mono">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span data-i18n="cart_tax_label">稅額:</span>
+                        <span id="cart-tax" class="font-mono">0</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-2xl font-bold text-gray-800 border-t border-slate-200 pt-3">
                     <span id="cart-total-label">總金額 (TWD):</span>
-                    <span id="cart-total">0</span>
+                    <span id="cart-total" class="font-mono">0</span>
                 </div>
                 <p id="cart-total-note" class="mt-2 text-sm text-slate-500">價格已含稅與運費，結帳金額即為實付總額。</p>
-                <div id="routing-preference-section" class="hidden mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                <div id="routing-preference-section" class="hidden mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg animate-fade-in">
                     <div class="flex items-center justify-between gap-3 mb-3">
-                        <h3 class="text-lg font-bold text-gray-800">地區與經銷商偏好</h3>
+                        <h3 class="text-lg font-bold text-gray-800" data-i18n="routing_title">地區與經銷商偏好</h3>
                         <span id="routing-recommendation-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-white border border-indigo-200 text-indigo-700">—</span>
                     </div>
-                    <p class="text-sm text-slate-600 mb-4">選擇你的地區後，系統會推薦最適合的經銷商；你可以手動切換，並把偏好保存到帳號。</p>
+                    <p class="text-sm text-slate-600 mb-4" data-i18n="routing_desc">選擇你的地區後，系統會推薦最適合的經銷商；你可以手動切換，並把偏好保存到帳號。</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1" for="preferred-region-select">地區 Region</label>
-                            <select id="preferred-region-select" class="w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700">
-                                <option value="">-- 請選擇地區 --</option>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="preferred-region-select" data-i18n="routing_region_label">地區 Region</label>
+                            <select id="preferred-region-select" class="w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                <option value="" data-i18n="routing_select_region_placeholder">-- 請選擇地區 --</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1" for="preferred-distributor-select">經銷商 Distributor</label>
-                            <select id="preferred-distributor-select" class="w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700">
-                                <option value="">-- 先選地區 --</option>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="preferred-distributor-select" data-i18n="routing_distributor_label">經銷商 Distributor</label>
+                            <select id="preferred-distributor-select" class="w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                <option value="" data-i18n="routing_select_distributor_placeholder">-- 請先選擇地區 --</option>
                             </select>
                         </div>
                     </div>
                     <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                        <button id="save-routing-preference-btn" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition">
+                        <button id="save-routing-preference-btn" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition active:scale-95 shadow-md shadow-indigo-150" data-i18n="routing_save_btn">
                             儲存偏好
                         </button>
-                        <span id="routing-preference-status" class="text-sm text-slate-600">尚未套用偏好。</span>
+                        <span id="routing-preference-status" class="text-sm text-slate-600" data-i18n="routing_status_init">尚未套用偏好。</span>
                     </div>
                 </div>
                 <div id="payment-form-container" class="hidden"></div>
@@ -128,40 +142,40 @@
                         <!-- International Shipping Fields -->
                         <div id="intl-shipping-container" class="hidden space-y-3 pt-2">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">國家 / 地區 (Country / Region)</label>
-                                <select id="shipping-country" class="mt-1 block w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700">
-                                    <option value="">-- 選擇國家 Select Country --</option>
-                                    <option value="US">美國 (United States)</option>
-                                    <option value="CA">加拿大 (Canada)</option>
-                                    <option value="JP">日本 (Japan)</option>
-                                    <option value="SG">新加坡 (Singapore)</option>
-                                    <option value="HK">香港 (Hong Kong)</option>
-                                    <option value="MY">馬來西亞 (Malaysia)</option>
+                                <label class="block text-sm font-medium text-gray-700" data-i18n="shipping_country_label">國家 / 地區 (Country / Region)</label>
+                                <select id="shipping-country" class="mt-1 block w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                    <option value="" data-i18n="shipping_country_placeholder">-- 選擇國家 Select Country --</option>
+                                    <option value="US" data-i18n="shipping_country_us">美國 (United States)</option>
+                                    <option value="CA" data-i18n="shipping_country_ca">加拿大 (Canada)</option>
+                                    <option value="JP" data-i18n="shipping_country_jp">日本 (Japan)</option>
+                                    <option value="SG" data-i18n="shipping_country_sg">新加坡 (Singapore)</option>
+                                    <option value="HK" data-i18n="shipping_country_hk">香港 (Hong Kong)</option>
+                                    <option value="MY" data-i18n="shipping_country_my">馬來西亞 (Malaysia)</option>
                                 </select>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">州 / 省 (State / Province)</label>
-                                    <input type="text" id="shipping-state" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. CA">
+                                    <label class="block text-sm font-medium text-gray-700" data-i18n="shipping_state_label">州 / 省 (State / Province)</label>
+                                    <input type="text" id="shipping-state" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" data-i18n-placeholder="shipping_state_placeholder" placeholder="e.g. CA">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">城市 (City)</label>
-                                    <input type="text" id="shipping-city" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. San Jose">
+                                    <label class="block text-sm font-medium text-gray-700" data-i18n="shipping_city_label">城市 (City)</label>
+                                    <input type="text" id="shipping-city" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" data-i18n-placeholder="shipping_city_placeholder" placeholder="e.g. San Jose">
                                 </div>
                             </div>
                             <div class="grid grid-cols-3 gap-3">
                                 <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">詳細地址 1 (Address Line 1)</label>
-                                    <input type="text" id="shipping-line1" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="Street address, P.O. box">
+                                    <label class="block text-sm font-medium text-gray-700" data-i18n="shipping_line1_label">詳細地址 1 (Address Line 1)</label>
+                                    <input type="text" id="shipping-line1" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" data-i18n-placeholder="shipping_line1_placeholder" placeholder="Street address, P.O. box">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">郵遞區號 (ZIP / Postal Code)</label>
-                                    <input type="text" id="shipping-zip" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="e.g. 95125">
+                                    <label class="block text-sm font-medium text-gray-700" data-i18n="shipping_zip_label">郵遞區號 (ZIP / Postal Code)</label>
+                                    <input type="text" id="shipping-zip" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" data-i18n-placeholder="shipping_zip_placeholder" placeholder="e.g. 95125">
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">詳細地址 2 (Address Line 2 - 選填 Optional)</label>
-                                <input type="text" id="shipping-line2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="Apartment, suite, unit, building, floor, etc.">
+                                <label class="block text-sm font-medium text-gray-700" data-i18n="shipping_line2_label">詳細地址 2 (Address Line 2 - 選填 Optional)</label>
+                                <input type="text" id="shipping-line2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" data-i18n-placeholder="shipping_line2_placeholder" placeholder="Apartment, suite, unit, building, floor, etc.">
                             </div>
                         </div>
                     </div>
@@ -226,6 +240,7 @@
         const saveRoutingPreferenceBtn = document.getElementById('save-routing-preference-btn');
         const routingPreferenceStatus = document.getElementById('routing-preference-status');
         const routingRecommendationBadge = document.getElementById('routing-recommendation-badge');
+        const shippingCountrySelect = document.getElementById('shipping-country');
         const pricingApi = window.vibePricing || {
             resolveCartPrice(item = {}, locale = "zh-TW") {
                 const currency = String(item.currency || item.price_currency || item.priceCurrency || "").toUpperCase();
@@ -261,13 +276,54 @@
             return id.trim().replace(/\.html$/, '');
         }
 
+        function normalizeRegionCode(value = '') {
+            return String(value || '').trim().toUpperCase();
+        }
+
+        function getPreferredRegionSource() {
+            return String(localStorage.getItem('vibe_user_region_source') || '').trim().toLowerCase();
+        }
+
+        function getLastSuccessfulRegion() {
+            return normalizeRegionCode(
+                localStorage.getItem('vibe_user_last_success_region')
+                || localStorage.getItem('vibe_user_last_successful_region')
+                || ''
+            );
+        }
+
+        function inferRegionFromCountry(country = '') {
+            const normalizedCountry = normalizeRegionCode(country);
+            const countryToRegion = {
+                TW: 'TW',
+                US: 'US',
+                CA: 'CA',
+                JP: 'JP',
+                SG: 'SG',
+                HK: 'HK',
+                MY: 'MY'
+            };
+            return countryToRegion[normalizedCountry] || '';
+        }
+
         function getPreferredRegion() {
-            return String(
+            const storedRegion = normalizeRegionCode(
                 localStorage.getItem('vibe_user_region')
                 || localStorage.getItem('preferredRegion')
                 || localStorage.getItem('vibe_user_preferred_region')
                 || ''
-            ).trim().toUpperCase();
+            );
+            if (storedRegion) return storedRegion;
+
+            const lastSuccessRegion = getLastSuccessfulRegion();
+            if (lastSuccessRegion) return lastSuccessRegion;
+
+            const shippingRegion = inferRegionFromCountry(shippingCountrySelect?.value || '');
+            if (shippingRegion) return shippingRegion;
+
+            const locale = String(localStorage.getItem('vibe_user_locale') || '').toLowerCase();
+            if (locale.startsWith('en')) return 'US';
+            return 'TW';
         }
 
         function getPreferredDistributorId() {
@@ -278,18 +334,32 @@
             ).trim();
         }
 
-        function setRoutingPreferenceLocal(region = '', distributorId = '') {
-            const normalizedRegion = String(region || '').trim().toUpperCase();
+        function setRoutingPreferenceLocal(region = '', distributorId = '', options = {}) {
+            const normalizedRegion = normalizeRegionCode(region);
             const normalizedDistributorId = String(distributorId || '').trim();
             if (normalizedRegion) {
                 localStorage.setItem('vibe_user_region', normalizedRegion);
                 localStorage.setItem('preferredRegion', normalizedRegion);
                 localStorage.setItem('vibe_user_preferred_region', normalizedRegion);
+                if (options.source) {
+                    localStorage.setItem('vibe_user_region_source', String(options.source).trim().toLowerCase());
+                }
             }
             if (normalizedDistributorId) {
                 localStorage.setItem('vibe_user_preferred_distributor', normalizedDistributorId);
                 localStorage.setItem('preferredDistributorId', normalizedDistributorId);
             }
+        }
+
+        function syncRegionFromShippingCountry(force = false) {
+            const currentSource = getPreferredRegionSource();
+            if (!force && currentSource === 'manual') return null;
+            const suggestedRegion = inferRegionFromCountry(shippingCountrySelect?.value || '');
+            if (!suggestedRegion) return null;
+            const currentRegion = getPreferredRegion();
+            if (!force && currentRegion === suggestedRegion) return null;
+            setRoutingPreferenceLocal(suggestedRegion, getPreferredDistributorId(), { source: 'auto' });
+            return suggestedRegion;
         }
 
         function setRoutingStatus(message = '', tone = 'info') {
@@ -304,8 +374,8 @@
 
         function renderDistributorOptions(snapshot = {}) {
             if (!preferredRegionSelect || !preferredDistributorSelect) return;
-            const regions = Array.isArray(snapshot.regions) ? snapshot.regions : [];
-            const distributors = Array.isArray(snapshot.eligibleDistributors) ? snapshot.eligibleDistributors : [];
+            let regions = Array.isArray(snapshot.regions) ? snapshot.regions : [];
+            let distributors = Array.isArray(snapshot.eligibleDistributors) ? snapshot.eligibleDistributors : [];
             const recommendation = snapshot.recommendation || {};
             const userPreference = snapshot.userPreference || {};
             const localRegion = getPreferredRegion();
@@ -313,13 +383,28 @@
             const initialRegion = localRegion || userPreference.preferredRegion || snapshot.region || regions[0] || '';
             const initialDistributorId = localDistributorId || userPreference.preferredDistributorId || recommendation.distributorId || '';
 
-            preferredRegionSelect.innerHTML = ['<option value="">-- 請選擇地區 --</option>']
+            if (regions.length === 0) regions = ['TW', 'US'];
+            if (distributors.length === 0) {
+                distributors = [
+                    { id: 'default-twd', name: '預設台幣經銷商', regions: ['TW'] },
+                    { id: 'default-usd', name: '預設美金經銷商', regions: ['US'] }
+                ];
+            }
+
+            const selectRegionText = window.t('routing_select_region_placeholder', '-- 請選擇地區 --');
+            preferredRegionSelect.innerHTML = [`<option value="">${escapeHtml(selectRegionText)}</option>`]
                 .concat(regions.map((region) => `<option value="${escapeHtml(region)}">${escapeHtml(region)}</option>`))
                 .join('');
             preferredRegionSelect.value = initialRegion;
 
-            preferredDistributorSelect.innerHTML = ['<option value="">-- 請先選擇地區 --</option>']
-                .concat(distributors.map((dist) => {
+            const selectDistributorText = window.t('routing_select_distributor_placeholder', '-- 請先選擇地區 --');
+            const matchedDistributors = distributors.filter(dist => 
+                !initialRegion || !Array.isArray(dist.regions) || dist.regions.length === 0 ||
+                dist.regions.map(r => r.toUpperCase()).includes(initialRegion.toUpperCase())
+            );
+            
+            preferredDistributorSelect.innerHTML = [`<option value="">${escapeHtml(selectDistributorText)}</option>`]
+                .concat(matchedDistributors.map((dist) => {
                     const regionHint = Array.isArray(dist.regions) && dist.regions.length ? ` (${dist.regions.join(', ')})` : '';
                     return `<option value="${escapeHtml(dist.id)}">${escapeHtml(dist.name || dist.id)}${escapeHtml(regionHint)}</option>`;
                 }))
@@ -328,31 +413,63 @@
 
             if (routingRecommendationBadge) {
                 routingRecommendationBadge.textContent = recommendation.distributorId
-                    ? `${recommendation.reason || 'recommended'} · ${recommendation.distributorName || recommendation.distributorId}`
-                    : (distributors.length ? '請手動選擇' : '無可用經銷商');
+                    ? `${window.t('routing_recommended', '推薦')} · ${recommendation.distributorName || recommendation.distributorId}`
+                    : (matchedDistributors.length ? window.t('routing_manual_select', '請手動選擇') : window.t('routing_no_distributor', '無可用經銷商'));
             }
 
             if (initialRegion && !preferredDistributorSelect.value) {
-                const firstMatch = distributors[0]?.id || '';
+                const firstMatch = matchedDistributors[0]?.id || '';
                 if (firstMatch) preferredDistributorSelect.value = firstMatch;
             }
         }
 
         async function loadRoutingOptions(region = '') {
             if (!auth.currentUser) {
-                if (routingPreferenceSection) routingPreferenceSection.classList.add('hidden');
+                if (routingPreferenceSection) routingPreferenceSection.classList.remove('hidden');
+                const targetRegion = (region || getPreferredRegion() || 'TW').toUpperCase();
+                const allFallbackDistributors = [
+                    { id: 'default-twd', name: '預設台幣經銷商', regions: ['TW'] },
+                    { id: 'default-usd', name: '預設美金經銷商', regions: ['US'] }
+                ];
+                const filteredDistributors = allFallbackDistributors.filter(d => 
+                    d.regions.includes(targetRegion)
+                );
+                
+                const fallbackSnapshot = {
+                    regions: ['TW', 'US'],
+                    eligibleDistributors: filteredDistributors.length ? filteredDistributors : allFallbackDistributors,
+                    recommendation: {
+                        distributorId: targetRegion === 'TW' ? 'default-twd' : 'default-usd',
+                        distributorName: targetRegion === 'TW' ? '預設台幣經銷商' : '預設美金經銷商',
+                        reason: 'guest-local'
+                    },
+                    userPreference: {
+                        preferredRegion: targetRegion,
+                        preferredDistributorId: getPreferredDistributorId() || (targetRegion === 'TW' ? 'default-twd' : 'default-usd')
+                    }
+                };
+                renderDistributorOptions(fallbackSnapshot);
+                setRoutingPreferenceLocal(targetRegion, fallbackSnapshot.userPreference.preferredDistributorId, { source: 'auto' });
+                setRoutingStatus(window.t('routing_guest_loaded', '訪客模式：已載入預設地區設定。'), 'info');
                 return;
             }
             try {
                 const res = await getDistributorRoutingOptions({ region: region || getPreferredRegion() || '' });
                 const snapshot = res?.data || res || {};
+                
+                const regions = Array.isArray(snapshot.regions) ? snapshot.regions : [];
+                const distributors = Array.isArray(snapshot.eligibleDistributors) ? snapshot.eligibleDistributors : [];
+                if (regions.length === 0 || distributors.length === 0) {
+                    throw new Error('empty_backend_data');
+                }
+
                 if (routingPreferenceSection) routingPreferenceSection.classList.remove('hidden');
                 renderDistributorOptions(snapshot);
                 const currentRegion = String(snapshot.userPreference?.preferredRegion || snapshot.region || getPreferredRegion() || '').toUpperCase();
-                setRoutingPreferenceLocal(currentRegion, snapshot.userPreference?.preferredDistributorId || getPreferredDistributorId());
+                setRoutingPreferenceLocal(currentRegion, snapshot.userPreference?.preferredDistributorId || getPreferredDistributorId(), { source: snapshot.userPreference?.preferredRegion ? 'manual' : 'auto' });
                 setRoutingStatus(snapshot.recommendation?.distributorId
-                    ? `系統推薦：${snapshot.recommendation.distributorName || snapshot.recommendation.distributorId}`
-                    : '請先選擇地區與經銷商。', 'info');
+                    ? window.t('routing_sys_recommend', '系統推薦：{name}').replace('{name}', snapshot.recommendation.distributorName || snapshot.recommendation.distributorId)
+                    : window.t('routing_prompt_select', '請先選擇地區與經銷商。'), 'info');
             } catch (error) {
                 console.warn('Failed to load distributor routing options:', error);
                 if (routingPreferenceSection) routingPreferenceSection.classList.remove('hidden');
@@ -381,20 +498,22 @@
                 };
                 renderDistributorOptions(fallbackSnapshot);
                 
-                setRoutingPreferenceLocal(targetRegion, fallbackSnapshot.userPreference.preferredDistributorId);
-                setRoutingStatus('無法載入推薦清單，已載入預設地區設定。', 'error');
+                setRoutingPreferenceLocal(targetRegion, fallbackSnapshot.userPreference.preferredDistributorId, { source: 'auto' });
+                setRoutingStatus(window.t('routing_load_failed_fallback', '無法載入推薦清單，已載入預設地區設定。'), 'error');
             }
         }
 
         async function saveRoutingPreference() {
-            if (!auth.currentUser) {
-                alert('請先登入再儲存偏好。');
-                return;
-            }
             const preferredRegion = String(preferredRegionSelect?.value || '').trim().toUpperCase();
             const preferredDistributorId = String(preferredDistributorSelect?.value || '').trim();
             if (!preferredRegion && !preferredDistributorId) {
-                setRoutingStatus('請至少選擇地區或經銷商。', 'error');
+                setRoutingStatus(window.t('routing_save_empty', '請至少選擇地區或經銷商。'), 'error');
+                return;
+            }
+            if (!auth.currentUser) {
+                setRoutingPreferenceLocal(preferredRegion, preferredDistributorId, { source: 'manual' });
+                setRoutingStatus(window.t('routing_save_local_success', '偏好已儲存（僅限本機）。'), 'success');
+                renderCartItems();
                 return;
             }
             try {
@@ -404,13 +523,14 @@
                     bindingSource: preferredDistributorId ? 'manual' : 'regionDefault'
                 });
                 const result = res?.data || res || {};
-                setRoutingPreferenceLocal(result.preferredRegion || preferredRegion, result.preferredDistributorId || preferredDistributorId);
-                setRoutingStatus('偏好已儲存。', 'success');
+                setRoutingPreferenceLocal(result.preferredRegion || preferredRegion, result.preferredDistributorId || preferredDistributorId, { source: 'manual' });
+                setRoutingStatus(window.t('routing_save_success', '偏好已儲存。'), 'success');
                 renderCartItems();
             } catch (error) {
-                console.warn('Failed to save routing preference:', error);
-                setRoutingStatus(error?.message || '儲存偏好失敗。', 'error');
-                alert(error?.message || '儲存偏好失敗。');
+                console.warn('Failed to save routing preference to backend:', error);
+                setRoutingPreferenceLocal(preferredRegion, preferredDistributorId, { source: 'manual' });
+                setRoutingStatus(window.t('routing_save_local_success', '偏好已儲存（僅限本機）。'), 'success');
+                renderCartItems();
             }
         }
 
@@ -647,6 +767,27 @@
             const shippingAmount = hasPhysical ? (preferredRegion && preferredRegion !== 'TW' ? 15 : 450) : 0;
             const taxAmount = 0;
             const totalAmount = subtotalAmount + shippingAmount + taxAmount;
+
+            const cartSubtotalElement = document.getElementById('cart-subtotal');
+            const cartShippingElement = document.getElementById('cart-shipping');
+            const cartTaxElement = document.getElementById('cart-tax');
+
+            if (cartSubtotalElement) {
+                cartSubtotalElement.textContent = expectedCurrency
+                    ? `${expectedCurrency} ${subtotalAmount.toLocaleString()}`
+                    : `${subtotalAmount.toLocaleString()}`;
+            }
+            if (cartShippingElement) {
+                cartShippingElement.textContent = expectedCurrency
+                    ? `${expectedCurrency} ${shippingAmount.toLocaleString()}`
+                    : `${shippingAmount.toLocaleString()}`;
+            }
+            if (cartTaxElement) {
+                cartTaxElement.textContent = expectedCurrency
+                    ? `${expectedCurrency} ${taxAmount.toLocaleString()}`
+                    : `${taxAmount.toLocaleString()}`;
+            }
+
             if (hasPhysical) {
                 if (cartTotalNote) {
                     cartTotalNote.textContent = isEn
@@ -1029,13 +1170,13 @@
                 userDisplay.textContent = window.t('user_guest', '訪客模式');
                 loginBtn.textContent = window.t('nav_login', '登入 / 註冊');
                 loginBtn.onclick = handleLogin;
-                if (routingPreferenceSection) routingPreferenceSection.classList.add('hidden');
+                loadRoutingOptions();
             }
         });
 
         if (preferredRegionSelect) {
             preferredRegionSelect.addEventListener('change', async () => {
-                setRoutingPreferenceLocal(preferredRegionSelect.value, '');
+                setRoutingPreferenceLocal(preferredRegionSelect.value, '', { source: 'manual' });
                 await loadRoutingOptions(preferredRegionSelect.value);
                 renderCartItems();
             });
@@ -1043,10 +1184,23 @@
 
         if (preferredDistributorSelect) {
             preferredDistributorSelect.addEventListener('change', () => {
-                setRoutingPreferenceLocal(preferredRegionSelect?.value || '', preferredDistributorSelect.value || '');
+                setRoutingPreferenceLocal(preferredRegionSelect?.value || '', preferredDistributorSelect.value || '', { source: 'manual' });
                 setRoutingStatus(preferredDistributorSelect.value
-                    ? '已選擇經銷商，尚未儲存到帳號。'
-                    : '請選擇經銷商。', 'info');
+                    ? window.t('routing_selected_unsaved', '已選擇經銷商，尚未儲存到帳號。')
+                    : window.t('routing_select_distributor_prompt', '請選擇經銷商。'), 'info');
+            });
+        }
+
+        if (shippingCountrySelect) {
+            shippingCountrySelect.addEventListener('change', async () => {
+                const suggestedRegion = syncRegionFromShippingCountry();
+                if (suggestedRegion) {
+                    await loadRoutingOptions(suggestedRegion);
+                    renderCartItems();
+                    setRoutingStatus(`系統已依收件地預設為 ${suggestedRegion}。`, 'info');
+                } else if (inferRegionFromCountry(shippingCountrySelect.value) && getPreferredRegionSource() === 'manual') {
+                    setRoutingStatus('目前地區已由你手動鎖定；若要依收件地調整，請重新選擇地區。', 'info');
+                }
             });
         }
 
@@ -1265,7 +1419,7 @@
                         preferredDistributorId: resolvedDistributorId || getPreferredDistributorId() || '',
                         bindingSource: resolvedDistributorId ? 'checkout' : 'regionDefault'
                     });
-                    setRoutingPreferenceLocal(checkoutRegion || getPreferredRegion() || '', resolvedDistributorId || getPreferredDistributorId() || '');
+                    setRoutingPreferenceLocal(checkoutRegion || getPreferredRegion() || '', resolvedDistributorId || getPreferredDistributorId() || '', { source: 'checkout' });
                     setRoutingStatus(resolvedDistributorId
                         ? `已記住偏好經銷商：${resolvedDistributorId}`
                         : '已記住地區偏好。', 'success');

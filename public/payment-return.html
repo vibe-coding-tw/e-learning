@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>付款結果 - Vibe Coding</title>
-    <script src="./js/i18n-helper.e9bc83ee6a21.js"></script>
+    <script src="./js/i18n-helper.06943c8663bd.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
@@ -102,6 +102,18 @@
             const urlParams = new URLSearchParams(window.location.search);
             const rtnCode = urlParams.get('RtnCode');
             const rtnMsg = urlParams.get('RtnMsg');
+
+            if (rtnCode === '1') {
+                const currentRegion = String(
+                    localStorage.getItem('vibe_user_region')
+                    || localStorage.getItem('preferredRegion')
+                    || localStorage.getItem('vibe_user_preferred_region')
+                    || ''
+                ).trim().toUpperCase();
+                if (currentRegion) {
+                    localStorage.setItem('vibe_user_last_success_region', currentRegion);
+                }
+            }
             
             // 簡單的錯誤處理 (如果逆向顯示交易失敗但還是導回來這裡)
             // 注意：RtnCode 1 代表成功
