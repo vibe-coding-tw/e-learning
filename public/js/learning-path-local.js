@@ -711,7 +711,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const listHtml = contentList.length
       ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
       : `<p class="text-sm text-slate-500">${summary}</p>`;
-    const objectPos = hardwareId === "car-intro" ? "50% 50%" : (hardwareId === "car-advanced" ? "50% 28%" : "50% 50%");
+    const objectPos = hardwareId === "car-intro" ? "50% 50%" : (hardwareId === "car-advanced" ? "50% 28%" : ((hardwareId.includes("esp32") || hardwareId.includes("chassis")) ? "50% 12%" : "50% 50%"));
     const objectScale = hardwareId === "car-advanced" ? "scale(1.08)" : (hardwareId === "car-intro" ? "scale(1.02)" : "scale(1)");
     const imageHtml = imageUrl
       ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-white mb-3 h-56"><img src="${imageUrl}" alt="${displayTitle}" class="w-full h-full object-cover" style="object-position:${objectPos}; transform:${objectScale};"></div>`
