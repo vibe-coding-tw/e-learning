@@ -764,7 +764,7 @@
                     : window.t('cart_total_no_currency', '總金額（含稅含運）:');
             }
 
-            const shippingAmount = hasPhysical ? (preferredRegion && preferredRegion !== 'TW' ? 15 : 450) : 0;
+            const shippingAmount = 0;
             const taxAmount = 0;
             const totalAmount = subtotalAmount + shippingAmount + taxAmount;
 
@@ -778,14 +778,10 @@
                     : `${subtotalAmount.toLocaleString()}`;
             }
             if (cartShippingElement) {
-                cartShippingElement.textContent = expectedCurrency
-                    ? `${expectedCurrency} ${shippingAmount.toLocaleString()}`
-                    : `${shippingAmount.toLocaleString()}`;
+                cartShippingElement.textContent = window.t('shipping_included', '已含運費');
             }
             if (cartTaxElement) {
-                cartTaxElement.textContent = expectedCurrency
-                    ? `${expectedCurrency} ${taxAmount.toLocaleString()}`
-                    : `${taxAmount.toLocaleString()}`;
+                cartTaxElement.textContent = window.t('tax_included', '已含稅額');
             }
 
             if (hasPhysical) {
@@ -1400,7 +1396,7 @@
             }
 
             if (hasPhysical) {
-                const shippingFee = useInternationalShipping ? 15 : 450;
+                const shippingFee = 0;
                 calculatedTotal += shippingFee;
             }
 
