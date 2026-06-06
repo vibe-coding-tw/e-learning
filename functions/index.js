@@ -742,7 +742,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
             settlementAmount += itemAmount * qty;
         }
         const subtotalAmount = settlementAmount;
-        const shippingAmount = hasPhysical ? (isStripe ? 15 : 450) : 0;
+        const shippingAmount = 0;
         const taxAmount = 0;
         const totalAmount = subtotalAmount + shippingAmount + taxAmount;
         const requestedDistributorId = String(distributorId || '').trim();
