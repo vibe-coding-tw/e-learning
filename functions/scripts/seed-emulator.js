@@ -30,12 +30,33 @@ function normalizeCanonicalCourseKey(value = '') {
     .replace(/^(?:tw|en)-/i, '');
 }
 
+function normalizeCanonicalCourseDocId(course = {}) {
+  const metadataType = String(course.metadataType || '').toLowerCase();
+  if (metadataType === 'spec' || metadataType === 'product') {
+    return String(course.courseId || course.id || '').trim();
+  }
+
+  const normalizedCourseKey = normalizeCanonicalCourseKey(
+    course.courseKey || course.contentRef || course.courseId || course.id || ''
+  );
+  if (normalizedCourseKey) {
+    return `${normalizedCourseKey}.html`;
+  }
+
+  return String(course.courseId || course.id || '').trim();
+}
+
+function normalizeCanonicalUnitId(value = '') {
+  const file = String(value || '').trim().replace(/\.html$/i, '');
+  if (!file) return '';
+  if (/^start-\d{2}-unit-/.test(file)) return `${file.replace(/^start-\d{2}-unit-/, 'car-starter-')}.html`;
+  if (/^basic-\d{2}-unit-/.test(file)) return `${file.replace(/^basic-\d{2}-unit-/, 'car-basic-')}.html`;
+  if (/^(?:adv|advanced)-\d{2}-unit-/.test(file)) return `${file.replace(/^(?:adv|advanced)-\d{2}-unit-/, 'car-advanced-')}.html`;
+  return `${file}.html`;
+}
+
 function resolveCanonicalCourseId(course) {
-  const rawCourseId = String(course.courseId || '').trim();
-  const firstUnit = Array.isArray(course.courseUnits) && course.courseUnits.length > 0 ? course.courseUnits[0] : '';
-  const entryUnitId = String(course.entryUnitId || firstUnit || '').trim();
-  if (rawCourseId.includes('-master-') && entryUnitId.endsWith('.html')) return entryUnitId;
-  return rawCourseId || entryUnitId;
+  return normalizeCanonicalCourseDocId(course);
 }
 
 function normalizeLegacyPrice(value) {
@@ -105,23 +126,29 @@ function withEntryMetadata(course) {
     };
   }
   const firstUnit = Array.isArray(course.courseUnits) && course.courseUnits.length > 0 ? course.courseUnits[0] : '';
-  const resolvedEntryUnitId = course.entryUnitId || firstUnit;
+  const resolvedEntryUnitId = normalizeCanonicalUnitId(course.entryUnitId || firstUnit);
+  const normalizedCourseUnits = Array.isArray(course.courseUnits)
+    ? course.courseUnits.map(normalizeCanonicalUnitId)
+    : [];
+  const normalizedCourseKey = normalizeCanonicalCourseKey(course.courseKey || course.contentRef || course.courseId || course.id || '');
   const canonicalCourseId = resolveCanonicalCourseId({
     ...course,
     entryUnitId: resolvedEntryUnitId,
   });
   return {
     ...course,
+    id: canonicalCourseId || course.id || '',
     courseId: canonicalCourseId,
-    courseKey: normalizeCanonicalCourseKey(course.courseKey || course.contentRef || canonicalCourseId),
-    track: course.track || (String(canonicalCourseId || '').startsWith('start-') || String(canonicalCourseId || '').startsWith('basic-') || String(canonicalCourseId || '').startsWith('adv-') ? 'car' : 'common'),
+    courseKey: normalizedCourseKey,
+    track: course.track || (normalizedCourseKey.startsWith('car-') ? 'car' : 'common'),
     level: course.level || (
-      String(canonicalCourseId || '').startsWith('start-') ? 'starter' :
-      String(canonicalCourseId || '').startsWith('basic-') ? 'basic' :
-      String(canonicalCourseId || '').startsWith('adv-') ? 'advanced' :
+      normalizedCourseKey.startsWith('car-starter-') ? 'starter' :
+      normalizedCourseKey.startsWith('car-basic-') ? 'basic' :
+      normalizedCourseKey.startsWith('car-advanced-') ? 'advanced' :
       'common'
     ),
     entryUnitId: resolvedEntryUnitId,
+    courseUnits: normalizedCourseUnits.length > 0 ? normalizedCourseUnits : course.courseUnits,
     contentRef: course.contentRef || buildContentRef(resolvedEntryUnitId),
     classroomUrl: resolvedEntryUnitId ? `/courses/${resolvedEntryUnitId}` : '',
   };
@@ -244,8 +271,8 @@ const courses = [
 
   // ─── started (入門課程：Web App 遙控器設計與 Web BLE 整合) ───
   {
-    id: 'start-01-web-app',
-    courseId: 'start-01-master-web-app.html',
+    id: 'car-starter-web-app.html',
+    courseId: 'car-starter-web-app.html',
     title: 'Web App 基礎開發',
     lessonLabel: '入門 01', icon: '📱', tagText: '入門', duration: '2 小時',
     price: 1200, category: 'started',
@@ -256,8 +283,8 @@ const courses = [
     orderWeight: 10, isPhysical: false,
   },
   {
-    id: 'start-02-web-ble',
-    courseId: 'start-02-master-web-ble.html',
+    id: 'car-starter-web-ble.html',
+    courseId: 'car-starter-web-ble.html',
     title: 'Web BLE 藍牙整合',
     lessonLabel: '入門 02', icon: '📶', tagText: '入門', duration: '2.5 小時',
     price: 1200, category: 'started',
@@ -268,8 +295,8 @@ const courses = [
     orderWeight: 11, isPhysical: false,
   },
   {
-    id: 'start-03-remote-control',
-    courseId: 'start-03-master-remote-control.html',
+    id: 'car-starter-remote-control.html',
+    courseId: 'car-starter-remote-control.html',
     title: '遙控器介面實作',
     lessonLabel: '入門 03', icon: '🎮', tagText: '入門', duration: '2 小時',
     price: 1200, category: 'started',
@@ -280,8 +307,8 @@ const courses = [
     orderWeight: 12, isPhysical: false,
   },
   {
-    id: 'start-04-touch-events',
-    courseId: 'start-04-master-touch-events.html',
+    id: 'car-starter-touch-events.html',
+    courseId: 'car-starter-touch-events.html',
     title: '觸控事件處理',
     lessonLabel: '入門 04', icon: '👆', tagText: '入門', duration: '2 小時',
     price: 1200, category: 'started',
@@ -292,8 +319,8 @@ const courses = [
     orderWeight: 13, isPhysical: false,
   },
   {
-    id: 'start-05-joystick-lab',
-    courseId: 'start-05-master-joystick-lab.html',
+    id: 'car-starter-joystick-lab.html',
+    courseId: 'car-starter-joystick-lab.html',
     title: '搖桿實驗室',
     lessonLabel: '入門 05', icon: '🕹️', tagText: '入門', duration: '2.5 小時',
     price: 1200, category: 'started',

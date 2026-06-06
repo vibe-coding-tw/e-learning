@@ -25,23 +25,27 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Detect locale (matches nav-component.js behavior)
     let isZh = true;
-    try {
-        const stored = localStorage.getItem('vibe_user_locale');
-        if (stored) {
-            isZh = stored.trim().toLowerCase().startsWith('zh');
-        } else {
-            const navLang = String(navigator.language || "").toLowerCase();
-            isZh = navLang.startsWith('zh');
-        }
-    } catch (_) {}
+    if (typeof window.detectUiLocale === 'function') {
+        isZh = window.detectUiLocale().startsWith('zh');
+    } else {
+        try {
+            const stored = localStorage.getItem('vibe_user_locale');
+            if (stored) {
+                isZh = stored.trim().toLowerCase().startsWith('zh');
+            } else {
+                const navLang = String(navigator.language || "").toLowerCase();
+                isZh = navLang.startsWith('zh');
+            }
+        } catch (_) {}
+    }
 
     const LOCALIZED_SITE_PAGES = {
         students: {
-            zh: { href: '/tw/students.html', label: '課程購買與使用指南' },
+            zh: { href: '/tw/students.html', label: window.t ? window.t('nav_students_label', '課程購買與使用指南') : '課程購買與使用指南' },
             en: { href: '/en/students.html', label: 'Student Guide' },
         },
         tutors: {
-            zh: { href: '/tw/tutors.html', label: '專業導師與合作洽談' },
+            zh: { href: '/tw/tutors.html', label: window.t ? window.t('nav_tutors_label', '專業導師與合作洽談') : '專業導師與合作洽談' },
             en: { href: '/en/tutors.html', label: 'Tutor Guide' },
         },
     };
@@ -112,10 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
                 <div class="text-2xl font-black tracking-tighter text-white">🚀 Vibe Coding</div>
                 <div class="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-400 font-bold text-sm uppercase tracking-wide">
-                    <a href="${resolve('index.html')}" class="hover:text-white transition-colors">${isZh ? '首頁' : 'Home'}</a>
-                    <a href="${resolve(learningPathHref('common'))}" class="hover:text-white transition-colors">${isZh ? '學習路徑' : 'Learning Path'}</a>
-                    <a href="${resolve('students.html')}" data-localized-page="students" class="hover:text-white transition-colors"><span data-localized-label="students">${isZh ? '課程指南' : 'Student Guide'}</span></a>
-                    <a href="${resolve('tutors.html')}" data-localized-page="tutors" class="hover:text-white transition-colors"><span data-localized-label="tutors">${isZh ? '導師合作' : 'Tutor Guide'}</span></a>
+                    <a href="${resolve('index.html')}" class="hover:text-white transition-colors">${window.t ? window.t('footer_home', isZh ? '首頁' : 'Home') : (isZh ? '首頁' : 'Home')}</a>
+                    <a href="${resolve(learningPathHref('common'))}" class="hover:text-white transition-colors">${window.t ? window.t('footer_learning_path', isZh ? '學習路徑' : 'Learning Path') : (isZh ? '學習路徑' : 'Learning Path')}</a>
+                    <a href="${resolve('students.html')}" data-localized-page="students" class="hover:text-white transition-colors"><span data-localized-label="students">${window.t ? window.t('footer_student_guide', isZh ? '課程指南' : 'Student Guide') : (isZh ? '課程指南' : 'Student Guide')}</span></a>
+                    <a href="${resolve('tutors.html')}" data-localized-page="tutors" class="hover:text-white transition-colors"><span data-localized-label="tutors">${window.t ? window.t('footer_tutor_guide', isZh ? '導師合作' : 'Tutor Guide') : (isZh ? '導師合作' : 'Tutor Guide')}</span></a>
                 </div>
             </div>
             
@@ -125,17 +129,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     <div class="grid grid-cols-1 md:flex md:flex-row justify-center items-center gap-y-2 md:gap-x-6 text-xs text-slate-500 font-medium">
                         <div class="flex items-center gap-2">
-                            <span class="opacity-50">${isZh ? '營業人' : 'Business Entity'}</span>
-                            <span class="text-slate-400">${isZh ? '腳丫健康科技有限公司' : 'Joy Foot Health Technology Co., Ltd.'}</span>
+                            <span class="opacity-50">${window.t ? window.t('footer_business_entity', isZh ? '營業人' : 'Business Entity') : (isZh ? '營業人' : 'Business Entity')}</span>
+                            <span class="text-slate-400">${window.t ? window.t('footer_company_name', isZh ? '腳丫健康科技有限公司' : 'Joy Foot Health Technology Co., Ltd.') : (isZh ? '腳丫健康科技有限公司' : 'Joy Foot Health Technology Co., Ltd.')}</span>
                         </div>
                         <span class="hidden md:inline opacity-20">|</span>
                         <div class="flex items-center gap-2">
-                            <span class="opacity-50">${isZh ? '統編' : 'Tax ID'}</span>
+                            <span class="opacity-50">${window.t ? window.t('footer_tax_id', isZh ? '統編' : 'Tax ID') : (isZh ? '統編' : 'Tax ID')}</span>
                             <span class="text-slate-400">80187668</span>
                         </div>
                         <span class="hidden md:inline opacity-20">|</span>
                         <div class="flex items-center gap-2">
-                            <span class="opacity-50">${isZh ? '合作洽談' : 'Contact Us'}</span>
+                            <span class="opacity-50">${window.t ? window.t('footer_contact_us', isZh ? '合作洽談' : 'Contact Us') : (isZh ? '合作洽談' : 'Contact Us')}</span>
                             <a href="mailto:info@vibe-coding.tw" class="text-indigo-400 hover:text-indigo-300 transition-colors font-bold">info@vibe-coding.tw</a>
                         </div>
                     </div>

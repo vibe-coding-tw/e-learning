@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const { normalizeLegacyId } = require('./id-utils');
 
 function normalizeText(value = "") {
     return String(value || "").trim();
@@ -46,7 +47,7 @@ async function queryTutorApplications(db, {
 } = {}) {
     let query = db.collection('tutor_applications');
     if (userId) query = query.where('userId', '==', userId);
-    if (unitId) query = query.where('unitId', '==', unitId);
+    if (unitId) query = query.where('unitId', '==', normalizeLegacyId(unitId));
     if (source) query = query.where('source', '==', source);
     if (Array.isArray(statuses) && statuses.length > 0) {
         query = statuses.length === 1 ? query.where('status', '==', statuses[0]) : query.where('status', 'in', statuses);

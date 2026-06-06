@@ -387,7 +387,7 @@ window.distributorPortalResolvePriceDisplay = function(book = {}) {
 window.distributorPortalSeedFromLessons = async function() {
     const distributorId = state.distributorId || getFormValue('portal-distributor-id-input');
     if (!distributorId) {
-        toast('請先載入經銷商 ID。', 'error');
+        toast(window.t('alert_load_distributor_first', '請先載入經銷商 ID。'), 'error');
         return;
     }
 
@@ -395,20 +395,24 @@ window.distributorPortalSeedFromLessons = async function() {
     const originalText = button?.textContent || '';
     if (button) {
         button.disabled = true;
-        button.textContent = '套用中...';
+        button.textContent = window.t('status_applying', '套用中...');
     }
 
     try {
         const fn = httpsCallable(functions, 'seedDistributorPriceBooksFromLessons');
         const res = await fn({ distributorId });
         if (!res?.data?.success) {
-            throw new Error(res?.data?.message || '套用失敗');
+            throw new Error(res?.data?.message || window.t('alert_apply_failed', '套用失敗'));
         }
-        toast(`已套用現有商品：建立 ${res.data.created || 0} 筆、更新 ${res.data.updated || 0} 筆、略過 ${res.data.skipped || 0} 筆`, 'success');
+        const msg = window.t('toast_apply_success', '已套用現有商品：建立 {created} 筆、更新 {updated} 筆、略過 {skipped} 筆')
+            .replace('{created}', res.data.created || 0)
+            .replace('{updated}', res.data.updated || 0)
+            .replace('{skipped}', res.data.skipped || 0);
+        toast(msg, 'success');
         await loadPriceBooks();
     } catch (e) {
         console.error('[DistributorPortal] seed failed:', e);
-        toast(`套用現有商品失敗：${e.message || 'unknown error'}`, 'error');
+        toast(window.t('toast_apply_failed', '套用現有商品失敗：{msg}').replace('{msg}', e.message || 'unknown error'), 'error');
     } finally {
         if (button) {
             button.disabled = false;
@@ -652,7 +656,7 @@ async function loadPortalData(distributorId = '') {
     }
 
     if (!state.portal?.canManagePricing) {
-        showDenied('這個帳號沒有可管理的經銷商歸屬，無法進入經銷商入口。');
+        showDenied(window.t('alert_distributor_not_assigned', '這個帳號沒有可管理的經銷商歸屬，無法進入經銷商入口。'));
         return;
     }
 
@@ -827,12 +831,12 @@ window.distributorPortalPopulateById = function (priceBookId) {
     const cached = state.priceBooks.find((book) => String(book.id || book.priceBookId || '').trim() === normalizedId);
     const fallback = cached || window.__distributorPriceBookCache?.[normalizedId] || null;
     if (!fallback) {
-        toast('找不到這筆價格表，請重新載入後再試。', 'error');
+        toast(window.t('toast_no_pricebook_found', '找不到這筆價格表，請重新載入後再試。'), 'error');
         return;
     }
     state.selectedPriceBookId = normalizedId;
     populateForm(fallback);
-    setText('portal-form-state', `已載入：${fallback.id || fallback.productId || '未命名價格表'}`);
+    setText('portal-form-state', window.t('status_loaded_pricebook', '已載入：{msg}').replace('{msg}', fallback.id || fallback.productId || '未命名價格表'));
     showPriceBookModal(true);
     document.getElementById('portal-product-id')?.focus?.();
 };
@@ -848,7 +852,7 @@ function showFulfillmentModal(open = true) {
 window.distributorPortalOpenFulfillmentModal = function (orderId) {
     const order = state.orders.find(o => o.id === orderId);
     if (!order) {
-        toast('找不到該筆訂單資訊。', 'error');
+        toast(window.t('toast_order_not_found', '找不到該筆訂單資訊。'), 'error');
         return;
     }
     state.selectedOrderId = orderId;
@@ -877,7 +881,7 @@ window.distributorPortalCloseFulfillmentModal = function () {
 window.distributorPortalSaveFulfillment = async function () {
     const orderId = state.selectedOrderId;
     if (!orderId) {
-        toast('請選擇要維護的訂單。', 'error');
+        toast(window.t('toast_select_order_first', '請選擇要維護的訂單。'), 'error');
         return;
     }
 
@@ -889,7 +893,7 @@ window.distributorPortalSaveFulfillment = async function () {
     const originalText = btn?.textContent || '';
     if (btn) {
         btn.disabled = true;
-        btn.textContent = '儲存中...';
+        btn.textContent = window.t('status_updating_tutor', '正在更新導師指派...'); // Let's use generic status
     }
 
     try {
@@ -901,15 +905,15 @@ window.distributorPortalSaveFulfillment = async function () {
             trackingNumber
         });
         if (!res?.data?.success) {
-            throw new Error(res?.data?.message || '更新出貨狀態失敗');
+            throw new Error(res?.data?.message || window.t('toast_update_shipment_failed', '更新出貨狀態失敗'));
         }
-        toast('出貨狀態更新成功！', 'success');
+        toast(window.t('toast_update_shipment_success', '出貨狀態更新成功！'), 'success');
         showFulfillmentModal(false);
         setLoading(true);
         await loadPortalData(state.selectedDistributorId || state.distributorId);
     } catch (e) {
         console.error('[DistributorPortal] save fulfillment failed:', e);
-        toast(`更新失敗：${e.message || 'unknown error'}`, 'error');
+        toast(window.t('alert_update_failed', '更新失敗：{msg}').replace('{msg}', e.message || 'unknown error'), 'error');
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -921,7 +925,7 @@ window.distributorPortalSaveFulfillment = async function () {
 onAuthStateChanged(auth, async (user) => {
     state.user = user || null;
     if (!user) {
-        showDenied('請先登入後再使用 Distributor Portal。');
+        showDenied(window.t('alert_login_distributor_first', '請先登入後再使用 Distributor Portal。'));
         return;
     }
 
@@ -931,6 +935,6 @@ onAuthStateChanged(auth, async (user) => {
         if (state.distributorId) await loadPriceBooks();
     } catch (e) {
         console.error('[DistributorPortal] bootstrap failed:', e);
-        showDenied(`無法載入經銷商入口：${e.message || 'unknown error'}`);
+        showDenied(window.t('alert_load_portal_failed', '無法載入經銷商入口：{msg}').replace('{msg}', e.message || 'unknown error'));
     }
 });

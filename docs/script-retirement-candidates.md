@@ -60,6 +60,15 @@
 - `scripts/generate_all_graders.py`
 - `scripts/merge_classroom_templates.py`
 - `scripts/update_student_workflows.py`
+- `functions/scripts/normalize_referral_links_unit_ids.js`
+- `functions/scripts/audit_referral_links_canonical_state.js`
+- `functions/scripts/migrate_lessons_classroom_urls.js`
+- `functions/scripts/migrate_metadata_lessons_unit_filenames.js`
+- `functions/scripts/normalize_runtime_canonical_fields.js`
+- `functions/scripts/migrate_all_legacy_firestore_references.js`
+- `functions/scripts/migrate_legacy_ids_firestore.js`
+- `functions/scripts/rename_basic_advanced_metadata_lessons_doc_ids.js`
+- `functions/scripts/rename_starter_metadata_lessons_doc_ids.js`
 
 ## 可先搬入 archive
 

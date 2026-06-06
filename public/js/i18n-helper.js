@@ -242,7 +242,79 @@
             "status_graded": "已評分",
             "status_blocked": "🔴 遭遇卡點",
             "status_coaching": "🟡 導師引導中",
-            "status_resolved": "🟢 已解決"
+            "status_resolved": "🟢 已解決",
+
+            // learning-path.html
+            "lp_title": "學習路徑",
+            "lp_hardwareHeader": "硬體設備",
+            "lp_specsHeader": "電腦規格推薦",
+            "lp_coreContentLabel": "核心內容：",
+            "lp_previewBtn": "▶ 課程預覽",
+            "lp_loadingText": "載入中...",
+            "lp_loginFreeBtn": "👤 請先登入 (免費)",
+            "lp_loginBtn": "👤 請先登入",
+            "lp_addToCartBtn": "🛒 加入購物車",
+            "lp_enterCourseBtn": "✅ 進入課程內容",
+            "lp_freeLabel": "免費",
+            "lp_emptyCategory": "目前此分類尚無課程。",
+            "lp_addToCartPhysical": "🛒 加入購物車",
+            "lp_alreadyInCart": "⚠️ 「{name}」已在購物車中！",
+            "lp_coursesConfigMissing": "⚠️ 課程連結尚未備妥，請聯繫客服。",
+
+            // dashboard.js / distributor-portal.js Alerts & Dialogs
+            "alert_invalid_unit_url": "此單元設定的作業連結格式不正確，請到課程設定修正。",
+            "alert_missing_unit_url": "此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。",
+            "alert_assignment_not_assigned": "此單元尚未完成老師指派，作業入口會在老師指派完成後開放。",
+            "alert_invalid_tutor_url": "此單元設定的作業連結格式不正確，請通知管理員/老師修正。",
+            "alert_fetch_portal_failed": "暫時無法取得作業入口，請稍後再試。",
+            "confirm_mark_shipped": "確定要將訂單 {orderId} 標記為「履約完成」嗎？\n這將會同步更新學員的查看狀態。",
+            "notify_order_status_updated": "訂單狀態已更新！",
+            "alert_update_failed": "更新失敗：{msg}",
+            "alert_enter_email": "請輸入 Email",
+            "status_updating_auth": "正在新增單元授權...",
+            "status_removing_auth": "正在移除單元授權...",
+            "alert_auth_failed": "授權失敗: {msg}",
+            "status_updating_tutor": "正在更新導師指派...",
+            "alert_assign_failed": "指派失敗: {msg}",
+            "alert_score_required": "請輸入分數",
+            "alert_feedback_required": "請輸入指導回饋指引！",
+            "alert_next_goal_required": "請指派下一步目標！",
+            "alert_grade_success": "評分成功！",
+            "alert_grade_failed": "評分失敗：{msg}",
+            "alert_tutor_record_success": "指導紀錄提交成功！",
+            "alert_tutor_record_failed": "提交指導紀錄失敗：{msg}",
+            "prompt_enter_url": "請貼上此單元的作業連結：",
+            "alert_url_format_error": "連結格式錯誤。請使用有效的作業連結（http/https）。",
+            "notify_url_submitted": "已送出作業連結，管理員已收到審核通知。",
+            "alert_submit_failed": "送出失敗：{msg}",
+            "confirm_unsaved_changes": "您有尚未儲存的價格變更，切換篩選將會遺失變更，是否繼續？",
+            "notify_price_updated": "價格已更新！",
+            "alert_update_price_failed": "更新價格失敗：{msg}",
+            "alert_input_distributor_product_id": "請先輸入經銷商 ID 與產品 ID。",
+            "alert_price_non_negative": "售價必須是非負數字。",
+            "alert_promo_price_invalid": "活動價必須是非負數字，且不可大於售價。",
+            "notify_distributor_price_saved": "已儲存經銷商價格表：{msg}",
+            "alert_save_distributor_price_failed": "儲存經銷商價格表失敗：{msg}",
+
+            // distributor-portal.js
+            "alert_load_distributor_first": "請先載入經銷商 ID。",
+            "status_applying": "套用中...",
+            "alert_apply_failed": "套用失敗",
+            "toast_apply_success": "已套用現有商品：建立 {created} 筆、更新 {updated} 筆、略過 {skipped} 筆",
+            "toast_apply_failed": "套用現有商品失敗：{msg}",
+            "toast_no_pricebook_found": "找不到這筆價格表，請重新載入後再試。",
+            "status_loaded_pricebook": "已載入：{msg}",
+            "toast_order_not_found": "找不到該筆訂單資訊。",
+            "toast_select_order_first": "請選擇要維護的訂單。",
+            "toast_update_shipment_success": "出貨狀態更新成功！",
+            "toast_update_shipment_failed": "更新出貨狀態失敗",
+            "alert_login_distributor_first": "請先登入後再使用 Distributor Portal。",
+            "alert_load_portal_failed": "無法載入經銷商入口：{msg}",
+            "alert_distributor_not_assigned": "這個帳號沒有可管理的經銷商歸屬，無法進入經銷商入口。",
+
+            // nav-component.js
+            "alert_login_failed": "Google 登入失敗，請再試一次。",
+            "alert_login_failed_blocked": "Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。"
         },
         "en": {
             // Document title fallback
@@ -445,11 +517,85 @@
             "status_graded": "Graded",
             "status_blocked": "🔴 Blocked",
             "status_coaching": "🟡 Guided",
-            "status_resolved": "🟢 Resolved"
+            "status_resolved": "🟢 Resolved",
+
+            // learning-path.html
+            "lp_title": "Learning Path",
+            "lp_hardwareHeader": "Hardware Kits",
+            "lp_specsHeader": "Computer Spec Recommendations",
+            "lp_coreContentLabel": "Core Content:",
+            "lp_previewBtn": "▶ Course Preview",
+            "lp_loadingText": "Loading...",
+            "lp_loginFreeBtn": "👤 Login (Free)",
+            "lp_loginBtn": "👤 Login",
+            "lp_addToCartBtn": "🛒 Add to Cart",
+            "lp_enterCourseBtn": "✅ Enter Course",
+            "lp_freeLabel": "Free",
+            "lp_emptyCategory": "No courses available in this category yet.",
+            "lp_addToCartPhysical": "🛒 Add to Cart",
+            "lp_alreadyInCart": "⚠️ \"{name}\" is already in your cart!",
+            "lp_coursesConfigMissing": "⚠️ Course link not ready, please contact customer support.",
+
+            // dashboard.js / distributor-portal.js Alerts & Dialogs
+            "alert_invalid_unit_url": "The assignment link format for this unit is incorrect. Please correct it in course settings.",
+            "alert_missing_unit_url": "The assignment link for this unit is not set. Please contact an admin/tutor to set it.",
+            "alert_assignment_not_assigned": "This unit has not been assigned by a tutor yet. The assignment portal will open once assigned.",
+            "alert_invalid_tutor_url": "The assignment link format is incorrect. Please notify your admin/tutor to correct it.",
+            "alert_fetch_portal_failed": "Unable to fetch the assignment portal. Please try again later.",
+            "confirm_mark_shipped": "Are you sure you want to mark order {orderId} as 'Fulfilled'? This will update the student's status.",
+            "notify_order_status_updated": "Order status updated!",
+            "alert_update_failed": "Update failed: {msg}",
+            "alert_enter_email": "Please enter Email",
+            "status_updating_auth": "Adding unit authorization...",
+            "status_removing_auth": "Removing unit authorization...",
+            "alert_auth_failed": "Authorization failed: {msg}",
+            "status_updating_tutor": "Updating tutor assignment...",
+            "alert_assign_failed": "Assignment failed: {msg}",
+            "alert_score_required": "Please enter a score",
+            "alert_feedback_required": "Please enter tutor feedback!",
+            "alert_next_goal_required": "Please assign the next goal!",
+            "alert_grade_success": "Graded successfully!",
+            "alert_grade_failed": "Grading failed: {msg}",
+            "alert_tutor_record_success": "Tutor record submitted successfully!",
+            "alert_tutor_record_failed": "Failed to submit tutor record: {msg}",
+            "prompt_enter_url": "Please paste the assignment link for this unit:",
+            "alert_url_format_error": "Invalid URL format. Please use a valid assignment link (http/https).",
+            "notify_url_submitted": "Assignment link submitted. Admin has been notified for review.",
+            "alert_submit_failed": "Submission failed: {msg}",
+            "confirm_unsaved_changes": "You have unsaved price changes. Switching filters will discard them. Do you want to continue?",
+            "notify_price_updated": "Prices updated!",
+            "alert_update_price_failed": "Failed to update prices: {msg}",
+            "alert_input_distributor_product_id": "Please enter distributor ID and product ID first.",
+            "alert_price_non_negative": "Price must be a non-negative number.",
+            "alert_promo_price_invalid": "Promo price must be a non-negative number and cannot be greater than the selling price.",
+            "notify_distributor_price_saved": "Distributor price book saved: {msg}",
+            "alert_save_distributor_price_failed": "Failed to save distributor price book: {msg}",
+
+            // distributor-portal.js
+            "alert_load_distributor_first": "Please load distributor ID first.",
+            "status_applying": "Applying...",
+            "alert_apply_failed": "Apply failed",
+            "toast_apply_success": "Applied existing products: created {created}, updated {updated}, skipped {skipped}",
+            "toast_apply_failed": "Failed to apply existing products: {msg}",
+            "toast_no_pricebook_found": "Price book not found. Please reload and try again.",
+            "status_loaded_pricebook": "Loaded: {msg}",
+            "toast_order_not_found": "Order details not found.",
+            "toast_select_order_first": "Please select an order to update.",
+            "toast_update_shipment_success": "Shipment status updated successfully!",
+            "toast_update_shipment_failed": "Failed to update shipment status",
+            "alert_login_distributor_first": "Please log in first to use the Distributor Portal.",
+            "alert_load_portal_failed": "Failed to load Distributor Portal: {msg}",
+            "alert_distributor_not_assigned": "This account is not assigned to any distributor and cannot access the portal.",
+
+            // nav-component.js
+            "alert_login_failed": "Google login failed. Please try again.",
+            "alert_login_failed_blocked": "Google login failed. Please try again later.\nIf popups are blocked, try clicking the login button again."
         }
     };
 
     // 3. 全局字串翻譯函數
+    window.detectUiLocale = detectUiLocale;
+    window.currentLocale = currentLocale;
     window.t = function (key, fallback) {
         const localeDict = DICTIONARY[currentLocale];
         if (localeDict && localeDict[key] !== undefined) {

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Normalize legacy product-like documents in metadata_lessons.
+ * Deprecated: legacy product docs were consolidated into the canonical
+ * `esp32-c3` and `esp32-s3` metadata_lessons documents.
  *
- * Why:
- * - Keep course metadata and product metadata distinguishable.
- * - Avoid forcing non-course items into courseId canonical pattern.
+ * This script is kept only as a historical pointer and now intentionally
+ * performs no writes. The canonical product docs already contain the merged
+ * metadata and aliases.
  *
  * Usage:
- *   node functions/scripts/normalize_legacy_product_metadata.js --dry-run
- *   node functions/scripts/normalize_legacy_product_metadata.js --apply
+ *   node functions/scripts/normalize_legacy_product_metadata.js
  */
 
 const admin = require("firebase-admin");
@@ -27,150 +27,14 @@ function parseArgs(argv) {
   return args;
 }
 
-const TARGETS = [
-  {
-    docId: "0WZW0gURA4rOzKIFh64j",
-    patch: {
-      metadataType: "legacy_product",
-      productId: "legacy-car-intro",
-      courseKey: "legacy-car-intro",
-      category: "prepare",
-      isPhysical: true,
-      isDeprecated: true,
-      hiddenFromCatalog: true,
-      normalizationNote: "Legacy car intro product metadata retained for history.",
-    },
-  },
-  {
-    docId: "udyru8h76d1z3DhCy5i3",
-    patch: {
-      metadataType: "legacy_product",
-      productId: "legacy-car-advanced",
-      courseKey: "legacy-car-advanced",
-      category: "prepare",
-      isPhysical: true,
-      isDeprecated: true,
-      hiddenFromCatalog: true,
-      normalizationNote: "Legacy car advanced product metadata retained for history.",
-    },
-  },
-  {
-    docId: "esp32-c3",
-    patch: {
-      metadataType: "product",
-      productId: "esp32-c3",
-      courseKey: "product-esp32-c3",
-      category: "prepare",
-      isPhysical: true,
-      isDeprecated: false,
-      hiddenFromCatalog: false,
-      pricing: {
-        tw: { amount: 0, currency: "TWD" },
-        en: { amount: 0, currency: "USD" },
-      },
-      prices: {
-        tw: 0,
-        en: 0,
-      },
-      priceByLocale: {
-        "zh-TW": { amount: 0, currency: "TWD" },
-        en: { amount: 0, currency: "USD" },
-      },
-      priceByRegion: {
-        tw: { amount: 0, currency: "TWD" },
-        en: { amount: 0, currency: "USD" },
-      },
-      priceMap: {
-        tw: { amount: 0, currency: "TWD" },
-        en: { amount: 0, currency: "USD" },
-      },
-      price_twd: 0,
-      price_usd: 0,
-      currency: "TWD",
-      learningPaths: ["tw-common", "en-common"],
-      normalizationNote: "Physical product metadata for prepare page hardware card.",
-    },
-  },
-  {
-    docId: "esp32-s3",
-    patch: {
-      metadataType: "product",
-      productId: "esp32-s3",
-      courseKey: "product-esp32-s3",
-      category: "prepare",
-      isPhysical: true,
-      isDeprecated: false,
-      hiddenFromCatalog: false,
-      pricing: {
-        tw: { amount: 0, currency: "TWD" },
-        en: { amount: 0, currency: "USD" },
-      },
-      prices: {
-        tw: 0,
-        en: 0,
-      },
-      priceByLocale: {
-        "zh-TW": { amount: 0, currency: "TWD" },
-        en: { amount: 0, currency: "USD" },
-      },
-      priceByRegion: {
-        tw: { amount: 0, currency: "TWD" },
-        en: { amount: 0, currency: "USD" },
-      },
-      priceMap: {
-        tw: { amount: 0, currency: "TWD" },
-        en: { amount: 0, currency: "USD" },
-      },
-      price_twd: 0,
-      price_usd: 0,
-      currency: "TWD",
-      learningPaths: ["tw-common", "en-common"],
-      normalizationNote: "Physical product metadata for prepare page hardware card.",
-    },
-  },
-];
+const TARGETS = [];
 
 async function main() {
   const { apply } = parseArgs(process.argv);
   const mode = apply ? "APPLY" : "DRY-RUN";
   console.log(`[normalize_legacy_product_metadata] mode=${mode}`);
-
-  let updated = 0;
-  let missing = 0;
-
-  for (const target of TARGETS) {
-    const ref = db.collection("metadata_lessons").doc(target.docId);
-    const snap = await ref.get();
-
-    if (!snap.exists) {
-      console.log(`[MISSING] docId=${target.docId}`);
-      missing += 1;
-      continue;
-    }
-
-    const before = snap.data() || {};
-    const patch = {
-      ...target.patch,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-
-    console.log(`\n[DOC] ${target.docId}`);
-    console.log(`before.courseId=${before.courseId || ""}`);
-    console.log(`before.category=${before.category || ""}`);
-    console.log(`before.isPhysical=${before.isPhysical === true ? "true" : "false"}`);
-    console.log(`patch=${JSON.stringify(target.patch)}`);
-
-    if (apply) {
-      await ref.set(patch, { merge: true });
-      console.log("[UPDATED]");
-      updated += 1;
-    } else {
-      console.log("[DRY-RUN] would update");
-      updated += 1;
-    }
-  }
-
-  console.log(`\n[SUMMARY] updated=${updated} missing=${missing} mode=${mode}`);
+  console.log("[NOOP] Legacy product docs have already been consolidated into esp32-c3 / esp32-s3.");
+  console.log("[NOOP] This script is retained only for historical reference.");
 }
 
 main().catch((err) => {

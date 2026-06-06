@@ -27,30 +27,8 @@ normalize_unit_key() {
   echo "$raw"
 }
 
-legacy_unit_key_from_canonical() {
-  local raw="${1:-}"
-  raw="${raw##*/}"
-  raw="${raw%%\?*}"
-  raw="${raw%.html}"
-  if [ -z "$raw" ]; then
-    echo ""
-    return 0
-  fi
-  case "$raw" in
-    common-*) echo "tw-$raw" ;;
-    car-starter-*) echo "tw-$raw" ;;
-    car-basic-*) echo "tw-$raw" ;;
-    car-advanced-*) echo "tw-$raw" ;;
-    *) echo "$raw" ;;
-  esac
-}
-
 UNIT_KEY="$(normalize_unit_key "$UNIT_KEY")"
-LEGACY_UNIT_KEY="$(legacy_unit_key_from_canonical "$UNIT_KEY")"
 GRADE_CANDIDATES=("$UNIT_KEY")
-if [ -n "$LEGACY_UNIT_KEY" ] && [ "$LEGACY_UNIT_KEY" != "$UNIT_KEY" ]; then
-  GRADE_CANDIDATES+=("$LEGACY_UNIT_KEY")
-fi
 
 if [ -z "$USER_ID" ] || [ -z "$UNIT_KEY" ] || [ -z "$AUTOGRADE_URL" ] || [ -z "$AUTOGRADE_TOKEN" ]; then
   echo "Error: Missing required environment variables (VC_USER_ID, VC_UNIT_KEY/VC_UNIT_ID, VC_AUTOGRADE_URL, VC_AUTOGRADE_TOKEN)."

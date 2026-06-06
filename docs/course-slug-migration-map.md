@@ -51,14 +51,13 @@
 
 - `functions/scripts/seed-emulator.js`
 - `functions/scripts/update_prepare_lessons.js`
-- `functions/scripts/normalize_runtime_canonical_fields.js`
-- `functions/scripts/normalize_referral_links_unit_ids.js`
-- `functions/scripts/migrate_lessons_classroom_urls.js`
 - `functions/scripts/audit_*` 類腳本
 - `functions/lib/assignment-flow.js`
 - `public/graders/run.sh`
 - `public/learning-path.html`
 - `functions/index.js`
+
+原先的一次性 legacy migration 腳本已退役並刪除，這份文件只保留遷移策略與歷史脈絡。
 
 ## 風險
 

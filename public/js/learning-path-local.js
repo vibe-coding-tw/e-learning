@@ -570,8 +570,15 @@ function formatPrice(priceEntry = {}, locale = "zh-TW") {
     return priceApi.formatPrice(priceEntry, locale);
   }
   const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
-  const currency = priceEntry?.currency || (String(locale || "").startsWith("en") ? "USD" : "TWD");
+  const currency = String(priceEntry?.currency || "").toUpperCase();
   if (!amount) return String(locale || "").startsWith("en") ? "Free" : "免費";
+  if (!currency) {
+    try {
+      return new Intl.NumberFormat(String(locale || "").startsWith("en") ? "en-US" : "zh-TW").format(amount);
+    } catch (_) {
+      return amount.toLocaleString();
+    }
+  }
   return `${currency} ${amount.toLocaleString()}`;
 }
 
@@ -656,7 +663,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const displayLessonLabel = lessonLabel || (isEn ? "Course Unit" : "課程單元");
     const icon = String(lesson.cardIcon || lesson.icon || "📘");
     const imageUrl = pickImage(lesson);
-    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson, uiLocale) : { amount: Number(lesson.price || 0), currency: uiLocale === "en" ? "USD" : "TWD" };
+    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson, uiLocale) : { amount: Number(lesson.price || 0), currency: String(lesson.currency || "").toUpperCase() };
     const price = Number(priceEntry.amount || 0);
     const priceCurrency = String(priceEntry.currency || "");
     const imageHtml = imageUrl
@@ -697,7 +704,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   const hardwareHtml = hardwareRows.map((lesson) => {
     const entryUrl = resolveEntryUrl(lesson);
     const unitFile = resolveUnitFile(lesson);
-    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson, uiLocale) : { amount: Number(lesson.price || 0), currency: uiLocale === "en" ? "USD" : "TWD" };
+    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson, uiLocale) : { amount: Number(lesson.price || 0), currency: String(lesson.currency || "").toUpperCase() };
     const price = Number(priceEntry.amount || 0);
     const priceCurrency = String(priceEntry.currency || "");
     const isEn = uiLocale === "en";

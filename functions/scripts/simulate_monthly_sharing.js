@@ -155,7 +155,8 @@ async function main() {
       let tutorLevel = 1;
       while (currentTutorEmail && currentTutorShare >= 0.01) {
         await addLine({
-          role: "tutor",
+          role: "user",
+          recipientRole: "tutor",
           recipientEmail: currentTutorEmail,
           orderId,
           orderItemId: itemKey,

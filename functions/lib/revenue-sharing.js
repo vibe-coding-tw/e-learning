@@ -26,6 +26,7 @@ function buildRevenueShareCreditRecord({
     creditStartPeriod,
     now
 } = {}) {
+    const normalizedRole = String(role || "user").toLowerCase();
     const remainingCredit = round2Amount(totalCredit || 0);
     const normalizedMonthlyInstallment = round2Amount(monthlyInstallment || remainingCredit);
     return {
@@ -33,7 +34,8 @@ function buildRevenueShareCreditRecord({
         orderId,
         orderItemId,
         studentUid,
-        role,
+        role: normalizedRole === "admin" ? "admin" : "user",
+        recipientRole: normalizedRole,
         recipientEmail,
         level,
         referralLink,
@@ -63,9 +65,11 @@ function buildRevenueSharePayoutRow({
     payoutAccountPresent,
     targetPeriod
 } = {}) {
+    const normalizedRole = String(credit.role || credit.recipientRole || "user").toLowerCase();
     return {
         idempotencyKey,
-        role: credit.role || "tutor",
+        role: normalizedRole === "admin" ? "admin" : "user",
+        recipientRole: normalizedRole,
         tutorEmail: recipientEmail,
         recipientEmail,
         studentUid: credit.studentUid || "",

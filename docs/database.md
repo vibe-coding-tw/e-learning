@@ -20,6 +20,11 @@
 | `promotionCode` | string | Tutor 專屬 Promotion code（全域唯一）。 |
 | `locale` | string | 使用者語系（例：`zh-TW`）。 |
 | `region` | string | 使用者地區（例：`TW`）。 |
+| `preferredRegion` | string | 預設 routing 地區；可與 `region` 不同。 |
+| `preferredDistributorId` | string | 預設經銷商；首次綁定後由系統維護。 |
+| `bindingSource` | string | 綁定來源，例如 `explicit`, `tutor`, `promotionCode`, `regionDefault`, `manual`。 |
+| `bindingConfidence` | number | 系統對目前經銷商綁定結果的內部信心分數。 |
+| `bindingUpdatedAt` | timestamp | 經銷商綁定最後更新時間。 |
 | `courseProgress` | map | 學習進度聚合資料。 |
 | `orders` | array | 主要為 Dashboard 聚合回傳欄位，非主要持久化來源（實際訂單以 `orders` 集合為準）。 |
 | `payoutAccount` | string | 分潤收款帳號（可選；未填時分潤 credit 會累積但不會月結支付）。 |
@@ -37,11 +42,25 @@
 | :--- | :--- | :--- |
 | `orderNumber` | string | 系統訂單編號（如 `VIBE...`）。 |
 | `uid` | string | 購買者 UID。 |
-| `amount` | number | 交易金額。 |
+| `amount` | number | 交易金額，與 `totalAmount` 保持相同值作相容欄位。 |
+| `subtotalAmount` | number | 商品小計，不含運費與稅額。 |
+| `taxAmount` | number | 稅額快照；目前 consumer price 以含稅總價顯示。 |
+| `shippingAmount` | number | 運費快照。 |
+| `totalAmount` | number | 實付總額，使用者看到的含稅含運總價。 |
+| `taxIncluded` | boolean | 是否採用含稅售價。 |
+| `shippingIncluded` | boolean | 是否採用含運售價。 |
 | `status` | string | 目前主流程實際寫入 `PENDING`, `SUCCESS`（`FAILED` 保留為擴充狀態）。 |
 | `items` | map | 訂單項目。Key 為 itemId，value 可含 `name`, `price`, `quantity`, `isPhysical`。 |
 | `gateway` | string | 付款閘道（例如 `ECPAY`）。 |
+| `paymentGateway` | string | 付款供應商快照；與 `gateway` 保持一致。 |
+| `logisticsProvider` | string | 物流 / 履約整合供應商（例如 `ECPAY`、`MANUAL`、`NONE`）。 |
+| `fulfillmentOwnerType` | string | 履約責任歸屬型別，通常為 `distributor`。 |
+| `fulfillmentOwnerId` | string | 履約責任歸屬 ID。 |
 | `region` | string | 訂單地區（例：`TW`）。 |
+| `contentLocale` | string | 訂單內容語系（例：`zh-TW`）。 |
+| `distributorId` | string | 凍結後的經銷商識別碼。 |
+| `priceBookId` | string | 凍結後的 price book 識別碼。 |
+| `currency` | string | 凍結後的結帳幣別。 |
 | `channelType` | string | 訂單渠道類型（例：`direct`, `agent`）。 |
 | `policyId` | string | 分潤政策識別碼（供月結計算讀取）。 |
 | `pricingVersion` | string | 價格版本識別碼（供定價追蹤）。 |
@@ -76,6 +95,7 @@
 > 購物車不再輸入 Promotion code / 推薦連結。  
 > 導師綁定在作業頁進行，並寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`。
 > 實體商品下單會在 `initiatePayment` 驗證物流必要欄位（收件人、電話、門市/地址）；若歷史資料或例外流程造成缺漏，`paymentNotify` 會標記 `logisticsMissing=true` 供後台追蹤。
+> 前台 consumer price 以「含稅含運」總價顯示，後端仍會保存 `subtotalAmount` / `taxAmount` / `shippingAmount` 供對帳與拆帳。
 > `fulfillmentStatus` 現在代表「經銷商 / 履約夥伴」的工作流狀態，不再單純等同於平台直送狀態。
 > **重複購買限制**：`initiatePayment` 在建立新訂單前，會自動檢查學員已成功付款且未到期的線上課程訂單（`expiryDate > now`）。若偵測到購物車中有學員已擁有的未到期課程，後端會直接拒絕交易並回傳錯誤訊息，阻止重複付款。
 > **付款後開通驗證**：`paymentNotify` 寫入 `SUCCESS` 後會立即檢查每個數位課程項目是否能解析到 canonical course、是否具備 `courseUnits`，並用共用授權邏輯確認學生可通過課程授權。失敗時會寫入 `activationAlerts` 並寄送 Admin 告警。實體商品不要求 `courseUnits`。
@@ -117,6 +137,7 @@
 > - 中文/TW 頁面讀取 `pricing.tw`，英文/US 頁面讀取 `pricing.en`。
 > - 推薦寫法為同時保留 `pricing`、`priceByLocale`、`priceByRegion`、`priceMap` 與 `price_twd` / `price_usd`，以維持舊資料相容。
 > - 目前課程標準價：入門 `TWD 1200 / USD 40`、基礎 `TWD 1500 / USD 50`、進階 `TWD 1800 / USD 60`。
+> - 經銷商 checkout 的幣別以 `dealer_price_books` / order quote 為準，不由課程語系決定；`locale` 只影響內容與介面文字。
 >
 > 2026-05-16 更新：
 > - `ai-agents-vibe.courseUnits` 已切換為 `02-unit-agent-mode.html`, `02-unit-web-agents.html`, `02-unit-vibe-coding.html`
@@ -345,7 +366,7 @@
 
 補充說明：
 - `unitId` 現行規格應為 canonical unit page URL，例如 `common-developer-identity.html`。
-- 2026-05-28 已完成歷史 `referral_links.unitId` 清理；8 筆 legacy unit 已轉為 canonical unit，另 1 筆 malformed referral index（`url = "authorized"`）已刪除。
+- 2026-05-28 已完成歷史 `referral_links.unitId` 清理；8 筆 historical unit 已轉為 canonical unit，另 1 筆 malformed referral index（`url = "authorized"`）已刪除。
 - `functions/index.js` 目前透過共用 helper 產生 referral link doc id 與 normalised URL；這是內部實作細節，不影響集合 schema。
 
 ---
@@ -598,13 +619,13 @@
 3. **頁面路由與導覽**：前台學習路徑、課程卡片及所有導覽，一律使用 canonical page URL（可直接開課之首個單元，例如 `/courses/common-developer-identity.html`）。
 4. **ID 命名歸一化**：比對 `unitId` 或 `courseId` 時，一律做歸一化（如移除 `.html` 後綴）。
 
-### 18.2 Legacy Master Pages Retirement Spec (主頁面退役與相容規格)
+### 18.2 Historical Master Pages Retirement Spec (主頁面退役與相容規格)
 
-1. **退役計畫狀態**：`*-master-*.html` 頁面在架構上已退役，新生產網頁不再使用此命名。然而，**代碼與資料庫中的相容層仍處於啟用（ACTIVE）狀態**，不可直接移除。
-2. **舊網址重導向**：已在 Cloud Functions 的 `serveCourse` 實作 301 轉址，將歷史書籤重導向至 canonical courseId。
-3. **歷史訂單授權相容性**：因遷移前成立之歷史訂單中 `items` 仍使用 legacy master 鍵值（例如 `start-01-master-web-app.html`），後端目前只在歷史訂單 / 歷史網址相容路徑中透過 `mapLegacyMasterToCanonical()` 進行轉換，確保舊學員權益，同時避免該相容表滲入一般 runtime 判斷。
-4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 legacy master item key。歷史 `referral_links.unitId` 也已完成 canonical 清理，另 1 筆 malformed referral index 已刪除。`mapLegacyMasterToCanonical()` 目前只保留在舊網址 redirect 與舊 token scope 驗證用途，且 token-scope fallback 只在請求或 token 仍明確帶有 `*-master-*` page id 時啟用。`metadata_lessons.courseKey` 已收斂為 locale-neutral key（例如 `common-vscode-setup`、`car-starter-web-app`），而頁面路由與 `contentRef` 仍保留 `tw-*` 檔名以維持內容倉與舊網址相容。
-5. **完全移除相容層之門檻**：相容代碼（如 `functions/index.js` 中的 `LEGACY_MASTER_TO_CANONICAL`）只有在以下條件皆滿足後，方可刪除：
+1. **退役計畫狀態**：`*-master-*.html` 頁面在架構上已退役，新生產網頁不再使用此命名。現行 runtime 不再讀取或維護歷史 mapping 相容層。
+2. **舊網址處理**：歷史連結若仍指向 master 頁面，需仰賴內容倉 alias 或外部內容同步結果；Cloud Functions 不再維護獨立的 redirect 表。
+3. **歷史訂單授權相容性**：遷移前成立之歷史訂單 `items` 曾使用 master 鍵值（例如 `start-01-master-web-app.html`），目前已完成 canonical 清理；現行後端只保留 canonical 比對邏輯，不再透過執行期 mapping 轉換。
+4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 historical master item key。歷史 `referral_links.unitId` 也已完成 canonical 清理，另 1 筆 malformed referral index 已刪除。`metadata_lessons.courseKey` 已收斂為 locale-neutral key（例如 `common-vscode-setup`、`car-starter-web-app`），而頁面路由與 `contentRef` 仍保留 `tw-*` 檔名以維持內容倉與舊網址相容。原先的一次性遷移腳本已退役並刪除，相關清理改由現行維運工具接手。
+5. **完全移除相容層之門檻**：若未來還需要重新引入任何 mapping 讀取，只能作為離線 migration 工具使用，不能回到 runtime。任何新流程都必須直接以 canonical `courseKey` / `productId` 為準。
    - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `courseKey`，商品項目維持 `productId`。
    - 經過至少一次完整生產環境 pilot validation，確認無任何歷史用戶存取異常。
 
@@ -613,7 +634,7 @@
 - **2026-05-27 系統升級**：
   - 角色統一：歷史 `student` 角色已全部遷移為 `user`。
   - 單元對照：將舊版 `03-unit-github-classroom.html` 等重複課程卡片移除，並確認後端只在歷史網址 / 歷史訂單相容路徑保留最小對照。
-  - 一次性遷移腳本為 `functions/scripts/migrate_lessons_classroom_urls.js`。
+  - 相關一次性遷移腳本已退役並刪除，後續如需重跑請改用現行維運工具。
 
 ---
 

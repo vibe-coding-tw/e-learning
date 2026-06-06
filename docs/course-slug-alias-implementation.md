@@ -23,9 +23,9 @@
 
 需要一層 mapping resolver：
 
-- 輸入 legacy slug 時，先轉成 canonical slug
+- 輸入 historical slug 時，先轉成 canonical slug
 - 再依 locale 決定實際檔案路徑
-- 找不到 canonical 時，再 fallback legacy 檔名
+- 找不到 canonical 時，再 fallback historical 檔名
 
 ### 3. Firestore 層
 
@@ -42,10 +42,9 @@
 
 - `functions/scripts/seed-emulator.js`
 - `functions/scripts/update_prepare_lessons.js`
-- `functions/scripts/migrate_lessons_classroom_urls.js`
-- `functions/scripts/normalize_runtime_canonical_fields.js`
-- `functions/scripts/normalize_referral_links_unit_ids.js`
 - `functions/scripts/audit_canonical_runtime_state.js`
+
+原先那批一次性 migration 腳本已退役，不再列為主流程依賴。
 
 ## 遷移策略
 
@@ -60,9 +59,9 @@
 - 新課程、更新課程、價格欄位都只寫 canonical
 - 舊欄位只作 fallback
 
-### Phase 3: 清除 legacy 依賴
+### Phase 3: 清除歷史相容依賴
 
-- 移除 grader 與 script 中的 legacy mapping
+- 移除 grader 與 script 中的 mapping
 - 清理 Firestore 中不再需要的舊欄位
 
 ### Phase 4: 刪除舊 alias
@@ -76,7 +75,7 @@
 1. 新增 canonical 檔名
 2. 舊檔名回傳 301 / rewrite
 3. 前端導覽與後端查詢都改用 canonical slug
-4. 等資料全數切換完成後，再刪掉 legacy 檔名
+4. 等資料全數切換完成後，再刪掉 historical 檔名
 
 ## 風險控管
 

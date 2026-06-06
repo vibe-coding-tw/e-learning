@@ -6,10 +6,6 @@
     return "en";
   }
 
-  function regionFromLocale(locale = "") {
-    return normalizeLocale(locale) === "en" ? "en" : "tw";
-  }
-
   function normalizeCurrency(raw = "", fallback = "") {
     const v = String(raw || fallback || "").trim().toUpperCase();
     if (v === "NTD") return "TWD";
@@ -77,23 +73,18 @@
   function lookupCatalogPrice(catalog, locale = "zh-TW") {
     if (!isPriceEntryObject(catalog)) return null;
     const normalizedLocale = normalizeLocale(locale);
-    const region = regionFromLocale(normalizedLocale);
     const candidates = [
       normalizedLocale,
-      region,
-      normalizedLocale.toLowerCase(),
-      region.toLowerCase(),
       normalizedLocale === "en" ? "en-US" : "zh-TW",
       normalizedLocale === "en" ? "USD" : "TWD",
       normalizedLocale === "en" ? "usd" : "twd",
-      normalizedLocale === "en" ? "us" : "tw",
       normalizedLocale === "en" ? "en" : "zh",
       normalizedLocale === "en" ? "english" : "chinese",
     ];
 
     for (const key of candidates) {
       if (catalog[key] == null) continue;
-      const entry = readPriceEntry(catalog[key], normalizedLocale === "en" ? "USD" : "TWD");
+      const entry = readPriceEntry(catalog[key], "");
       if (entry) return { ...entry, source: `catalog:${key}` };
     }
 
@@ -122,16 +113,15 @@
       }
     }
 
-    const fallbackCurrency = normalizeCurrency(lesson.currency, normalizedLocale === "en" ? "USD" : "TWD");
+    const fallbackCurrency = normalizeCurrency(lesson.currency, "");
     return {
       amount: normalizeAmount(lesson.price),
-      currency: fallbackCurrency || (normalizedLocale === "en" ? "USD" : "TWD"),
+      currency: fallbackCurrency,
       source: "legacy:price",
     };
   }
 
   function resolveCartPrice(item = {}, locale = "zh-TW") {
-    const normalizedLocale = normalizeLocale(locale);
     const explicitCurrency = normalizeCurrency(item.price_currency || item.currency || item.priceCurrency || "");
     if (item.price != null && explicitCurrency) {
       return {
@@ -159,7 +149,7 @@
 
     return {
       amount: normalizeAmount(item.price),
-      currency: normalizeCurrency(item.currency, normalizedLocale === "en" ? "USD" : "TWD"),
+      currency: normalizeCurrency(item.currency, ""),
       source: "cart:legacy",
     };
   }
@@ -167,8 +157,16 @@
   function formatPrice(priceEntry = {}, locale = "zh-TW") {
     const normalizedLocale = normalizeLocale(locale);
     const amount = normalizeAmount(priceEntry.amount ?? priceEntry);
-    const currency = normalizeCurrency(priceEntry.currency, normalizedLocale === "en" ? "USD" : "TWD");
+    const currency = normalizeCurrency(priceEntry.currency, "");
     if (amount <= 0) return normalizedLocale === "en" ? "Free" : "免費";
+
+    if (!currency) {
+      try {
+        return new Intl.NumberFormat(normalizedLocale === "en" ? "en-US" : "zh-TW").format(amount);
+      } catch (_) {
+        return amount.toLocaleString();
+      }
+    }
 
     try {
       const options = {

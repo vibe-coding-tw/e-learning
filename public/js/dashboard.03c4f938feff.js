@@ -1891,7 +1891,7 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
             const finalUrl = getAssignmentUrlForTutor(assignmentUrlMap, unitId, myEmail);
             if (finalUrl) {
                 if (isLikelyAssignmentLink(finalUrl) && !isValidAssignmentInviteUrl(normalizeAssignmentInviteUrl(finalUrl))) {
-                    alert("此單元設定的作業連結格式不正確，請到課程設定修正。");
+                    alert(window.t("alert_invalid_unit_url", "此單元設定的作業連結格式不正確，請到課程設定修正。"));
                     return;
                 }
                 window.open(finalUrl, '_blank');
@@ -1899,7 +1899,7 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
             }
         }
 
-        alert("此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。");
+        alert(window.t("alert_missing_unit_url", "此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。"));
         return;
     }
 
@@ -1920,24 +1920,24 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
             }
 
             if (access.requiresTutorAssignment && !access.assignedTutorEmail) {
-                alert("此單元尚未完成老師指派，作業入口會在老師指派完成後開放。");
+                alert(window.t("alert_assignment_not_assigned", "此單元尚未完成老師指派，作業入口會在老師指派完成後開放。"));
                 return;
             }
 
             const assignmentUrl = access.classroomUrl;
             if (assignmentUrl) {
                 if (isLikelyAssignmentLink(assignmentUrl) && !isValidAssignmentInviteUrl(normalizeAssignmentInviteUrl(assignmentUrl))) {
-                    alert("此單元設定的作業連結格式不正確，請通知管理員/老師修正。");
+                    alert(window.t("alert_invalid_tutor_url", "此單元設定的作業連結格式不正確，請通知管理員/老師修正。"));
                     return;
                 }
                 window.open(assignmentUrl, '_blank');
                 return;
             }
 
-            alert("此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。");
+            alert(window.t("alert_missing_unit_url", "此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。"));
         } catch (error) {
             console.error('[Dashboard] Failed to resolve assignment link:', error);
-            alert("暫時無法取得作業入口，請稍後再試。");
+            alert(window.t("alert_fetch_portal_failed", "暫時無法取得作業入口，請稍後再試。"));
         }
     })();
 };
