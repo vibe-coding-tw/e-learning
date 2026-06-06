@@ -111,6 +111,7 @@ const {
     resolveLessonPrice
 } = require('./lib/pricing-utils');
 const {
+    findLessonByProductId,
     listDistributorPriceBooks,
     resolveDistributorCheckoutQuote: buildDistributorCheckoutQuote,
     resolvePriceBookAmount
@@ -708,7 +709,6 @@ exports.initiatePayment = onRequest(async (req, res) => {
         const isStripe = gateway === 'STRIPE';
         const normalizedOrderRegion = normalizeRoutingRegionCode(region || '');
         const orderContentLocale = normalizeText(locale || 'zh-TW') || 'zh-TW';
-        const settlementLocale = isStripe ? 'en' : 'zh-TW';
         const expectedCurrency = isStripe ? 'USD' : 'TWD';
         const pricingAwareItems = {};
         let settlementAmount = 0;
@@ -718,8 +718,8 @@ exports.initiatePayment = onRequest(async (req, res) => {
             const lesson = resolveLessonForOrderItem(itemKey, lessons);
             const qty = Number(normalizedItems[itemKey].quantity || 1);
             const sourcePrice = lesson
-                ? resolveLessonPrice(lesson, settlementLocale)
-                : resolveCartPrice(normalizedItems[itemKey], settlementLocale);
+                ? resolveLessonPrice(lesson, expectedCurrency)
+                : resolveCartPrice(normalizedItems[itemKey], expectedCurrency);
             const itemAmount = Number(sourcePrice.amount || 0);
             const itemCurrency = String(sourcePrice.currency || '').toUpperCase();
 
@@ -1962,12 +1962,12 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         const freeCourseContext = course || lessonByCourseRef;
         const lessonPrice = freeCourseContext
             ? Math.max(
-                Number(resolveLessonPrice(freeCourseContext, "zh-TW").amount || 0),
-                Number(resolveLessonPrice(freeCourseContext, "en").amount || 0)
+                Number(resolveLessonPrice(freeCourseContext, "TWD").amount || 0),
+                Number(resolveLessonPrice(freeCourseContext, "USD").amount || 0)
               )
             : Math.max(
-                Number(resolveLessonPrice(findLessonByCourseRef(effectiveCourseId, lessons) || {}, "zh-TW").amount || 0),
-                Number(resolveLessonPrice(findLessonByCourseRef(effectiveCourseId, lessons) || {}, "en").amount || 0)
+                Number(resolveLessonPrice(findLessonByCourseRef(effectiveCourseId, lessons) || {}, "TWD").amount || 0),
+                Number(resolveLessonPrice(findLessonByCourseRef(effectiveCourseId, lessons) || {}, "USD").amount || 0)
               ) || 9999;
         const isFreeCourse = !!(freeCourseContext && parseInt(lessonPrice, 10) === 0);
         if (isFreeCourse) {
@@ -2022,7 +2022,90 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
 // [NEW] API to expose lessons to frontend
 exports.getLessonsMetadata = onCall(async (request) => {
     console.log("[getLessonsMetadata] Starting onCall request...");
-    const lessons = await getLessons();
+    let lessons = await getLessons();
+    
+    // Support distributor pricing overrides
+    const { distributorId } = request.data || {};
+    const normalizedDistributorId = String(distributorId || "").trim();
+    
+    if (normalizedDistributorId) {
+        console.log(`[getLessonsMetadata] Resolving pricing for distributor: ${normalizedDistributorId}`);
+        try {
+            const priceBooks = await listDistributorPriceBooks(db, normalizedDistributorId);
+            console.log(`[getLessonsMetadata] Found ${priceBooks.length} price books for distributor: ${normalizedDistributorId}`);
+            
+            if (priceBooks.length > 0) {
+                // Map over lessons to apply price book overrides
+                lessons = lessons.map(lesson => {
+                    // Clone lesson to avoid mutating cachedLessons in memory
+                    const clonedLesson = { ...lesson };
+                    
+                    // Find matching price books for this lesson
+                    const matchingBooks = priceBooks.filter(book => {
+                        return findLessonByProductId([clonedLesson], book.productId) !== null;
+                    });
+                    
+                    // Filter for active books
+                    const activeBooks = matchingBooks.filter(book => {
+                        if (book.isActive === false) return false;
+                        const effectiveFromMs = book.effectiveFrom?.toMillis ? book.effectiveFrom.toMillis() : (book.effectiveFrom?.seconds ? book.effectiveFrom.seconds * 1000 : 0);
+                        const effectiveToMs = book.effectiveTo?.toMillis ? book.effectiveTo.toMillis() : (book.effectiveTo?.seconds ? book.effectiveTo.seconds * 1000 : 0);
+                        const now = Date.now();
+                        if (effectiveFromMs && effectiveFromMs > now) return false;
+                        if (effectiveToMs && effectiveToMs < now) return false;
+                        return true;
+                    });
+                    
+                    if (activeBooks.length > 0) {
+                        // Sort by effectiveFrom desc to pick the most recent
+                        activeBooks.sort((a, b) => {
+                            const aFrom = a.effectiveFrom?.toMillis ? a.effectiveFrom.toMillis() : (a.effectiveFrom?.seconds ? a.effectiveFrom.seconds * 1000 : 0);
+                            const bFrom = b.effectiveFrom?.toMillis ? b.effectiveFrom.toMillis() : (b.effectiveFrom?.seconds ? b.effectiveFrom.seconds * 1000 : 0);
+                            return bFrom - aFrom;
+                        });
+                        
+                        const chosenBook = activeBooks[0];
+                        const resolvedAmount = resolvePriceBookAmount(chosenBook);
+                        
+                        // Clear headquarters legacy catalog/locale pricing on the client response
+                        const catalogFields = [
+                            'pricing', 'prices', 'priceByLocale', 'priceByRegion',
+                            'priceMap', 'localizedPrices', 'localizedPricing',
+                            'priceLocales', 'pricesByRegion'
+                        ];
+                        catalogFields.forEach(f => {
+                            delete clonedLesson[f];
+                        });
+                        
+                        const amount = resolvedAmount.amount;
+                        const currency = String(resolvedAmount.currency || "").toUpperCase();
+                        
+                        // Override prices
+                        if (currency === "USD") {
+                            clonedLesson.price_usd = amount;
+                            clonedLesson.price_twd = null;
+                        } else if (currency === "TWD") {
+                            clonedLesson.price_twd = amount;
+                            clonedLesson.price_usd = null;
+                        } else {
+                            clonedLesson.price_twd = null;
+                            clonedLesson.price_usd = null;
+                        }
+                        
+                        clonedLesson.price = amount;
+                        clonedLesson.currency = currency;
+                        clonedLesson.priceBookSource = `dealer_price_books:${chosenBook.id}`;
+                        clonedLesson.isPromoActive = resolvedAmount.isPromoActive;
+                    }
+                    
+                    return clonedLesson;
+                });
+            }
+        } catch (err) {
+            console.error(`[getLessonsMetadata] Failed to resolve distributor pricing overrides:`, err);
+        }
+    }
+    
     let categoryLabels = {};
     try {
         const settingsSnap = await admin.firestore().collection('metadata_settings').doc('learning_paths').get();
@@ -2685,7 +2768,6 @@ function countAuthorizedTutorUnits(userData = {}) {
 
 function getSeedableDistributorProducts(lessons = [], distributorCurrency = 'TWD') {
     const normalizedCurrency = normalizeText(distributorCurrency || 'TWD').toUpperCase() || 'TWD';
-    const locale = normalizedCurrency === 'USD' ? 'en' : 'zh-TW';
 
     return (Array.isArray(lessons) ? lessons : [])
         .filter((lesson) => lesson && (
@@ -2702,7 +2784,7 @@ function getSeedableDistributorProducts(lessons = [], distributorCurrency = 'TWD
             || lesson.pricesByRegion
         ))
         .map((lesson) => {
-            const resolvedPrice = resolveLessonPrice(lesson, locale);
+            const resolvedPrice = resolveLessonPrice(lesson, normalizedCurrency);
             const productId = normalizeText(
                 lesson.id ||
                 lesson.courseId ||
@@ -3238,8 +3320,13 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
                 console.warn(`[content-runtime] Firestore cache read error:`, err.message || err);
             }
 
-            // 3. 快取均未命中，向 GitHub API 請求
-            const contentPath = `courses/${locale}/${localeCandidate}`;
+            let contentPath;
+            if (localeCandidate === 'tutors.html' || localeCandidate === 'students.html') {
+                const gitHubLocale = locale === 'en' ? 'en' : 'zh-TW';
+                contentPath = `public/${gitHubLocale}/${localeCandidate}`;
+            } else {
+                contentPath = `courses/${locale}/${localeCandidate}`;
+            }
             const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/contents/${contentPath}?ref=${encodeURIComponent(ref)}`;
             try {
                 const startedAt = Date.now();
@@ -3294,12 +3381,21 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
 // ==========================================
 // trigger cache clear and container recycle
 exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, res) => {
+    const urlPath = req.path || "";
+    let pathLocale = "";
+    if (urlPath.startsWith('/en/')) {
+        pathLocale = "en";
+    } else if (urlPath.startsWith('/tw/') || urlPath.startsWith('/zh-TW/')) {
+        pathLocale = "zh-TW";
+    }
+
     const resolvePreferredLocales = (runtimeConfig = null) => {
         const queryLocale = normalizeLocale(req.query.lang || req.query.locale || "");
         const header = String(req.headers["accept-language"] || "");
         const headerPrimary = normalizeLocale(header.split(",")[0] || "");
         const chain = [];
-        if (queryLocale) chain.push(queryLocale);
+        if (pathLocale) chain.push(pathLocale);
+        if (queryLocale && !chain.includes(queryLocale)) chain.push(queryLocale);
         if (headerPrimary && !chain.includes(headerPrimary)) chain.push(headerPrimary);
         const defaultLocale = normalizeLocale(runtimeConfig?.defaultLocale || "zh-TW") || "zh-TW";
         if (!chain.includes(defaultLocale)) chain.push(defaultLocale);
@@ -3366,114 +3462,118 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
     };
 
     // 1. Parsing Path (e.g. /courses/ble-connection-master.html)
-    const urlPath = req.path; // /courses/foo.html
     // [FIXED v11.3.8] More robust fileName extraction (strips leading slashes)
     const fileName = urlPath.split('/').filter(Boolean).pop();
 
     // 2. Security Check (Token)
     const token = req.query.token;
+    const isPublicPage = fileName === 'tutors.html' || fileName === 'students.html';
 
-    console.log(`[serveCourse] Path: ${urlPath}, FileName: ${fileName}, Token Provided: ${!!token}`);
+    console.log(`[serveCourse] Path: ${urlPath}, FileName: ${fileName}, Token Provided: ${!!token}, IsPublicPage: ${isPublicPage}`);
 
-    if (!token) {
+    if (!isPublicPage && !token) {
         console.warn(`[serveCourse] Access Denied: No token. Query:`, req.query);
         return res.status(403).send("Access Denied: No token provided.");
     }
 
     try {
-        const parts = token.split('|');
-        let pageId, scopePart, expiryStr, uid, tokenIp, signature;
-        let expectedSignature;
-        let expiry;
-
-        if (parts.length === 6) {
-            [pageId, scopePart, expiryStr, uid, tokenIp, signature] = parts;
-            expiry = parseInt(expiryStr);
-            const raw = `${pageId}|${scopePart}|${expiry}|${uid}|${tokenIp}`;
-            expectedSignature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
-
-            if (signature !== expectedSignature) {
-                return res.status(403).send("Access Denied: Invalid signature.");
-            }
-
-            // Verify IP Address
-            const cleanTokenIp = normalizeClientIp(tokenIp);
-            const currentClientIps = collectClientIpCandidates(req);
-            const matchedClientIp = currentClientIps.find((ip) => normalizeClientIp(ip) === cleanTokenIp);
-
-            if (!matchedClientIp && cleanTokenIp !== '127.0.0.1' && !currentClientIps.includes('127.0.0.1')) {
-                console.warn(`[serveCourse] IP Mismatch: token=${cleanTokenIp}, currentCandidates=${currentClientIps.join(',')}`);
-                return res.status(403).send("Access Denied: Invalid client context.");
-            }
-        } else if (parts.length === 4) {
-            [pageId, scopePart, expiryStr, signature] = parts;
-            expiry = parseInt(expiryStr);
-            const raw = `${pageId}|${scopePart}|${expiry}`;
-            expectedSignature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
-
-            if (signature !== expectedSignature) {
-                return res.status(403).send("Access Denied: Invalid signature.");
-            }
-        } else {
-            return res.status(403).send("Access Denied: Invalid token format.");
-        }
-
-        // C. Normalize target filename
+        let isAuthorizedScope = false;
         let normalizedFileName = normalizeCourseFile(fileName);
         const runtimeConfig = await getContentRuntimeConfig(db);
 
-        const normalizedFileVariantKey = normalizeCourseVariantKey(normalizedFileName);
-        const normalizedScopePart = normalizeCourseFile(scopePart);
-        const normalizedScopeVariantKey = normalizeCourseVariantKey(normalizedScopePart);
-        const normalizedPageVariantKey = normalizeCourseVariantKey(pageId || '');
+        if (isPublicPage) {
+            isAuthorizedScope = true;
+        } else {
+            const parts = token.split('|');
+            let pageId, scopePart, expiryStr, uid, tokenIp, signature;
+            let expectedSignature;
+            let expiry;
 
-        // B. Validate Expiry
-        if (Date.now() > expiry) {
-            return res.status(403).send("Access Denied: Token expired.");
-        }
+            if (parts.length === 6) {
+                [pageId, scopePart, expiryStr, uid, tokenIp, signature] = parts;
+                expiry = parseInt(expiryStr);
+                const raw = `${pageId}|${scopePart}|${expiry}|${uid}|${tokenIp}`;
+                expectedSignature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
 
-        // C. Validate File Scope Dynamic Logic
-        let isAuthorizedScope = (
-            scopePart === fileName ||
-            normalizedScopePart === normalizedFileName ||
-            normalizeCourseFile(scopePart) === normalizeCourseFile(fileName) ||
-            normalizedScopeVariantKey === normalizedFileVariantKey ||
-            normalizedPageVariantKey === normalizedFileVariantKey
-        );
-        let debugInfo = "None";
-        let lessons = [];
-
-        if (!isAuthorizedScope) {
-            try {
-                // Use the centralized getLessons helper [FIXED v11.3.14]
-                lessons = await getLessons();
-
-                const normalizedPageId = normalizeCourseFile(pageId || '');
-                const course = findCourseForScope(lessons, normalizedScopePart, normalizedPageId);
-
-                if (course) {
-                    const authorizedCandidates = buildAuthorizedFileCandidates(course);
-                    const requestedFileKey = normalizeLooseKey(normalizedFileName);
-                    const isCourseScopedMatch = authorizedCandidates.has(requestedFileKey);
-
-                    debugInfo = `CourseFound: ${course.courseId || course.courseKey || "unknown"}, requested=${requestedFileKey}, entryUnitId=${normalizeCourseFile(course.entryUnitId || "")}, candidates=${authorizedCandidates.size}`;
-
-                    if (isCourseScopedMatch) {
-                        isAuthorizedScope = true;
-                        console.log(`[serveCourse] ${normalizedFileName} authorized via dynamic course-scope: ${scopePart}`);
-                    }
-                } else {
-                    debugInfo = `CourseNotFound for Scope: ${scopePart}. LessonsCount: ${lessons.length}`;
+                if (signature !== expectedSignature) {
+                    return res.status(403).send("Access Denied: Invalid signature.");
                 }
-            } catch (jsonErr) {
-                console.error("[serveCourse] JSON Scope check failed:", jsonErr);
-                debugInfo = `JSON Error: ${jsonErr.message}`;
-            }
-        }
 
-        if (!isAuthorizedScope) {
-            console.error(`Access Denied Debug: Scope=${scopePart} (normalized=${normalizedScopePart}), File=${normalizedFileName}, Debug=${debugInfo}`);
-            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${normalizedFileName}.`);
+                // Verify IP Address
+                const cleanTokenIp = normalizeClientIp(tokenIp);
+                const currentClientIps = collectClientIpCandidates(req);
+                const matchedClientIp = currentClientIps.find((ip) => normalizeClientIp(ip) === cleanTokenIp);
+
+                if (!matchedClientIp && cleanTokenIp !== '127.0.0.1' && !currentClientIps.includes('127.0.0.1')) {
+                    console.warn(`[serveCourse] IP Mismatch: token=${cleanTokenIp}, currentCandidates=${currentClientIps.join(',')}`);
+                    return res.status(403).send("Access Denied: Invalid client context.");
+                }
+            } else if (parts.length === 4) {
+                [pageId, scopePart, expiryStr, signature] = parts;
+                expiry = parseInt(expiryStr);
+                const raw = `${pageId}|${scopePart}|${expiry}`;
+                expectedSignature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
+
+                if (signature !== expectedSignature) {
+                    return res.status(403).send("Access Denied: Invalid signature.");
+                }
+            } else {
+                return res.status(403).send("Access Denied: Invalid token format.");
+            }
+
+            const normalizedFileVariantKey = normalizeCourseVariantKey(normalizedFileName);
+            const normalizedScopePart = normalizeCourseFile(scopePart);
+            const normalizedScopeVariantKey = normalizeCourseVariantKey(normalizedScopePart);
+            const normalizedPageVariantKey = normalizeCourseVariantKey(pageId || '');
+
+            // B. Validate Expiry
+            if (Date.now() > expiry) {
+                return res.status(403).send("Access Denied: Token expired.");
+            }
+
+            // C. Validate File Scope Dynamic Logic
+            isAuthorizedScope = (
+                scopePart === fileName ||
+                normalizedScopePart === normalizedFileName ||
+                normalizeCourseFile(scopePart) === normalizeCourseFile(fileName) ||
+                normalizedScopeVariantKey === normalizedFileVariantKey ||
+                normalizedPageVariantKey === normalizedFileVariantKey
+            );
+            let debugInfo = "None";
+            let lessons = [];
+
+            if (!isAuthorizedScope) {
+                try {
+                    // Use the centralized getLessons helper [FIXED v11.3.14]
+                    lessons = await getLessons();
+
+                    const normalizedPageId = normalizeCourseFile(pageId || '');
+                    const course = findCourseForScope(lessons, normalizedScopePart, normalizedPageId);
+
+                    if (course) {
+                        const authorizedCandidates = buildAuthorizedFileCandidates(course);
+                        const requestedFileKey = normalizeLooseKey(normalizedFileName);
+                        const isCourseScopedMatch = authorizedCandidates.has(requestedFileKey);
+
+                        debugInfo = `CourseFound: ${course.courseId || course.courseKey || "unknown"}, requested=${requestedFileKey}, entryUnitId=${normalizeCourseFile(course.entryUnitId || "")}, candidates=${authorizedCandidates.size}`;
+
+                        if (isCourseScopedMatch) {
+                            isAuthorizedScope = true;
+                            console.log(`[serveCourse] ${normalizedFileName} authorized via dynamic course-scope: ${scopePart}`);
+                        }
+                    } else {
+                        debugInfo = `CourseNotFound for Scope: ${scopePart}. LessonsCount: ${lessons.length}`;
+                    }
+                } catch (jsonErr) {
+                    console.error("[serveCourse] JSON Scope check failed:", jsonErr);
+                    debugInfo = `JSON Error: ${jsonErr.message}`;
+                }
+            }
+
+            if (!isAuthorizedScope) {
+                console.error(`Access Denied Debug: Scope=${scopePart} (normalized=${normalizedScopePart}), File=${normalizedFileName}, Debug=${debugInfo}`);
+                return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${normalizedFileName}.`);
+            }
         }
 
         // 3. Serve File
@@ -3507,6 +3607,12 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
 
         // [NEW] Normalize legacy hashed core script links to stable runtime assets.
         content = content
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/i18n-helper\.[0-9a-f]{12}\.js["']/gi, 'src="/js/i18n-helper.js"')
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/nav-component\.[0-9a-f]{12}\.js["']/gi, 'src="/js/nav-component.js"')
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/course-shared\.[0-9a-f]{12}\.js["']/gi, 'src="/js/course-shared.js"')
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/pricing-utils\.[0-9a-f]{12}\.js["']/gi, 'src="/js/pricing-utils.js"')
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/footer-component\.[0-9a-f]{12}\.js["']/gi, 'src="/js/footer-component.js"')
+            .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?style\.[0-9a-f]{12}\.css["']/gi, 'href="/style.css"')
             .replace(/\/js\/course-shared\.[0-9a-f]{12}\.js\b/gi, '/js/course-shared.js')
             .replace(/\/js\/nav-component\.[0-9a-f]{12}\.js\b/gi, '/js/nav-component.js');
 
@@ -5956,8 +6062,8 @@ exports.remindAdminPendingAssignments = onSchedule({
             const course = unitToCourse.get(String(unitId));
             if (!course) return false;
             const price = Math.max(
-                Number(resolveLessonPrice(course, "zh-TW").amount || 0),
-                Number(resolveLessonPrice(course, "en").amount || 0)
+                Number(resolveLessonPrice(course, "TWD").amount || 0),
+                Number(resolveLessonPrice(course, "USD").amount || 0)
             );
             return price > 0 && course.isPhysical !== true;
         };
