@@ -65,23 +65,23 @@ function renderInfoCard(rows = [], options = {}) {
 }
 
 /**
- * Helper to resolve user locale by email from Firestore, falling back to 'zh-TW'.
+ * Helper to resolve user locale by email from Firestore, falling back to 'en'.
  * @param {string} email
  * @returns {Promise<string>}
  */
 async function resolveUserLocale(email) {
-    if (!email) return 'zh-TW';
+    if (!email) return 'en';
     try {
         const db = admin.firestore();
         const userSnap = await db.collection("users").where("email", "==", email).limit(1).get();
         if (!userSnap.empty) {
             const userData = userSnap.docs[0].data();
-            return userData.locale || 'zh-TW';
+            return userData.locale || 'en';
         }
     } catch (e) {
         console.warn("[EmailService] Failed to resolve user locale by email:", e);
     }
-    return 'zh-TW';
+    return 'en';
 }
 
 /**
@@ -90,7 +90,7 @@ async function resolveUserLocale(email) {
  * @param {string} locale - User's locale ('zh-TW' or 'en')
  * @returns {Promise<{courseName: string, unitName: string}>}
  */
-async function resolveCourseAndUnitMeta(unitId, locale = 'zh-TW') {
+async function resolveCourseAndUnitMeta(unitId, locale = 'en') {
     const defaultMeta = { courseName: '', unitName: '' };
     if (!unitId) return defaultMeta;
 
@@ -251,7 +251,7 @@ function renderCalloutPanel({
 }
 
 function buildAutogradeInfoRows({
-    locale = 'zh-TW',
+    locale = 'en',
     courseName = '',
     unitName = '',
     assignmentTitle = '',
@@ -269,7 +269,7 @@ function buildAutogradeInfoRows({
 }
 
 function buildCourseUnitInfoRows({
-    locale = 'zh-TW',
+    locale = 'en',
     courseName = '',
     unitName = '',
     assignmentLabel = '',
@@ -291,7 +291,7 @@ function buildSingleInfoRow(label, value, { html = null } = {}) {
 }
 
 function buildApplicationInfoRows({
-    locale = 'zh-TW',
+    locale = 'en',
     courseName = '',
     unitName = '',
     courseLabel = '',
@@ -666,7 +666,7 @@ async function sendAssignmentNotification(tutorEmail, studentName, assignmentTit
                     assignmentLabel: locale === 'en' ? 'Assignment Name' : '作業名稱',
                     assignmentValue: assignmentTitle,
                     extraRows: [
-                        { label: locale === 'en' ? 'Submission Time' : '繳交時間', value: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) }
+                        { label: locale === 'en' ? 'Submission Time' : '繳交時間', value: new Date().toLocaleString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { timeZone: 'Asia/Taipei' }) }
                     ]
                 }), { padding: '25px' })}
                 

@@ -105,3 +105,62 @@
 3. Confirm tutor dashboard cannot change price book data.
 4. Confirm settlement uses snapshot policy, not live policy.
 5. Confirm admin can review all price changes in the audit log.
+
+## 5. Region and Routing Task Plan
+
+### 5.1 This week
+
+1. Auto-prefill `region` on first visit using saved preference, last successful checkout, shipping country, then locale fallback.
+2. Recommend the distributor from `region_distributor_rules`.
+3. Freeze `region`, `distributorId`, and `priceBookId` at checkout.
+4. Recalculate quote immediately when `region` changes.
+5. Keep consumer prices displayed as tax-inclusive and shipping-inclusive totals.
+6. Keep `paymentGateway` and `logisticsProvider` separate in order records.
+
+### 5.2 Next week
+
+1. Backfill `preferredRegion`.
+2. Backfill `preferredDistributorId`.
+3. Show the reason for the selected region or distributor.
+4. Persist `last_success_region` after successful payment.
+5. Allow manual override of the region preference from account or cart UI.
+
+### 5.3 Later
+
+1. Add more regions and routing rules.
+2. Add region and distributor reporting.
+3. Add same-region price dispersion analysis.
+4. Add weighted recommendation rules for history, shipping country, tutor binding, and inventory.
+
+## 6. Acceptance Criteria by Task
+
+### 6.1 Auto region default
+
+- A first-time user sees a prefilled region without manually entering one.
+- The UI can explain why the region was chosen.
+- Manual region selection overrides the automatic value.
+
+### 6.2 Distributor recommendation
+
+- A region resolves to one recommended distributor.
+- If multiple distributors are eligible, the UI surfaces a manual choice.
+- The recommendation uses `region_distributor_rules` first, then distributor region support.
+
+### 6.3 Checkout freeze
+
+- One checkout stores one `region`.
+- One checkout stores one `distributorId`.
+- One checkout stores one `priceBookId`.
+- The quote and payment payload must match the frozen values.
+
+### 6.4 Price display
+
+- The cart shows a single all-in total by default.
+- The cart may expose subtotal, tax, and shipping only as supporting detail.
+- The user should not need to mentally add shipping to understand the payable total.
+
+### 6.5 Payment and logistics separation
+
+- Payment provider and logistics provider are separate fields.
+- ECPay can be used as payment only, logistics only, or both.
+- Fulfillment ownership remains with the distributor even when ECPay is used.

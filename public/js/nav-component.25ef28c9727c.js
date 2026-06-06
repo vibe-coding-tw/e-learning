@@ -103,8 +103,6 @@ const LOCALIZED_SITE_PAGES = {
     },
 };
 
-const LOCALIZED_PAGE_EXISTS_CACHE = new Map();
-
 function localeBucket(locale = "") {
     return isZhLocale(locale) ? "zh" : "en";
 }
@@ -116,55 +114,14 @@ function resolveLocalizedSitePageMeta(pageKey = "", locale = "zh-TW") {
     return page[bucket] || page.en || page.zh || null;
 }
 
-function probePageExists(path = "") {
-    const normalized = String(path || "").trim();
-    if (!normalized) return Promise.resolve(false);
-
-    const url = new URL(normalized, window.location.origin).toString();
-    if (LOCALIZED_PAGE_EXISTS_CACHE.has(url)) {
-        return LOCALIZED_PAGE_EXISTS_CACHE.get(url);
-    }
-
-    const probe = fetch(url, { method: "HEAD", cache: "no-store" })
-        .then((resp) => resp.ok)
-        .catch(() => false);
-
-    LOCALIZED_PAGE_EXISTS_CACHE.set(url, probe);
-    return probe;
-}
-
-async function resolveLocalizedSitePage(pageKey = "", locale = "zh-TW") {
-    const page = LOCALIZED_SITE_PAGES[pageKey];
-    if (!page) return null;
-
-    const preferredBucket = localeBucket(locale);
-    const fallbackBucket = preferredBucket === "zh" ? "en" : "zh";
-    const preferred = page[preferredBucket] || page.en || page.zh || null;
-    const fallback = page[fallbackBucket] || page.en || page.zh || null;
-
-    if (preferred && await probePageExists(preferred.href)) {
-        return { ...preferred, locale: preferredBucket };
-    }
-    if (fallback && await probePageExists(fallback.href)) {
-        return { ...fallback, locale: fallbackBucket };
-    }
-    return preferred ? { ...preferred, locale: preferredBucket } : fallback ? { ...fallback, locale: fallbackBucket } : null;
-}
-
-async function hydrateLocalizedSitePages(rootNode, locale = "zh-TW") {
+function hydrateLocalizedSitePages(rootNode, locale = "zh-TW") {
     const scope = rootNode && typeof rootNode.querySelectorAll === "function" ? rootNode : document;
     const elements = scope.querySelectorAll("[data-localized-page]");
     if (!elements.length) return;
 
-    const pageKeys = Array.from(new Set(Array.from(elements).map((el) => el.getAttribute("data-localized-page")).filter(Boolean)));
-    const resolved = {};
-    await Promise.all(pageKeys.map(async (pageKey) => {
-        resolved[pageKey] = await resolveLocalizedSitePage(pageKey, locale);
-    }));
-
     elements.forEach((el) => {
         const pageKey = el.getAttribute("data-localized-page");
-        const meta = resolved[pageKey] || resolveLocalizedSitePageMeta(pageKey, locale);
+        const meta = resolveLocalizedSitePageMeta(pageKey, locale);
         if (!meta) return;
 
         if (el.tagName === "A") {
@@ -184,12 +141,54 @@ async function hydrateLocalizedSitePages(rootNode, locale = "zh-TW") {
 }
 
 window.__vibeResolveLocalizedSitePageMeta = resolveLocalizedSitePageMeta;
-window.__vibeResolveLocalizedSitePage = resolveLocalizedSitePage;
 window.__vibeHydrateLocalizedSitePages = hydrateLocalizedSitePages;
 
 function detectUiLocale() {
     if (typeof window.detectUiLocale === 'function') return window.detectUiLocale();
-    return "zh-TW";
+
+    try {
+        const pathname = window.location.pathname;
+        if (pathname.includes('/en/')) return 'en';
+        if (pathname.includes('/tw/') || pathname.includes('/zh-TW/')) return 'zh-TW';
+        const filename = pathname.split('/').pop() || '';
+        if (filename.startsWith('en-')) return 'en';
+        if (filename.startsWith('tw-')) return 'zh-TW';
+    } catch (_) {}
+
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const path = params.get('path');
+        if (path) {
+            const cleanPath = String(path).trim().toLowerCase();
+            if (cleanPath.startsWith('en-')) return 'en';
+            if (cleanPath.startsWith('tw-')) return 'zh-TW';
+        }
+    } catch (_) {}
+
+    try {
+        const stored = localStorage.getItem('vibe_user_locale');
+        if (stored) {
+            const clean = String(stored).trim().toLowerCase();
+            if (clean.startsWith('zh')) return 'zh-TW';
+            if (clean.startsWith('en')) return 'en';
+        }
+    } catch (_) {}
+
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const queryLang = params.get('lang') || params.get('locale');
+        if (queryLang) {
+            const clean = String(queryLang).trim().toLowerCase();
+            if (clean.startsWith('zh')) return 'zh-TW';
+            if (clean.startsWith('en')) return 'en';
+        }
+    } catch (_) {}
+
+    const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
+    const navLang = String(navigator.language || "").toLowerCase();
+    const raw = htmlLang || navLang;
+    if (raw.startsWith("zh")) return "zh-TW";
+    return "en";
 }
 
 window.__vibeSwitchLocale = async function (locale) {
@@ -226,8 +225,8 @@ window.__vibeSwitchLocale = async function (locale) {
         const localeIsEn = String(locale || '').toLowerCase().startsWith('en');
         const localeIsZh = String(locale || '').toLowerCase().startsWith('zh');
 
-        const supportsLocaleMirror = new Set(['students.html', 'tutors.html']);
-        if (supportsLocaleMirror.has(currentFile)) {
+        const supportsLocalizedSupportPages = new Set(['students.html', 'tutors.html']);
+        if (supportsLocalizedSupportPages.has(currentFile)) {
             if (localeIsEn && !currentIsEnSection) {
                 url.pathname = `/en/${currentFile}`;
                 window.location.href = url.toString();

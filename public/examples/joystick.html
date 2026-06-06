@@ -4,7 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
   <title>BLE 搖桿控制 | Vibe Coding</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+        (function() {
+            const w = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+                w.apply(console, args);
+            };
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { 
         background: radial-gradient(circle at center, #1a1f2e 0%, #0d121c 100%);

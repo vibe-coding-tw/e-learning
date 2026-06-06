@@ -4,19 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>學習路徑</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+        (function() {
+            const w = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+                w.apply(console, args);
+            };
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="./style.1b939bdb0a17.css">
-  <script src="./js/i18n-helper.d861e221e3db.js"></script>
+  <script src="./js/i18n-helper.bd2161ff0ea9.js"></script>
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.a4e75ce7dd1c.js"></script>
+  <script type="module" src="./js/nav-component.25ef28c9727c.js"></script>
   <script src="./js/dashboard-lookup-utils.35d63fe776d1.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
   <script src="./js/course-shared.4950ec7ad369.js"></script>
-  <script src="./js/pricing-utils.539d1bb9dcdd.js"></script>
+  <script src="./js/pricing-utils.49fc3c360cd6.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -27,7 +36,7 @@
   </div>
 
   <div id="footer-placeholder" data-root="."></div>
-  <script src="./js/footer-component.c5c54c25090d.js"></script>
+  <script src="./js/footer-component.0c8b87eef903.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -48,10 +57,18 @@
 
     const checkAuthFunction = httpsCallable(functions, "checkPaymentAuthorization");
     const getLessonsFunc = httpsCallable(functions, "getLessonsMetadata");
-    window.__getLessonsMetadata = async function () {
-      const distributorId = localStorage.getItem('vibe_user_preferred_distributor')
+    let currentLessons = [];
+    let currentPathKey = "common";
+    let currentLessonsRequestId = 0;
+
+    function getSelectedDistributorId() {
+      return localStorage.getItem('vibe_user_preferred_distributor')
                          || localStorage.getItem('preferredDistributorId')
                          || '';
+    }
+
+    window.__getLessonsMetadata = async function () {
+      const distributorId = getSelectedDistributorId();
       const res = await getLessonsFunc({ distributorId });
       return res?.data || {};
     };
@@ -761,6 +778,11 @@
 
     function renderLessons(lessons, pathKey) {
       const uiLocale = detectUiLocale();
+      const t = {
+        coreContentLabel: window.t('lp_coreContentLabel', uiLocale.startsWith('en') ? 'Core Content' : '核心內容'),
+        freeLabel: window.t('lp_freeLabel', uiLocale.startsWith('en') ? 'Free' : '免費'),
+        loadingText: window.t('lp_loadingText', uiLocale.startsWith('en') ? 'Loading...' : '載入中...')
+      };
 
       const shouldHideCourse = (lesson = {}) => {
         return lesson.hiddenFromCatalog === true;
@@ -797,28 +819,28 @@
         const legacyPrice = Number(lesson.price || 0);
         // 英文模式優先讀取 *En 欄位，fallback 到中文欄位
         const isEn = uiLocale === 'en';
-        const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.title) : lesson.title) || lesson.courseId || "");
+        const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId) : lesson.title) || lesson.courseId || "");
         const displayKey = String(lesson.courseKey || lesson.courseId || "");
         const contentList = translateBulletList(
-          toList(isEn ? (lesson.coreContentEn || lesson.coreContent) : lesson.coreContent).slice(0, 4),
+          toList(isEn ? (lesson.coreContentEn || []) : lesson.coreContent).slice(0, 4),
           uiLocale
-        );
+        ).filter(Boolean);
         const summary = String(
-          (isEn ? (lesson.summaryEn || lesson.summary || lesson.descriptionEn || lesson.description)
+          (isEn ? (lesson.summaryEn || lesson.descriptionEn)
                 : (lesson.summary || lesson.description))
-          || (isEn ? "Course content loaded dynamically." : "課程內容由系統資料動態載入。")
+          || (isEn ? "English translation pending." : "課程內容由系統資料動態載入。")
         );
         const duration = String(lesson.duration || lesson.estimatedDuration || "");
       const lessonLabel = String(
-          (isEn ? (lesson.lessonLabelEn || translateLessonLabel(lesson.lessonLabel || lesson.tagText, uiLocale) || lesson.tagText)
+          (isEn ? (lesson.lessonLabelEn || "")
                 : (lesson.lessonLabel || lesson.tagText))
-          || ""
+          || (isEn ? "Course Unit" : "")
         ).trim();
         const displayLessonLabel = lessonLabel || (isEn ? "Course Unit" : "課程單元");
         const icon = String(lesson.cardIcon || lesson.icon || "📘");
         const imageUrl = pickImage(lesson);
         const videoUrl = pickVideo(lesson);
-        const priceEntry = getPricingApi().resolveLessonPrice(lesson, uiLocale);
+        const priceEntry = getPricingApi().resolveLessonPrice(lesson);
         const price = Number(priceEntry.amount || 0);
         const priceCurrency = String(priceEntry.currency || "");
         const disablePreview = lesson.previewDisabled === true;
@@ -867,7 +889,7 @@
       const hardwareHtml = hardwareRows.map((lesson) => {
         const entryUrl = resolveEntryUrl(lesson);
         const unitFile = resolveUnitFile(lesson);
-        const priceEntry = getPricingApi().resolveLessonPrice(lesson, uiLocale);
+        const priceEntry = getPricingApi().resolveLessonPrice(lesson);
         const price = Number(priceEntry.amount || 0);
         const priceCurrency = String(priceEntry.currency || "");
         const isEn = uiLocale === 'en';
@@ -875,15 +897,15 @@
         const hardwareId = String(lesson.courseId || "").toLowerCase();
         const imageUrl = pickImage(lesson);
         const summary = String(
-          isEn ? (lesson.summaryEn || lesson.summary || lesson.descriptionEn || lesson.description)
+          isEn ? (lesson.summaryEn || lesson.descriptionEn)
                : (lesson.summary || lesson.description)
           || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations")
         );
-        const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.title) : lesson.title) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit"));
+        const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId) : lesson.title) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit"));
         const contentList = translateBulletList(
-          toList(isEn ? (lesson.coreContentEn || lesson.coreContent) : lesson.coreContent).slice(0, 4),
+          toList(isEn ? (lesson.coreContentEn || []) : lesson.coreContent).slice(0, 4),
           uiLocale
-        );
+        ).filter(Boolean);
         const listHtml = contentList.length
           ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
           : `<p class="text-sm text-slate-500">${summary}</p>`;
@@ -965,18 +987,23 @@
       });
     }
 
+    async function loadLessonsForCurrentDistributor() {
+      const requestId = ++currentLessonsRequestId;
+      const distributorId = getSelectedDistributorId();
+      const result = await getLessonsFunc({ distributorId });
+      if (requestId !== currentLessonsRequestId) return null;
+      currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
+      categoryLabelsMap = deriveCategoryLabels(currentLessons, result?.data?.categoryLabels || {}, detectUiLocale());
+      renderLessons(currentLessons, currentPathKey);
+      return currentLessons;
+    }
+
     async function init() {
       const uiLocale = detectUiLocale();
       document.title = window.t('lp_title', '學習路徑');
 
-      const pathKey = normalizeCanonicalLearningPathKey(new URLSearchParams(location.search).get("path") || "common") || "common";
-      const distributorId = localStorage.getItem('vibe_user_preferred_distributor')
-                         || localStorage.getItem('preferredDistributorId')
-                         || '';
-      const result = await getLessonsFunc({ distributorId });
-      const lessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
-      categoryLabelsMap = deriveCategoryLabels(lessons, result?.data?.categoryLabels || {}, uiLocale);
-      renderLessons(lessons, pathKey);
+      currentPathKey = normalizeCanonicalLearningPathKey(new URLSearchParams(location.search).get("path") || "common") || "common";
+      await loadLessonsForCurrentDistributor();
       window.updateAuthUI = function () {
         const cards = document.querySelectorAll(".lesson-card");
         const user = auth.currentUser;
@@ -988,6 +1015,19 @@
       onAuthStateChanged(auth, () => window.updateAuthUI());
     }
     init();
+    window.addEventListener('storage', (event) => {
+      if (event.key !== 'vibe_user_preferred_distributor' && event.key !== 'preferredDistributorId') return;
+      loadLessonsForCurrentDistributor().catch((error) => {
+        console.warn('[learning-path] Failed to refresh lessons after distributor change:', error);
+      });
+    });
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        loadLessonsForCurrentDistributor().catch((error) => {
+          console.warn('[learning-path] Failed to refresh lessons after bfcache restore:', error);
+        });
+      }
+    });
     window.handleLogout = async () => { await signOut(auth); };
   </script>
 </body>

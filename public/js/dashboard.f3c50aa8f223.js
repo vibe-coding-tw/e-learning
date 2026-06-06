@@ -3940,6 +3940,91 @@ function buildBusinessPricingOverviewHtml() {
             courseId.replace(/\.html$/i, '') ||
             lesson.id ||
             courseId
+        ).trim();
+        const pricingState = getLessonBusinessPricingState(lesson);
+        const updatedAt = lesson.pricingUpdatedAt?.seconds
+            ? new Date(lesson.pricingUpdatedAt.seconds * 1000).toLocaleString()
+            : (lesson.pricingUpdatedAt ? new Date(lesson.pricingUpdatedAt).toLocaleString() : '—');
+
+        const isPhysical = lesson.isPhysical === true;
+        
+        const badgeClass = 'bg-blue-50 text-blue-700 border border-blue-100';
+        const badgeLabel = '🌐 經銷價格表';
+
+        // Type badge (Course vs Hardware)
+        const typeBadgeClass = isPhysical 
+            ? 'bg-purple-50 text-purple-700 border border-purple-100'
+            : 'bg-sky-50 text-sky-700 border border-sky-100';
+        const typeBadgeLabel = isPhysical ? '📦 實體商品 (Hardware)' : '📘 線上課程 (Course)';
+
+        // USD Warning Badge
+        const hasUsdWarning = pricingState.en.amount === 0 && pricingState.tw.amount > 0;
+        const usdWarningBadge = hasUsdWarning 
+            ? `<div class="mt-2 text-[10px] inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold bg-rose-50 text-rose-700 border border-rose-100">
+                ⚠️ 缺美金定價
+               </div>` 
+            : '';
+
+        return `
+            <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition">
+                <td class="py-4 px-6 align-top">
+                    <div class="font-bold text-slate-900">${escapeHtml(title)}</div>
+                    <div class="text-[11px] text-slate-400 font-mono mt-1 break-all">${escapeHtml(displayId)}</div>
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                        <span class="text-[10px] inline-flex items-center px-2 py-0.5 rounded font-semibold ${typeBadgeClass}">
+                            ${typeBadgeLabel}
+                        </span>
+                        <span class="text-[10px] inline-flex items-center px-2 py-0.5 rounded font-semibold ${badgeClass}">
+                            ${badgeLabel}
+                        </span>
+                    </div>
+                    ${usdWarningBadge}
+                </td>
+                <td class="py-4 px-6 align-top">
+                    ${businessPriceInput(pricingState.tw.amount, 'TWD / tw', `business-price-tw-${safeId}`, 'NT$', safeId)}
+                </td>
+                <td class="py-4 px-6 align-top">
+                    ${businessPriceInput(pricingState.en.amount, 'USD / en', `business-price-en-${safeId}`, '$', safeId)}
+                </td>
+                <td class="py-4 px-6 align-top text-sm text-slate-600">
+                    <div class="font-semibold text-slate-800">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.tw, 'zh-TW') : `TWD ${pricingState.tw.amount}`)}</div>
+                    <div class="mt-1">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.en, 'en') : `USD ${pricingState.en.amount}`)}</div>
+                    <div class="mt-2 text-[11px] text-slate-400">更新：${escapeHtml(updatedAt)}</div>
+                </td>
+                <td class="py-4 px-6 text-right align-top">
+                    <button id="btn-save-price-${safeId}" onclick="window.saveLessonPricing('${escapeHtml(courseId)}')" class="px-3.5 py-2 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-700 transition duration-150 active:scale-95 whitespace-nowrap">儲存</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h4 class="text-sm font-black text-slate-900">課程與商品定價維護</h4>
+                    <p class="text-xs text-slate-500 mt-1">資料直接寫入 Firestore 的 <code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">dealer_price_books</code>，依 default-usd 與 default-twd 儲存定價。</p>
+                </div>
+                <div class="text-xs text-slate-400 font-medium">儲存來源：<code class="px-1 py-0.5 rounded bg-slate-100 text-slate-700">dealer_price_books</code> (default-usd / default-twd)</div>
+            </div>
+            
+            <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-slate-50/30">
+                <div class="flex flex-wrap items-center gap-3 flex-grow max-w-2xl">
+                    <div class="relative flex-grow max-w-xs">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            🔍
+                        </span>
+                        <input type="text" id="pricing-search-input" oninput="window.filterPricingTable()" placeholder="搜尋名稱 or ID..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    </div>
+                    
+                    <!-- Filter Button Group -->
+                    <div class="flex items-center gap-1 border border-slate-200 rounded-xl p-1 bg-white shadow-sm">
+                        <button onclick="window.setPricingFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'all' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">全部商品</button>
+                        <button onclick="window.setPricingFilter('courses')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'courses' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">📘 線上課程</button>
+                        <button onclick="window.setPricingFilter('physical')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'physical' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">📦 實體硬體</button>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400 font-medium">請在欄位修改後點擊對應列的「儲存變更」</div>
             </div>
 
             <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60">

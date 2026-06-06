@@ -321,7 +321,7 @@ const EN_BULLET_TRANSLATIONS = {
 function translateBulletItem(value = "", uiLocale = "zh-TW") {
   const raw = String(value || "").trim();
   if (!uiLocale.startsWith("en")) return raw;
-  return EN_BULLET_TRANSLATIONS[raw] || raw;
+  return EN_BULLET_TRANSLATIONS[raw] || "";
 }
 
 function translateBulletList(items = [], uiLocale = "zh-TW") {
@@ -653,17 +653,17 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const entryUrl = resolveEntryUrl(lesson);
     const unitFile = resolveUnitFile(lesson);
     const isEn = uiLocale === "en";
-    const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.title) : lesson.title) || lesson.courseId || "");
+    const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId) : lesson.title) || lesson.courseId || "");
     const displayKey = String(lesson.courseKey || lesson.courseId || "");
-    const contentList = translateBulletList(toList(isEn ? (lesson.coreContentEn || lesson.coreContent) : lesson.coreContent).slice(0, 4), uiLocale);
-    const summary = String((isEn ? (lesson.summaryEn || lesson.summary || lesson.descriptionEn || lesson.description)
+    const contentList = translateBulletList(toList(isEn ? (lesson.coreContentEn || []) : lesson.coreContent).slice(0, 4), uiLocale).filter(Boolean);
+    const summary = String((isEn ? (lesson.summaryEn || lesson.descriptionEn)
       : (lesson.summary || lesson.description)) || (isEn ? "Course content loaded locally." : "課程內容由本機資料載入。"));
     const duration = String(lesson.duration || lesson.estimatedDuration || "");
-    const lessonLabel = String((isEn ? (lesson.lessonLabelEn || translateLessonLabel(lesson.lessonLabel || lesson.tagText, uiLocale) || lesson.tagText) : (lesson.lessonLabel || lesson.tagText)) || "").trim();
+    const lessonLabel = String((isEn ? (lesson.lessonLabelEn || "") : (lesson.lessonLabel || lesson.tagText)) || "").trim();
     const displayLessonLabel = lessonLabel || (isEn ? "Course Unit" : "課程單元");
     const icon = String(lesson.cardIcon || lesson.icon || "📘");
     const imageUrl = pickImage(lesson);
-    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson, uiLocale) : { amount: Number(lesson.price || 0), currency: String(lesson.currency || "").toUpperCase() };
+    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson) : { amount: Number(lesson.price || 0), currency: String(lesson.currency || "").toUpperCase() };
     const price = Number(priceEntry.amount || 0);
     const priceCurrency = String(priceEntry.currency || "");
     const imageHtml = imageUrl
@@ -704,17 +704,17 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   const hardwareHtml = hardwareRows.map((lesson) => {
     const entryUrl = resolveEntryUrl(lesson);
     const unitFile = resolveUnitFile(lesson);
-    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson, uiLocale) : { amount: Number(lesson.price || 0), currency: String(lesson.currency || "").toUpperCase() };
+    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson) : { amount: Number(lesson.price || 0), currency: String(lesson.currency || "").toUpperCase() };
     const price = Number(priceEntry.amount || 0);
     const priceCurrency = String(priceEntry.currency || "");
     const isEn = uiLocale === "en";
     const displayKey = String(lesson.courseKey || lesson.courseId || "");
     const hardwareId = String(lesson.courseId || "").toLowerCase();
     const imageUrl = pickImage(lesson);
-    const summary = String(isEn ? (lesson.summaryEn || lesson.summary || lesson.descriptionEn || lesson.description)
+    const summary = String(isEn ? (lesson.summaryEn || lesson.descriptionEn)
       : (lesson.summary || lesson.description) || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations"));
-    const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.title) : lesson.title) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit"));
-    const contentList = translateBulletList(toList(isEn ? (lesson.coreContentEn || lesson.coreContent) : lesson.coreContent).slice(0, 4), uiLocale);
+    const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId) : lesson.title) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit"));
+    const contentList = translateBulletList(toList(isEn ? (lesson.coreContentEn || []) : lesson.coreContent).slice(0, 4), uiLocale).filter(Boolean);
     const listHtml = contentList.length
       ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
       : `<p class="text-sm text-slate-500">${summary}</p>`;

@@ -71,6 +71,7 @@ This spec covers:
 4. Checkout must freeze `distributorId`, `priceBookId`, `currency`, and `pricingVersion` together.
 5. Mixed-distributor or mixed-currency carts must be split before payment.
 6. `paymentGateway` and `logisticsProvider` are independent capabilities; a provider such as ECPay may appear in one or both roles, but business ownership still belongs to `distributorId`.
+7. Price resolution helpers must not use UI locale as a price selector; locale may only affect formatting and translated copy.
 
 ## 4. Data Model
 

@@ -117,10 +117,10 @@
 | `metadataType` | string | 元資料類型：`course` / `product` / `legacy_product`。 |
 | `productId` | string | 商品識別碼（商品型 metadata 使用）。 |
 | `pricing` | map | 多地區定價主欄位。建議使用 `tw` / `en`，各值格式為 `{ amount, currency }`。 |
-| `priceByLocale` | map | 語系定價別名。建議使用 `zh-TW` / `en`。 |
-| `priceByRegion` | map | 區域定價別名。建議使用 `tw` / `en`。 |
-| `priceMap` | map | 舊版/相容定價別名，前端與後端都會讀。 |
-| `prices` | map | 簡化定價別名，通常對應 `tw` / `en` 的純金額。 |
+| `priceByLocale` | map | 語系定價相容別名。僅供歷史資料或 migration 使用，不應作為新的定價依據。 |
+| `priceByRegion` | map | 區域定價相容別名。僅供歷史資料或 migration 使用，不應作為新的定價依據。 |
+| `priceMap` | map | 舊版/相容定價別名，前端與後端仍可讀取，但新流程應以 distributor price book 為準。 |
+| `prices` | map | 舊版簡化定價別名，僅作歷史相容與資料遷移用途。 |
 | `price_twd` | number | 相容欄位，台幣金額。 |
 | `price_usd` | number | 相容欄位，美金金額。 |
 | `currency` | string | 預設幣別，通常保留 `TWD`。 |
@@ -134,10 +134,10 @@
 >
 > 2026-06-03 價格規則更新：
 > - 課程與硬體商品皆採用多地區定價欄位，前端與後端不做匯率換算。
-> - 中文/TW 頁面讀取 `pricing.tw`，英文/US 頁面讀取 `pricing.en`。
-> - 推薦寫法為同時保留 `pricing`、`priceByLocale`、`priceByRegion`、`priceMap` 與 `price_twd` / `price_usd`，以維持舊資料相容。
+> - `pricing.tw` / `pricing.en` 與 `priceByLocale` / `priceByRegion` 都屬於歷史相容表達，新的定價依據應以 distributor price book / checkout quote 為準。
+> - 推薦寫法為同時保留 `pricing`、`priceMap`、`price_twd` / `price_usd`，以維持舊資料相容。
 > - 目前課程標準價：入門 `TWD 1200 / USD 40`、基礎 `TWD 1500 / USD 50`、進階 `TWD 1800 / USD 60`。
-> - 經銷商 checkout 的幣別以 `dealer_price_books` / order quote 為準，不由課程語系決定；`locale` 只影響內容與介面文字。
+> - 語言只影響內容與介面文字，不得作為價格選擇依據；checkout 的幣別以 `dealer_price_books` / order quote 為準。
 >
 > 2026-05-16 更新：
 > - `ai-agents-vibe.courseUnits` 已切換為 `02-unit-agent-mode.html`, `02-unit-web-agents.html`, `02-unit-vibe-coding.html`
@@ -172,6 +172,7 @@
 
 **使用規則**：
 - 前端（`learning-path.html`）在英文模式（`uiLocale === 'en'`）下優先讀取 `*En` 欄位，若欄位不存在則 fallback 到中文欄位。
+- 這些 `*En` 欄位僅影響內容文案，不影響價格解析。
 - `getLessonsMetadata` Cloud Function 直接傳回 Firestore 文件所有欄位，**不需要後端修改**即可生效。
 - 欄位維護透過 `admin-i18n.html` 管理頁面，呼叫 `updateLessonI18n` Cloud Function 寫入。
 
