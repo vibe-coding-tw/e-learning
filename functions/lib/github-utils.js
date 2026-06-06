@@ -137,8 +137,8 @@ function extractHiddenSectionContent(html, sectionId) {
 async function resolveAssignmentDocRefByUserAndUnit(db, userId, assignmentIdOrUnitId) {
     const raw = String(assignmentIdOrUnitId || "").trim();
     if (!raw) return null;
-
-    const normalized = raw.replace(/\.html$/i, '');
+    const { normalizeLegacyId } = require('./id-utils');
+    const normalized = normalizeLegacyId(raw);
     const exactDocId = `${userId}_${normalized}`;
     const exactRef = db.collection('assignments').doc(exactDocId);
     const exactDoc = await exactRef.get();
@@ -153,8 +153,8 @@ async function resolveAssignmentDocRefByUserAndUnit(db, userId, assignmentIdOrUn
         const row = d.data() || {};
         const aid = String(row.assignmentId || '').trim();
         const uid = String(row.unitId || '').trim();
-        const aidNorm = aid.replace(/\.html$/i, '');
-        const uidNorm = uid.replace(/\.html$/i, '');
+        const aidNorm = normalizeLegacyId(aid);
+        const uidNorm = normalizeLegacyId(uid);
         return unitCandidates.has(aid) || unitCandidates.has(aidNorm) ||
             unitCandidates.has(uid) || unitCandidates.has(uidNorm);
     });

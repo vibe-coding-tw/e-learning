@@ -20,9 +20,7 @@ const {
     unitIdsMatch
 } = require('./lib/id-utils');
 const {
-    getContentRuntimeConfig,
-    getLegacyMasterMapping,
-    peekLegacyMasterMapping
+    getContentRuntimeConfig
 } = require('./lib/runtime-state');
 const {
     ensureGithubOrgMembership,
@@ -112,20 +110,16 @@ const {
     resolveCartPrice,
     resolveLessonPrice
 } = require('./lib/pricing-utils');
+const {
+    listDistributorPriceBooks,
+    resolveDistributorCheckoutQuote: buildDistributorCheckoutQuote,
+    resolvePriceBookAmount
+} = require('./lib/distributor-pricing');
 
 admin.initializeApp({
     projectId: "e-learning-942f7"
 });
 const db = admin.firestore();
-
-(async () => {
-    try {
-        await getLegacyMasterMapping(db);
-        console.log("[Initialization] Legacy master mapping cache pre-loaded");
-    } catch (err) {
-        console.warn("[Initialization] Failed to pre-load legacy master mapping:", err.message);
-    }
-})();
 
 // ==========================================
 // Firebase Functions V2 全域設定
@@ -398,6 +392,93 @@ function assertAdminRole(requesterRole, message = '僅限管理員執行此操�
     if (requesterRole !== 'admin') throw new HttpsError('permission-denied', message);
 }
 
+function getUserDistributorScope(userData = {}) {
+    return normalizeText(
+        userData.distributorId ||
+        userData.commercial?.distributorId ||
+        userData.tutorDistributorId ||
+        userData.partnerDistributorId ||
+        ""
+    );
+}
+
+function normalizeRoutingRegionCode(value = "") {
+    const raw = normalizeText(value).toUpperCase();
+    if (!raw) return "";
+    if (raw === "ZH-TW" || raw === "TW" || raw === "TWD") return "TW";
+    if (raw === "EN" || raw === "EN-US" || raw === "US" || raw === "USD") return "US";
+    return raw;
+}
+
+function distributorMatchesRegion(distributor = {}, regionCode = "") {
+    const normalizedRegionCode = normalizeRoutingRegionCode(regionCode);
+    if (!normalizedRegionCode) return true;
+    const regions = Array.isArray(distributor.regions) ? distributor.regions : [];
+    return regions.some((region) => normalizeRoutingRegionCode(region) === normalizedRegionCode);
+}
+
+function collectDistributorRegions(distributors = []) {
+    const regions = new Set();
+    (Array.isArray(distributors) ? distributors : []).forEach((item) => {
+        (Array.isArray(item.regions) ? item.regions : []).forEach((region) => {
+            const normalized = normalizeRoutingRegionCode(region);
+            if (normalized) regions.add(normalized);
+        });
+    });
+    return Array.from(regions).sort((a, b) => String(a).localeCompare(String(b)));
+}
+
+function chooseRecommendedDistributor(distributors = [], {
+    regionCode = "",
+    preferredDistributorId = "",
+    ruleDefaultDistributorId = "",
+    ruleBackupDistributorIds = []
+} = {}) {
+    const active = (Array.isArray(distributors) ? distributors : [])
+        .filter((item) => item && item.id && item.status === 'ACTIVE');
+    const regionMatched = active.filter((item) => distributorMatchesRegion(item, regionCode));
+    const pickById = (distributorId = "") => {
+        const normalizedId = normalizeText(distributorId);
+        if (!normalizedId) return null;
+        return regionMatched.find((item) => item.id === normalizedId)
+            || active.find((item) => item.id === normalizedId)
+            || null;
+    };
+
+    const preferred = pickById(preferredDistributorId);
+    if (preferred) {
+        return { distributor: preferred, reason: 'preferred-distributor' };
+    }
+
+    const defaultDistributor = pickById(ruleDefaultDistributorId);
+    if (defaultDistributor) {
+        return { distributor: defaultDistributor, reason: 'region-default' };
+    }
+
+    for (const candidateId of Array.isArray(ruleBackupDistributorIds) ? ruleBackupDistributorIds : []) {
+        const candidate = pickById(candidateId);
+        if (candidate) {
+            return { distributor: candidate, reason: 'region-backup' };
+        }
+    }
+
+    if (regionMatched.length === 1) {
+        return { distributor: regionMatched[0], reason: 'single-region-match' };
+    }
+
+    const fallback = regionMatched[0] || active[0] || null;
+    return fallback
+        ? { distributor: fallback, reason: regionMatched.length > 1 ? 'first-region-match' : 'first-active-distributor' }
+        : { distributor: null, reason: 'no-active-distributor' };
+}
+
+function assertDistributorScope(userData = {}, requestedDistributorId = "", message = '僅限該經銷商執行此操作') {
+    if ((userData || {}).role === 'admin') return;
+    const ownDistributorId = getUserDistributorScope(userData);
+    if (ownDistributorId && requestedDistributorId && ownDistributorId === requestedDistributorId) return;
+    throw new HttpsError('permission-denied', message);
+}
+
 function assertRequiredValue(value, message = '缺少必要參數') {
     if (!value) throw new HttpsError('invalid-argument', message);
 }
@@ -468,6 +549,7 @@ function isValidAssignmentLinkUrl(value = "") {
 }
 
 function getTutorAssignmentUrlFromConfig(cfg = {}, course = null, canonicalUnitId = '', tutorEmail = '', lessons = []) {
+    cfg = cfg || {};
     const directUrl = normalizeText(cfg.assignmentUrl || cfg.legacyAssignmentUrl || cfg.githubClassroomUrl || '');
     if (directUrl) return directUrl;
 
@@ -546,7 +628,11 @@ exports.initiatePayment = onRequest(async (req, res) => {
             referredTutorEmail = '',
             promoCode = '',
             referralTutor = '',
+            distributorId = '',
+            priceBookId = '',
+            pricingVersion = '',
             gateway,
+            region,
             locale
         } = requestData;
 
@@ -619,7 +705,9 @@ exports.initiatePayment = onRequest(async (req, res) => {
             }
         }
 
-        const isStripe = (gateway === 'STRIPE' || locale === 'en');
+        const isStripe = gateway === 'STRIPE';
+        const normalizedOrderRegion = normalizeRoutingRegionCode(region || '');
+        const orderContentLocale = normalizeText(locale || 'zh-TW') || 'zh-TW';
         const settlementLocale = isStripe ? 'en' : 'zh-TW';
         const expectedCurrency = isStripe ? 'USD' : 'TWD';
         const pricingAwareItems = {};
@@ -653,7 +741,22 @@ exports.initiatePayment = onRequest(async (req, res) => {
             pricingAwareItems[itemKey] = normalizedItem;
             settlementAmount += itemAmount * qty;
         }
-        const shippingFeeAmount = hasPhysical ? (isStripe ? 15 : 450) : 0;
+        const subtotalAmount = settlementAmount;
+        const shippingAmount = hasPhysical ? (isStripe ? 15 : 450) : 0;
+        const taxAmount = 0;
+        const totalAmount = subtotalAmount + shippingAmount + taxAmount;
+        const requestedDistributorId = String(distributorId || '').trim();
+        const requestedPriceBookId = String(priceBookId || '').trim();
+        const requestedPricingVersion = String(pricingVersion || '').trim();
+        const orderPricingMeta = {
+            ...(requestedDistributorId ? { distributorId: requestedDistributorId } : {}),
+            ...(requestedPriceBookId ? { priceBookId: requestedPriceBookId } : {}),
+            ...(requestedPricingVersion ? { pricingVersion: requestedPricingVersion } : {})
+        };
+        const paymentGateway = isStripe ? "STRIPE" : "ECPAY";
+        const logisticsProvider = hasPhysical ? (isStripe ? "MANUAL" : "ECPAY") : "NONE";
+        const fulfillmentOwnerType = "distributor";
+        const fulfillmentOwnerId = requestedDistributorId || orderPricingMeta.distributorId || "";
 
         if (isStripe) {
             const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -665,21 +768,33 @@ exports.initiatePayment = onRequest(async (req, res) => {
                 });
             }
             const stripe = require('stripe')(stripeKey);
-            let shippingFeeUsd = shippingFeeAmount;
-            if (shippingFeeUsd > 0) {
+            let shippingAmountUsd = shippingAmount;
+            if (shippingAmountUsd > 0) {
                 if (!logisticsPayload) {
                     logisticsPayload = {};
                 }
-                logisticsPayload.shippingFee = shippingFeeUsd;
+                logisticsPayload.shippingFee = shippingAmountUsd;
                 logisticsPayload.isInternational = true;
             }
 
-            const finalAmountUsd = settlementAmount + shippingFeeUsd;
+            const finalAmountUsd = subtotalAmount + shippingAmountUsd + taxAmount;
 
             // 建立訂單內容記錄 (Firestore)
             await admin.firestore().collection("orders").doc(orderNumber).set({
                 uid: uid,
-                amount: finalAmountUsd, // USD amount
+                amount: finalAmountUsd,
+                region: normalizedOrderRegion,
+                contentLocale: orderContentLocale,
+                subtotalAmount: subtotalAmount,
+                taxAmount: taxAmount,
+                shippingAmount: shippingAmountUsd,
+                totalAmount: finalAmountUsd,
+                taxIncluded: true,
+                shippingIncluded: true,
+                paymentGateway: paymentGateway,
+                logisticsProvider: logisticsProvider,
+                fulfillmentOwnerType: fulfillmentOwnerType,
+                fulfillmentOwnerId: fulfillmentOwnerId,
                 status: "PENDING",
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 items: pricingAwareItems,
@@ -687,6 +802,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
                 orderNumber: orderNumber,
                 gateway: "STRIPE",
                 currency: "USD",
+                ...orderPricingMeta,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
@@ -705,14 +821,14 @@ exports.initiatePayment = onRequest(async (req, res) => {
                 });
             }
 
-            if (shippingFeeUsd > 0) {
+            if (shippingAmountUsd > 0) {
                 lineItems.push({
                     price_data: {
                         currency: 'usd',
                         product_data: {
-                            name: 'International Shipping Fee',
+                            name: 'Shipping Fee',
                         },
-                        unit_amount: Math.round(shippingFeeUsd * 100), // cents
+                        unit_amount: Math.round(shippingAmountUsd * 100), // cents
                     },
                     quantity: 1,
                 });
@@ -756,12 +872,26 @@ exports.initiatePayment = onRequest(async (req, res) => {
         // 建立訂單內容記錄 (Firestore)
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: uid,
-            amount: settlementAmount + shippingFeeAmount,
+            amount: totalAmount,
+            region: normalizedOrderRegion,
+            contentLocale: orderContentLocale,
+            subtotalAmount: subtotalAmount,
+            taxAmount: taxAmount,
+            shippingAmount: shippingAmount,
+            totalAmount: totalAmount,
+            taxIncluded: true,
+            shippingIncluded: true,
+            paymentGateway: paymentGateway,
+            logisticsProvider: logisticsProvider,
+            fulfillmentOwnerType: fulfillmentOwnerType,
+            fulfillmentOwnerId: fulfillmentOwnerId,
             status: "PENDING",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             items: pricingAwareItems,
             logistics: logisticsPayload || null,
-            orderNumber: orderNumber
+            orderNumber: orderNumber,
+            gateway: "ECPAY",
+            ...orderPricingMeta
         });
 
         // ServerUrl (Webhook)
@@ -788,7 +918,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
             MerchantTradeNo: orderNumber,
             MerchantTradeDate: tradeDate,
             PaymentType: 'aio',
-            TotalAmount: settlementAmount + shippingFeeAmount,
+            TotalAmount: totalAmount,
             TradeDesc: 'VibeCodingCourse',
             ItemName: itemNameStr,
             ReturnURL: serverUrl,
@@ -1011,6 +1141,13 @@ async function activateOrderPermissionsAndNotify(orderId) {
             await sendPaymentSuccessEmail(userEmail, orderId, orderData.amount, itemDesc, hasPhysical);
         }
 
+        try {
+            await syncUserPurchaseCacheFromOrder(db, orderId, orderData, lessons);
+            console.log(`[activateOrderPermissionsAndNotify] ✅ User purchase cache synced for order ${orderId}`);
+        } catch (cacheErr) {
+            console.warn(`[activateOrderPermissionsAndNotify] User purchase cache sync skipped for order ${orderId}:`, cacheErr.message || cacheErr);
+        }
+
         // 3.5. Investor income credit creation (order revenue entry)
         try {
             const investorProfileCache = new Map();
@@ -1097,7 +1234,8 @@ exports.paymentNotify = onRequest(async (req, res) => {
                 paymentDate: data.PaymentDate || "",
                 isSimulated: isSimulated,
                 rtnMsg: data.RtnMsg || "",
-                gateway: "ECPAY"
+                gateway: "ECPAY",
+                paymentGateway: "ECPAY"
             });
             console.log(`訂單 ${orderId} 更新成功 (ECPay)`);
 
@@ -1171,7 +1309,8 @@ exports.stripeWebhook = onRequest(async (req, res) => {
                 stripePaymentIntentId: session.payment_intent || null,
                 stripeSessionId: session.id,
                 paymentDate: getCurrentTime(),
-                gateway: "STRIPE"
+                gateway: "STRIPE",
+                paymentGateway: "STRIPE"
             };
 
             if (session.shipping_details) {
@@ -1290,117 +1429,16 @@ function cleanUnitId(unitId) {
         .replace(/^(?:tw-(?:common|car-(?:starter|basic|advanced))-|start-|basic-|adv-|advanced-|prepare-)?(?:\d{2}-)?(?:unit-|lesson-|master-)?/i, '');
 }
 
-const LEGACY_TUTOR_UNIT_TO_CANONICAL = {
-    '01-master-getting-started.html': 'common-developer-identity.html',
-    '02-master-ai-agents.html': 'common-agent-mode.html',
-    '03-master-wifi-motor.html': 'common-github-classroom.html',
-    '01-unit-vscode-online.html': 'common-vscode-online.html',
-    '01-unit-vscode-setup.html': 'common-vscode-setup.html',
-    '02-unit-agent-mode.html': 'common-agent-mode.html',
-    '02-unit-vibe-coding.html': 'common-vibe-coding.html',
-    '02-unit-web-agents.html': 'common-web-agents.html',
-    '03-unit-github-classroom.html': 'common-github-classroom.html',
-    '03-unit-motor-ramping.html': 'common-motor-ramping.html',
-    '03-unit-wifi-setup.html': 'common-wifi-setup.html',
-    'start-01-unit-html5-basics.html': 'start-01-unit-flexbox-layout.html',
-    
-    // Start, Basic, and Advanced legacy master mappings
-    "adv-01-master-s3-cam.html": "adv-01-unit-jpeg-quality.html",
-    "adv-02-master-video.html": "adv-02-unit-bandwidth-fps.html",
-    "adv-03-master-ble-advanced.html": "adv-03-unit-ble-mtu.html",
-    "adv-04-master-sensors.html": "adv-04-unit-filter-algorithms.html",
-    "adv-05-master-cv.html": "adv-05-unit-centroid-error.html",
-    "adv-06-master-cv-advanced.html": "adv-06-unit-centroid-algorithm.html",
-    "adv-07-master-ui-framework.html": "adv-07-unit-chart-canvas.html",
-    "adv-08-master-image-processing.html": "adv-08-unit-color-spaces.html",
-    "adv-09-master-ai-recognition.html": "adv-09-unit-cnn-audio.html",
-    "adv-10-master-diff-drive.html": "adv-10-unit-api-design.html",
-    "adv-11-master-photoelectric.html": "adv-11-unit-hardware-interrupts.html",
-    "adv-12-master-pid.html": "adv-12-unit-code-logic.html",
-    "adv-13-master-robustness.html": "adv-13-unit-robustness.html",
-    "adv-14-master-debugging-art.html": "adv-14-unit-debugging-art.html",
-    "adv-15-master-architecture.html": "adv-15-unit-ble-async.html",
-    "basic-01-master-environment.html": "basic-01-unit-drivers-ports.html",
-    "basic-02-master-ota-architecture.html": "basic-02-unit-ota-principles.html",
-    "basic-03-master-io-mapping.html": "basic-03-unit-adc-resolution.html",
-    "basic-04-master-pwm-control.html": "basic-04-unit-h-bridge.html",
-    "basic-05-master-ble-gatt.html": "basic-05-unit-advertising-connection.html",
-    "basic-06-master-http-web.html": "basic-06-unit-cors-security.html",
-    "basic-07-master-wifi-modes.html": "basic-07-unit-async-webserver.html",
-    "basic-08-master-joystick-math.html": "basic-08-unit-joystick-mapping.html",
-    "basic-09-master-multitasking.html": "basic-09-unit-hardware-timer.html",
-    "basic-10-master-fsm.html": "basic-10-unit-fsm.html",
-    "start-01-master-web-app.html": "start-01-unit-flexbox-layout.html",
-    "start-02-master-web-ble.html": "start-02-unit-ble-async.html",
-    "start-03-master-remote-control.html": "start-03-unit-control-panel.html",
-    "start-04-master-touch-events.html": "start-04-unit-long-press.html",
-    "start-05-master-joystick-lab.html": "start-05-unit-canvas-joystick.html"
-};
-
-const CANONICAL_TUTOR_UNIT_TO_LEGACY = Object.entries(LEGACY_TUTOR_UNIT_TO_CANONICAL).reduce((acc, [legacy, canonical]) => {
-    if (!acc[canonical]) acc[canonical] = [];
-    acc[canonical].push(legacy);
-    return acc;
-}, {});
-
 function normalizeTutorAdminUnitId(unitId = '') {
     const raw = normalizeText(unitId);
     if (!raw) return '';
-    const withHtml = raw.endsWith('.html') ? raw : `${raw}.html`;
-    if (LEGACY_TUTOR_UNIT_TO_CANONICAL[withHtml]) return LEGACY_TUTOR_UNIT_TO_CANONICAL[withHtml];
-    if (LEGACY_TUTOR_UNIT_TO_CANONICAL[raw]) return LEGACY_TUTOR_UNIT_TO_CANONICAL[raw];
     if (/^(?:tw|en)-/i.test(raw)) return raw.replace(/^(?:tw|en)-/i, '');
-    if (raw === '02-unit-classroom-workflow.html') return 'common-github-classroom.html';
-    if (raw.startsWith('04-')) return raw.replace(/^04-/, '02-');
     return raw;
 }
 
-function getTutorAdminUnitAliasCandidates(unitId = '') {
-    const canonical = normalizeTutorAdminUnitId(unitId);
-    const raw = normalizeText(unitId);
-    const withHtml = canonical.endsWith('.html') ? canonical : `${canonical}.html`;
-    const noHtml = withHtml.replace(/\.html$/i, '');
-    const legacyAliases = [
-        ...(CANONICAL_TUTOR_UNIT_TO_LEGACY[withHtml] || []),
-        ...(CANONICAL_TUTOR_UNIT_TO_LEGACY[noHtml] || [])
-    ];
-    const candidates = new Set([
-        canonical,
-        withHtml,
-        noHtml,
-        raw,
-        raw.replace(/\.html$/i, '')
-    ]);
-    legacyAliases.forEach(alias => {
-        candidates.add(alias);
-        candidates.add(alias.replace(/\.html$/i, ''));
-    });
-    return Array.from(candidates).filter(Boolean);
-}
-
-function mapLegacyMasterToCanonical(value = '') {
-    // Use cached mapping if available; fallback to value if not
-    const mapping = peekLegacyMasterMapping();
-    return mapping[value] || value;
-}
-
-function isLegacyMasterPage(value = '') {
-    const normalized = normalizeText(value || '').split('/').pop().split('?')[0];
-    if (!normalized.includes('-master-')) return false;
-    const mapping = peekLegacyMasterMapping();
-    return Object.prototype.hasOwnProperty.call(mapping, normalized);
-}
-
-function resolveCanonicalUnitId(unitId, lessons = [], options = {}) {
+function resolveCanonicalUnitId(unitId, lessons = []) {
     if (!unitId) return unitId;
-    const { allowLegacyMaster = false } = options;
-
-    // Only explicit compatibility paths should translate retired master ids.
-    let mappedUnitId = allowLegacyMaster ? mapLegacyMasterToCanonical(unitId) : unitId;
-    const tutorMappedUnitId = normalizeTutorAdminUnitId(mappedUnitId);
-    if (tutorMappedUnitId && tutorMappedUnitId !== mappedUnitId) {
-        mappedUnitId = tutorMappedUnitId;
-    }
+    let mappedUnitId = unitId;
     const cleanId = cleanUnitId(mappedUnitId);
 
     let resolved = mappedUnitId;
@@ -1438,14 +1476,14 @@ function resolveCanonicalUnitId(unitId, lessons = [], options = {}) {
 function canonicalizeLessonForDashboard(lesson = {}, lessons = []) {
     if (!lesson || typeof lesson !== 'object') return lesson;
     const courseUnits = Array.isArray(lesson.courseUnits)
-        ? lesson.courseUnits.map((unitId) => resolveCanonicalUnitId(unitId, lessons, { allowLegacyMaster: true }) || unitId)
+        ? lesson.courseUnits.map((unitId) => resolveCanonicalUnitId(unitId, lessons) || unitId)
         : lesson.courseUnits;
 
     return {
         ...lesson,
         ...(Array.isArray(courseUnits) ? { courseUnits } : {}),
         ...(lesson.entryUnitId ? {
-            entryUnitId: resolveCanonicalUnitId(lesson.entryUnitId, lessons, { allowLegacyMaster: true }) || lesson.entryUnitId
+            entryUnitId: resolveCanonicalUnitId(lesson.entryUnitId, lessons) || lesson.entryUnitId
         } : {})
     };
 }
@@ -1608,6 +1646,45 @@ function resolveLessonForOrderItem(itemKey = '', lessons = []) {
         }
         return false;
     }) || findCourseByPageOrUnit(itemKey, itemKey, lessons);
+}
+
+function isStarterLesson(lesson = {}) {
+    const canonicalLessonId = getCanonicalLessonIdentity(lesson) || lesson.courseKey || lesson.courseId || lesson.id || '';
+    const normalizedLessonId = normalizeText(canonicalLessonId).toLowerCase();
+    const category = normalizeText(lesson.category || lesson.level || '').toLowerCase();
+    return normalizedLessonId.startsWith('car-starter-') || category === 'start' || category === 'started';
+}
+
+async function syncUserPurchaseCacheFromOrder(db, orderId, orderData = {}, lessons = []) {
+    const uid = orderData.uid;
+    if (!uid || uid === 'GUEST') return;
+
+    const userRef = db.collection('users').doc(uid);
+    const userSnap = await userRef.get();
+    const userData = userSnap.exists ? (userSnap.data() || {}) : {};
+
+    const items = orderData.items || {};
+    let hasStarterAccess = !!userData.hasStarterAccess;
+
+    for (const itemKey of Object.keys(items)) {
+        const lesson = resolveLessonForOrderItem(itemKey, lessons);
+        if (lesson && lesson.isPhysical !== true && isStarterLesson(lesson)) {
+            hasStarterAccess = true;
+            break;
+        }
+    }
+
+    const patch = {
+        paid: true,
+        lastPaidOrderId: orderId,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (hasStarterAccess) {
+        patch.hasStarterAccess = true;
+    }
+
+    await userRef.set(patch, { merge: true });
 }
 
 const orderNormalizationResolvers = {
@@ -2261,6 +2338,782 @@ exports.upsertLessonPricing = onCall(async (request) => {
     };
 });
 
+/**
+ * [Distributor Pricing] 取得某經銷商的價格表
+ */
+exports.getDistributorPriceBooks = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth);
+
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const distributorId = normalizeText(data?.distributorId || userData.distributorId || userData.commercial?.distributorId || '');
+
+    assertRequiredValue(distributorId, 'missing-distributor-id');
+    assertDistributorScope(userData, distributorId, '僅限該經銷商或管理員查看價格表');
+
+    const items = await listDistributorPriceBooks(db, distributorId);
+    return {
+        success: true,
+        distributorId,
+        items
+    };
+});
+
+/**
+ * [Distributor Pricing] 新增或更新經銷商價格表
+ */
+exports.upsertDistributorPriceBook = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth);
+
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const payload = data || {};
+
+    const distributorId = normalizeText(payload.distributorId || userData.distributorId || userData.commercial?.distributorId || '');
+    const productId = normalizeText(payload.productId || '');
+    const currency = normalizeText(payload.currency || 'TWD').toUpperCase() || 'TWD';
+
+    assertRequiredValue(distributorId, 'missing-distributor-id');
+    assertRequiredValue(productId, 'missing-product-id');
+    assertDistributorScope(userData, distributorId, '僅限該經銷商或管理員編輯價格表');
+
+    const salePrice = Number(payload.salePrice);
+    const promoPriceRaw = payload.promoPrice;
+    const promoPrice = promoPriceRaw == null || promoPriceRaw === "" ? null : Number(promoPriceRaw);
+    if (!Number.isFinite(salePrice) || salePrice < 0) {
+        throw new HttpsError('invalid-argument', 'salePrice must be a non-negative number.');
+    }
+    if (promoPrice != null && (!Number.isFinite(promoPrice) || promoPrice < 0 || promoPrice > salePrice)) {
+        throw new HttpsError('invalid-argument', 'promoPrice must be a non-negative number not greater than salePrice.');
+    }
+
+    const effectiveFrom = payload.effectiveFrom || null;
+    const effectiveTo = payload.effectiveTo || null;
+    const promoEffectiveFrom = payload.promoEffectiveFrom || null;
+    const promoEffectiveTo = payload.promoEffectiveTo || null;
+    if (promoPrice != null && (!promoEffectiveFrom || !promoEffectiveTo)) {
+        throw new HttpsError('invalid-argument', 'promoEffectiveFrom and promoEffectiveTo are required when promoPrice is set.');
+    }
+    if (promoPrice != null && promoEffectiveFrom && promoEffectiveTo) {
+        const promoFromMs = new Date(promoEffectiveFrom).getTime();
+        const promoToMs = new Date(promoEffectiveTo).getTime();
+        if (!Number.isFinite(promoFromMs) || !Number.isFinite(promoToMs) || promoToMs < promoFromMs) {
+            throw new HttpsError('invalid-argument', 'promoEffectiveTo must be greater than or equal to promoEffectiveFrom.');
+        }
+    }
+    const isActive = payload.isActive !== false;
+    const priceBookId = normalizeText(payload.priceBookId || payload.id || `${distributorId}_${productId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, '-'));
+    const existingDoc = await db.collection('dealer_price_books').doc(priceBookId).get();
+    const createdAt = existingDoc.exists && existingDoc.data()?.createdAt
+        ? existingDoc.data().createdAt
+        : admin.firestore.FieldValue.serverTimestamp();
+
+    await db.collection('dealer_price_books').doc(priceBookId).set({
+        distributorId,
+        productId,
+        currency,
+        salePrice,
+        ...(promoPrice != null ? { promoPrice } : {}),
+        ...(effectiveFrom ? { effectiveFrom } : {}),
+        ...(effectiveTo ? { effectiveTo } : {}),
+        ...(promoPrice != null && promoEffectiveFrom ? { promoEffectiveFrom } : {}),
+        ...(promoPrice != null && promoEffectiveTo ? { promoEffectiveTo } : {}),
+        isActive,
+        version: normalizeText(payload.version || payload.pricingVersion || 'v1') || 'v1',
+        updatedBy: auth.uid,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt
+    }, { merge: true });
+
+    return {
+        success: true,
+        priceBookId,
+        distributorId,
+        productId
+    };
+});
+
+/**
+ * [Distributor Pricing] 一次套用既有商品到經銷商 price books
+ */
+exports.seedDistributorPriceBooksFromLessons = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth);
+
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const payload = data || {};
+
+    const distributorId = normalizeText(payload.distributorId || userData.distributorId || userData.commercial?.distributorId || '');
+    assertRequiredValue(distributorId, 'missing-distributor-id');
+    assertDistributorScope(userData, distributorId, '僅限該經銷商或管理員套用商品價格');
+
+    const distributorDoc = await db.collection('distributors').doc(distributorId).get();
+    const distributorData = distributorDoc.exists ? (distributorDoc.data() || {}) : {};
+    const distributorCurrency = normalizeText(payload.currency || distributorData.defaultCurrency || userData.defaultCurrency || 'TWD').toUpperCase() || 'TWD';
+    const overwrite = payload.overwrite === true;
+
+    const lessons = await getLessons();
+    const products = getSeedableDistributorProducts(lessons, distributorCurrency);
+
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+
+    for (const item of products) {
+        const priceBookId = normalizeText(
+            payload.priceBookPrefix
+                ? `${payload.priceBookPrefix}_${item.productId}`
+                : `${distributorId}_${item.productId}`
+        ).toLowerCase().replace(/[^a-z0-9_-]/gi, '-');
+        const docRef = db.collection('dealer_price_books').doc(priceBookId);
+        const existing = await docRef.get();
+
+        if (existing.exists && !overwrite) {
+            skipped += 1;
+            continue;
+        }
+
+        const existingData = existing.exists ? (existing.data() || {}) : {};
+        await docRef.set({
+            distributorId,
+            productId: item.productId,
+            currency: item.currency || distributorCurrency,
+            salePrice: item.salePrice,
+            ...(existingData.promoPrice != null && !overwrite ? { promoPrice: existingData.promoPrice } : {}),
+            ...(existingData.promoEffectiveFrom != null && !overwrite ? { promoEffectiveFrom: existingData.promoEffectiveFrom } : {}),
+            ...(existingData.promoEffectiveTo != null && !overwrite ? { promoEffectiveTo: existingData.promoEffectiveTo } : {}),
+            isActive: existingData.isActive !== false,
+            version: normalizeText(existingData.version || item.pricingVersion || 'v1') || 'v1',
+            sourceLessonId: item.lessonId,
+            sourceLessonTitle: item.title,
+            sourceIsPhysical: item.isPhysical === true,
+            updatedBy: auth.uid,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: existing.exists && existingData.createdAt
+                ? existingData.createdAt
+                : admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        if (existing.exists) updated += 1;
+        else created += 1;
+    }
+
+    return {
+        success: true,
+        distributorId,
+        currency: distributorCurrency,
+        totalProducts: products.length,
+        created,
+        updated,
+        skipped
+    };
+});
+
+/**
+ * [Distributor Pricing] 結帳前 quote 與 distributor resolution
+ */
+exports.resolveDistributorCheckoutQuote = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth);
+
+    const db = admin.firestore();
+    const lessons = await getLessons();
+    const payload = data || {};
+
+    const quote = await buildDistributorCheckoutQuote(db, {
+        lessons,
+        distributorId: payload.distributorId || "",
+        tutorId: payload.tutorId || "",
+        promotionCode: payload.promotionCode || payload.promoCode || "",
+        region: payload.region || "",
+        customerId: payload.customerId || auth.uid || "",
+        productId: payload.productId || payload.courseId || payload.itemId || "",
+        locale: payload.locale || "zh-TW",
+        priceBookId: payload.priceBookId || ""
+    });
+
+    return {
+        success: true,
+        ...quote
+    };
+});
+
+exports.getDistributorRoutingOptions = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth);
+
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const requestedRegion = normalizeRoutingRegionCode(data?.region || userData.preferredRegion || userData.region || '');
+    const distributorSnap = await db.collection('distributors').get();
+    const distributors = [];
+    distributorSnap.forEach((doc) => {
+        const item = { id: doc.id, ...(doc.data() || {}) };
+        if (item.status === 'ACTIVE') distributors.push(item);
+    });
+    distributors.sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)));
+
+    const ruleDoc = requestedRegion
+        ? await db.collection('region_distributor_rules').doc(requestedRegion).get()
+        : null;
+    const ruleData = ruleDoc && ruleDoc.exists ? (ruleDoc.data() || {}) : {};
+    const eligibleDistributors = requestedRegion
+        ? distributors.filter((item) => distributorMatchesRegion(item, requestedRegion))
+        : distributors.slice();
+    const recommendation = chooseRecommendedDistributor(distributors, {
+        regionCode: requestedRegion,
+        preferredDistributorId: userData.preferredDistributorId || getUserDistributorScope(userData),
+        ruleDefaultDistributorId: ruleData.defaultDistributorId || '',
+        ruleBackupDistributorIds: ruleData.backupDistributorIds || []
+    });
+    const selectedDistributor = recommendation.distributor || null;
+
+    return {
+        success: true,
+        region: requestedRegion,
+        regions: collectDistributorRegions(distributors),
+        eligibleDistributors: eligibleDistributors.map((item) => ({
+            id: item.id,
+            name: item.name || item.id,
+            regions: Array.isArray(item.regions) ? item.regions : [],
+            defaultCurrency: item.defaultCurrency || '',
+            status: item.status || 'ACTIVE'
+        })),
+        recommendation: selectedDistributor ? {
+            distributorId: selectedDistributor.id,
+            distributorName: selectedDistributor.name || selectedDistributor.id,
+            reason: recommendation.reason,
+            regions: Array.isArray(selectedDistributor.regions) ? selectedDistributor.regions : []
+        } : {
+            distributorId: '',
+            distributorName: '',
+            reason: recommendation.reason,
+            regions: []
+        },
+        userPreference: {
+            preferredRegion: normalizeRoutingRegionCode(userData.preferredRegion || userData.region || ''),
+            preferredDistributorId: getUserDistributorScope(userData) || normalizeText(userData.preferredDistributorId || ''),
+            bindingSource: normalizeText(userData.bindingSource || ''),
+            bindingUpdatedAt: userData.bindingUpdatedAt || null
+        }
+    };
+});
+
+exports.updateUserRoutingPreference = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth);
+
+    const db = admin.firestore();
+    const payload = data || {};
+    const preferredRegion = normalizeRoutingRegionCode(payload.preferredRegion || '');
+    const preferredDistributorId = normalizeText(payload.preferredDistributorId || '');
+
+    if (!preferredRegion && !preferredDistributorId) {
+        throw new HttpsError('invalid-argument', '至少需要提供 preferredRegion 或 preferredDistributorId');
+    }
+
+    if (preferredDistributorId) {
+        const distributorDoc = await db.collection('distributors').doc(preferredDistributorId).get();
+        if (!distributorDoc.exists) {
+            throw new HttpsError('not-found', '找不到指定的經銷商');
+        }
+        const distributorData = distributorDoc.data() || {};
+        if (!distributorMatchesRegion(distributorData, preferredRegion || payload.region || distributorData.regions?.[0] || '')) {
+            throw new HttpsError('invalid-argument', '經銷商不屬於指定地區');
+        }
+    }
+
+    const updatePayload = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    if (preferredRegion) {
+        updatePayload.preferredRegion = preferredRegion;
+        updatePayload.region = preferredRegion;
+    }
+    if (preferredDistributorId) {
+        updatePayload.preferredDistributorId = preferredDistributorId;
+        updatePayload.bindingSource = payload.bindingSource || 'manual';
+        updatePayload.bindingUpdatedAt = admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    await db.collection('users').doc(auth.uid).set(updatePayload, { merge: true });
+
+    return {
+        success: true,
+        preferredRegion,
+        preferredDistributorId
+    };
+});
+
+function toMillis(value = null) {
+    if (!value) return 0;
+    try {
+        if (typeof value.toMillis === 'function') return value.toMillis();
+        if (typeof value.toDate === 'function') return value.toDate().getTime();
+        if (value instanceof Date) return value.getTime();
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+    } catch (_) {
+        return 0;
+    }
+}
+
+function formatYmPeriod(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function previousYmPeriod(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    return formatYmPeriod(prev);
+}
+
+function countAuthorizedTutorUnits(userData = {}) {
+    const tutorConfigs = userData.tutorConfigs || {};
+    return Object.values(tutorConfigs).filter((cfg) => cfg && cfg.authorized === true).length;
+}
+
+function getSeedableDistributorProducts(lessons = [], distributorCurrency = 'TWD') {
+    const normalizedCurrency = normalizeText(distributorCurrency || 'TWD').toUpperCase() || 'TWD';
+    const locale = normalizedCurrency === 'USD' ? 'en' : 'zh-TW';
+
+    return (Array.isArray(lessons) ? lessons : [])
+        .filter((lesson) => lesson && (
+            lesson.isPhysical === true
+            || lesson.price != null
+            || lesson.price_twd != null
+            || lesson.price_usd != null
+            || lesson.pricing
+            || lesson.prices
+            || lesson.priceByLocale
+            || lesson.priceByRegion
+            || lesson.priceMap
+            || lesson.priceLocales
+            || lesson.pricesByRegion
+        ))
+        .map((lesson) => {
+            const resolvedPrice = resolveLessonPrice(lesson, locale);
+            const productId = normalizeText(
+                lesson.id ||
+                lesson.courseId ||
+                lesson.courseKey ||
+                lesson.entryUnitId ||
+                lesson.productId ||
+                lesson.sku ||
+                ''
+            );
+            return {
+                lessonId: lesson.id || '',
+                productId,
+                title: lesson.title || lesson.name || productId || '未命名商品',
+                isPhysical: lesson.isPhysical === true,
+                currency: resolvedPrice.currency || normalizedCurrency,
+                salePrice: Number(resolvedPrice.amount || 0),
+                pricingVersion: lesson.pricingVersion || lesson.pricingSource || 'legacy'
+            };
+        })
+        .filter((item) => item.productId && Number.isFinite(item.salePrice) && item.salePrice >= 0);
+}
+
+async function loadDistributorScopedUsers(db, distributorId = '') {
+    const normalizedDistributorId = normalizeText(distributorId);
+    if (!normalizedDistributorId) return [];
+
+    const queries = [
+        db.collection('users').where('distributorId', '==', normalizedDistributorId),
+        db.collection('users').where('commercial.distributorId', '==', normalizedDistributorId),
+        db.collection('users').where('tutorDistributorId', '==', normalizedDistributorId),
+        db.collection('users').where('partnerDistributorId', '==', normalizedDistributorId)
+    ];
+
+    const snapshots = await Promise.all(queries.map(async (query) => {
+        try {
+            return await query.get();
+        } catch (e) {
+            console.warn('[DistributorPortal] scoped user query failed:', e.message || e);
+            return null;
+        }
+    }));
+
+    const users = new Map();
+    snapshots.forEach((snap) => {
+        if (!snap || snap.empty) return;
+        snap.forEach((doc) => {
+            const data = doc.data() || {};
+            if (getUserDistributorScope(data) !== normalizedDistributorId) return;
+            users.set(doc.id, { id: doc.id, ...data });
+        });
+    });
+
+    return Array.from(users.values());
+}
+
+function buildDistributorPortalOrderRecord(order = {}, orderId = '') {
+    const items = order.items || {};
+    const itemEntries = Object.entries(items);
+    const physicalItemCount = itemEntries.filter(([_, item]) => item && item.isPhysical === true).length;
+    const itemNames = itemEntries
+        .map(([itemKey, item]) => item?.name || item?.productName || itemKey)
+        .filter(Boolean)
+        .slice(0, 3);
+    return {
+        id: orderId,
+        orderNumber: order.orderNumber || orderId,
+        uid: order.uid || '',
+        amount: Number(order.amount || 0),
+        currency: order.currency || 'TWD',
+        status: order.status || '',
+        fulfillmentStatus: order.fulfillmentStatus || 'PENDING',
+        distributorId: order.distributorId || order.commercial?.distributorId || '',
+        priceBookId: order.priceBookId || '',
+        pricingVersion: order.pricingVersion || '',
+        itemCount: itemEntries.length,
+        physicalItemCount,
+        hasPhysical: physicalItemCount > 0,
+        items: itemNames,
+        logistics: order.logistics || null,
+        shippingContact: buildShippingContact(order.logistics || {}),
+        shippingAddress: buildShippingAddress(order.logistics || {}),
+        createdAt: order.createdAt || null,
+        paidAt: order.paidAt || order.createdAt || null,
+        shippedAt: order.shippedAt || null
+    };
+}
+
+async function loadDistributorPortalOrders(db, distributorId = '', lessons = []) {
+    const normalizedDistributorId = normalizeText(distributorId);
+    if (!normalizedDistributorId) {
+        return { items: [], summary: { totalOrders: 0, pendingShipmentCount: 0, shippedCount: 0, grossAmount: 0 } };
+    }
+
+    const physicalUnitIds = getPhysicalUnitIdSet(lessons);
+    const priceBooks = await listDistributorPriceBooks(db, normalizedDistributorId);
+    const priceBookIds = new Set(priceBooks.map((book) => String(book.id || book.priceBookId || '').trim()).filter(Boolean));
+
+    const snap = await db.collection('orders')
+        .where('status', '==', 'SUCCESS')
+        .get();
+
+    const items = [];
+    snap.forEach((doc) => {
+        const order = doc.data() || {};
+        const orderDistributorId = normalizeText(order.distributorId || order.commercial?.distributorId || '');
+        const orderPriceBookId = normalizeText(order.priceBookId || '');
+        const isOwnOrder = orderDistributorId === normalizedDistributorId || (orderPriceBookId && priceBookIds.has(orderPriceBookId));
+        if (!isOwnOrder) return;
+
+        const record = buildDistributorPortalOrderRecord(order, doc.id);
+        const physicalItems = Object.keys(order.items || {}).filter((itemId) => isPhysicalOrderItem(itemId, order.items?.[itemId] || {}, physicalUnitIds));
+        record.physicalItemCount = physicalItems.length;
+        record.hasPhysical = physicalItems.length > 0;
+        record.needsShipment = physicalItems.length > 0 && String(record.fulfillmentStatus || '').toUpperCase() !== 'SHIPPED';
+        items.push(record);
+    });
+
+    items.sort((a, b) => toMillis(b.paidAt) - toMillis(a.paidAt));
+
+    const summary = items.reduce((acc, item) => {
+        acc.totalOrders += 1;
+        acc.grossAmount += Number(item.amount || 0);
+        if (item.needsShipment) acc.pendingShipmentCount += 1;
+        if (String(item.fulfillmentStatus || '').toUpperCase() === 'SHIPPED') acc.shippedCount += 1;
+        return acc;
+    }, { totalOrders: 0, pendingShipmentCount: 0, shippedCount: 0, grossAmount: 0 });
+
+    return { items, summary };
+}
+
+async function loadDistributorPortalTutors(db, distributorId = '') {
+    const normalizedDistributorId = normalizeText(distributorId);
+    if (!normalizedDistributorId) {
+        return { items: [], summary: { tutorCount: 0, authorizedUnitCount: 0 } };
+    }
+
+    const users = await loadDistributorScopedUsers(db, normalizedDistributorId);
+    const tutorItems = users.filter((user) => {
+        return countAuthorizedTutorUnits(user) > 0
+            || Boolean(normalizeText(user.tutorEmail || ''))
+            || Boolean(normalizeText(user.courseDevEmail || ''))
+            || Boolean(normalizeText(user.agentEmail || ''))
+            || Object.keys(user.tutorConfigs || {}).length > 0;
+    }).map((user) => {
+        const email = normalizeText(user.email || user.tutorEmail || user.userEmail || '');
+        return {
+            id: user.id,
+            uid: user.id,
+            name: user.name || user.displayName || email || user.id,
+            email,
+            role: user.role === 'admin' ? 'admin' : 'user',
+            isTutor: countAuthorizedTutorUnits(user) > 0 || Object.keys(user.tutorConfigs || {}).length > 0,
+            distributorId: getUserDistributorScope(user) || normalizedDistributorId,
+            authorizedUnitCount: countAuthorizedTutorUnits(user),
+            tutorConfigCount: Object.keys(user.tutorConfigs || {}).length,
+            payoutAccount: normalizeText(user.payoutAccount || user.paymentAccount || ''),
+            promotionCode: normalizeText(user.promotionCode || ''),
+            status: user.status || 'ACTIVE'
+        };
+    }).sort((a, b) => String(a.name || a.email || a.id).localeCompare(String(b.name || b.email || b.id)));
+
+    return {
+        items: tutorItems,
+        summary: {
+            tutorCount: tutorItems.length,
+            authorizedUnitCount: tutorItems.reduce((sum, tutor) => sum + Number(tutor.authorizedUnitCount || 0), 0)
+        }
+    };
+}
+
+async function loadDistributorPortalSettlement(db, distributorId = '', tutors = []) {
+    const normalizedDistributorId = normalizeText(distributorId);
+    if (!normalizedDistributorId) {
+        return {
+            period: '',
+            rows: [],
+            summary: {
+                period: '',
+                paidTotal: 0,
+                plannedTotal: 0,
+                blockedTotal: 0,
+                rowCount: 0,
+                tutorCount: 0
+            }
+        };
+    }
+
+    const period = previousYmPeriod(new Date());
+    const tutorEmailSet = new Set(
+        tutors
+            .map((tutor) => normalizeText(tutor.email || tutor.tutorEmail || '').toLowerCase())
+            .filter(Boolean)
+    );
+
+    if (tutorEmailSet.size === 0) {
+        return {
+            period,
+            rows: [],
+            summary: {
+                period,
+                paidTotal: 0,
+                plannedTotal: 0,
+                blockedTotal: 0,
+                rowCount: 0,
+                tutorCount: 0
+            }
+        };
+    }
+
+    const snap = await db.collection('profit_ledger')
+        .where('period', '==', period)
+        .get();
+
+    const byEmail = new Map();
+    snap.forEach((doc) => {
+        const row = doc.data() || {};
+        const email = normalizeText(row.recipientEmail || row.tutorEmail || '').toLowerCase();
+        if (!email || (tutorEmailSet.size > 0 && !tutorEmailSet.has(email))) return;
+
+        const current = byEmail.get(email) || {
+            email,
+            name: '',
+            role: 'user',
+            paidTotal: 0,
+            plannedTotal: 0,
+            blockedTotal: 0,
+            rowCount: 0,
+            roleBreakdown: {}
+        };
+
+        current.paidTotal = round2Amount(current.paidTotal + Number(row.shareAmount || 0));
+        current.plannedTotal = round2Amount(current.plannedTotal + Number(row.plannedShareAmount || row.shareAmount || 0));
+        current.blockedTotal = round2Amount(current.blockedTotal + Number(row.blockedShareAmount || 0));
+        current.rowCount += 1;
+        const role = String(row.recipientRole || row.role || 'user').toLowerCase();
+        const normalizedRole = role === 'admin' ? 'admin' : 'user';
+        current.roleBreakdown[normalizedRole] = round2Amount((current.roleBreakdown[normalizedRole] || 0) + Number(row.shareAmount || 0));
+        byEmail.set(email, current);
+    });
+
+    const tutorMap = new Map(tutors.map((tutor) => [normalizeText(tutor.email || '').toLowerCase(), tutor]));
+    const rows = Array.from(byEmail.values()).map((row) => {
+        const tutor = tutorMap.get(row.email) || {};
+        return {
+            ...row,
+            name: tutor.name || tutor.displayName || row.email,
+            distributorId: tutor.distributorId || normalizedDistributorId,
+            payoutAccount: tutor.payoutAccount || '',
+            authorizedUnitCount: Number(tutor.authorizedUnitCount || 0),
+            tutorConfigCount: Number(tutor.tutorConfigCount || 0),
+            status: tutor.status || 'ACTIVE'
+        };
+    }).sort((a, b) => b.paidTotal - a.paidTotal);
+
+    const summary = rows.reduce((acc, row) => {
+        acc.paidTotal = round2Amount(acc.paidTotal + Number(row.paidTotal || 0));
+        acc.plannedTotal = round2Amount(acc.plannedTotal + Number(row.plannedTotal || 0));
+        acc.blockedTotal = round2Amount(acc.blockedTotal + Number(row.blockedTotal || 0));
+        acc.rowCount += Number(row.rowCount || 0);
+        return acc;
+    }, {
+        period,
+        paidTotal: 0,
+        plannedTotal: 0,
+        blockedTotal: 0,
+        rowCount: 0,
+        tutorCount: rows.length
+    });
+
+    return { period, rows, summary };
+}
+
+/**
+ * [Distributor Portal] 回傳登入者的經銷商範圍與基本資料
+ */
+exports.getDistributorPortalData = onCall(async (request) => {
+    const { auth } = request;
+    assertAuthenticated(auth, '請先登入');
+
+    const uid = auth.uid;
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const role = await getRole(uid);
+    const myDistributorId = getUserDistributorScope(userData) || '';
+    const canManagePricing = role === 'admin' || !!myDistributorId;
+    const requestedDistributorId = normalizeText(request.data?.distributorId || '');
+    const lessons = await getLessons();
+    const distributorQuerySnap = await db.collection('distributors').get();
+    const allDistributors = [];
+    distributorQuerySnap.forEach((doc) => {
+        allDistributors.push({ id: doc.id, ...(doc.data() || {}) });
+    });
+    allDistributors.sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)));
+
+    const ownDistributorId = myDistributorId || '';
+    const adminRequestedDistributorId = role === 'admin' && requestedDistributorId
+        ? requestedDistributorId
+        : '';
+    const selectedDistributorId = role === 'admin'
+        ? (
+            adminRequestedDistributorId ||
+            ownDistributorId ||
+            (allDistributors[0]?.id || '')
+        )
+        : ownDistributorId;
+
+    const accessibleDistributors = role === 'admin'
+        ? allDistributors
+        : allDistributors.filter((item) => item.id === ownDistributorId);
+
+    const distributorDoc = selectedDistributorId ? await db.collection('distributors').doc(selectedDistributorId).get() : null;
+    const distributorData = distributorDoc && distributorDoc.exists ? (distributorDoc.data() || {}) : {};
+    const seedableProducts = getSeedableDistributorProducts(
+        lessons,
+        distributorData.defaultCurrency || userData.defaultCurrency || 'TWD'
+    );
+
+    const [orderData, tutorData, settlementData] = selectedDistributorId
+        ? await Promise.all([
+            loadDistributorPortalOrders(db, selectedDistributorId, lessons),
+            loadDistributorPortalTutors(db, selectedDistributorId),
+            loadDistributorPortalSettlement(db, selectedDistributorId)
+        ])
+        : [
+            { items: [], summary: { totalOrders: 0, pendingShipmentCount: 0, shippedCount: 0, grossAmount: 0 } },
+            { items: [], summary: { tutorCount: 0, authorizedUnitCount: 0 } },
+            { period: '', rows: [], summary: { period: '', paidTotal: 0, plannedTotal: 0, blockedTotal: 0, rowCount: 0, tutorCount: 0 } }
+        ];
+
+    return {
+        success: true,
+        role: role === 'admin' ? 'admin' : 'user',
+        isTutor: !!userData.tutorConfigs && Object.keys(userData.tutorConfigs || {}).length > 0,
+        uid,
+        email: auth.token?.email || userData.email || '',
+        name: userData.name || auth.token?.name || '',
+        myDistributorId,
+        selectedDistributorId,
+        canManagePricing,
+        accessibleDistributors,
+        orders: orderData.items,
+        orderSummary: orderData.summary,
+        tutors: tutorData.items,
+        tutorSummary: tutorData.summary,
+        settlement: settlementData,
+        seedableProductCount: seedableProducts.length,
+        user: {
+            uid,
+            email: auth.token?.email || userData.email || '',
+            name: userData.name || auth.token?.name || '',
+            distributorId: selectedDistributorId,
+            role
+        }
+    };
+});
+
+
+/**
+ * [Distributor Portal] 經銷商更新履約狀態與物流追蹤資訊
+ */
+exports.updateOrderFulfillmentStatus = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth);
+
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const payload = data || {};
+
+    const orderId = String(payload.orderId || '').trim();
+    const fulfillmentStatus = String(payload.fulfillmentStatus || 'PENDING').trim().toUpperCase();
+    const trackingNumber = String(payload.trackingNumber || '').trim();
+    const carrier = String(payload.carrier || '').trim();
+
+    assertRequiredValue(orderId, 'missing-order-id');
+    assertRequiredValue(fulfillmentStatus, 'missing-fulfillment-status');
+
+    // 載入訂單
+    const orderDoc = await db.collection('orders').doc(orderId).get();
+    if (!orderDoc.exists) {
+        throw new HttpsError('not-found', 'Order not found.');
+    }
+    const orderData = orderDoc.data() || {};
+
+    // 權限檢查：僅限訂單歸屬經銷商或系統管理員編輯
+    const orderDistributorId = normalizeText(orderData.distributorId || orderData.commercial?.distributorId || '');
+    assertDistributorScope(userData, orderDistributorId, '僅限該訂單的歸屬經銷商或管理員編輯履約狀態');
+
+    // 準備更新欄位
+    const updateData = {
+        fulfillmentStatus,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    if (fulfillmentStatus === 'SHIPPED') {
+        updateData.shippedAt = admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    // 合併物流追蹤資訊
+    const existingLogistics = orderData.logistics || {};
+    updateData.logistics = {
+        ...existingLogistics,
+        ...(trackingNumber ? { trackingNumber } : {}),
+        ...(carrier ? { carrier } : {})
+    };
+
+    await db.collection('orders').doc(orderId).update(updateData);
+
+    return { success: true, orderId, fulfillmentStatus };
+});
+
 
 // [V12.4.7] ONCALL WRAPPER: For frontend's httpsCallable('checkPaymentAuthorization')
 exports.checkPaymentAuthorization = onCall(async (request) => {
@@ -2517,14 +3370,6 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
     // [FIXED v11.3.8] More robust fileName extraction (strips leading slashes)
     const fileName = urlPath.split('/').filter(Boolean).pop();
 
-    // [NEW] Redirection for Retired Master Pages to corresponding entryUnitId
-    const canonicalRedirectTarget = mapLegacyMasterToCanonical(fileName);
-    if (canonicalRedirectTarget && canonicalRedirectTarget !== fileName) {
-        const queryStr = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
-        console.log(`[serveCourse] Redirecting legacy master ${fileName} to canonical unit ${canonicalRedirectTarget}`);
-        return res.redirect(301, `/courses/${canonicalRedirectTarget}${queryStr}`);
-    }
-
     // 2. Security Check (Token)
     const token = req.query.token;
 
@@ -2577,11 +3422,6 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         let normalizedFileName = normalizeCourseFile(fileName);
         const runtimeConfig = await getContentRuntimeConfig(db);
 
-        if (fileName.match(/^0[1-5]-/) && !fileName.includes('-master-')) {
-            normalizedFileName = 'start-' + fileName;
-            console.log(`[serveCourse] Early Normalization (Conditional): ${fileName} -> ${normalizedFileName}`);
-        }
-
         const normalizedFileVariantKey = normalizeCourseVariantKey(normalizedFileName);
         const normalizedScopePart = normalizeCourseFile(scopePart);
         const normalizedScopeVariantKey = normalizeCourseVariantKey(normalizedScopePart);
@@ -2608,22 +3448,8 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
                 // Use the centralized getLessons helper [FIXED v11.3.14]
                 lessons = await getLessons();
 
-                // [MODIFIED] Map legacy scopePart/pageId values to canonical unit counterparts
-                // so they find and validate scoped candidates correctly against migrated canonical records.
                 const normalizedPageId = normalizeCourseFile(pageId || '');
-                const shouldApplyLegacyScopeCompatibility =
-                    isLegacyMasterPage(fileName) ||
-                    isLegacyMasterPage(normalizedScopePart) ||
-                    isLegacyMasterPage(normalizedPageId);
-                const mappedScopePart = shouldApplyLegacyScopeCompatibility
-                    ? mapLegacyMasterToCanonical(normalizedScopePart)
-                    : normalizedScopePart;
-                const mappedPageId = shouldApplyLegacyScopeCompatibility
-                    ? mapLegacyMasterToCanonical(normalizedPageId)
-                    : normalizedPageId;
-
-                // Find the course by pageId/courseId/courseKey/entryUnitId or scopePart
-                const course = findCourseForScope(lessons, mappedScopePart, mappedPageId);
+                const course = findCourseForScope(lessons, normalizedScopePart, normalizedPageId);
 
                 if (course) {
                     const authorizedCandidates = buildAuthorizedFileCandidates(course);
@@ -2637,7 +3463,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
                         console.log(`[serveCourse] ${normalizedFileName} authorized via dynamic course-scope: ${scopePart}`);
                     }
                 } else {
-                    debugInfo = `CourseNotFound for Scope: ${scopePart} (mapped=${mappedScopePart}). LessonsCount: ${lessons.length}`;
+                    debugInfo = `CourseNotFound for Scope: ${scopePart}. LessonsCount: ${lessons.length}`;
                 }
             } catch (jsonErr) {
                 console.error("[serveCourse] JSON Scope check failed:", jsonErr);
@@ -2660,7 +3486,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
             content = externalHit.content;
             resolvedSource = externalHit.source;
         } else {
-            // [NEW v11.3.9] Legacy Name Fallback (01- to start-01- / start-01- to 01-) via external content repo
+            // Alternate filename fallback via external content repo.
             let altFileName;
             if (fileName.startsWith('start-')) altFileName = fileName.replace('start-', '');
             else if (fileName.match(/^0[1-5]-/)) altFileName = 'start-' + fileName;
@@ -2668,7 +3494,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
             if (altFileName) {
                 const altExternalHit = await fetchExternalCourseContent(altFileName, runtimeConfig);
                 if (altExternalHit && altExternalHit.content) {
-                    console.log(`[serveCourse] Legacy Fallback via external: ${fileName} -> ${altFileName}`);
+                    console.log(`[serveCourse] Alternate content filename fallback: ${fileName} -> ${altFileName}`);
                     content = altExternalHit.content;
                     resolvedSource = altExternalHit.source;
                 }
@@ -3126,12 +3952,16 @@ const saveTutorConfigsHandler = onCall(async (request) => {
 
         try {
             const db = admin.firestore();
+            // [canonical key] 預先取得 lessons，用於正規化所有 unitId key
+            const lessons = await getLessons();
             
             // --- PHASE 1: Propagate assignmentUrl maps and Authorizations to User Documents ---
             if (unitIds.length > 0) {
                 console.log(`[saveTutorConfigs] Syncing assignment URLs to user documents for ${courseId}...`);
                 
-                for (const [unitId, tutorsMap] of Object.entries(effectiveAssignmentUrlMaps)) {
+                for (const [rawUnitId, tutorsMap] of Object.entries(effectiveAssignmentUrlMaps)) {
+                    // [canonical key] 確保存入 user document 的 tutor config key 為 canonical 格式
+                    const unitId = resolveCanonicalUnitId(rawUnitId, lessons) || rawUnitId;
                     for (const [tEmail, url] of Object.entries(tutorsMap)) {
                         try {
                             const userRecord = await admin.auth().getUserByEmail(tEmail);
@@ -3145,7 +3975,7 @@ const saveTutorConfigsHandler = onCall(async (request) => {
                                 syncReferralLinkFn: syncReferralLink
                             });
 
-                            console.log(`[saveTutorConfigs] ✅ Synced ${unitId} for ${tEmail}`);
+                            console.log(`[saveTutorConfigs] ✅ Synced ${unitId} (from ${rawUnitId}) for ${tEmail}`);
                         } catch (err) {
                             console.warn(`[saveTutorConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
                         }
@@ -3156,7 +3986,9 @@ const saveTutorConfigsHandler = onCall(async (request) => {
             // --- PHASE 1.5: Support saving custom tutor configs (githubOrg, templateRepo, githubToken) ---
             if (configs.tutorConfigs) {
                 console.log(`[saveTutorConfigs] Syncing custom tutorConfigs to user documents...`);
-                for (const [unitId, configObj] of Object.entries(configs.tutorConfigs)) {
+                for (const [rawUnitId, configObj] of Object.entries(configs.tutorConfigs)) {
+                    // [canonical key] 確保存入 user document 的 tutor config key 為 canonical 格式
+                    const unitId = resolveCanonicalUnitId(rawUnitId, lessons) || rawUnitId;
                     const tEmail = configObj.email || email;
                     try {
                         const userRecord = await admin.auth().getUserByEmail(tEmail.toLowerCase());
@@ -3174,7 +4006,7 @@ const saveTutorConfigsHandler = onCall(async (request) => {
                             syncReferralLinkFn: syncReferralLink
                         });
                         
-                        console.log(`[saveTutorConfigs] ✅ Saved custom config for ${unitId} and tutor ${tEmail}`);
+                        console.log(`[saveTutorConfigs] ✅ Saved custom config for ${unitId} (from ${rawUnitId}) and tutor ${tEmail}`);
                     } catch (err) {
                         console.warn(`[saveTutorConfigs] Failed to save custom config for ${tEmail} on ${unitId}: ${err.message}`);
                     }
@@ -3333,7 +4165,10 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
     try {
         let assignmentDoc = null;
         if (assignmentId) {
-            assignmentDoc = await db.collection('assignments').doc(`${auth.uid}_${assignmentId}`).get();
+            // [canonical key] 正規化 assignmentId，避免舊格式 key 查不到 canonical 文件
+            const normalizedAssignmentId = (resolveCanonicalUnitId(assignmentId, lessons) || assignmentId)
+                .replace(/\.html$/i, '');
+            assignmentDoc = await db.collection('assignments').doc(`${auth.uid}_${normalizedAssignmentId}`).get();
         }
 
         if (!assignmentDoc || !assignmentDoc.exists) {
@@ -3419,7 +4254,6 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
         const db = admin.firestore();
         const lessons = await getLessons();
         const canonicalCourseId = normalizeTutorAdminUnitId(resolveCanonicalUnitId(courseId, lessons) || courseId);
-        const aliasCandidates = getTutorAdminUnitAliasCandidates(canonicalCourseId);
         // [V13.0.22] All authorization data is now strictly user-centric. 
         // No longer using centralized course_configs collection.
 
@@ -3473,7 +4307,7 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
                 console.error("[Auth] Failed to generate promo code or send email:", authExtraErr);
             }
 
-            // [MODIFIED] Do NOT set role: 'tutor' in users collection.
+            // [MODIFIED] Do NOT set a tutor role in the users collection.
             // Authorization is strictly handled at the course_configs unit level.
 
         } else if (action === 'remove') {
@@ -3486,9 +4320,7 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
                 const updatePatch = {
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 };
-                for (const alias of aliasCandidates) {
-                    updatePatch[`tutorConfigs.${alias}`] = admin.firestore.FieldValue.delete();
-                }
+                updatePatch[`tutorConfigs.${canonicalCourseId}`] = admin.firestore.FieldValue.delete();
                 await db.collection('users').doc(tutorUid).set(updatePatch, { merge: true });
                 console.log(`[Role] Successfully removed auth for ${tutorEmail} from user doc.`);
             } catch (authSyncErr) {
@@ -4147,7 +4979,8 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             myApplications: myApplicationsMapping,
             tutorTerms: tutorTerms,
             pendingApplications: allPendingApplications,
-            hardwareOrders: [] // [NEW] Complete hardware order history for admin
+            hardwareOrders: [], // [NEW] Complete hardware order history for admin
+            myDistributorId: getUserDistributorScope(userData) || ''
         };
 
         // Fetch profit sharing data and the current unit referral link for tutors.
@@ -4465,7 +5298,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                     ...data,
                     userId: targetUid, // Ensure normalized UID is present
                     courseId: mappedCid,
-                    unitId: resolveCanonicalUnitId(data.unitId, lessons, { allowLegacyMaster: true }) || data.unitId
+                    unitId: resolveCanonicalUnitId(data.unitId, lessons) || data.unitId
                 }));
             }
         });
@@ -4570,11 +5403,14 @@ exports.assignStudentToTutor = onCall(async (request) => {
     const requesterRole = await getRole(uid);
     assertAdminRole(requesterRole);
 
-    const { studentUid, unitId, tutorEmail } = data;
+    const { studentUid, unitId: rawUnitId, tutorEmail } = data;
     assertRequiredValue(studentUid, '缺少學生 ID');
-    assertRequiredValue(unitId, '缺少單元 ID');
+    assertRequiredValue(rawUnitId, '缺少單元 ID');
 
     try {
+        // [canonical key] 正規化 unitId，確保寫入 unitAssignments 的 key 與讀取端一致
+        const lessons = await getLessons();
+        const unitId = resolveCanonicalUnitId(rawUnitId, lessons) || rawUnitId;
         await upsertStudentUnitAssignment(admin.firestore(), studentUid, unitId, tutorEmail || null, uid, true);
 
         return { success: true };
@@ -4742,12 +5578,15 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
         const score = Number(scoreRaw);
         const maxScore = maxScoreRaw !== null && maxScoreRaw !== undefined ? Number(maxScoreRaw) : null;
 
+        // [canonical key] 取得 lessons 以便傳入 canonicalResolver，讓 assignment 查詢支援前綴映射
+        const lessons = await getLessons();
         const { resolvedDocId, inferredUnitId, candidateCount, candidateIds } = await resolveAutogradeAssignmentDocId(db, {
             assignmentDocId,
             userId,
             assignmentId,
             unitIdFromPayload,
-            repositoryFullName
+            repositoryFullName,
+            canonicalResolver: (id) => resolveCanonicalUnitId(id, lessons)
         });
 
         if (!resolvedDocId && candidateCount > 1) {
@@ -4808,7 +5647,10 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
         const now = admin.firestore.Timestamp.now();
         const assignmentData = assignmentDoc.data() || {};
         const studentUid = assignmentData.userId || userId || resolvedDocId.split('_')[0];
-        const assignmentIdVal = assignmentData.assignmentId || effectiveUnitId;
+        // [canonical key] 修正 effectiveUnitId scope bug — 此變數只存在 resolveAutogradeAssignmentDocId 內部
+        // 改用 assignmentData 中的資料，或回退到 payload 中的 unitIdFromPayload / assignmentId
+        const assignmentIdVal = assignmentData.assignmentId || assignmentData.unitId
+            || unitIdFromPayload || assignmentId || '';
         const ownerTutorEmail = assignmentData.assignedTutorEmail || "";
 
         // Verification: Ensure the webhook request comes from an authorized repository organization
@@ -5564,7 +6406,7 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 
             await collectRevenueShareChainTargets({
                 targets,
-                role: "tutor",
+                role: "user",
                 initialEmail: initialTutor,
                 initialShare: lineAmount * Number(policy.tutorRate || DEFAULT_REVENUE_SHARE_POLICY.tutorRate),
                 uplineRate: policy.tutorUplineRate || DEFAULT_REVENUE_SHARE_POLICY.tutorUplineRate,
@@ -5926,15 +6768,21 @@ exports.bindTutorByPromotionCode = onCall(async (request) => {
         const canonicalUnitId = resolveCanonicalUnitId(unitIdRaw, lessons);
         const effectiveCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons) || courseIdRaw;
 
-        // Admin tutor-mode debugging/support flow should not be blocked by student payment gate.
+        // Student-side tutor binding should only require paid access.
+        // A first-time binding may not yet have assignedTutorEmail, so do not
+        // reuse resolveSubmissionAccessOrThrow() here.
         if (requesterRole !== 'admin') {
-            await resolveSubmissionAccessOrThrow(db, uid, effectiveCourseId, canonicalUnitId, lessons);
+            const access = await resolveStudentAssignmentAccess(db, uid, effectiveCourseId, canonicalUnitId, lessons);
+            if (!access.authorized) {
+                throw new HttpsError('permission-denied', access.reason || '尚未完成此課程付款授權。');
+            }
         }
 
         const DEFAULT_TUTOR_EMAIL = 'rover.k.chen@gmail.com';
         const normalizedInput = promoCodeRaw;
         const promotionCode = normalizedInput.toUpperCase();
         const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedInput);
+        const isDefaultTutorSelection = !normalizedInput || normalizeEmail(normalizedInput) === normalizeEmail(DEFAULT_TUTOR_EMAIL);
         let tutorSnap;
         let tutorDoc = null;
         let resolvedPromotionCode = promotionCode;
@@ -5966,15 +6814,17 @@ exports.bindTutorByPromotionCode = onCall(async (request) => {
         }
 
         const cfg = getUserTutorConfig(tutorData, canonicalUnitId);
-        if (!cfg || cfg.authorized !== true) {
+        if (!isDefaultTutorSelection && (!cfg || cfg.authorized !== true)) {
             throw new HttpsError('permission-denied', '此導師尚未取得該單元授權。');
         }
 
         const course = findLessonByCourseRef(effectiveCourseId, lessons);
         const assignmentUrl = getTutorAssignmentUrlFromConfig(cfg, course, canonicalUnitId, tutorEmail, lessons);
-
-        if (!assignmentUrl) {
+        if (!assignmentUrl && !isDefaultTutorSelection) {
             throw new HttpsError('failed-precondition', '此導師尚未設定該單元作業連結，請通知管理員設定。');
+        }
+        if (isDefaultTutorSelection && !assignmentUrl) {
+            console.warn(`[bindTutorByPromotionCode] Default tutor selected for ${canonicalUnitId}, but no assignmentUrl was configured. Proceeding without referral link.`);
         }
 
         const tutorRef = db.collection('users').doc(tutorDoc.id);
@@ -6124,7 +6974,7 @@ exports.resolveStudentBlocker = onCall(async (request) => {
         const isRequesterAdmin = reqUserData.role === 'admin';
         
         let isTutor = false;
-        if (reqUserData.role === 'tutor' || reqUserData.tutorConfigs) {
+        if (reqUserData.role === 'admin' || reqUserData.tutorConfigs) {
             isTutor = true;
         }
         
@@ -6175,7 +7025,11 @@ exports.submitTutorCoachingLog = onCall(async (request) => {
 
     const tutorEmail = auth.token.email;
     const db = admin.firestore();
-    const docId = `${studentUid}_${assignmentId.replace(/\.html$/, '')}`;
+    // [canonical key] 正規化 assignmentId，確保以 canonical key 查找作業文件
+    const lessons = await getLessons();
+    const canonicalAssignmentId = (resolveCanonicalUnitId(assignmentId, lessons) || assignmentId)
+        .replace(/\.html$/, '');
+    const docId = `${studentUid}_${canonicalAssignmentId}`;
     const docRef = db.collection('assignments').doc(docId);
 
     try {

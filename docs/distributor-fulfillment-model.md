@@ -128,3 +128,4 @@ graph TD
 
 更多操作層規格請見：
 - [經銷商履約管理機制規劃](./distributor-fulfillment-operations.md)
+- [經銷商/導師/價格工程規格](./distributor-tutor-pricing-engineering-spec.md)

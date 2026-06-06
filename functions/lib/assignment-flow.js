@@ -158,7 +158,8 @@ async function resolveAutogradeAssignmentDocId(db, {
     userId = null,
     assignmentId = null,
     unitIdFromPayload = null,
-    repositoryFullName = ""
+    repositoryFullName = "",
+    canonicalResolver = null  // [canonical key] 可選地傳入 resolveCanonicalUnitId，支援完整的前綴映射
 } = {}) {
     let resolvedDocId = assignmentDocId || (userId && unitIdFromPayload ? `${userId}_${(unitIdFromPayload || "").replace(/\.html$/, "")}` : null);
     const effectiveUnitId = (unitIdFromPayload || assignmentId || "").replace(/\.html$/, "");
@@ -172,8 +173,12 @@ async function resolveAutogradeAssignmentDocId(db, {
         return { resolvedDocId: null, inferredUnitId: null, candidateCount: 0 };
     }
 
+    // [canonical key] 候選集包含 normalizeLegacyId 版本，以及 canonical key 版本（若有傳入 canonicalResolver）
+    const normalizedId = normalizeLegacyId(inferredUnitId || "");
+    const canonicalId = canonicalResolver ? (canonicalResolver(inferredUnitId) || '').replace(/\.html$/i, '') : null;
     const unitCandidates = Array.from(new Set([
-        normalizeLegacyId(inferredUnitId || ""),
+        normalizedId,
+        canonicalId,
     ].filter(Boolean)));
 
     const candidateDocs = [];

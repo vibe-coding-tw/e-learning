@@ -9,6 +9,7 @@ This document consolidates:
 3. I18N content repo MVP
 4. Channel partner / revenue share parameterization
 5. Distributor / fulfillment partner operating model
+6. Distributor-tutor pricing engineering spec
 
 The goal is to keep one source of truth for the next-stage platform changes.
 
@@ -79,6 +80,10 @@ For `users`:
 
 - `locale`
 - `region`
+- `preferredRegion`
+- `preferredDistributorId`
+
+Language selection in the catalog should remain a content concern only; checkout currency should come from the selected distributor's active price book.
 
 ### 2.3.2 Pricing implementation status (2026-06-03)
 
@@ -93,6 +98,7 @@ For `users`:
   - `priceMap.tw` / `priceMap.en`
   - `price_twd` / `price_usd`
 - Frontend and backend price resolvers must prefer Firestore values over local conversion logic.
+- Distributor checkout quotes should ignore locale-based currency fallbacks once a price book is available.
 
 ### 2.4 Naming strategy
 
@@ -337,6 +343,20 @@ Admin needs:
 3. Revenue simulation
 4. Audit trail
 
+### 5.7 Distributor and tutor commercial split
+
+The distributor-owned hardware pricing model and the tutor service-sharing model are now documented in a dedicated engineering spec:
+
+- [Distributor, Tutor, and Pricing Engineering Spec](./distributor-tutor-pricing-engineering-spec.md)
+
+This spec covers:
+
+1. Distributor-owned hardware pricing
+2. Tutor service revenue sharing
+3. Same-region multiple distributor price books
+4. Checkout distributor resolution
+5. Backend API and permission matrix
+
 ---
 
 ## 6. Confirmed Decisions
@@ -527,6 +547,7 @@ Hotfix note (2026-05-26):
 2. Apply `users` and `orders` regional fields (`locale`, `region`, `channelType`, `policyId`, `pricingVersion`) with migration script.
 3. Complete role-based sharing (`tutor/agent/courseDev`) with policy snapshot mode.
 4. Add admin UI for setting `courseDev` ownership/upline mapping quality checks.
+5. Implement distributor-owned price books and tutor service settlement as a dedicated commerce workflow.
 
 ---
 
@@ -585,10 +606,10 @@ Phase A manual test checklist (ready to execute):
    - Pass criteria: each page shows one dashboard FAB at bottom-right.
 
 2. Nav de-duplication
-   - `https://vibe-coding.tw/courses/start-01-master-web-app.html`
-   - `https://vibe-coding.tw/courses/start-02-master-web-ble.html`
-   - `https://vibe-coding.tw/courses/basic-01-master-environment.html`
-   - `https://vibe-coding.tw/courses/adv-01-master-s3-cam.html`
+   - `https://vibe-coding.tw/courses/car-starter-web-app.html`
+   - `https://vibe-coding.tw/courses/car-starter-web-ble.html`
+   - `https://vibe-coding.tw/courses/car-basic-environment.html`
+   - `https://vibe-coding.tw/courses/car-advanced-s3-cam.html`
    - Pass criteria: no duplicated global nav/header blocks.
 
 3. Access route (no `File not found`)

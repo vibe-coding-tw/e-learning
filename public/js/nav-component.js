@@ -19,7 +19,7 @@ async function consumeGoogleRedirectResult() {
     } catch (error) {
         console.error("[NavComp] Google redirect login failed:", error);
         sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
-        alert("Google 登入失敗，請再試一次。");
+        alert(window.t ? window.t("alert_login_failed", "Google 登入失敗，請再試一次。") : "Google 登入失敗，請再試一次。");
     }
 }
 
@@ -37,7 +37,7 @@ async function startGoogleLogin() {
         } catch (redirectError) {
             console.error("[NavComp] Google redirect login failed:", redirectError);
             sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
-            alert("Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。");
+            alert(window.t ? window.t("alert_login_failed_blocked", "Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。") : "Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。");
         }
     }
 }
@@ -188,40 +188,8 @@ window.__vibeResolveLocalizedSitePage = resolveLocalizedSitePage;
 window.__vibeHydrateLocalizedSitePages = hydrateLocalizedSitePages;
 
 function detectUiLocale() {
-    try {
-        const params = new URLSearchParams(window.location.search);
-        const path = params.get('path');
-        if (path) {
-            const cleanPath = String(path).trim().toLowerCase();
-            if (cleanPath.startsWith('en-')) return 'en';
-            if (cleanPath.startsWith('tw-')) return 'zh-TW';
-        }
-    } catch (_) {}
-
-    try {
-        const stored = localStorage.getItem('vibe_user_locale');
-        if (stored) {
-            const clean = String(stored).trim().toLowerCase();
-            if (clean.startsWith('zh')) return 'zh-TW';
-            if (clean.startsWith('en')) return 'en';
-        }
-    } catch (_) {}
-
-    try {
-        const params = new URLSearchParams(window.location.search);
-        const queryLang = params.get('lang') || params.get('locale');
-        if (queryLang) {
-            const clean = String(queryLang).trim().toLowerCase();
-            if (clean.startsWith('zh')) return 'zh-TW';
-            if (clean.startsWith('en')) return 'en';
-        }
-    } catch (_) {}
-
-    const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
-    const navLang = String(navigator.language || "").toLowerCase();
-    const raw = htmlLang || navLang;
-    if (raw.startsWith("zh")) return "zh-TW";
-    return "en";
+    if (typeof window.detectUiLocale === 'function') return window.detectUiLocale();
+    return "zh-TW";
 }
 
 window.__vibeSwitchLocale = async function (locale) {

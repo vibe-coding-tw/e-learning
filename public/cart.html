@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.60b4ee502ff2.js"></script>
+    <script src="./js/i18n-helper.5a0ca1b218e8.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -22,7 +22,7 @@
 
 <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.6c6a53ae9fda.js"></script>
+    <script type="module" src="./js/nav-component.a4e75ce7dd1c.js"></script>
     
 
     <main class="flex-grow pt-32 pb-20 hero-gradient">
@@ -48,6 +48,34 @@
                 <div class="flex justify-between items-center text-2xl font-bold text-gray-800">
                     <span data-i18n="cart_total_label">總金額 (TWD):</span>
                     <span id="cart-total">0</span>
+                </div>
+                <p id="cart-total-note" class="mt-2 text-sm text-slate-500">價格已含稅與運費，結帳金額即為實付總額。</p>
+                <div id="routing-preference-section" class="hidden mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <h3 class="text-lg font-bold text-gray-800">地區與經銷商偏好</h3>
+                        <span id="routing-recommendation-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-white border border-indigo-200 text-indigo-700">—</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">選擇你的地區後，系統會推薦最適合的經銷商；你可以手動切換，並把偏好保存到帳號。</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="preferred-region-select">地區 Region</label>
+                            <select id="preferred-region-select" class="w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700">
+                                <option value="">-- 請選擇地區 --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="preferred-distributor-select">經銷商 Distributor</label>
+                            <select id="preferred-distributor-select" class="w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700">
+                                <option value="">-- 先選地區 --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                        <button id="save-routing-preference-btn" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition">
+                            儲存偏好
+                        </button>
+                        <span id="routing-preference-status" class="text-sm text-slate-600">尚未套用偏好。</span>
+                    </div>
                 </div>
                 <div id="payment-form-container" class="hidden"></div>
 
@@ -149,8 +177,8 @@
     </main>
 
     <div id="footer-placeholder" data-root="."></div>
-    <script src="./js/footer-component.1c6f334c52a2.js"></script>
-    <script src="./js/pricing-utils.e362733979a2.js"></script>
+    <script src="./js/footer-component.c5c54c25090d.js"></script>
+    <script src="./js/pricing-utils.539d1bb9dcdd.js"></script>
 
 
 
@@ -171,6 +199,9 @@
 
         // 修改為通用的付款請求 Function (後端需配合修改)
         const initiatePayment = httpsCallable(functions, 'initiatePayment');
+        const resolveDistributorCheckoutQuote = httpsCallable(functions, 'resolveDistributorCheckoutQuote');
+        const getDistributorRoutingOptions = httpsCallable(functions, 'getDistributorRoutingOptions');
+        const updateUserRoutingPreference = httpsCallable(functions, 'updateUserRoutingPreference');
         const getLessonsMetadata = httpsCallable(functions, 'getLessonsMetadata');
         let lessonsCache = null;
 
@@ -185,18 +216,32 @@
         const unpaidItemsContainer = document.getElementById('unpaid-items');
         const emptyMsg = document.getElementById('empty-cart-msg');
         const cartTotalElement = document.getElementById('cart-total');
+        const cartTotalNote = document.getElementById('cart-total-note');
         const checkoutBtn = document.getElementById('checkout-btn');
         const paymentFormContainer = document.getElementById('payment-form-container');
         const cartPrefillStatus = document.getElementById('cart-prefill-status');
+        const routingPreferenceSection = document.getElementById('routing-preference-section');
+        const preferredRegionSelect = document.getElementById('preferred-region-select');
+        const preferredDistributorSelect = document.getElementById('preferred-distributor-select');
+        const saveRoutingPreferenceBtn = document.getElementById('save-routing-preference-btn');
+        const routingPreferenceStatus = document.getElementById('routing-preference-status');
+        const routingRecommendationBadge = document.getElementById('routing-recommendation-badge');
         const pricingApi = window.vibePricing || {
             resolveCartPrice(item = {}, locale = "zh-TW") {
-                const currency = String(item.currency || item.price_currency || "").toUpperCase() || (String(locale || "").startsWith("en") ? "USD" : "TWD");
+                const currency = String(item.currency || item.price_currency || item.priceCurrency || "").toUpperCase();
                 return { amount: Number(item.price || 0), currency };
             },
             formatPrice(priceEntry = {}, locale = "zh-TW") {
                 const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
-                const currency = priceEntry?.currency || (String(locale || "").startsWith("en") ? "USD" : "TWD");
+                const currency = String(priceEntry?.currency || "").toUpperCase();
                 if (!amount) return String(locale || "").startsWith("en") ? "Free" : "免費";
+                if (!currency) {
+                    try {
+                        return new Intl.NumberFormat(String(locale || "").startsWith("en") ? "en-US" : "zh-TW").format(amount);
+                    } catch (_) {
+                        return amount.toLocaleString();
+                    }
+                }
                 if (currency === "TWD") {
                     return `TWD ${Math.round(amount).toLocaleString()}`;
                 }
@@ -214,6 +259,136 @@
         function normalizeId(id) {
             if (!id) return '';
             return id.trim().replace(/\.html$/, '');
+        }
+
+        function getPreferredRegion() {
+            return String(
+                localStorage.getItem('vibe_user_region')
+                || localStorage.getItem('preferredRegion')
+                || localStorage.getItem('vibe_user_preferred_region')
+                || ''
+            ).trim().toUpperCase();
+        }
+
+        function getPreferredDistributorId() {
+            return String(
+                localStorage.getItem('vibe_user_preferred_distributor')
+                || localStorage.getItem('preferredDistributorId')
+                || ''
+            ).trim();
+        }
+
+        function setRoutingPreferenceLocal(region = '', distributorId = '') {
+            const normalizedRegion = String(region || '').trim().toUpperCase();
+            const normalizedDistributorId = String(distributorId || '').trim();
+            if (normalizedRegion) {
+                localStorage.setItem('vibe_user_region', normalizedRegion);
+                localStorage.setItem('preferredRegion', normalizedRegion);
+                localStorage.setItem('vibe_user_preferred_region', normalizedRegion);
+            }
+            if (normalizedDistributorId) {
+                localStorage.setItem('vibe_user_preferred_distributor', normalizedDistributorId);
+                localStorage.setItem('preferredDistributorId', normalizedDistributorId);
+            }
+        }
+
+        function setRoutingStatus(message = '', tone = 'info') {
+            if (!routingPreferenceStatus) return;
+            routingPreferenceStatus.textContent = message;
+            routingPreferenceStatus.className = tone === 'success'
+                ? 'text-sm text-emerald-700'
+                : tone === 'error'
+                    ? 'text-sm text-rose-700'
+                    : 'text-sm text-slate-600';
+        }
+
+        function renderDistributorOptions(snapshot = {}) {
+            if (!preferredRegionSelect || !preferredDistributorSelect) return;
+            const regions = Array.isArray(snapshot.regions) ? snapshot.regions : [];
+            const distributors = Array.isArray(snapshot.eligibleDistributors) ? snapshot.eligibleDistributors : [];
+            const recommendation = snapshot.recommendation || {};
+            const userPreference = snapshot.userPreference || {};
+            const localRegion = getPreferredRegion();
+            const localDistributorId = getPreferredDistributorId();
+            const initialRegion = localRegion || userPreference.preferredRegion || snapshot.region || regions[0] || '';
+            const initialDistributorId = localDistributorId || userPreference.preferredDistributorId || recommendation.distributorId || '';
+
+            preferredRegionSelect.innerHTML = ['<option value="">-- 請選擇地區 --</option>']
+                .concat(regions.map((region) => `<option value="${escapeHtml(region)}">${escapeHtml(region)}</option>`))
+                .join('');
+            preferredRegionSelect.value = initialRegion;
+
+            preferredDistributorSelect.innerHTML = ['<option value="">-- 請先選擇地區 --</option>']
+                .concat(distributors.map((dist) => {
+                    const regionHint = Array.isArray(dist.regions) && dist.regions.length ? ` (${dist.regions.join(', ')})` : '';
+                    return `<option value="${escapeHtml(dist.id)}">${escapeHtml(dist.name || dist.id)}${escapeHtml(regionHint)}</option>`;
+                }))
+                .join('');
+            preferredDistributorSelect.value = initialDistributorId;
+
+            if (routingRecommendationBadge) {
+                routingRecommendationBadge.textContent = recommendation.distributorId
+                    ? `${recommendation.reason || 'recommended'} · ${recommendation.distributorName || recommendation.distributorId}`
+                    : (distributors.length ? '請手動選擇' : '無可用經銷商');
+            }
+
+            if (initialRegion && !preferredDistributorSelect.value) {
+                const firstMatch = distributors[0]?.id || '';
+                if (firstMatch) preferredDistributorSelect.value = firstMatch;
+            }
+        }
+
+        async function loadRoutingOptions(region = '') {
+            if (!auth.currentUser) {
+                if (routingPreferenceSection) routingPreferenceSection.classList.add('hidden');
+                return;
+            }
+            try {
+                const res = await getDistributorRoutingOptions({ region: region || getPreferredRegion() || '' });
+                const snapshot = res?.data || res || {};
+                if (routingPreferenceSection) routingPreferenceSection.classList.remove('hidden');
+                renderDistributorOptions(snapshot);
+                const currentRegion = String(snapshot.userPreference?.preferredRegion || snapshot.region || getPreferredRegion() || '').toUpperCase();
+                setRoutingPreferenceLocal(currentRegion, snapshot.userPreference?.preferredDistributorId || getPreferredDistributorId());
+                setRoutingStatus(snapshot.recommendation?.distributorId
+                    ? `系統推薦：${snapshot.recommendation.distributorName || snapshot.recommendation.distributorId}`
+                    : '請先選擇地區與經銷商。', 'info');
+            } catch (error) {
+                console.warn('Failed to load distributor routing options:', error);
+                if (routingPreferenceSection) routingPreferenceSection.classList.remove('hidden');
+                const fallbackRegion = getPreferredRegion() || 'TW';
+                setRoutingPreferenceLocal(fallbackRegion, getPreferredDistributorId());
+                if (preferredRegionSelect) preferredRegionSelect.value = fallbackRegion;
+                setRoutingStatus('無法載入推薦清單，請先手動設定偏好。', 'error');
+            }
+        }
+
+        async function saveRoutingPreference() {
+            if (!auth.currentUser) {
+                alert('請先登入再儲存偏好。');
+                return;
+            }
+            const preferredRegion = String(preferredRegionSelect?.value || '').trim().toUpperCase();
+            const preferredDistributorId = String(preferredDistributorSelect?.value || '').trim();
+            if (!preferredRegion && !preferredDistributorId) {
+                setRoutingStatus('請至少選擇地區或經銷商。', 'error');
+                return;
+            }
+            try {
+                const res = await updateUserRoutingPreference({
+                    preferredRegion,
+                    preferredDistributorId,
+                    bindingSource: preferredDistributorId ? 'manual' : 'regionDefault'
+                });
+                const result = res?.data || res || {};
+                setRoutingPreferenceLocal(result.preferredRegion || preferredRegion, result.preferredDistributorId || preferredDistributorId);
+                setRoutingStatus('偏好已儲存。', 'success');
+                renderCartItems();
+            } catch (error) {
+                console.warn('Failed to save routing preference:', error);
+                setRoutingStatus(error?.message || '儲存偏好失敗。', 'error');
+                alert(error?.message || '儲存偏好失敗。');
+            }
         }
 
         function findCartItemIdForPromo(cart, targetCourseId = '', targetUnitId = '') {
@@ -373,7 +548,7 @@
 
         function renderCartItems() {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            let total = 0;
+            let subtotalAmount = 0;
             let hasPhysical = false;
             let currencyMismatch = false;
             let expectedCurrency = '';
@@ -383,6 +558,9 @@
             if (Object.keys(cart).length === 0) {
                 emptyMsg.style.display = 'block';
                 cartTotalElement.textContent = '0';
+                if (cartTotalNote) {
+                    cartTotalNote.textContent = '價格已含稅與運費，結帳金額即為實付總額。';
+                }
                 checkoutBtn.disabled = true;
                 return;
             } else {
@@ -391,24 +569,16 @@
 
             const storedLocale = localStorage.getItem('vibe_user_locale') || '';
             const isEn = storedLocale.startsWith('en');
-            expectedCurrency = isEn ? 'USD' : 'TWD';
-            const cartTotalLabel = document.querySelector('[data-i18n="cart_total_label"]');
-            if (cartTotalLabel) {
-                cartTotalLabel.textContent = isEn
-                    ? `Total (${expectedCurrency}):`
-                    : `總金額 (${expectedCurrency}):`;
-            }
-
+            const preferredRegion = getPreferredRegion();
+            const currencies = new Set();
             for (const [id, item] of Object.entries(cart)) {
                 const resolvedPrice = pricingApi.resolveCartPrice(item, isEn ? 'en' : 'zh-TW');
                 const price = Number(resolvedPrice.amount || 0);
                 const itemCurrency = String(resolvedPrice.currency || '').toUpperCase();
-                if (itemCurrency && expectedCurrency && itemCurrency !== expectedCurrency) {
-                    currencyMismatch = true;
-                }
+                if (itemCurrency) currencies.add(itemCurrency);
                 const quantity = parseInt(item.quantity) || 1;
                 const itemTotal = price * quantity;
-                total += itemTotal;
+                subtotalAmount += itemTotal;
                 if (item.isPhysical) {
                     hasPhysical = true;
                 }
@@ -417,7 +587,10 @@
                 itemDiv.className = 'bg-white/50 p-6 rounded-[2rem] border border-slate-200 shadow-sm mb-4';
                 const codeLabel = window.t('cart_item_code', '產品代號: {id}').replace('{id}', id);
                 const removeLabel = window.t('cart_item_remove', '移除');
-                const currencyUnit = itemCurrency || window.t('currency_unit', isEn ? 'USD' : '元');
+                const currencyUnit = itemCurrency || '';
+                const priceText = currencyUnit
+                    ? `${itemTotal.toLocaleString()} ${currencyUnit}`
+                    : itemTotal.toLocaleString();
                 itemDiv.innerHTML = `
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0 flex-1">
@@ -425,7 +598,7 @@
                             <p class="text-xs text-gray-500">${codeLabel}</p>
                         </div>
                         <div class="text-right shrink-0">
-                             <p class="font-bold text-indigo-600">${itemTotal.toLocaleString()} ${currencyUnit}</p>
+                             <p class="font-bold text-indigo-600">${priceText}</p>
                              <button class="remove-cart-item-btn text-sm text-rose-500 hover:text-rose-600 mt-2" data-product-id="${id}">${removeLabel}</button>
                         </div>
                     </div>
@@ -433,21 +606,45 @@
                 unpaidItemsContainer.appendChild(itemDiv);
             }
 
-            let shippingFeeText = '';
-            if (hasPhysical) {
-                const shippingFee = isEn ? 15 : 450;
-                total += shippingFee;
-                const feeUnit = isEn ? 'USD' : 'TWD';
-                shippingFeeText = ` (含運費 ${shippingFee.toLocaleString()} ${feeUnit})`;
+            const observedCurrencies = [...currencies];
+            if (observedCurrencies.length === 1) {
+                expectedCurrency = observedCurrencies[0];
+            } else if (observedCurrencies.length > 1) {
+                currencyMismatch = true;
+            } else {
+                expectedCurrency = '';
             }
 
-            const mainCurrencyUnit = isEn ? 'USD' : 'TWD';
-            cartTotalElement.textContent = `${mainCurrencyUnit} ${total.toLocaleString()}${shippingFeeText}`;
-            checkoutBtn.disabled = (total === 0) || currencyMismatch;
+            const cartTotalLabel = document.querySelector('[data-i18n="cart_total_label"]');
+            if (cartTotalLabel) {
+                cartTotalLabel.textContent = expectedCurrency
+                    ? (isEn ? `Total (${expectedCurrency}, tax & shipping included):` : `總金額 (${expectedCurrency}，含稅含運):`)
+                    : (isEn ? 'Total (tax & shipping included):' : '總金額（含稅含運）:');
+            }
+
+            const shippingAmount = hasPhysical ? (preferredRegion && preferredRegion !== 'TW' ? 15 : 450) : 0;
+            const taxAmount = 0;
+            const totalAmount = subtotalAmount + shippingAmount + taxAmount;
+            if (hasPhysical) {
+                if (cartTotalNote) {
+                    cartTotalNote.textContent = isEn
+                        ? 'Prices already include tax and shipping. The checkout amount is the final payable total.'
+                        : '價格已含稅與運費，結帳金額即為實付總額。';
+                }
+            } else if (cartTotalNote) {
+                cartTotalNote.textContent = isEn
+                    ? 'Prices already include tax. The checkout amount is the final payable total.'
+                    : '價格已含稅，結帳金額即為實付總額。';
+            }
+
+            cartTotalElement.textContent = expectedCurrency
+                ? `${expectedCurrency} ${totalAmount.toLocaleString()}`
+                : `${totalAmount.toLocaleString()}`;
+            checkoutBtn.disabled = (totalAmount === 0) || currencyMismatch;
             if (currencyMismatch) {
                 cartPrefillStatus.textContent = isEn
-                    ? 'This cart contains mixed currencies. Please keep a single region/language price set.'
-                    : '購物車包含不同幣別的商品，請改用同一地區的價格設定。';
+                    ? 'This cart contains mixed currencies. Please split the checkout by distributor or price book.'
+                    : '購物車包含不同幣別的商品，請依經銷商或 price book 拆單結帳。';
                 cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-amber-50 border-amber-200 text-amber-700';
                 cartPrefillStatus.classList.remove('hidden');
             }
@@ -487,12 +684,11 @@
             if (hasPhysical) {
                 shippingSection.classList.remove('hidden');
                 
-                const storedLocale = localStorage.getItem('vibe_user_locale') || '';
-                const isEn = storedLocale.startsWith('en');
+                const preferredRegion = getPreferredRegion();
                 const cvsContainer = document.getElementById('cvs-shipping-container');
                 const intlContainer = document.getElementById('intl-shipping-container');
                 
-                if (isEn) {
+                if (preferredRegion && preferredRegion !== 'TW') {
                     if (cvsContainer) cvsContainer.classList.add('hidden');
                     if (intlContainer) intlContainer.classList.remove('hidden');
                 } else {
@@ -738,7 +934,7 @@
             const priceEntry = pricingApi.resolveCartPrice(
                 courseMeta && typeof courseMeta === 'object'
                     ? courseMeta
-                    : { price: fallbackPrice, currency: localStorage.getItem('vibe_user_locale')?.startsWith('en') ? 'USD' : 'TWD' },
+                    : { price: fallbackPrice },
                 localStorage.getItem('vibe_user_locale')?.startsWith('en') ? 'en' : 'zh-TW'
             );
             const productPrice = Number(priceEntry?.amount ?? fallbackPrice) || 0;
@@ -806,12 +1002,35 @@
                 userDisplay.textContent = window.t('user_hello', '您好, {user}').replace('{user}', user.displayName || user.email);
                 loginBtn.textContent = window.t('nav_logout', '登出');
                 loginBtn.onclick = handleLogout;
+                loadRoutingOptions();
             } else {
                 userDisplay.textContent = window.t('user_guest', '訪客模式');
                 loginBtn.textContent = window.t('nav_login', '登入 / 註冊');
                 loginBtn.onclick = handleLogin;
+                if (routingPreferenceSection) routingPreferenceSection.classList.add('hidden');
             }
         });
+
+        if (preferredRegionSelect) {
+            preferredRegionSelect.addEventListener('change', async () => {
+                setRoutingPreferenceLocal(preferredRegionSelect.value, '');
+                await loadRoutingOptions(preferredRegionSelect.value);
+                renderCartItems();
+            });
+        }
+
+        if (preferredDistributorSelect) {
+            preferredDistributorSelect.addEventListener('change', () => {
+                setRoutingPreferenceLocal(preferredRegionSelect?.value || '', preferredDistributorSelect.value || '');
+                setRoutingStatus(preferredDistributorSelect.value
+                    ? '已選擇經銷商，尚未儲存到帳號。'
+                    : '請選擇經銷商。', 'info');
+            });
+        }
+
+        if (saveRoutingPreferenceBtn) {
+            saveRoutingPreferenceBtn.addEventListener('click', saveRoutingPreference);
+        }
 
         hydrateCartFromInviteLink();
 
@@ -843,6 +1062,9 @@
         async function handlePaymentCheckout(user, cartItems) {
             const storedLocale = localStorage.getItem('vibe_user_locale') || '';
             const isEn = storedLocale.startsWith('en');
+            const checkoutLocale = isEn ? 'en' : 'zh-TW';
+            const checkoutRegion = getPreferredRegion();
+            const useInternationalShipping = checkoutRegion && checkoutRegion !== 'TW';
 
             // [NEW] 驗證實體商品欄位
             const hasPhysical = checkPhysicalItems();
@@ -857,7 +1079,7 @@
                     return;
                 }
 
-                if (isEn) {
+                if (useInternationalShipping) {
                     const country = document.getElementById('shipping-country').value;
                     const state = document.getElementById('shipping-state').value.trim();
                     const city = document.getElementById('shipping-city').value.trim();
@@ -899,14 +1121,62 @@
                 }
             }
 
-            // 計算結帳金額
+            // 先向後端解析每個品項的經銷商價格，並確保整筆訂單只落到同一個經銷商
+            const cartEntries = Object.entries(cartItems || {});
+            const resolvedQuotes = [];
+            let resolvedDistributorId = '';
+            let resolvedPriceBookId = '';
+            let resolvedPricingVersion = '';
+            let resolvedCurrency = '';
             let calculatedTotal = 0;
-            let checkoutCurrency = isEn ? 'USD' : 'TWD';
-            for (const item of Object.values(cartItems)) {
-                const resolvedPrice = pricingApi.resolveCartPrice(item, isEn ? 'en' : 'zh-TW');
-                const price = Number(resolvedPrice.amount || 0);
-                const itemCurrency = String(resolvedPrice.currency || '').toUpperCase();
-                if (itemCurrency && checkoutCurrency && itemCurrency !== checkoutCurrency) {
+
+            for (const [itemId, item] of cartEntries) {
+                const productId = normalizeId(item.sourceUnitId || item.unitId || itemId);
+                if (!productId) {
+                    alert(isEn
+                        ? 'Unable to resolve product identifier for one of the cart items.'
+                        : '購物車中有品項無法解析產品代號，請先整理購物車。');
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
+                    return;
+                }
+
+                const quoteResponse = await resolveDistributorCheckoutQuote({
+                    productId,
+                    region: checkoutRegion,
+                    locale: checkoutLocale,
+                    tutorId: item.referredTutorEmail || '',
+                    promotionCode: item.referralLink || '',
+                    customerId: user.uid
+                });
+
+                const quoteData = quoteResponse?.data?.result || quoteResponse?.data || quoteResponse?.result || quoteResponse || {};
+                if (!quoteData || quoteData.state === 'ambiguous' || quoteData.success === false) {
+                    const msg = quoteData?.reason || quoteData?.message || (isEn
+                        ? 'Unable to resolve a distributor for this checkout.'
+                        : '無法解析此筆結帳所屬的經銷商，請先選擇經銷商或聯絡管理員。');
+                    alert(msg);
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
+                    return;
+                }
+
+                const quotePrice = quoteData.price || {};
+                const itemCurrency = String(quotePrice.currency || '').toUpperCase();
+                const itemPrice = Number(quotePrice.amount || 0);
+                const quantity = parseInt(item.quantity) || 1;
+
+                if (!itemCurrency) {
+                    alert(isEn
+                        ? 'The distributor quote did not return a currency.'
+                        : '經銷商報價未回傳幣別，請稍後再試。');
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
+                    return;
+                }
+
+                if (!resolvedCurrency) resolvedCurrency = itemCurrency;
+                if (resolvedCurrency && itemCurrency !== resolvedCurrency) {
                     alert(isEn
                         ? 'Mixed currencies are not supported in a single checkout.'
                         : '單筆結帳不支援混合幣別，請先整理購物車。');
@@ -914,16 +1184,81 @@
                     checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
                     return;
                 }
-                const quantity = parseInt(item.quantity) || 1;
-                calculatedTotal += price * quantity;
-            }
-            if (hasPhysical) {
-                calculatedTotal += isEn ? 15 : 450;
+
+                if (resolvedDistributorId && quoteData.distributorId && resolvedDistributorId !== quoteData.distributorId) {
+                    alert(isEn
+                        ? 'This cart contains items from multiple distributors. Please split the checkout.'
+                        : '購物車包含不同經銷商的品項，請拆單結帳。');
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
+                    return;
+                }
+
+                resolvedDistributorId = resolvedDistributorId || quoteData.distributorId || '';
+                resolvedPriceBookId = resolvedPriceBookId || quoteData.priceBookId || '';
+                resolvedPricingVersion = resolvedPricingVersion || quotePrice.pricingVersion || quoteData.pricingVersion || '';
+                if (!resolvedCurrency) resolvedCurrency = itemCurrency;
+
+                cartItems[itemId] = {
+                    ...item,
+                    price: itemPrice,
+                    currency: itemCurrency,
+                    price_currency: itemCurrency,
+                    price_usd: itemCurrency === 'USD' ? itemPrice : item.price_usd,
+                    price_twd: itemCurrency === 'TWD' ? itemPrice : item.price_twd,
+                    distributorId: quoteData.distributorId || item.distributorId || '',
+                    priceBookId: quoteData.priceBookId || item.priceBookId || '',
+                    pricingVersion: quotePrice.pricingVersion || quoteData.pricingVersion || item.pricingVersion || ''
+                };
+                calculatedTotal += itemPrice * quantity;
+
+                resolvedQuotes.push({
+                    itemId,
+                    productId,
+                    distributorId: quoteData.distributorId || '',
+                    priceBookId: quoteData.priceBookId || '',
+                    pricingVersion: quotePrice.pricingVersion || quoteData.pricingVersion || '',
+                    price: itemPrice,
+                    currency: itemCurrency
+                });
             }
 
+            if (hasPhysical) {
+                const shippingFee = useInternationalShipping ? 15 : 450;
+                calculatedTotal += shippingFee;
+            }
+
+            if (resolvedDistributorId) {
+                cartPrefillStatus.textContent = isEn
+                    ? `Distributor resolved: ${resolvedDistributorId}`
+                    : `已解析經銷商：${resolvedDistributorId}`;
+                cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-green-50 border-green-200 text-green-700';
+                cartPrefillStatus.classList.remove('hidden');
+            }
+
+            if (auth.currentUser && (checkoutRegion || resolvedDistributorId)) {
+                try {
+                    await updateUserRoutingPreference({
+                        preferredRegion: checkoutRegion || getPreferredRegion() || '',
+                        preferredDistributorId: resolvedDistributorId || getPreferredDistributorId() || '',
+                        bindingSource: resolvedDistributorId ? 'checkout' : 'regionDefault'
+                    });
+                    setRoutingPreferenceLocal(checkoutRegion || getPreferredRegion() || '', resolvedDistributorId || getPreferredDistributorId() || '');
+                    setRoutingStatus(resolvedDistributorId
+                        ? `已記住偏好經銷商：${resolvedDistributorId}`
+                        : '已記住地區偏好。', 'success');
+                } catch (error) {
+                    console.warn('Failed to persist routing preference from checkout:', error);
+                }
+            }
+
+            localStorage.setItem('vibeCodingCart', JSON.stringify(cartItems));
+            renderCartItems();
+            checkPhysicalItems();
+
             checkoutBtn.disabled = true;
-            checkoutBtn.textContent = isEn 
-                ? '🔒 Connecting to payment gateway...' 
+            checkoutBtn.textContent = useInternationalShipping
+                ? '🔒 Connecting to payment gateway...'
                 : window.t('checkout_btn_ecpay', '🔒 正在連接綠界金流...');
 
             try {
@@ -934,7 +1269,11 @@
                     logistics: logisticsInfo,
                     referralLink: null,
                     referredTutorEmail: null,
-                    gateway: isEn ? "STRIPE" : "ECPAY",
+                    distributorId: resolvedDistributorId,
+                    priceBookId: resolvedPriceBookId,
+                    pricingVersion: resolvedPricingVersion,
+                    gateway: useInternationalShipping ? "STRIPE" : "ECPAY",
+                    region: checkoutRegion,
                     locale: isEn ? "en" : "zh-TW",
                     // 設定交易完成後的返回網址
                     returnUrl: window.location.origin + '/payment-return.html'

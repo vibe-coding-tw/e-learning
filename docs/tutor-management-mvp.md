@@ -61,7 +61,7 @@ graph TD
 ### Firestore Collections
 - `tutor_applications`: Source of truth for all tutor requests and review status.
 - `users.tutorConfigs`: Stores unit-level tutor authorizations and assignment / repo settings（歷史作業邀請 URL 僅作相容欄位）。
-- `users`: Also keeps `tutorApplications` as a legacy-compatible snapshot.
+- `users`: Also keeps `tutorApplications` as a historical compatibility snapshot.
 
 ### Cloud Functions
 - `getDashboardData`: Aggregates pending applications for the admin view.
@@ -75,8 +75,8 @@ graph TD
 - **Traceability**: All recommendations are linked to the recommending tutor's UID for audit purposes.
 
 ## 6. Implementation Notes
-- `functions/index.js` 目前已將 `tutorConfigs` 的讀寫收斂到共用 helper，包含 dashboard 彙整、授權寫入與 legacy snapshot 同步；但資料契約仍維持 `users.tutorConfigs[unitId].authorized = true`。
-- `users.tutorApplications` 仍保留作為 legacy-compatible snapshot；現行的 source of truth 仍是 `tutor_applications`。
+- `functions/index.js` 目前已將 `tutorConfigs` 的讀寫收斂到共用 helper，包含 dashboard 彙整、授權寫入與歷史快照同步；但資料契約仍維持 `users.tutorConfigs[unitId].authorized = true`。
+- `users.tutorApplications` 仍保留作為 historical compatibility snapshot；現行的 source of truth 仍是 `tutor_applications`。
 - `getDashboardData`、`decideTutorApplication`、`recommendTutorForUnit` 與 `submitTutorRecommendationInviteLink` 的外部行為不變，文件仍以現有流程與通知規格為準。
 - `githubClassroomUrl` / `githubClassroomUrls` 仍屬相容欄位；若後續要正式改名，請先依 [`docs/assignment-url-migration-plan.md`](assignment-url-migration-plan.md) 的 dual read/write + backfill 流程進行，不要直接破壞既有資料。
 
@@ -85,6 +85,7 @@ graph TD
 - `docs/classroom-bridge-sync-workflow.md` (template -> bridge sync SOP，歷史備查)
 - `docs/template-org-migration-runbook.md` (source/publish layer policy，歷史備查)
 - `docs/admin-invite-binding-tool.md` (admin binding lookup，歷史備查)
+- `docs/distributor-tutor-pricing-engineering-spec.md` (commercial tutor-to-distributor binding and service revenue split)
 
 ## 8. Tutor Binding via Promotion Code (Updated 2026-05-20)
 - 綁定入口為作業頁（Assignment modal），由學生確認或輸入 Tutor 的 `Promotion code`。

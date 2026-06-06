@@ -8,14 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="./style.1b939bdb0a17.css">
+  <script src="./js/i18n-helper.5a0ca1b218e8.js"></script>
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.6c6a53ae9fda.js"></script>
+  <script type="module" src="./js/nav-component.a4e75ce7dd1c.js"></script>
   <script src="./js/dashboard-lookup-utils.35d63fe776d1.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
   <script src="./js/course-shared.ecbd4e826fd2.js"></script>
-  <script src="./js/pricing-utils.e362733979a2.js"></script>
+  <script src="./js/pricing-utils.539d1bb9dcdd.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -26,7 +27,7 @@
   </div>
 
   <div id="footer-placeholder" data-root="."></div>
-  <script src="./js/footer-component.1c6f334c52a2.js"></script>
+  <script src="./js/footer-component.c5c54c25090d.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -60,94 +61,9 @@
     } = window.repoSlugUtils || {};
 
     function detectUiLocale() {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const path = params.get('path');
-        if (path) {
-          const cleanPath = String(path).trim().toLowerCase();
-          if (cleanPath.startsWith('en-')) return 'en';
-          if (cleanPath.startsWith('tw-')) return 'zh-TW';
-        }
-      } catch (_) {}
-
-      try {
-        const stored = localStorage.getItem('vibe_user_locale');
-        if (stored) {
-          const clean = String(stored).trim().toLowerCase();
-          if (clean.startsWith('zh')) return 'zh-TW';
-          if (clean.startsWith('en')) return 'en';
-        }
-      } catch (_) {}
-
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const queryLang = params.get('lang') || params.get('locale');
-        if (queryLang) {
-          const clean = String(queryLang).trim().toLowerCase();
-          if (clean.startsWith('zh')) return 'zh-TW';
-          if (clean.startsWith('en')) return 'en';
-        }
-      } catch (_) {}
-
-      const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
-      const navLang = String(navigator.language || "").toLowerCase();
-      const raw = htmlLang || navLang;
-      if (raw.startsWith("zh")) return "zh-TW";
-      return "en";
+      if (typeof window.detectUiLocale === 'function') return window.detectUiLocale();
+      return "zh-TW";
     }
-
-    const TRANSLATIONS = {
-      "zh-TW": {
-        title: "學習路徑",
-        hardwareHeader: "硬體設備",
-        specsHeader: "電腦規格推薦",
-        coreContentLabel: "核心內容：",
-        previewBtn: "▶ 課程預覽",
-        loadingText: "載入中...",
-        loginFreeBtn: "👤 請先登入 (免費)",
-        loginBtn: "👤 請先登入",
-        addToCartBtn: "🛒 加入購物車",
-        enterCourseBtn: "✅ 進入課程內容",
-        freeLabel: "免費",
-        emptyCategory: "目前此分類尚無課程。",
-        addToCartPhysical: "🛒 加入購物車",
-        alreadyInCart: "⚠️ 「{name}」已在購物車中！",
-        coursesConfigMissing: "⚠️ 課程連結尚未備妥，請聯繫客服。",
-        "tw-common": "課前準備",
-        "tw-car-starter": "入門課程",
-        "tw-car-basic": "基礎課程",
-        "tw-car-advanced": "進階課程",
-        "en-common": "課前準備",
-        "en-car-starter": "入門課程",
-        "en-car-basic": "基礎課程",
-        "en-car-advanced": "進階課程"
-      },
-      "en": {
-        title: "Learning Path",
-        hardwareHeader: "Hardware Kits",
-        specsHeader: "Computer Spec Recommendations",
-        coreContentLabel: "Core Content:",
-        previewBtn: "▶ Course Preview",
-        loadingText: "Loading...",
-        loginFreeBtn: "👤 Login (Free)",
-        loginBtn: "👤 Login",
-        addToCartBtn: "🛒 Add to Cart",
-        enterCourseBtn: "✅ Enter Course",
-        freeLabel: "Free",
-        emptyCategory: "No courses available in this category yet.",
-        addToCartPhysical: "🛒 Add to Cart",
-        alreadyInCart: "⚠️ \"{name}\" is already in your cart!",
-        coursesConfigMissing: "⚠️ Course link not ready, please contact customer support.",
-        "tw-common": "Preparation",
-        "tw-car-starter": "Starter Course",
-        "tw-car-basic": "Basic Course",
-        "tw-car-advanced": "Advanced Course",
-        "en-common": "Preparation",
-        "en-car-starter": "Starter Course",
-        "en-car-basic": "Basic Course",
-        "en-car-advanced": "Advanced Course"
-      }
-    };
 
     function normalizeLocaleCode(raw = "") {
       const v = String(raw || "").trim().toLowerCase();
@@ -220,15 +136,21 @@
     }
     function getPricingApi() {
       return window.vibePricing || {
-        resolveLessonPrice(lesson = {}, locale = "zh-TW") {
-          const fallbackCurrency = String(locale || "").startsWith("en") ? "USD" : "TWD";
+      resolveLessonPrice(lesson = {}, locale = "zh-TW") {
           const amount = Number(lesson?.price || 0);
-          return { amount: Number.isFinite(amount) ? amount : 0, currency: lesson?.currency || fallbackCurrency };
+          return { amount: Number.isFinite(amount) ? amount : 0, currency: String(lesson?.currency || "").toUpperCase() };
         },
         formatPrice(priceEntry = {}, locale = "zh-TW") {
           const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
-          const currency = priceEntry?.currency || (String(locale || "").startsWith("en") ? "USD" : "TWD");
+          const currency = String(priceEntry?.currency || "").toUpperCase();
           if (!amount) return String(locale || "").startsWith("en") ? "Free" : "免費";
+          if (!currency) {
+            try {
+              return new Intl.NumberFormat(String(locale || "").startsWith("en") ? "en-US" : "zh-TW").format(amount);
+            } catch (_) {
+              return amount.toLocaleString();
+            }
+          }
           if (currency === "TWD") {
             return `TWD ${Math.round(amount).toLocaleString()}`;
           }
@@ -551,12 +473,18 @@
     }
     function categoryLabel(path = "") {
       const uiLocale = detectUiLocale();
-      const dict = TRANSLATIONS[uiLocale];
       const canonical = normalizeCanonicalLearningPathKey(path);
       const localizedLegacy = legacyPathKeyFromCanonical(canonical || path, uiLocale);
-      if (dict && dict[localizedLegacy]) return dict[localizedLegacy];
-      if (dict && dict[canonical]) return dict[canonical];
-      if (dict && dict[path]) return dict[path];
+
+      let val = window.t('lp_' + localizedLegacy);
+      if (val !== 'lp_' + localizedLegacy) return val;
+
+      val = window.t('lp_' + canonical);
+      if (val !== 'lp_' + canonical) return val;
+
+      val = window.t('lp_' + path);
+      if (val !== 'lp_' + path) return val;
+
       return categoryLabelsMap[canonical || path] || titleizeCategoryKey(canonical || path);
     }
     function resolveUnitFile(lesson = {}) {
@@ -637,22 +565,21 @@
       btn.disabled = false;
 
       const uiLocale = detectUiLocale();
-      const t = TRANSLATIONS[uiLocale];
 
       if (isPhysical && coursePrice > 0) {
-        btn.textContent = t.addToCartPhysical;
+        btn.textContent = window.t('lp_addToCartPhysical', '🛒 加入購物車');
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (addToCart(courseId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
-          else alert(t.alreadyInCart.replace("{name}", courseName));
+          else alert(window.t('lp_alreadyInCart', '⚠️ 「{name}」已在購物車中！').replace("{name}", courseName));
         };
         return;
       }
       if (status === "AUTHORIZED") {
-        btn.textContent = t.enterCourseBtn;
+        btn.textContent = window.t('lp_enterCourseBtn', '✅ 進入課程內容');
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition`;
         btn.onclick = () => {
-          if (!classroomUrl) return alert(t.coursesConfigMissing);
+          if (!classroomUrl) return alert(window.t('lp_coursesConfigMissing', '⚠️ 課程連結尚未備妥，請聯繫客服。'));
           const langParam = uiLocale === "en" ? "&lang=en" : "";
           const currencyParam = courseCurrency ? `&currency=${encodeURIComponent(courseCurrency)}` : "";
           window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${encodeURIComponent(authPageId)}&price=${coursePrice}${currencyParam}${langParam}`;
@@ -660,7 +587,7 @@
         return;
       }
       if (status === "NOT_LOGGED_IN") {
-        btn.textContent = coursePrice === 0 ? t.loginFreeBtn : t.loginBtn;
+        btn.textContent = coursePrice === 0 ? window.t('lp_loginFreeBtn', '👤 請先登入 (免費)') : window.t('lp_loginBtn', '👤 請先登入');
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (typeof window.vibeStartGoogleLogin === 'function') window.vibeStartGoogleLogin();
@@ -669,15 +596,15 @@
         return;
       }
       if (status === "UNAUTHORIZED" || status === "ERROR") {
-        btn.textContent = t.addToCartBtn;
+        btn.textContent = window.t('lp_addToCartBtn', '🛒 加入購物車');
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (addToCart(courseId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
-          else alert(t.alreadyInCart.replace("{name}", courseName));
+          else alert(window.t('lp_alreadyInCart', '⚠️ 「{name}」已在購物車中！').replace("{name}", courseName));
         };
         return;
       }
-      btn.textContent = t.loadingText;
+      btn.textContent = window.t('lp_loadingText', '載入中...');
       btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
       btn.disabled = true;
     }
@@ -831,7 +758,6 @@
 
     function renderLessons(lessons, pathKey) {
       const uiLocale = detectUiLocale();
-      const t = TRANSLATIONS[uiLocale];
 
       const shouldHideCourse = (lesson = {}) => {
         return lesson.hiddenFromCatalog === true;
@@ -859,7 +785,7 @@
         uiLocale
       ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
       if (!rows.length && !hardwareRows.length && normalizeCanonicalLearningPathKey(pathKey) !== "common") {
-        container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">${t.emptyCategory}</p>`;
+        container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">${window.t('lp_emptyCategory', '目前此分類尚無課程。')}</p>`;
         return;
       }
       const courseHtml = rows.map((lesson) => {
@@ -894,7 +820,7 @@
         const priceCurrency = String(priceEntry.currency || "");
         const disablePreview = lesson.previewDisabled === true;
         const videoButton = (videoUrl && !disablePreview)
-          ? `<button class="video-btn flex-1 w-full py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors">${t.previewBtn}</button>`
+          ? `<button class="video-btn flex-1 w-full py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors">${window.t('lp_previewBtn', '▶ 課程預覽')}</button>`
           : "";
         const actionButtonClass = videoUrl ? "flex-1 w-full" : "w-full";
         const listHtml = contentList.length
@@ -1025,8 +951,8 @@
         if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
       } else {
         if (courseHtml) pageHtml += renderSection("", courseHtml);
-        if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
-        if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
+        if (hardwareHtml) pageHtml += renderSection(window.t('lp_hardwareHeader', '硬體設備'), hardwareHtml);
+        if (specsHtml) pageHtml += renderSection(window.t('lp_specsHeader', '電腦規格推薦'), specsHtml);
       }
       container.innerHTML = pageHtml;
 
@@ -1038,8 +964,7 @@
 
     async function init() {
       const uiLocale = detectUiLocale();
-      const t = TRANSLATIONS[uiLocale];
-      document.title = t.title;
+      document.title = window.t('lp_title', '學習路徑');
 
       const pathKey = normalizeCanonicalLearningPathKey(new URLSearchParams(location.search).get("path") || "common") || "common";
       const result = await getLessonsFunc({});

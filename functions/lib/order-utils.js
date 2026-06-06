@@ -14,6 +14,15 @@ function normalizeGitHubUrl(url = '') {
     }
 }
 
+function normalizeLookupValue(value = '') {
+    return String(value || '')
+        .split('/')
+        .pop()
+        .split('?')[0]
+        .replace(/\.html$/i, '')
+        .toLowerCase();
+}
+
 function normalizeLegacyId(value = '') {
     return String(value || '').replace(/\.html$/i, '').toLowerCase();
 }
@@ -252,7 +261,7 @@ function hasActiveOrderForCourse(ordersSnapshot, courseId, lessons = [], resolve
     let hasCourse = false;
     const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
     const now = Date.now();
-    const targetLesson = (resolvers.findLessonByCourseRef || findLessonByCourseRef)(courseId, lessons);
+    const targetLesson = (resolvers.findLessonByCourseRef || (() => null))(courseId, lessons);
     const targetKeys = new Set();
     const addTargetKey = (value) => {
         if (!value) return;
