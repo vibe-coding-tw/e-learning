@@ -48,6 +48,7 @@
     }
 
     function getCanonicalLessonIdentity(lesson = {}) {
+        if (!lesson || typeof lesson !== 'object') return '';
         const metadataType = String(lesson.metadataType || '').toLowerCase();
         if (lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product') {
             return String(

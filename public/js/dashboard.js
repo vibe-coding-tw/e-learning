@@ -1188,7 +1188,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
         assignmentsTabBtn.classList.toggle('hidden', !canViewAssignments);
-        assignmentsTabBtn.textContent = '作業 (Assignments)';
+        assignmentsTabBtn.textContent = window.t('dash_tab_assignments', 'Assignments');
     }
 
 
@@ -2051,7 +2051,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
     const clickAction = canManageAssignments ? 'modal' : 'url';
 
     if (!assignments || assignments.length === 0) {
-        const emptyMsg = `<tr><td colspan="${showActionCol ? 6 : 5}" class="text-center py-8 text-gray-400">尚無作業繳交紀錄</td></tr>`;
+        const emptyMsg = `<tr><td colspan="${showActionCol ? 6 : 5}" class="text-center py-8 text-gray-400">${window.t('dash_no_assignments_submitted', 'No assignments submitted for this unit.')}</td></tr>`;
         tableBodies.forEach(tbody => tbody.innerHTML = emptyMsg);
         return;
     }
@@ -2081,7 +2081,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             rowOnClick = `window.openGradingModal('${a.id}')`;
         } else {
             // clickAction === 'url'
-            rowOnClick = a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : "notify('此作業無連結', 'warning')";
+            rowOnClick = a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : `notify('${window.t('dash_assignment_no_link', 'This assignment has no link.')}', 'warning')`;
         }
         
         return `
@@ -2399,7 +2399,9 @@ window.switchTab = function (tabName) {
         // Update Title for Student vs Tutor
         const headerEl = document.querySelector('#assignments-header h3');
         if (headerEl) {
-            headerEl.textContent = isStudent ? '我的作業 (My Assignments)' : '作業批改 (Assignments)';
+            headerEl.textContent = isStudent
+                ? window.t('dash_my_assignments', 'My Assignments')
+                : window.t('dash_assignments_title', 'Assignments');
         }
 
         if (!isStudent) {
@@ -6186,7 +6188,7 @@ window.saveAllSettings = async function (clickedBtn = null) {
     });
 
     if (invalidEntry) {
-        alert(`連結格式錯誤\n單元：${invalidEntry.unit}\nTutor：${invalidEntry.tutor}\n請使用有效的作業連結`);
+        alert(`${window.t('alert_url_format_error', 'Link format error. Please use a valid assignment link (http/https).')}\n${window.t('dash_unit_label', 'Unit')}：${invalidEntry.unit}\nTutor：${invalidEntry.tutor}`);
         btns.forEach(btn => {
             btn.disabled = false;
             btn.textContent = originalTexts.get(btn) || "儲存變更";
@@ -6321,7 +6323,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
             <div class="space-y-3">
                 <div>
                     <div class="text-[10px] uppercase tracking-wider text-gray-400">Promotion Code</div>
-                    <div class="font-mono text-indigo-700 text-sm">${escapeHtml(data.myPromotionCode || '尚未生成')}</div>
+                    <div class="font-mono text-indigo-700 text-sm">${escapeHtml(data.myPromotionCode || window.t('dash_not_generated', 'Not generated'))}</div>
                 </div>
                 <div>
                     <div class="text-[10px] uppercase tracking-wider text-gray-400">作業連結</div>
@@ -6335,7 +6337,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
             <div class="space-y-3">
                 <div>
                     <div class="text-[10px] uppercase tracking-wider text-gray-400">Promotion Code</div>
-                    <div class="font-mono text-indigo-700 text-sm break-all">${escapeHtml(data.myPromotionCode || '尚未生成')}</div>
+                    <div class="font-mono text-indigo-700 text-sm break-all">${escapeHtml(data.myPromotionCode || window.t('dash_not_generated', 'Not generated'))}</div>
                 </div>
                 <div>
                     <div class="text-[10px] uppercase tracking-wider text-gray-400">作業連結</div>
@@ -6400,26 +6402,26 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
     }
 
     const currentTutor = (data.tutors || []).find(t => normalizeEmail(t.email) === normalizeEmail(myEmail));
-    const tutorName = currentTutor?.name || auth.currentUser?.displayName || '授課老師';
+    const tutorName = currentTutor?.name || auth.currentUser?.displayName || window.t('dash_tutor_name_label', 'Tutor Name');
     const promoCode = data.myPromotionCode || '';
 
     const tutorInfoHtml = `
         <div class="mb-6 p-5 bg-indigo-50 border border-indigo-100 rounded-3xl">
             <div class="text-[10px] text-indigo-600 font-bold uppercase tracking-widest mb-3">
-                🧑‍🏫 導師專屬作業資訊 (Tutor Information)
+                🧑‍🏫 ${window.t('dash_tutor_info_title', 'Tutor Information')}
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <div class="text-xs text-gray-400">導師姓名</div>
+                    <div class="text-xs text-gray-400">${window.t('dash_tutor_name_label', 'Tutor Name')}</div>
                     <div class="text-sm font-bold text-gray-800">${escapeHtml(tutorName)}</div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-400">電子信箱</div>
+                    <div class="text-xs text-gray-400">${window.t('dash_tutor_email_label', 'Email')}</div>
                     <div class="text-sm font-bold text-gray-800 font-mono">${escapeHtml(myEmail)}</div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-400">專屬 Promo Code</div>
-                    <div class="text-sm font-black text-indigo-700 font-mono">${escapeHtml(promoCode || '尚未生成')}</div>
+                    <div class="text-xs text-gray-400">${window.t('dash_tutor_promo_code_label', 'Promo Code')}</div>
+                    <div class="text-sm font-black text-indigo-700 font-mono">${escapeHtml(promoCode || window.t('dash_not_generated', 'Not generated'))}</div>
                 </div>
             </div>
         </div>
@@ -6446,9 +6448,9 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
         ${tutorInfoHtml}
         <div class="space-y-6">
             <div class="border-b border-slate-100 pb-4">
-                <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Registration Tools</p>
-                <h3 class="text-2xl font-black text-gray-900 mt-2">招生工具包</h3>
-                <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
+                <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">${window.t('dash_registration_tools_title', 'Registration Tools')}</p>
+                <h3 class="text-2xl font-black text-gray-900 mt-2">${window.t('dash_registration_tools_title', 'Registration Tools')}</h3>
+                <p class="text-sm text-gray-500 mt-2 leading-relaxed">${window.t('dash_registration_tools_desc', 'Once students scan the QR code or open the link, the course is added to their cart and linked to your teaching assignment permissions.')}</p>
             </div>
 
             <div class="flex flex-col lg:flex-row gap-8 items-start">
@@ -6460,8 +6462,8 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
 
                     <div class="flex flex-col gap-4">
                         <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                            <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">分銷連結 / Referral Link</p>
-                            <button type="button" class="promo-copy-link w-full inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition shadow-md active:scale-95">複製專屬連結</button>
+                            <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">Referral Link</p>
+                            <button type="button" class="promo-copy-link w-full inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition shadow-md active:scale-95">${window.t('dash_copy_referral_link', 'Copy Referral Link')}</button>
                         </div>
                         <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
                             <p class="text-[10px] text-emerald-600 font-bold uppercase mb-2 tracking-widest">快速分享 / Quick Share</p>
@@ -6696,7 +6698,7 @@ function renderTutorAlerts(data) {
     `;
 
     if (interventions.length === 0) {
-        html += `<p class="text-xs text-slate-400 italic bg-white border border-slate-100 p-4 rounded-xl">目前沒有自動監控警示紀錄</p>`;
+        html += `<p class="text-xs text-slate-400 italic bg-white border border-slate-100 p-4 rounded-xl">${window.t('dash_no_auto_monitoring', 'No auto-monitoring alerts')}</p>`;
     } else {
         html += interventions.map(item => {
             const timeStr = item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleString() : 'N/A';
@@ -6708,10 +6710,10 @@ function renderTutorAlerts(data) {
                             <span class="text-[9px] text-slate-400 font-medium whitespace-nowrap">${timeStr}</span>
                         </div>
                         <div class="text-[10px] text-slate-500 capitalize mb-2">
-                            單元：${escapeHtml(window.formatUnitIdForUI(item.unitId))}
+                            ${window.t('dash_unit_label', 'Unit')}：${escapeHtml(window.formatUnitIdForUI(item.unitId))}
                         </div>
                         <div class="text-xs text-red-700 bg-white/70 p-2.5 rounded-lg border border-red-50/50 mb-3">
-                            <strong>原因：</strong> ${escapeHtml(item.triggerReason || '評分低於門檻')}
+                            <strong>${window.t('dash_block_reason_label', 'Reason')}：</strong> ${escapeHtml(item.triggerReason || window.t('dash_block_reason_default', 'Below threshold'))}
                         </div>
                     </div>
                     <div class="flex justify-end">
@@ -6732,12 +6734,12 @@ function renderTutorAlerts(data) {
         <div class="space-y-3">
             <h4 class="text-xs font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                <span>學生主動回報卡點 (Student Blockers)</span>
+                <span>${window.t('dash_student_blockers_title', 'Student Blockers')}</span>
             </h4>
     `;
 
     if (blockedAssignments.length === 0) {
-        html += `<p class="text-xs text-slate-400 italic bg-white border border-slate-100 p-4 rounded-xl">目前沒有學生回報卡點</p>`;
+        html += `<p class="text-xs text-slate-400 italic bg-white border border-slate-100 p-4 rounded-xl">${window.t('dash_no_student_blockers', 'No student blocker reports yet')}</p>`;
     } else {
         html += blockedAssignments.map(a => {
             const timeStr = a.updatedAt ? new Date(a.updatedAt.seconds ? a.updatedAt.seconds * 1000 : a.updatedAt).toLocaleString() : 'N/A';
@@ -6751,7 +6753,7 @@ function renderTutorAlerts(data) {
                             <span class="text-[9px] text-slate-400 font-medium whitespace-nowrap">${timeStr}</span>
                         </div>
                         <div class="text-[10px] text-slate-500 capitalize mb-1">
-                            單元：${escapeHtml(window.formatUnitIdForUI(a.unitId))}
+                            ${window.t('dash_unit_label', 'Unit')}：${escapeHtml(window.formatUnitIdForUI(a.unitId))}
                         </div>
                         <div class="mb-2"><span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 border border-amber-300 text-amber-800">${typeLabel}</span></div>
                         <div class="text-xs text-slate-700 bg-white/70 p-2.5 rounded-lg border border-amber-50/50 mb-3 whitespace-pre-wrap truncate max-h-[80px]">

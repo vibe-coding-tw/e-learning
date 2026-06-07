@@ -32,6 +32,7 @@ node scripts/audit_assignment_guide_coverage.js --out=/tmp/assignment-guide-audi
 - 如果 `matchedButMissingAssignmentGuideCount = 0`，表示內容本身沒有缺 `assignment-guide`
 - 如果畫面仍顯示載入失敗，多半是 runtime 授權、路由或快取回退問題，不是內容缺頁
 - `unmatchedFilesCount` 大量存在通常是正常現象，代表 content repo 裡有很多歷史或尚未掛進 dashboard 的課程檔
+- 課程頁若已改用共用樣式分層（`course-base.css` / `course-components.css` / `course-quiz.css`），這不會改變本稽核的判定邏輯；本報告仍只看 HTML 內是否存在 `#assignment-guide`
 
 ## Current Baseline
 
@@ -63,7 +64,7 @@ node scripts/audit_assignment_guide_coverage.js --out=/tmp/assignment-guide-audi
 
 ## How to handle `unmatchedFilesCount`
 
-目前 `unmatchedFilesCount = 0`，因為前一輪已將 `metadata_lessons.courseUnits` 全數對齊到 content repo 的現有檔名。
+目前 `unmatchedFilesCount = 0`，因為前一輪已將 `metadata_lessons.courseUnits` 全數對齊到 content repo 的現有檔名。即使後續課程頁面將 shell/元件 CSS 抽成共用檔，這個數值也不會因此改變。
 
 目前需要關注的只有這 4 筆非一般課程單元：
 

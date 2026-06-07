@@ -215,6 +215,7 @@ All unit files now follow a consistent structure:
 - Sidebar navigation with progress tracking
 - Breadcrumbs linking to course listing
 - Content pages using semantic CSS classes: `.ms-note`, `.ms-tip`, `.ms-warning`, `.ms-important`, `.ms-steps`, `.ms-table`, `.ms-code`
+- Shared stylesheet layers for course shell and reusable UI: `course-base.css`, `course-components.css`, `course-quiz.css`
 - Knowledge quiz page with 4 topic-specific multiple-choice questions, answer validation, and explanations
 - Summary page with key takeaways
 
@@ -236,7 +237,7 @@ All unit files now follow a consistent structure:
 | Fix fonts, footer overflow, H1 format | basic 30 files | Same fixes as adv Phase 1 |
 | Rewrite generic learning objectives | basic 30 files | Specific, measurable, action-verb-based outcomes |
 | Expand teaching pages | 240 pages across 80 files | From 1-3 sentences to full MS Learn-style content with tables, code examples, callouts, and step-by-step instructions |
-| Remove raw Tailwind from content | 80 files | Replaced with MS Learn CSS components |
+| Remove raw Tailwind from content | 80 files | Replaced with MS Learn CSS components and shared shell stylesheet layers |
 
 ### 3.5 Phase 3 — Knowledge quizzes (basic 30 + adv 50 = 80 files)
 
