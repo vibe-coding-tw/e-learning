@@ -98,8 +98,8 @@ const LOCALIZED_SITE_PAGES = {
         en: { href: "/en/students.html", label: "Student Guide" },
     },
     tutors: {
-        zh: { href: "https://vibe-coding.tw/index.html#core-values", label: "專業導師與合作洽談" },
-        en: { href: "https://vibe-coding.tw/index.html#core-values", label: "Tutor Guide" },
+        zh: { href: "/tw/tutors.html", label: "專業導師與合作洽談" },
+        en: { href: "/en/tutors.html", label: "Tutor Guide" },
     },
 };
 
