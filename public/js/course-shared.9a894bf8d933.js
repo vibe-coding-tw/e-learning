@@ -93,6 +93,7 @@ function init() {
     normalizeCourseTopNav();
     normalizeCourseBreadcrumbs();
     ensureDynamicUnitTabsFromFirestore();
+    ensureDynamicSidebarFromFirestore();
     hideGlobalNavOnCoursePage();
     applyHideTabsPreference();
     toggleUnitTabsVisibility();
@@ -362,6 +363,124 @@ async function ensureDynamicUnitTabsFromFirestore() {
         }
     } catch (e) {
         console.warn('[CourseShared] ensureDynamicUnitTabsFromFirestore failed:', e);
+    }
+}
+
+async function ensureDynamicSidebarFromFirestore() {
+    try {
+        const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        const excluded = new Set(['', 'index.html', 'prepare.html', 'start.html', 'basic.html', 'advanced.html', 'learning-path.html', 'dashboard.html', 'students.html', 'tutors.html', 'cart.html', 'payment-return.html']);
+        if (!fileName.endsWith('.html') || excluded.has(fileName)) return;
+
+        if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
+            globalLessonsData = await vibeFetchLessons();
+        }
+        if (!Array.isArray(globalLessonsData) || globalLessonsData.length === 0) return;
+
+        const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(fileName));
+        const matchedCourse = globalLessonsData.find((course) => {
+            const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
+            return units
+                .map(normalizeUnitFilenameForRoute)
+                .map(normalizeLooseKey)
+                .includes(targetKey);
+        });
+        if (!matchedCourse) return;
+
+        const units = (Array.isArray(matchedCourse.courseUnits) ? matchedCourse.courseUnits : [])
+            .map(normalizeUnitFilenameForRoute)
+            .filter(Boolean);
+        if (units.length === 0) return;
+
+        // Determine UI language
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
+        const isEn = queryLang.trim().toLowerCase().startsWith('en') || fileName.startsWith('en-');
+
+        // 1. Update module title in sidebar header
+        const sidebarTitleEl = document.querySelector('.ms-sidebar-header .module-title');
+        if (sidebarTitleEl) {
+            const courseTitle = isEn && matchedCourse.titleEn ? matchedCourse.titleEn : matchedCourse.title;
+            if (courseTitle) sidebarTitleEl.textContent = courseTitle;
+        }
+
+        // 2. Override window.UNITS if defined, or reconstruct sidebar DOM
+        const sidebarNav = document.getElementById('sidebar-nav');
+        if (sidebarNav) {
+            const newUnits = [
+                { id: 0, label: isEn ? 'Module Overview' : '課程總覽', time: '', type: 'index' }
+            ];
+
+            units.forEach((unitFile, idx) => {
+                let labelText = '';
+                if (Array.isArray(matchedCourse.courseUnitTitles) && matchedCourse.courseUnitTitles[idx]) {
+                    labelText = matchedCourse.courseUnitTitles[idx];
+                } else {
+                    labelText = formatUnitTabTitle(unitFile, idx).replace(/^\d+\s*/, '');
+                }
+
+                let type = 'unit';
+                if (unitFile.includes('quiz')) type = 'quiz';
+                else if (unitFile.includes('lab') || unitFile.includes('challenge')) type = 'lab';
+
+                newUnits.push({
+                    id: idx + 1,
+                    label: labelText,
+                    time: isEn ? 'Est. 30 mins' : '約 30 分鐘',
+                    type: type,
+                    file: unitFile
+                });
+            });
+
+            if (Array.isArray(window.UNITS)) {
+                window.UNITS.splice(0, window.UNITS.length, ...newUnits);
+            }
+
+            const activeIndex = units.findIndex(unitFile => normalizeLooseKey(unitFile) === targetKey);
+            const currentActiveId = activeIndex + 1;
+
+            sidebarNav.innerHTML = newUnits.map(u => {
+                const badge = u.type === 'lab' ? ` <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">${isEn ? 'LAB' : '實驗'}</span>`
+                            : u.type === 'quiz' ? ` <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">${isEn ? 'QUIZ' : '測驗'}</span>`
+                            : '';
+                return `
+                <div class="ms-unit-item ${u.id === currentActiveId ? 'active' : ''}" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                    <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                    <div class="unit-meta">
+                        <div class="unit-name">${sanitizeTitle(u.label)}${badge}</div>
+                        ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+
+            const metaEl = document.querySelector('.ms-sidebar-header .meta');
+            if (metaEl) {
+                metaEl.innerHTML = isEn 
+                    ? `<i class="far fa-clock"></i> Est. ${units.length * 30} mins · ${units.length} pages`
+                    : `<i class="far fa-clock"></i> 約 ${units.length * 30} 分鐘 · ${units.length} 頁`;
+            }
+
+            const indexUnitList = document.getElementById('index-unit-list');
+            if (indexUnitList) {
+                indexUnitList.innerHTML = newUnits.filter(u => u.id > 0).map(u => `
+                    <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                        <div class="unit-card-num">${u.id}</div>
+                        <div class="unit-card-info">
+                            <div class="unit-card-name">${sanitizeTitle(u.label)}</div>
+                            <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                        </div>
+                        <div class="unit-card-arrow">›</div>
+                    </div>
+                `).join('');
+            }
+
+            if (typeof window.updateProgress === 'function') window.updateProgress();
+            if (typeof window.goToUnit === 'function' && window.currentUnit !== undefined) {
+                window.goToUnit(window.currentUnit);
+            }
+        }
+    } catch (e) {
+        console.warn('[CourseShared] ensureDynamicSidebarFromFirestore failed:', e);
     }
 }
 
