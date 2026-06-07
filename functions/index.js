@@ -331,9 +331,12 @@ function appendCourseProgressActivity(studentStatsEntry, cid, log = {}) {
 }
 
 function buildDashboardReferenceEntry(usersMap = {}, uid, baseData = {}, fallbackPrefix = 'Unknown Student') {
+    const studentInfo = usersMap[uid] || {};
     return {
         ...baseData,
-        studentEmail: resolveStudentEmailLabel(usersMap, uid, fallbackPrefix, baseData)
+        studentEmail: resolveStudentEmailLabel(usersMap, uid, fallbackPrefix, baseData),
+        studentName: studentInfo.name || baseData.studentName || '',
+        studentUid: uid || baseData.studentUid || ''
     };
 }
 
@@ -366,6 +369,23 @@ function buildTutorList(usersMap = {}) {
 }
 
 function buildStudentAssignmentTutorRows(usersMap = {}, lessons = []) {
+    const extractTutorEmail = (value) => {
+        if (!value) return '';
+        if (typeof value === 'string') return normalizeEmail(value);
+        if (typeof value === 'object') {
+            return normalizeEmail(
+                value.email ||
+                value.tutorEmail ||
+                value.referredTutorEmail ||
+                value.referralTutor ||
+                value.tutor ||
+                value.value ||
+                ''
+            );
+        }
+        return normalizeEmail(String(value));
+    };
+
     const tutorIndexByEmail = new Map();
     Object.entries(usersMap).forEach(([uid, data]) => {
         const email = normalizeEmail(data?.email || '');
@@ -386,7 +406,7 @@ function buildStudentAssignmentTutorRows(usersMap = {}, lessons = []) {
 
         const unitAssignments = studentData?.unitAssignments || {};
         Object.entries(unitAssignments).forEach(([rawUnitId, rawTutorEmail]) => {
-            const tutorEmail = normalizeEmail(rawTutorEmail || '');
+            const tutorEmail = extractTutorEmail(rawTutorEmail);
             if (!rawUnitId || !tutorEmail) return;
 
             const canonicalUnitId = resolveCanonicalUnitId(rawUnitId, lessons) || rawUnitId;
@@ -3794,7 +3814,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         }
 
         // [NEW] Normalize legacy hashed core script links to stable runtime assets with cache-busting version parameter.
-        const vSuffix = `?v=${runtimeConfig?.contentVersion ? runtimeConfig.contentVersion.slice(0, 8) : 'latest'}`;
+        const vSuffix = `?v=${runtimeConfig?.contentVersion ? runtimeConfig.contentVersion.slice(0, 8) : 'latest'}_v2`;
         content = content
             .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/i18n-helper\.[0-9a-f]{12}\.js["']/gi, `src="/js/i18n-helper.js${vSuffix}"`)
             .replace(/(?:src|href)=["'](?:\.\.\/|\.\/)?js\/nav-component\.[0-9a-f]{12}\.js["']/gi, `src="/js/nav-component.js${vSuffix}"`)
@@ -5497,6 +5517,53 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             });
         }
 
+        const targetUnitId = data.unitId ? resolveCanonicalUnitId(data.unitId, lessons) : null;
+        const targetCourseId = data.courseId || null;
+
+        const extractTutorEmail = (value) => {
+            if (!value) return '';
+            if (typeof value === 'string') return value.trim().toLowerCase();
+            if (typeof value === 'object') {
+                return String(
+                    value.email ||
+                    value.tutorEmail ||
+                    value.referredTutorEmail ||
+                    value.referralTutor ||
+                    value.tutor ||
+                    value.value ||
+                    ''
+                ).trim().toLowerCase();
+            }
+            return String(value).trim().toLowerCase();
+        };
+
+        const isTutorRelevantStudent = (studentData = {}) => {
+            const unitAssignments = studentData?.unitAssignments || {};
+            if (targetUnitId) {
+                return extractTutorEmail(unitAssignments[targetUnitId]) === email;
+            }
+            if (targetCourseId) {
+                return Object.entries(unitAssignments).some(([unitId, tutorValue]) => {
+                    const parent = findParentCourseIdByUnit(unitId, lessons);
+                    return parent === targetCourseId && extractTutorEmail(tutorValue) === email;
+                });
+            }
+            return Object.values(unitAssignments).some((tutorValue) => extractTutorEmail(tutorValue) === email);
+        };
+
+        if (isManagementView && (targetUnitId || targetCourseId || hasQualifiedTutorStatus(userData))) {
+            Object.entries(usersMap).forEach(([sid, studentData]) => {
+                if (!studentData || !isTutorRelevantStudent(studentData)) return;
+                ensureStudentStatsEntry(studentStats, sid, studentData, {
+                    accountStatus: studentStats[sid]?.accountStatus ?? 'free',
+                    includeOrderRecords: !!studentStats[sid]?.orderRecords
+                });
+                if (studentStats[sid] && !studentStats[sid].createdAt) {
+                    studentStats[sid].createdAt = studentData.createdAt || null;
+                }
+            });
+        }
+
         // [V13.0.14] UNIFIED STUDENT FILTERING: Filter students based on authorization scope.
         // 1. Admin Global with Tutor Mode ON: All students.
         // 2. Unit Context: Only students in that unit (assigned to the tutor).
@@ -5506,8 +5573,6 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         const filteredStudentStats = [];
         const isAdmin = requesterRole === 'admin';
         const isTutorModeAdmin = isAdmin && data.tutorMode !== false;
-        const targetUnitId = data.unitId ? resolveCanonicalUnitId(data.unitId, lessons) : null;
-        const targetCourseId = data.courseId || null;
 
         Object.values(studentStats).forEach(s => {
             // [A] Master Bypass for Admin in Global View (Overview)
@@ -5522,7 +5587,7 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
             
             // 1. Assignment Check: Is the student assigned to THIS tutor for THIS unit?
             if (targetUnitId) {
-                const assignedTutor = s.unitAssignments?.[targetUnitId];
+                const assignedTutor = extractTutorEmail(s.unitAssignments?.[targetUnitId]);
                 if (assignedTutor === email || isTutorModeAdmin) {
                     isRelevant = true;
                 }
@@ -5531,12 +5596,12 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
                 const hasCourseOrder = (s.orders || []).includes(targetCourseId);
                 const assignedToAnyInCourse = Object.keys(s.unitAssignments || {}).some(uid => {
                     const parent = findParentCourseIdByUnit(uid, lessons);
-                    return parent === targetCourseId && (s.unitAssignments[uid] === email || isTutorModeAdmin);
+                    return parent === targetCourseId && (extractTutorEmail(s.unitAssignments[uid]) === email || isTutorModeAdmin);
                 });
                 if (hasCourseOrder || assignedToAnyInCourse) isRelevant = true;
             } else {
                 // Global Tutor View (No Context): Only see students assigned to THEM at all
-                const hasAnyAssignmentToMe = Object.values(s.unitAssignments || {}).some(t => t === email);
+                const hasAnyAssignmentToMe = Object.values(s.unitAssignments || {}).some(t => extractTutorEmail(t) === email);
                 if (hasAnyAssignmentToMe || isTutorModeAdmin) isRelevant = true;
             }
 
