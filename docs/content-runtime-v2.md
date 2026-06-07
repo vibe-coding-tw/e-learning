@@ -4,6 +4,7 @@
 
 - Make external content repo the primary runtime source.
 - Keep Firestore as source of truth for authorization and mapping.
+- Treat course HTML as the canonical content payload, while allowing shared stylesheet layers for course shell and reusable quiz/content components.
 
 > **2026-05-27 決策**：`private_courses_i18n` local mirror 層已廢除。
 > 課程內容以 content-repo (GitHub) 為主，所有降級邏輯都以 pinned 版本與 branch fallback 處理，不再使用本地內容 fallback。
@@ -18,6 +19,7 @@
   - Runtime version selection (`contentVersion`)
 - External repo (`vibe-coding-tw/content-repo`)：
   - Course HTML content（primary，所有語系）
+  - Shared course stylesheet assets for unit pages (`course-base.css`, `course-components.css`, `course-quiz.css`)
   - Localized support entry pages (`/tw/students.html`, `/en/students.html`, `/tw/tutors.html`, `/en/tutors.html`) are fetched on demand through `serveCourse` from `content-repo/public/en/` or `content-repo/public/zh-TW/` and are not stored as local mirror files in this repo.
 
 ---
@@ -84,9 +86,10 @@ Log 欄位：
 ## 8. Release SOP
 
 1. 在 `content-repo` 更新課程 HTML（PR → merge）。
-2. 取得 commit SHA。
-3. 更新 `metadata_settings/content_runtime.contentVersion` 為該 SHA。
-4. 驗證 2 個 sample 課程可正常讀取。
+2. 若該次變更包含課程 shell / 共用元件調整，確認課程 HTML 已引用最新的 `course-base.css` / `course-components.css` / `course-quiz.css`。
+3. 取得 commit SHA。
+4. 更新 `metadata_settings/content_runtime.contentVersion` 為該 SHA。
+5. 驗證 2 個 sample 課程可正常讀取。
 
 ---
 

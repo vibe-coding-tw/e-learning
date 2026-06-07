@@ -55,8 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
             en: { href: '/en/students.html', label: 'Student Guide' },
         },
         tutors: {
-            zh: { href: '/tw/tutors.html', label: window.t ? window.t('nav_tutors_label', '專業導師與合作洽談') : '專業導師與合作洽談' },
-            en: { href: '/en/tutors.html', label: 'Tutor Guide' },
+            zh: { href: 'https://vibe-coding.tw/index.html#core-values', label: window.t ? window.t('nav_tutors_label', '專業導師與合作洽談') : '專業導師與合作洽談' },
+            en: { href: 'https://vibe-coding.tw/index.html#core-values', label: 'Tutor Guide' },
         },
     };
     const localeBucket = (locale = '') => (String(locale || '').toLowerCase().startsWith('zh') ? 'zh' : 'en');

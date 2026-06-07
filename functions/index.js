@@ -365,6 +365,67 @@ function buildTutorList(usersMap = {}) {
     }, []);
 }
 
+function buildStudentAssignmentTutorRows(usersMap = {}, lessons = []) {
+    const tutorIndexByEmail = new Map();
+    Object.entries(usersMap).forEach(([uid, data]) => {
+        const email = normalizeEmail(data?.email || '');
+        if (email) {
+            tutorIndexByEmail.set(email, {
+                uid,
+                email,
+                name: data?.name || '',
+                role: data?.role || 'user'
+            });
+        }
+    });
+
+    const rows = [];
+    Object.entries(usersMap).forEach(([studentUid, studentData]) => {
+        const role = studentData?.role || 'user';
+        if (role === 'admin' || hasQualifiedTutorStatus(studentData)) return;
+
+        const unitAssignments = studentData?.unitAssignments || {};
+        Object.entries(unitAssignments).forEach(([rawUnitId, rawTutorEmail]) => {
+            const tutorEmail = normalizeEmail(rawTutorEmail || '');
+            if (!rawUnitId || !tutorEmail) return;
+
+            const canonicalUnitId = resolveCanonicalUnitId(rawUnitId, lessons) || rawUnitId;
+            const unitMeta = findLessonByCourseRef(canonicalUnitId, lessons)
+                || findCourseByUnitId(canonicalUnitId, lessons)
+                || null;
+            const parentCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons) || unitMeta?.courseId || '';
+            const parentCourse = parentCourseId ? findLessonByCourseRef(parentCourseId, lessons) : null;
+            const tutor = tutorIndexByEmail.get(tutorEmail) || null;
+
+            rows.push({
+                studentUid,
+                studentEmail: studentData?.email || '',
+                studentName: studentData?.name || '',
+                studentRole: role,
+                unitId: canonicalUnitId,
+                unitTitle: unitMeta?.title || unitMeta?.courseName || unitMeta?.name || canonicalUnitId,
+                courseId: parentCourseId,
+                courseTitle: parentCourse?.title || parentCourse?.courseName || parentCourse?.name || parentCourseId,
+                tutorEmail,
+                tutorName: tutor?.name || '',
+                tutorRole: tutor?.role || '',
+                tutorUid: tutor?.uid || '',
+                tutorFound: !!tutor
+            });
+        });
+    });
+
+    rows.sort((a, b) => {
+        const studentCmp = String(a.studentEmail || a.studentUid || '').localeCompare(String(b.studentEmail || b.studentUid || ''));
+        if (studentCmp !== 0) return studentCmp;
+        const courseCmp = String(a.courseTitle || a.courseId || '').localeCompare(String(b.courseTitle || b.courseId || ''));
+        if (courseCmp !== 0) return courseCmp;
+        return String(a.unitTitle || a.unitId || '').localeCompare(String(b.unitTitle || b.unitId || ''));
+    });
+
+    return rows;
+}
+
 function buildDashboardSummary(students = []) {
     const registeredUserStats = students;
     const paidStudentStats = students.filter(s => s.accountStatus === 'paid' && (s.role === 'user' || !s.role));
@@ -5630,6 +5691,37 @@ exports.getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (requ
         console.error("Dashboard Data Error:", error);
         throw new HttpsError('internal', 'Failed to fetch dashboard data.');
     }
+});
+
+exports.getStudentAssignmentTutorReport = onCall(async (request) => {
+    const db = admin.firestore();
+    const auth = request.auth;
+    assertAuthenticated(auth, '請先登入');
+
+    const uid = auth.uid;
+    const userDoc = await db.collection('users').doc(uid).get();
+    const requesterRole = (userDoc.data() || {}).role || 'user';
+    assertAdminRole(requesterRole, 'Only admins can query the student assignment tutor report.');
+
+    const lessons = await getLessons();
+    const usersSnapshot = await db.collection('users').get();
+    const usersMap = {};
+
+    usersSnapshot.forEach((doc) => {
+        const data = doc.data() || {};
+        usersMap[doc.id] = { ...data, _id: doc.id };
+    });
+
+    const rows = buildStudentAssignmentTutorRows(usersMap, lessons);
+    return {
+        generatedAt: new Date().toISOString(),
+        totalRows: rows.length,
+        totalStudents: Object.values(usersMap).filter((userData) => {
+            const role = userData?.role || 'user';
+            return role !== 'admin' && !hasQualifiedTutorStatus(userData);
+        }).length,
+        rows
+    };
 });
 
 // 8.0 指派學生給老師 (Admin/Tutor)

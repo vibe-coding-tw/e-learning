@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.bd2161ff0ea9.js"></script>
+    <script src="./js/i18n-helper.f88c6d9f24ce.js"></script>
     <script>
         (function() {
             const w = console.warn;
@@ -31,7 +31,7 @@
 
 <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.25ef28c9727c.js"></script>
+    <script type="module" src="./js/nav-component.972c651aaeb9.js"></script>
     
 
     <main class="flex-grow pt-32 pb-20 hero-gradient">
@@ -189,7 +189,7 @@
     </main>
 
     <div id="footer-placeholder" data-root="."></div>
-    <script src="./js/footer-component.0c8b87eef903.js"></script>
+    <script src="./js/footer-component.457b7e7ecfae.js"></script>
     <script src="./js/pricing-utils.49fc3c360cd6.js"></script>
 
 
@@ -401,6 +401,10 @@
             if (normalizedDistributorId) {
                 localStorage.setItem('vibe_user_preferred_distributor', normalizedDistributorId);
                 localStorage.setItem('preferredDistributorId', normalizedDistributorId);
+            } else {
+                // Clear stale distributor preference when the user changes region.
+                localStorage.removeItem('vibe_user_preferred_distributor');
+                localStorage.removeItem('preferredDistributorId');
             }
         }
 
@@ -475,6 +479,24 @@
             if (routingSummaryReason) routingSummaryReason.textContent = reasonValue;
         }
 
+        function buildFallbackRoutingDistributors(region = '') {
+            const normalizedRegion = normalizeRegionCode(region);
+            const fallbackDistributors = [
+                { id: 'default-twd', name: '預設台幣經銷商', regions: ['TW'] },
+                { id: 'default-usd', name: '預設美金經銷商', regions: ['US'] }
+            ];
+            if (!normalizedRegion) return fallbackDistributors;
+            const regionalFallback = fallbackDistributors.filter((dist) => Array.isArray(dist.regions) && dist.regions.includes(normalizedRegion));
+            return regionalFallback.length ? regionalFallback : fallbackDistributors;
+        }
+
+        function resolveFallbackDistributorIdForRegion(region = '') {
+            const normalizedRegion = normalizeRegionCode(region);
+            if (normalizedRegion === 'TW') return 'default-twd';
+            if (normalizedRegion === 'US') return 'default-usd';
+            return buildFallbackRoutingDistributors(normalizedRegion)[0]?.id || '';
+        }
+
         function renderDistributorOptions(snapshot = {}) {
             if (!preferredRegionSelect || !preferredDistributorSelect) return;
             let regions = Array.isArray(snapshot.regions) ? snapshot.regions : [];
@@ -487,10 +509,7 @@
 
             if (regions.length === 0) regions = ['TW', 'US'];
             if (distributors.length === 0) {
-                distributors = [
-                    { id: 'default-twd', name: '預設台幣經銷商', regions: ['TW'] },
-                    { id: 'default-usd', name: '預設美金經銷商', regions: ['US'] }
-                ];
+                distributors = buildFallbackRoutingDistributors(initialRegion);
             }
 
             const selectRegionText = window.t('routing_select_region_placeholder', '-- 請選擇地區 --');
@@ -500,11 +519,29 @@
             preferredRegionSelect.value = initialRegion;
 
             const selectDistributorText = window.t('routing_select_distributor_placeholder', '-- 請先選擇地區 --');
-            const matchedDistributors = distributors.filter(dist => 
+            let matchedDistributors = distributors.filter(dist => 
                 !initialRegion || !Array.isArray(dist.regions) || dist.regions.length === 0 ||
                 dist.regions.map(r => r.toUpperCase()).includes(initialRegion.toUpperCase())
             );
-            const initialDistributorId = localDistributorId || userPreference.preferredDistributorId || recommendation.distributorId || matchedDistributors[0]?.id || 'default-usd';
+            if (matchedDistributors.length === 0) {
+                matchedDistributors = buildFallbackRoutingDistributors(initialRegion);
+            }
+
+            const availableDistributorIds = new Set(
+                matchedDistributors
+                    .map((dist) => String(dist.id || '').trim())
+                    .filter(Boolean)
+            );
+            let initialDistributorId = localDistributorId
+                || userPreference.preferredDistributorId
+                || recommendation.distributorId
+                || matchedDistributors[0]?.id
+                || (initialRegion === 'TW' ? 'default-twd' : 'default-usd');
+            if (initialDistributorId && !availableDistributorIds.has(initialDistributorId)) {
+                initialDistributorId = recommendation.distributorId && availableDistributorIds.has(recommendation.distributorId)
+                    ? recommendation.distributorId
+                    : matchedDistributors[0]?.id || '';
+            }
             
             preferredDistributorSelect.innerHTML = [`<option value="">${escapeHtml(selectDistributorText)}</option>`]
                 .concat(matchedDistributors.map((dist) => {
@@ -586,7 +623,12 @@
 
         async function saveRoutingPreference() {
             const preferredRegion = String(preferredRegionSelect?.value || '').trim().toUpperCase();
-            const preferredDistributorId = String(preferredDistributorSelect?.value || '').trim();
+            const selectedDistributorId = String(preferredDistributorSelect?.value || '').trim();
+            const fallbackDistributorId = resolveFallbackDistributorIdForRegion(preferredRegion);
+            const preferredDistributorId = selectedDistributorId
+                || getPreferredDistributorId()
+                || fallbackDistributorId;
+            const distributorLabel = preferredDistributorSelect?.selectedOptions?.[0]?.textContent || preferredDistributorId;
             if (!preferredRegion && !preferredDistributorId) {
                 setRoutingStatus(window.t('routing_save_empty', '請至少選擇地區或經銷商。'), 'error');
                 return;
@@ -598,7 +640,7 @@
                     region: preferredRegion,
                     recommendation: {
                         distributorId: preferredDistributorId,
-                        distributorName: preferredDistributorSelect?.selectedOptions?.[0]?.textContent || preferredDistributorId,
+                        distributorName: distributorLabel,
                         reason: 'explicit'
                     },
                     userPreference: {
@@ -623,7 +665,7 @@
                     region: result.preferredRegion || preferredRegion,
                     recommendation: {
                         distributorId: result.preferredDistributorId || preferredDistributorId,
-                        distributorName: preferredDistributorSelect?.selectedOptions?.[0]?.textContent || result.preferredDistributorId || preferredDistributorId,
+                        distributorName: distributorLabel || result.preferredDistributorId || preferredDistributorId,
                         reason: 'explicit'
                     },
                     userPreference: {
@@ -641,7 +683,7 @@
                     region: preferredRegion,
                     recommendation: {
                         distributorId: preferredDistributorId,
-                        distributorName: preferredDistributorSelect?.selectedOptions?.[0]?.textContent || preferredDistributorId,
+                        distributorName: distributorLabel,
                         reason: 'explicit'
                     },
                     userPreference: {
@@ -1278,6 +1320,7 @@
         if (preferredRegionSelect) {
             preferredRegionSelect.addEventListener('change', async () => {
                 setRoutingPreferenceLocal(preferredRegionSelect.value, '', { source: 'manual' });
+                if (preferredDistributorSelect) preferredDistributorSelect.value = '';
                 await loadRoutingOptions(preferredRegionSelect.value);
                 renderCartItems();
                 updateRoutingSummary({
