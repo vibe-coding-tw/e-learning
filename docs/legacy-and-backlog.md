@@ -1,7 +1,7 @@
 # 歷史與 Backlog
 **Last updated**: 2026-06-01
 
-這份文件把過去分散在 `docs/migration-history.md`、`docs/system-improvement-backlog.md` 與部分 `platform-expansion-plan.md` 的重疊內容收斂到單一入口。
+這份文件把過去分散在舊的歷史與 backlog 內容，以及部分 `platform-expansion-plan.md` 的重疊內容收斂到單一入口。
 
 ## 1. What Is Historical
 

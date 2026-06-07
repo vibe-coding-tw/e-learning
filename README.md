@@ -115,7 +115,6 @@ firebase deploy --project e-learning-942f7
 | [docs/examples/metadata-lessons-pricing-template.csv](docs/examples/metadata-lessons-pricing-template.csv) | metadata_lessons 價格範例 |
 | [docs/examples/metadata-lessons-pricing-template.md](docs/examples/metadata-lessons-pricing-template.md) | metadata_lessons 價格範例說明 |
 | [docs/distributor-fulfillment-model.md](docs/distributor-fulfillment-model.md) | 履約結算 |
-| [docs/migration-history.md](docs/migration-history.md) | 歷史遷移紀錄（Dashboard、Firestore ID 等） |
 | [docs/classroom-legacy-classification.md](docs/classroom-legacy-classification.md) | 歷史資產分類 |
 
 > 收尾原則：內部命名維持中性語意；歷史相容欄位先保留，API 回傳欄位最後再 cutover。
