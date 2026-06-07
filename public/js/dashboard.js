@@ -487,8 +487,9 @@ function setupRealTimeAssignmentsListener({ isAdmin, isQualifiedTutor, filterUni
             q = query(assignmentsCol);
         }
     } else if (isQualifiedTutor) {
-        // Find by assigned tutor email
-        q = query(assignmentsCol, where("assignedTutorEmail", "==", myEmail));
+        // Tutor view: fetch all assignments and filter client-side so legacy rows without assignedTutorEmail
+        // or rows with slightly different assignment metadata still remain visible.
+        q = query(assignmentsCol);
     } else {
         // Student: query by userId
         q = query(assignmentsCol, where("userId", "==", auth.currentUser.uid));
@@ -699,29 +700,52 @@ function getCourseGuideConfig(courseId) {
     return dashboardData?.courseGuideIndex?.[courseId] || {};
 }
 
+function resolveGuideContentFileName(unitId) {
+    const raw = String(unitId || '').trim();
+    if (!raw) return '';
+    const fileName = raw.split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
+    if (!fileName) return '';
+
+    let resolved = fileName.replace(/^(?:tw|en)-/i, '');
+    if (/^start-\d{2}-unit-/i.test(resolved)) {
+        resolved = resolved.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+    } else if (/^basic-\d{2}-unit-/i.test(resolved)) {
+        resolved = resolved.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
+    } else if (/^(?:adv|advanced)-\d{2}-unit-/i.test(resolved)) {
+        resolved = resolved.replace(/^(?:adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
+    } else if (/^\d{2}-(?:unit|lesson|master)-/i.test(resolved)) {
+        resolved = resolved.replace(/^\d{2}-(?:unit|lesson|master)-/i, 'common-');
+    } else if (/^prepare-\d+-(.+)$/i.test(resolved)) {
+        resolved = resolved.replace(/^prepare-\d+-/, 'common-');
+    }
+
+    return `${resolved}.html`;
+}
+
 function getCachedGuideSectionFromDashboard(filterUnitId, sectionId) {
     if (!filterUnitId || !sectionId) return "";
-    const courseId = findParentCourseIdByUnit(filterUnitId) || "";
-    const guideConfig = getCourseGuideConfig(courseId);
-    const guideBucket = sectionId === 'tutor-guide'
-        ? (guideConfig.tutorGuide || {})
-        : (guideConfig.assignmentGuide || {});
+    const lessons = dashboardData?.lessons || [];
+    const unitCandidates = new Set([
+        ...getEquivalentUnitIds(filterUnitId),
+        resolveGuideContentFileName(filterUnitId)
+    ].filter(Boolean));
+    const courseCandidates = [
+        findParentCourseIdByUnit(filterUnitId, lessons),
+        findParentCourseIdByUnit(resolveCanonicalUnitId(filterUnitId, lessons), lessons),
+        resolveCanonicalUnitId(filterUnitId, lessons),
+        filterUnitId
+    ].filter(Boolean);
 
-    if (!guideBucket || typeof guideBucket !== 'object') return "";
-
-    const candidates = new Set();
-    const unitCandidates = getEquivalentUnitIds(filterUnitId);
-    unitCandidates.forEach((candidate) => {
-        candidates.add(candidate);
-        candidates.add(String(candidate || '').replace(/\.html$/i, ''));
-    });
-    candidates.add(filterUnitId);
-    candidates.add(String(filterUnitId || '').replace(/\.html$/i, ''));
-
-    for (const candidate of candidates) {
-        if (!candidate) continue;
-        if (typeof guideBucket[candidate] === 'string' && guideBucket[candidate].trim()) {
-            return guideBucket[candidate].trim();
+    for (const courseId of courseCandidates) {
+        const guideConfig = getCourseGuideConfig(courseId);
+        const guideBucket = sectionId === 'tutor-guide'
+            ? (guideConfig.tutorGuide || {})
+            : (guideConfig.assignmentGuide || {});
+        if (!guideBucket || typeof guideBucket !== 'object') continue;
+        for (const unitKey of unitCandidates) {
+            if (typeof guideBucket[unitKey] === 'string' && guideBucket[unitKey].trim()) {
+                return guideBucket[unitKey].trim();
+            }
         }
     }
 
@@ -743,13 +767,15 @@ async function fetchGuideSectionFromUnitPage(filterUnitId, sectionId) {
         return m && m[1] ? m[1].trim() : '';
     };
     try {
-        const parentCourseId = findParentCourseIdByUnit(filterUnitId);
-        const courseId = parentCourseId || filterUnitId;
-        
-        let pageName = filterUnitId;
-        if (!pageName.endsWith('.html')) {
-            pageName += '.html';
-        }
+        const cachedSection = getCachedGuideSectionFromDashboard(filterUnitId, sectionId);
+        if (cachedSection) return cachedSection;
+
+        const lessons = dashboardData?.lessons || [];
+        const unitToDocId = dashboardData?.unitToDocId || {};
+        const canonicalUnitId = resolveCanonicalUnitId(filterUnitId, lessons, unitToDocId) || filterUnitId;
+        const pageName = resolveGuideContentFileName(canonicalUnitId || filterUnitId);
+        const parentCourseId = findParentCourseIdByUnit(filterUnitId, lessons) || findParentCourseIdByUnit(canonicalUnitId, lessons);
+        const courseId = parentCourseId || canonicalUnitId || filterUnitId;
         
         const isTutor = (sectionId === 'tutor-guide');
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
@@ -762,7 +788,7 @@ async function fetchGuideSectionFromUnitPage(filterUnitId, sectionId) {
         const token = response?.data?.token || response?.data?.result?.token;
         if (!token) {
             console.warn(`[GuideRefresh] No serve token returned for ${pageName}. Response:`, response);
-            return "";
+            return getCachedGuideSectionFromDashboard(filterUnitId, sectionId);
         }
         
         const unitUrl = `${window.location.origin}/courses/${pageName}?token=${encodeURIComponent(token)}`;
@@ -834,6 +860,23 @@ function configureStudentTabsForUnitAccess() {
 }
 
 function filterAssignmentsForCurrentView(assignments = []) {
+    const extractTutorEmail = (value) => {
+        if (!value) return '';
+        if (typeof value === 'string') return normalizeEmail(value);
+        if (typeof value === 'object') {
+            return normalizeEmail(
+                value.email ||
+                value.tutorEmail ||
+                value.referredTutorEmail ||
+                value.referralTutor ||
+                value.tutor ||
+                value.value ||
+                ''
+            );
+        }
+        return normalizeEmail(String(value));
+    };
+
     const isOwnAssignment = (assignment) =>
         (assignment.userId || assignment.uid) === myUid ||
         normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
@@ -845,19 +888,19 @@ function filterAssignmentsForCurrentView(assignments = []) {
         const studentUid = assignment.userId || assignment.uid;
         if (!studentUid) return false;
         
-        const students = window.dashboardData?.students || [];
+        const students = dashboardData?.students || [];
         const student = students.find(s => s.uid === studentUid || s.id === studentUid);
         if (!student) return false;
         
         if (filterUnitId) {
             const assignedTutors = student.unitAssignments || {};
             const isMatch = Object.entries(assignedTutors).some(([uid, tutorEmail]) => {
-                return unitIdsMatch(uid, filterUnitId) && normalizeEmail(tutorEmail) === normalizeEmail(myEmail);
+                return unitIdsMatch(uid, filterUnitId) && extractTutorEmail(tutorEmail) === normalizeEmail(myEmail);
             });
             if (isMatch) return true;
         } else {
             const hasAnyAssignmentToMe = Object.values(student.unitAssignments || {}).some(tutorEmail => {
-                return normalizeEmail(tutorEmail) === normalizeEmail(myEmail);
+                return extractTutorEmail(tutorEmail) === normalizeEmail(myEmail);
             });
             if (hasAnyAssignmentToMe) return true;
         }
@@ -2088,7 +2131,8 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
         <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
             onclick="${rowOnClick}">
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
-                <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
+                <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentName || a.studentEmail || a.userEmail)}</div>
+                <div class="text-[10px] text-gray-400 truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail || '')}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2">
                 <!-- 顯示課程單元名稱（去除前綴）為主標題，特定作業任務為副標題 -->

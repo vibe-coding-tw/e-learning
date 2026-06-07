@@ -1356,9 +1356,9 @@ function injectDashboardModal() {
     const modalHTML = `
     <div id="dashboard-modal-overlay" class="fixed inset-0 bg-black/70 hidden flex-col overflow-hidden" style="z-index: 1000002 !important;">
         <div class="flex items-center justify-between px-4 md:px-6 py-3 bg-white/95 border-b border-slate-200">
-            <div class="text-sm md:text-base font-bold text-slate-700">課程儀表板 (Dashboard)</div>
+            <div class="text-sm md:text-base font-bold text-slate-700">${window.t ? window.t('dash_header_title', '儀表板 (Dashboard)') : '儀表板 (Dashboard)'}</div>
             <button id="dashboard-modal-close-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs md:text-sm font-bold hover:bg-slate-700">
-                關閉 (Esc)
+                ${window.t ? window.t('dash_close_btn', 'Close') : 'Close'}
             </button>
         </div>
         <iframe id="dashboard-modal-frame" class="w-full flex-1 bg-white border-0" title="Dashboard"></iframe>
