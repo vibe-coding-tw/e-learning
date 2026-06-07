@@ -1504,13 +1504,11 @@ let lastFetchTime = 0;
 
 async function getLessons() {
     const now = Date.now();
-    // Cache for 5 minutes (DISABLED FOR DEBUG)
-    /*
+    // Cache for 5 minutes to minimize Firestore reads (GCP Cost Control)
     if (cachedLessons && (now - lastFetchTime < 300000)) {
         return cachedLessons;
     }
-    */
-    console.log("[getLessons] Cache disabled, fetching fresh data...");
+    console.log("[getLessons] Fetching fresh metadata from Firestore...");
 
     try {
         if (typeof db === 'undefined') {
@@ -2586,8 +2584,10 @@ async function purgeContentCacheHelper(db) {
     if (typeof CONTENT_FILE_CACHE !== 'undefined' && CONTENT_FILE_CACHE.clear) {
         CONTENT_FILE_CACHE.clear();
     }
+    cachedLessons = null;
+    lastFetchTime = 0;
 
-    console.log(`[purgeContentCacheHelper] ✅ Purged ${count} cache files from content_cache.`);
+    console.log(`[purgeContentCacheHelper] ✅ Purged ${count} cache files from content_cache and cleared lessons cache.`);
 }
 
 /**
@@ -2677,6 +2677,10 @@ exports.upsertLessonPricing = onCall(async (request) => {
     ]);
 
     console.log(`[upsertLessonPricing] ✅ Updated default price books for productId=${cleanProductId} by uid=${auth.uid}`);
+    
+    // Invalidate in-memory lessons cache to ensure new price reflects immediately
+    cachedLessons = null;
+    lastFetchTime = 0;
 
     return {
         success: true,
