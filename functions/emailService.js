@@ -1,15 +1,24 @@
-const nodemailer = require('nodemailer');
 const admin = require('firebase-admin');
 
-// Configure Nodemailer Transport
-// We rely on environment variables for credentials
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS
+let _transporter = null;
+function getTransporter() {
+    if (!_transporter) {
+        const nodemailer = require('nodemailer');
+        _transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS
+            }
+        });
     }
-});
+    return _transporter;
+}
+
+// Configure Nodemailer Transport lazily via a proxy object
+const transporter = {
+    sendMail: (...args) => getTransporter().sendMail(...args)
+};
 
 const APP_BASE_URL = (process.env.APP_BASE_URL || 'https://vibe-coding.tw').replace(/\/+$/, '');
 const appUrl = (path = '') => `${APP_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;

@@ -1,0 +1,23 @@
+name: Graders ShellCheck Linter
+
+on:
+  push:
+    paths:
+      - 'public/graders/**'
+      - '.github/workflows/shellcheck-check.yml'
+  pull_request:
+    paths:
+      - 'public/graders/**'
+
+jobs:
+  shellcheck:
+    name: Run ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ShellCheck Lint
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: 'public/graders'
