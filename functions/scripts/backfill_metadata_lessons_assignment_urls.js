@@ -67,10 +67,8 @@ function countKeys(value) {
 function buildAliasPayload(data = {}) {
   const legacyMap = isPlainObject(data.githubClassroomUrls) ? data.githubClassroomUrls : null;
   const currentMap = isPlainObject(data.assignmentUrlMap) ? data.assignmentUrlMap : null;
-  const currentUrls = isPlainObject(data.assignmentUrls) ? data.assignmentUrls : null;
 
   const nextMap = currentMap || legacyMap || null;
-  const nextUrls = currentUrls || currentMap || legacyMap || null;
 
   const patch = {};
   const changes = [];
@@ -80,12 +78,7 @@ function buildAliasPayload(data = {}) {
     changes.push("assignmentUrlMap");
   }
 
-  if (!currentUrls && nextUrls) {
-    patch.assignmentUrls = nextUrls;
-    changes.push("assignmentUrls");
-  }
-
-  return { patch, changes, hasLegacyMap: !!legacyMap, nextMap, nextUrls };
+  return { patch, changes, hasLegacyMap: !!legacyMap, nextMap };
 }
 
 async function loadDocs(args) {
@@ -124,16 +117,15 @@ async function main() {
 
   for (const doc of docs) {
     const data = doc.data() || {};
-    const { patch, changes, hasLegacyMap, nextMap, nextUrls } = buildAliasPayload(data);
+    const { patch, changes, hasLegacyMap, nextMap } = buildAliasPayload(data);
     const legacyCount = countKeys(data.githubClassroomUrls);
     const currentMapCount = countKeys(data.assignmentUrlMap);
-    const currentUrlsCount = countKeys(data.assignmentUrls);
 
     if (hasLegacyMap) {
       report.legacyDocs += 1;
       report.totalLegacyMaps += legacyCount;
     }
-    report.totalMapEntries += Math.max(currentMapCount, currentUrlsCount, legacyCount);
+    report.totalMapEntries += Math.max(currentMapCount, legacyCount);
 
     if (changes.length === 0) {
       report.untouchedDocs += 1;
@@ -144,8 +136,7 @@ async function main() {
     const summary = [
       changes.join(","),
       `legacyKeys=${legacyCount}`,
-      `assignmentUrlMapKeys=${countKeys(nextMap)}`,
-      `assignmentUrlsKeys=${countKeys(nextUrls)}`
+      `assignmentUrlMapKeys=${countKeys(nextMap)}`
     ].join(" ");
 
     if (args.apply) {

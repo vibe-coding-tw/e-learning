@@ -22,10 +22,10 @@
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
   <script type="module" src="./js/nav-component.b3d3a2b945e9.js"></script>
-  <script src="./js/dashboard-lookup-utils.47ade9654133.js"></script>
+  <script src="./js/dashboard-lookup-utils.398a597cda03.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
-  <script src="./js/course-shared.9a894bf8d933.js"></script>
-  <script src="./js/pricing-utils.49fc3c360cd6.js"></script>
+  <script src="./js/course-shared.ec30c24bd8b4.js"></script>
+  <script src="./js/pricing-utils.909971c38740.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -42,7 +42,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
     import { firebaseConfig, connectFirebaseEmulators } from "./js/firebase-local.js?v=3";
 
     const app = initializeApp(firebaseConfig);
@@ -61,14 +61,47 @@
     let currentPathKey = "common";
     let currentLessonsRequestId = 0;
 
-    function getSelectedDistributorId() {
+    function getLocalPreferredDistributorId() {
       return localStorage.getItem('vibe_user_preferred_distributor')
                          || localStorage.getItem('preferredDistributorId')
                          || '';
     }
 
+    function persistLocalPreferredDistributorId(distributorId = '') {
+      const normalized = String(distributorId || '').trim();
+      if (!normalized) return;
+      localStorage.setItem('vibe_user_preferred_distributor', normalized);
+      localStorage.setItem('preferredDistributorId', normalized);
+    }
+
+    async function resolveLessonsDistributorId() {
+      const localPreferredDistributorId = getLocalPreferredDistributorId();
+      const currentUser = auth.currentUser;
+      if (!currentUser) return localPreferredDistributorId;
+
+      try {
+        const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+        const userData = userSnap.exists() ? (userSnap.data() || {}) : {};
+        const preferredDistributorId = String(
+          userData.preferredDistributorId
+          || userData.distributorId
+          || userData.commercial?.distributorId
+          || ''
+        ).trim();
+        if (preferredDistributorId) return preferredDistributorId;
+
+        const preferredRegion = String(userData.preferredRegion || userData.region || '').trim().toUpperCase();
+        if (preferredRegion === 'TW') return 'default-twd';
+        if (preferredRegion === 'US') return 'default-usd';
+      } catch (error) {
+        console.warn('[learning-path] Failed to resolve preferred distributor from Firestore:', error);
+      }
+
+      return localPreferredDistributorId;
+    }
+
     window.__getLessonsMetadata = async function () {
-      const distributorId = getSelectedDistributorId();
+      const distributorId = await resolveLessonsDistributorId();
       const res = await getLessonsFunc({ distributorId });
       return res?.data || {};
     };
@@ -157,8 +190,8 @@
     function getPricingApi() {
       return window.vibePricing || {
       resolveLessonPrice(lesson = {}, locale = "zh-TW") {
-          const amount = Number(lesson?.price || 0);
-          return { amount: Number.isFinite(amount) ? amount : 0, currency: String(lesson?.currency || "").toUpperCase() };
+          const amount = Number(lesson?.dealerPrice ?? 0);
+          return { amount: Number.isFinite(amount) ? amount : 0, currency: String(lesson?.dealerCurrency || lesson?.currency || "").toUpperCase() };
         },
         formatPrice(priceEntry = {}, locale = "zh-TW") {
           const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
@@ -554,6 +587,26 @@
       return lesson.classroomUrl || fallbackUrl || "";
     }
 
+    function stripQueryAndHash(value = "") {
+      return String(value || "").split("?")[0].split("#")[0];
+    }
+
+    function basenameFromUrl(value = "") {
+      const clean = stripQueryAndHash(value);
+      if (!clean) return "";
+      return clean.split("/").pop() || "";
+    }
+
+    function buildLessonAuthRequest(card = {}) {
+      const lessonId = String(card.dataset.lessonId || card.dataset.courseId || "").trim();
+      const classroomUrl = String(card.dataset.classroomUrl || "").trim();
+      const authFileName = String(card.dataset.authFileName || "").trim() || basenameFromUrl(classroomUrl).replace(/\.html$/i, "");
+      return {
+        pageId: lessonId,
+        fileName: authFileName
+      };
+    }
+
     function addToCart(productId, productName, productPrice, isPhysical, currency = "") {
       const cart = JSON.parse(localStorage.getItem("vibeCodingCart") || "{}");
       if (cart[productId]) return false;
@@ -572,12 +625,13 @@
     function updateCardAction(card, status) {
       const btn = card.querySelector(".action-btn");
       if (!btn) return;
-      const courseId = card.dataset.courseId;
-      const authPageId = card.dataset.authPageId || courseId;
+      const lessonId = card.dataset.lessonId || card.dataset.courseId;
+      const authPageId = card.dataset.authPageId || lessonId;
       const courseName = card.dataset.courseName;
       const coursePrice = Number(card.dataset.coursePrice || 0);
       const courseCurrency = card.dataset.courseCurrency || "";
       const isPhysical = card.dataset.isPhysical === "true";
+      const hasPriceData = card.dataset.hasPriceData === "true";
       const classroomUrl = card.dataset.classroomUrl;
       const hasVideoButton = !!card.querySelector(".video-btn");
       const widthClass = hasVideoButton ? "flex-1 w-full" : "w-full";
@@ -586,11 +640,18 @@
 
       const uiLocale = detectUiLocale();
 
+      if (!hasPriceData) {
+        btn.textContent = uiLocale.startsWith("en") ? "Not for sale" : "未定價";
+        btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
+        btn.disabled = true;
+        return;
+      }
+
       if (isPhysical && coursePrice > 0) {
         btn.textContent = window.t('lp_addToCartPhysical', '🛒 加入購物車');
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
-          if (addToCart(courseId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
+          if (addToCart(lessonId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
           else alert(window.t('lp_alreadyInCart', '⚠️ 「{name}」已在購物車中！').replace("{name}", courseName));
         };
         return;
@@ -607,7 +668,17 @@
         return;
       }
       if (status === "NOT_LOGGED_IN") {
-        btn.textContent = coursePrice === 0 ? window.t('lp_loginFreeBtn', '👤 請先登入 (免費)') : window.t('lp_loginBtn', '👤 請先登入');
+        if (coursePrice > 0) {
+          btn.textContent = window.t('lp_addToCartBtn', '🛒 加入購物車');
+          btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
+          btn.onclick = () => {
+            if (addToCart(lessonId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
+            else alert(window.t('lp_alreadyInCart', '⚠️ 「{name}」已在購物車中！').replace("{name}", courseName));
+          };
+          return;
+        }
+
+        btn.textContent = window.t('lp_loginFreeBtn', '👤 請先登入 (免費)');
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
           if (typeof window.vibeStartGoogleLogin === 'function') window.vibeStartGoogleLogin();
@@ -619,7 +690,7 @@
         btn.textContent = window.t('lp_addToCartBtn', '🛒 加入購物車');
         btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
         btn.onclick = () => {
-          if (addToCart(courseId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
+          if (addToCart(lessonId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
           else alert(window.t('lp_alreadyInCart', '⚠️ 「{name}」已在購物車中！').replace("{name}", courseName));
         };
         return;
@@ -631,19 +702,26 @@
 
     async function checkLessonAuthorization(card, user) {
       updateCardAction(card, "LOADING");
-      const courseId = card.dataset.courseId;
-      const authPageId = card.dataset.authPageId || courseId;
-      const isFreeCourse = Number(card.dataset.coursePrice || 0) === 0;
+      const hasPriceData = card.dataset.hasPriceData === "true";
+      const coursePrice = Number(card.dataset.coursePrice || 0);
+      const courseCurrency = card.dataset.courseCurrency || "";
+      const isFreeCourse = hasPriceData && Number(card.dataset.coursePrice || 0) === 0;
       if (isFreeCourse && user) return updateCardAction(card, "AUTHORIZED");
       const tutorModeActive = localStorage.getItem("adminTutorMode") === "true";
       try {
-        const result = await checkAuthFunction({
-          // pageId should stay on the course card identity, while fileName carries the entry unit.
-          pageId: courseId || authPageId,
-          fileName: authPageId,
+        const attempt = buildLessonAuthRequest(card);
+        const lastResult = await checkAuthFunction({
+          pageId: attempt.pageId,
+          fileName: attempt.fileName,
+          price: coursePrice,
+          currency: courseCurrency,
           tutorMode: tutorModeActive
         });
-        updateCardAction(card, result?.data?.authorized ? "AUTHORIZED" : "UNAUTHORIZED");
+        if (lastResult?.data?.authorized) {
+          updateCardAction(card, "AUTHORIZED");
+          return;
+        }
+        updateCardAction(card, "UNAUTHORIZED");
       } catch (_) {
         updateCardAction(card, "UNAUTHORIZED");
       }
@@ -816,7 +894,6 @@
       const courseHtml = rows.map((lesson) => {
         const entryUrl = resolveEntryUrl(lesson);
         const unitFile = resolveUnitFile(lesson);
-        const legacyPrice = Number(lesson.price || 0);
         // 英文模式優先讀取 *En 欄位，fallback 到中文欄位
         const isEn = uiLocale === 'en';
         const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId) : lesson.title) || lesson.courseId || "");
@@ -843,6 +920,7 @@
         const priceEntry = getPricingApi().resolveLessonPrice(lesson);
         const price = Number(priceEntry.amount || 0);
         const priceCurrency = String(priceEntry.currency || "");
+        const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
         const disablePreview = lesson.previewDisabled === true;
         const videoButton = (videoUrl && !disablePreview)
           ? `<button class="video-btn flex-1 w-full py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors">${window.t('lp_previewBtn', '▶ 課程預覽')}</button>`
@@ -856,11 +934,15 @@
           : "";
         return `
           <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
-               data-course-id="${lesson.courseId || ""}"
-               data-auth-page-id="${unitFile || lesson.courseId || ""}"
+               data-lesson-id="${lesson.id || lesson.docId || ""}"
+               data-course-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+               data-legacy-course-id="${lesson.courseId || ""}"
+               data-auth-page-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+               data-auth-file-name="${unitFile || ""}"
                data-course-name="${lesson.title || ""}"
                data-course-price="${price}"
                data-course-currency="${priceCurrency}"
+               data-has-price-data="${hasPriceData}"
                data-is-physical="${lesson.isPhysical === true}"
                data-classroom-url="${entryUrl}">
             <div class="flex items-start justify-between gap-3 mb-3">
@@ -876,7 +958,7 @@
               ${listHtml}
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-              <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : formatCoursePrice(priceEntry, uiLocale)}</span>
+              <span class="text-2xl font-bold text-blue-600">${!hasPriceData ? (uiLocale.startsWith('en') ? 'Not for sale' : '未定價') : (price === 0 ? t.freeLabel : formatCoursePrice(priceEntry, uiLocale))}</span>
             </div>
             <div class="mt-3 flex flex-col sm:flex-row gap-2">
               ${videoButton}
@@ -892,6 +974,7 @@
         const priceEntry = getPricingApi().resolveLessonPrice(lesson);
         const price = Number(priceEntry.amount || 0);
         const priceCurrency = String(priceEntry.currency || "");
+        const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
         const isEn = uiLocale === 'en';
         const displayKey = String(lesson.courseKey || lesson.courseId || "");
         const hardwareId = String(lesson.courseId || "").toLowerCase();
@@ -916,11 +999,15 @@
           : "";
         return `
           <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
-               data-course-id="${lesson.courseId || ""}"
-               data-auth-page-id="${unitFile || lesson.courseId || ""}"
+               data-lesson-id="${lesson.id || lesson.docId || ""}"
+               data-course-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+               data-legacy-course-id="${lesson.courseId || ""}"
+               data-auth-page-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+               data-auth-file-name="${unitFile || ""}"
                data-course-name="${displayTitle}"
                data-course-price="${price}"
                data-course-currency="${priceCurrency}"
+               data-has-price-data="${hasPriceData}"
                data-is-physical="true"
                data-classroom-url="${entryUrl}">
             <div class="min-w-0 text-xs text-slate-500 mb-2 truncate">${displayKey}</div>
@@ -928,7 +1015,7 @@
             ${imageHtml}
             <div class="text-sm text-slate-700 mb-4">${listHtml}</div>
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-              <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : formatCoursePrice(priceEntry, uiLocale)}</span>
+              <span class="text-2xl font-bold text-blue-600">${!hasPriceData ? (uiLocale.startsWith('en') ? 'Not for sale' : '未定價') : (price === 0 ? t.freeLabel : formatCoursePrice(priceEntry, uiLocale))}</span>
             </div>
             <div class="mt-3">
               <button class="action-btn w-full py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>${t.loadingText}</button>
@@ -989,7 +1076,10 @@
 
     async function loadLessonsForCurrentDistributor() {
       const requestId = ++currentLessonsRequestId;
-      const distributorId = getSelectedDistributorId();
+      const distributorId = await resolveLessonsDistributorId();
+      if (auth.currentUser && distributorId) {
+        persistLocalPreferredDistributorId(distributorId);
+      }
       const result = await getLessonsFunc({ distributorId });
       if (requestId !== currentLessonsRequestId) return null;
       currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
@@ -1003,8 +1093,7 @@
       document.title = window.t('lp_title', '學習路徑');
 
       currentPathKey = normalizeCanonicalLearningPathKey(new URLSearchParams(location.search).get("path") || "common") || "common";
-      await loadLessonsForCurrentDistributor();
-      window.updateAuthUI = function () {
+      window.updateAuthUI = async function () {
         const cards = document.querySelectorAll(".lesson-card");
         const user = auth.currentUser;
         cards.forEach((card) => {
@@ -1012,7 +1101,10 @@
           else updateCardAction(card, "NOT_LOGGED_IN");
         });
       };
-      onAuthStateChanged(auth, () => window.updateAuthUI());
+      onAuthStateChanged(auth, async () => {
+        await loadLessonsForCurrentDistributor();
+        await window.updateAuthUI();
+      });
     }
     init();
     window.addEventListener('storage', (event) => {

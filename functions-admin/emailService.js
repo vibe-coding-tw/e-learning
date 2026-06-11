@@ -1,0 +1,1394 @@
+const admin = require('firebase-admin');
+
+let _transporter = null;
+function getTransporter() {
+    if (!_transporter) {
+        const nodemailer = require('nodemailer');
+        _transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS
+            }
+        });
+    }
+    return _transporter;
+}
+
+// Configure Nodemailer Transport lazily via a proxy object
+const transporter = {
+    sendMail: (...args) => getTransporter().sendMail(...args)
+};
+
+const APP_BASE_URL = (process.env.APP_BASE_URL || 'https://vibe-coding.tw').replace(/\/+$/, '');
+const appUrl = (path = '') => `${APP_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+
+function normalizeUnitId(unitId = '') {
+    return String(unitId || '').trim().replace(/\.html$/i, '');
+}
+
+function buildDashboardUrlForUnit(unitId, tab = 'assignments', tutorMode = false) {
+    const cleanUnitId = normalizeUnitId(unitId);
+    const tabQuery = tab ? `&tab=${encodeURIComponent(tab)}` : '';
+    const tutorModeQuery = tutorMode ? '&tutorMode=1' : '';
+    if (cleanUnitId) {
+        return appUrl(`/dashboard.html?unitId=${encodeURIComponent(cleanUnitId)}${tabQuery}${tutorModeQuery}`);
+    }
+    return appUrl(`/dashboard.html?tab=${encodeURIComponent(tab)}${tutorModeQuery}`);
+}
+
+function escapeHtml(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderInfoCard(rows = [], options = {}) {
+    const {
+        padding = '20px',
+        margin = '25px 0',
+        borderRadius = '12px',
+        border = '1px solid #e2e8f0'
+    } = options;
+
+    const cells = rows.filter(Boolean).map((row) => {
+        const label = escapeHtml(row.label || '');
+        const value = row.html ?? escapeHtml(row.value ?? '');
+        const labelColor = row.labelColor || '#64748b';
+        const valueStyle = row.valueStyle || '';
+        const cellMargin = row.margin || '0 0 10px 0';
+
+        return `<p style="margin: ${cellMargin};${valueStyle ? ` ${valueStyle}` : ''}"><strong style="color: ${labelColor}; font-size: 12px; text-transform: uppercase;">${label}</strong><br><strong>${value}</strong></p>`;
+    }).join('');
+
+    if (!cells) return '';
+
+    return `
+        <div style="background-color: #f8fafc; padding: ${padding}; border-radius: ${borderRadius}; margin: ${margin}; border: ${border};">
+            ${cells}
+        </div>
+    `;
+}
+
+/**
+ * Helper to resolve user locale by email from Firestore, falling back to 'en'.
+ * @param {string} email
+ * @returns {Promise<string>}
+ */
+async function resolveUserLocale(email) {
+    if (!email) return 'en';
+    try {
+        const db = admin.firestore();
+        const userSnap = await db.collection("users").where("email", "==", email).limit(1).get();
+        if (!userSnap.empty) {
+            const userData = userSnap.docs[0].data();
+            return userData.locale || 'en';
+        }
+    } catch (e) {
+        console.warn("[EmailService] Failed to resolve user locale by email:", e);
+    }
+    return 'en';
+}
+
+/**
+ * Resolves Course Name and Unit Name dynamically from Firestore metadata_lessons.
+ * @param {string} unitId - The unit ID or filename (e.g., 'common-vscode-setup.html')
+ * @param {string} locale - User's locale ('zh-TW' or 'en')
+ * @returns {Promise<{courseName: string, unitName: string}>}
+ */
+async function resolveCourseAndUnitMeta(unitId, locale = 'en') {
+    const defaultMeta = { courseName: '', unitName: '' };
+    if (!unitId) return defaultMeta;
+
+    const filename = String(unitId).trim().replace(/^\//, '').split('/').pop() || '';
+    const cleanUnitId = normalizeUnitId(filename).toLowerCase();
+
+    try {
+        const db = admin.firestore();
+        const snap = await db.collection("metadata_lessons").get();
+        let matchedLesson = null;
+        let unitIndex = -1;
+
+        snap.forEach(doc => {
+            const data = doc.data();
+            const units = Array.isArray(data.courseUnits) ? data.courseUnits : [];
+            const index = units.findIndex(u => {
+                const cleanU = normalizeUnitId(u).replace(/^(?:tw|en)-/, '').toLowerCase();
+                const cleanReq = cleanUnitId.replace(/^(?:tw|en)-/, '').toLowerCase();
+                return cleanU === cleanReq;
+            });
+            if (index !== -1) {
+                matchedLesson = data;
+                unitIndex = index;
+            }
+        });
+
+        if (matchedLesson) {
+            const isEn = String(locale).toLowerCase().startsWith('en');
+            const courseName = isEn
+                ? (matchedLesson.titleEn || matchedLesson.title || '')
+                : (matchedLesson.title || '');
+            
+            let unitName = '';
+            if (Array.isArray(matchedLesson.courseUnitTitles) && matchedLesson.courseUnitTitles[unitIndex]) {
+                unitName = matchedLesson.courseUnitTitles[unitIndex];
+            } else {
+                unitName = normalizeUnitId(filename);
+            }
+
+            return { courseName, unitName };
+        }
+    } catch (e) {
+        console.warn("[EmailService] resolveCourseAndUnitMeta failed:", e);
+    }
+
+    return { courseName: '', unitName: normalizeUnitId(filename) };
+}
+
+/**
+
+ * Standard Premium Email Wrapper to ensure responsiveness and brand consistency.
+ */
+function getEmailHtmlWrapper(title, content, footer = 'Vibe Coding 團隊') {
+    return `
+        <div style="background-color: #f4f7f9; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eef2f6;">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); padding: 30px 20px; text-align: center;">
+                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">${title}</h1>
+                </div>
+                
+                <!-- Content -->
+                <div style="padding: 30px; color: #1e293b; font-size: 16px; word-break: break-word;">
+                    ${content}
+                </div>
+                
+                <!-- Footer -->
+                <div style="padding: 20px 30px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center; color: #64748b; font-size: 13px;">
+                    <p style="margin: 0;">${footer}</p>
+                    <p style="margin: 5px 0 0 0;">© 2026 Vibe Coding. All rights reserved.</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px; color: #94a3b8; font-size: 12px;">
+                若您不應收到此郵件，請忽略或聯繫我們：<a href="mailto:info@vibe-coding.tw" style="color: #4f46e5; text-decoration: none;">info@vibe-coding.tw</a>
+            </div>
+        </div>
+    `;
+}
+
+function renderNextSteps(title, steps = []) {
+    const items = steps.map((step) => `<li style="margin-bottom: 6px;">${step}</li>`).join('');
+    return renderPanel(`
+        <p style="margin: 0 0 10px 0; font-weight: bold;">${title}</p>
+        <ol style="margin: 0; padding-left: 20px; color: #334155; font-size: 14px;">
+            ${items}
+        </ol>
+    `, { padding: '20px', margin: '20px 0', borderRadius: '10px' });
+}
+
+function renderPanel(contentHtml, options = {}) {
+    const {
+        tag = 'div',
+        backgroundColor = '#f8fafc',
+        padding = '20px',
+        margin = '25px 0',
+        borderRadius = '12px',
+        border = '1px solid #e2e8f0',
+        borderLeft = '',
+        extraStyle = ''
+    } = options;
+
+    const styles = [
+        `background-color: ${backgroundColor}`,
+        `padding: ${padding}`,
+        `border-radius: ${borderRadius}`,
+        `margin: ${margin}`
+    ];
+    if (border) styles.push(`border: ${border}`);
+    if (borderLeft) styles.push(`border-left: ${borderLeft}`);
+    if (extraStyle) styles.push(extraStyle);
+
+    return `
+        <${tag} style="${styles.join('; ')}">
+            ${contentHtml}
+        </${tag}>
+    `;
+}
+
+function renderCtaButton({
+    href = '#',
+    label = '前往',
+    background = 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
+    color = '#ffffff',
+    padding = '14px 28px',
+    radius = '10px',
+    shadow = '0 4px 6px rgba(79, 70, 229, 0.2)',
+    display = 'inline-block'
+} = {}) {
+    return `<a href="${escapeHtml(href)}" style="display: ${display}; background: ${background}; color: ${color}; padding: ${padding}; text-decoration: none; border-radius: ${radius}; font-weight: bold; box-shadow: ${shadow};">${escapeHtml(label)}</a>`;
+}
+
+function renderActionButton(buttonHtml, marginTop = '30px') {
+    if (!buttonHtml) return '';
+    return `<p style="margin-top: ${marginTop};">${buttonHtml}</p>`;
+}
+
+function renderCalloutPanel({
+    title = '',
+    body = '',
+    backgroundColor = '#f8fafc',
+    borderLeft = '4px solid #cbd5e1',
+    titleColor = '#334155',
+    bodyColor = '#334155',
+    padding = '15px',
+    margin = '25px 0',
+    borderRadius = '8px'
+} = {}) {
+    const titleHtml = title ? `<p style="margin: 0; font-weight: bold; color: ${titleColor}; font-size: 14px;">${title}</p>` : '';
+    const bodyHtml = body ? `<p style="margin: ${title ? '10px 0 0 0' : '0'}; font-size: 14px; color: ${bodyColor};">${body}</p>` : '';
+    return renderPanel(`${titleHtml}${bodyHtml}`, {
+        backgroundColor,
+        padding,
+        margin,
+        borderRadius,
+        border: 'none',
+        borderLeft
+    });
+}
+
+function buildAutogradeInfoRows({
+    locale = 'en',
+    courseName = '',
+    unitName = '',
+    assignmentTitle = '',
+    scoreText = '',
+    scoreColor = '#10b981'
+} = {}) {
+    const isEn = String(locale).toLowerCase().startsWith('en');
+    const rows = [
+        courseName ? { label: isEn ? 'Course Name' : '課程名稱', value: courseName } : null,
+        unitName ? { label: isEn ? 'Unit Name' : '單元名稱', value: unitName } : null,
+        { label: isEn ? 'Assignment Title' : '作業名稱', value: assignmentTitle },
+        { label: isEn ? 'Latest Score' : '最新分數', html: `<span style="font-size: 24px; color: ${scoreColor}; font-weight: bold;">${escapeHtml(scoreText)}</span>` }
+    ];
+    return rows.filter(Boolean);
+}
+
+function buildCourseUnitInfoRows({
+    locale = 'en',
+    courseName = '',
+    unitName = '',
+    assignmentLabel = '',
+    assignmentValue = '',
+    extraRows = []
+} = {}) {
+    const isEn = String(locale).toLowerCase().startsWith('en');
+    const rows = [
+        courseName ? { label: isEn ? 'Course Name' : '課程名稱', value: courseName } : null,
+        unitName ? { label: isEn ? 'Unit Name' : '單元名稱', value: unitName } : null,
+        assignmentLabel && assignmentValue ? { label: assignmentLabel, value: assignmentValue } : null,
+        ...extraRows
+    ];
+    return rows.filter(Boolean);
+}
+
+function buildSingleInfoRow(label, value, { html = null } = {}) {
+    return [{ label, value, html }].filter(Boolean);
+}
+
+function buildApplicationInfoRows({
+    locale = 'en',
+    courseName = '',
+    unitName = '',
+    courseLabel = '',
+    unitLabel = '',
+    applicantLabel = '',
+    applicantValue = '',
+    statusLabel = '',
+    statusHtml = '',
+    messageLabel = '',
+    messageHtml = '',
+    extraRows = []
+} = {}) {
+    const isEn = String(locale).toLowerCase().startsWith('en');
+    const rows = [
+        courseName ? { label: courseLabel || (isEn ? 'Course Name' : '申請課程'), value: courseName } : null,
+        unitName ? { label: unitLabel || (isEn ? 'Unit Name' : '申請單元'), value: unitName } : null,
+        applicantLabel && applicantValue ? { label: applicantLabel, value: applicantValue } : null,
+        statusLabel && statusHtml ? { label: statusLabel, html: statusHtml } : null,
+        messageLabel && messageHtml ? { label: messageLabel, html: messageHtml } : null,
+        ...extraRows
+    ];
+    return rows.filter(Boolean);
+}
+
+function renderReminderBlock({
+    introHtml = '',
+    infoRows = [],
+    infoCardOptions = { padding: '25px' },
+    calloutHtml = '',
+    stepsTitle = '',
+    steps = [],
+    buttonHtml = '',
+    extraHtml = ''
+} = {}) {
+    const infoCardHtml = Array.isArray(infoRows) && infoRows.length
+        ? renderInfoCard(infoRows, infoCardOptions)
+        : '';
+    const calloutPart = calloutHtml ? `${calloutHtml}` : '';
+    const stepsPart = stepsTitle ? renderNextSteps(stepsTitle, steps) : '';
+    const buttonPart = buttonHtml ? renderActionButton(buttonHtml) : '';
+    return `${introHtml}${infoCardHtml}${calloutPart}${stepsPart}${buttonPart}${extraHtml}`;
+}
+
+/**
+ * Send a welcome email to a newly registered user.
+ * @param {string} email - User's email address
+ * @param {string} displayName - User's display name
+ * @param {string} expiryDateStr - Fallback expiry string
+ */
+async function sendWelcomeEmail(email, displayName, expiryDateStr) {
+    const locale = await resolveUserLocale(email);
+    const dashboardUrl = appUrl('/dashboard.html');
+    
+    // Format expiration date dynamically based on locale
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+    const resolvedExpiryStr = locale === 'en'
+        ? expiryDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        : expiryDate.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const introUrl = appUrl(`/learning-path.html?path=${locale === 'en' ? 'en-common' : 'tw-common'}`);
+    const courseListUrl = appUrl(`/learning-path.html?path=${locale === 'en' ? 'en-car-starter' : 'tw-car-starter'}`);
+    
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: locale === 'en' ? 'Welcome to Vibe Coding!' : '歡迎加入 Vibe Coding！',
+        html: getEmailHtmlWrapper(
+            locale === 'en' ? 'Welcome to Vibe Coding!' : '歡迎加入 Vibe Coding！',
+            locale === 'en' ? `
+                <p>Hi ${displayName || 'Developer'},</p>
+                <p>Thank you for signing up with Vibe Coding. We are thrilled to embark on this coding journey with you!</p>
+                
+                ${renderPanel(`
+                    <p style="margin: 0; font-weight: bold; color: #4f46e5; font-size: 14px; text-transform: uppercase;">🎁 Welcome Gift: 1-Month Free Access to Starter Courses</p>
+                    <p style="margin: 10px 0 0 0;">To celebrate your arrival, you have free access to all <strong>"Starter"</strong> courses until:</p>
+                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #ef4444;">${resolvedExpiryStr}</p>
+                `, { backgroundColor: '#f0f7ff', padding: '20px', margin: '25px 0', borderRadius: '8px', border: 'none', borderLeft: '4px solid #4f46e5' })}
+
+                ${renderNextSteps('Recommended Next Steps:', [
+                    'Set up your development environment and account (approx. 10-15 mins).',
+                    'Select a Starter lesson and complete your first run.',
+                    'Check your Learning Dashboard to review progress and unlock content.'
+                ])}
+
+                <p style="margin-top: 25px;">
+                    ${renderCtaButton({ href: introUrl, label: 'Set Up Environment First' })}
+                </p>
+                <p style="margin-top: 14px; font-size: 14px;">
+                    Or go directly to: <a href="${courseListUrl}" style="color: #4f46e5; text-decoration: none;">Starter Course Catalog</a> / <a href="${dashboardUrl}" style="color: #4f46e5; text-decoration: none;">Learning Dashboard</a>
+                </p>
+                <p style="margin-top: 25px; font-size: 14px; color: #64748b;">If you get stuck, simply reply to this email with "I am stuck at step X", and we will help you resolve it.</p>
+            ` : `
+                <p>Hi ${displayName || '開發者'},</p>
+                <p>感謝您註冊 Vibe Coding。我們很高興能與您一起探索程式開發的樂趣！</p>
+                
+                ${renderPanel(`
+                    <p style="margin: 0; font-weight: bold; color: #4f46e5; font-size: 14px; text-transform: uppercase;">🎁 限時歡迎禮：入門課程免費使用一個月</p>
+                    <p style="margin: 10px 0 0 0;">為了慶祝您加入，目前所有標記為<strong>「入門」</strong>的課程，您皆可免費存取使用至：</p>
+                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #ef4444;">${resolvedExpiryStr}</p>
+                `, { backgroundColor: '#f0f7ff', padding: '20px', margin: '25px 0', borderRadius: '8px', border: 'none', borderLeft: '4px solid #4f46e5' })}
+
+                ${renderNextSteps('接下來建議您這樣做：', [
+                    '先完成環境準備與帳號設定（約 10-15 分鐘）。',
+                    '挑 1 堂入門單元先做完，建立第一個可執行成果。',
+                    '到儀表板查看學習進度與可解鎖內容。'
+                ])}
+
+                <p style="margin-top: 25px;">
+                    ${renderCtaButton({ href: introUrl, label: '先完成環境準備' })}
+                </p>
+                <p style="margin-top: 14px; font-size: 14px;">
+                    或直接前往：<a href="${courseListUrl}" style="color: #4f46e5; text-decoration: none;">入門課程列表</a> / <a href="${dashboardUrl}" style="color: #4f46e5; text-decoration: none;">學習儀表板</a>
+                </p>
+                <p style="margin-top: 25px; font-size: 14px; color: #64748b;">如果您卡住，直接回覆這封信說「我卡在第幾步」，我們會協助你快速排除。</p>
+            `,
+            locale === 'en' ? 'Happy Coding!<br>Vibe Coding Team' : '祝學習愉快！<br>Vibe Coding 團隊'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Welcome email sent to ${email} (locale: ${locale})`);
+    } catch (error) {
+        console.error('Error sending welcome email:', error);
+    }
+}
+
+/**
+ * Send a payment confirmation email.
+ * @param {string} email - User's email address
+ * @param {string} orderId - Order ID
+ * @param {number} amount - Total amount paid
+ * @param {string} itemsDesc - Description of items purchased
+ * @param {boolean} hasPhysical - Whether the order contains physical items
+ */
+async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc, hasPhysical = false) {
+    const locale = await resolveUserLocale(email);
+    
+    let subject, title, textHtml, footer;
+    if (locale === 'en') {
+        const fulfillmentMessage = hasPhysical 
+            ? 'If you purchased physical course materials, we will ship them in 1-3 business days. You can track shipment status in your dashboard.'
+            : 'You can now log in to the platform at any time to access your course content.';
+            
+        subject = 'Vibe Coding Order Confirmation';
+        title = 'Payment Successful: Confirmation & Next Steps';
+        textHtml = `
+            <p>Thank you for your purchase. Your order has been successfully confirmed. Welcome and happy learning!</p>
+            ${renderInfoCard([
+                { label: 'Order ID', value: orderId },
+                { label: 'Purchased Items', value: itemsDesc },
+                { label: 'Amount Paid', html: `<span style="font-size: 18px; color: #10b981; font-weight: bold;">TWD $${amount}</span>` }
+            ], { padding: '25px' })}
+            <p>${fulfillmentMessage}</p>
+            ${renderNextSteps('Recommended Next Steps:', [
+                'Log in to your dashboard to confirm your unlocked courses/materials.',
+                hasPhysical ? 'Check shipment and logistics details in your dashboard.' : 'Complete a course unit and create your first runnable project.',
+                'To submit assignments, navigate to the specific unit from your dashboard.'
+            ])}
+            ${renderActionButton(renderCtaButton({ href: appUrl('/dashboard.html?tab=overview'), label: 'Go to Learning Dashboard', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }))}
+        `;
+        footer = 'Thank you for your support!<br>Vibe Coding Team';
+    } else {
+        const fulfillmentMessage = hasPhysical 
+            ? '若購買的是實體教材，我們將於 1-3 個工作天內為您寄出。您可以在儀表板追蹤出貨狀態。'
+            : '您現在可以隨時登入平台存取您的課程內容。';
+            
+        subject = 'Vibe Coding 訂單確認';
+        title = '付款成功：報名通知書';
+        textHtml = `
+            <p>感謝您的購買。您的訂單已成功確認，歡迎開始學習！</p>
+            ${renderInfoCard([
+                { label: '訂單編號', value: orderId },
+                { label: '購買項目', value: itemsDesc },
+                { label: '實付金額', html: `<span style="font-size: 18px; color: #10b981; font-weight: bold;">TWD $${amount}</span>` }
+            ], { padding: '25px' })}
+            <p>${fulfillmentMessage}</p>
+            ${renderNextSteps('接下來請這樣做：', [
+                '先到儀表板確認本次訂單已啟用的課程或教材。',
+                hasPhysical ? '若含實體教材，請在儀表板查看出貨狀態與物流資訊。' : '先完成一個單元，建立第一個可驗收成果。',
+                '若要提交作業，請從儀表板進入對應單元。'
+            ])}
+            ${renderActionButton(renderCtaButton({ href: appUrl('/dashboard.html?tab=overview'), label: '前往學習儀表板', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }))}
+        `;
+        footer = '謝謝您的支持！<br>Vibe Coding 團隊';
+    }
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: subject,
+        html: getEmailHtmlWrapper(title, textHtml, footer)
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Payment success email sent to ${email} for order ${orderId} (locale: ${locale})`);
+    } catch (error) {
+        console.error('Error sending payment email:', error);
+    }
+}
+
+/**
+ * Send a trial expiration warning email.
+ * @param {string} email - User's email address
+ * @param {string} displayName - User's name
+ * @param {number} daysLeft - Days remaining in trial
+ */
+async function sendTrialExpiringEmail(email, displayName, daysLeft) {
+    const dashboardUrl = appUrl('/dashboard.html');
+    const pricingUrl = appUrl('/index.html');
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: `您的試用期即將在 ${daysLeft} 天後結束`,
+        html: getEmailHtmlWrapper(
+            '試用期即將結束',
+            `
+                ${renderReminderBlock({
+                    introHtml: `
+                        <p>Hi ${displayName || '開發者'},</p>
+                        <p>提醒您，您的 Vibe Coding 入門試用資格將在 <strong>${daysLeft} 天</strong>後到期。</p>
+                    `,
+                    calloutHtml: renderCalloutPanel({
+                        title: '現在建議優先完成：',
+                        body: '至少 1 個單元作業 + 儀表板進度確認，避免權限到期後中斷。',
+                        backgroundColor: '#fff7ed',
+                        borderLeft: '4px solid #f97316',
+                        titleColor: '#9a3412',
+                        bodyColor: '#9a3412',
+                        padding: '16px',
+                        borderRadius: '8px'
+                    }),
+                    stepsTitle: '你可以這樣安排接下來：',
+                    steps: [
+                        '今天先登入儀表板，確認目前未完成單元。',
+                        '優先完成一個最短的入門單元與作業提交。',
+                        '若需要持續學習，提早完成升級，避免中斷。'
+                    ],
+                    buttonHtml: renderCtaButton({ href: dashboardUrl, label: '先查看我的進度' }),
+                    extraHtml: `<p style="margin-top: 12px; font-size: 14px;">需要延長學習與解鎖更多內容：<a href="${pricingUrl}" style="color: #4f46e5; text-decoration: none;">查看課程方案</a></p>`
+                })}
+            `,
+            'Vibe Coding 團隊'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Trial expiring email sent to ${email}`);
+    } catch (error) {
+        console.error('Error sending trial email:', error);
+    }
+}
+
+/**
+ * Send a course expiration warning email.
+ * @param {string} email - User's email address
+ * @param {string} displayName - User's name
+ * @param {string} courseName - Name of the course
+ * @param {number} daysLeft - Days remaining
+ */
+async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft) {
+    const pricingUrl = appUrl('/index.html');
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: `[提醒] 您的課程 "${courseName}" 即將在 ${daysLeft} 天後到期`,
+        html: getEmailHtmlWrapper(
+            '課程使用期限提醒',
+            `
+                ${renderReminderBlock({
+                    introHtml: `
+                        <p>Hi ${displayName || '開發者'},</p>
+                        <p>提醒您，您的課程 <strong>${courseName}</strong> 的使用期限即將在 <strong>${daysLeft} 天</strong>後到期。</p>
+                        <p>把握最後的時間複習課程內容！如果您希望繼續存取這些內容或解鎖更多進階課程，請考慮購買續約或查看最新優惠。</p>
+                    `,
+                    stepsTitle: '到期前建議完成：',
+                    steps: [
+                    '登入儀表板確認尚未完成的單元與作業。',
+                    '優先完成 1 個最重要單元，避免學習中斷。',
+                    '若需持續存取，先完成續購或升級。'
+                    ],
+                    buttonHtml: renderCtaButton({ href: appUrl('/dashboard.html'), label: '登入儀表板', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', shadow: '0 4px 6px rgba(239, 68, 68, 0.2)' }),
+                    extraHtml: `<p style="margin-top: 12px; font-size: 14px;">需要延長存取權限：<a href="${pricingUrl}" style="color: #4f46e5; text-decoration: none;">查看課程方案</a></p>`
+                })}
+            `,
+            'Happy Coding!<br>Vibe Coding 團隊'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Course expiring email sent to ${email} for course ${courseName}`);
+    } catch (error) {
+        console.error('Error sending course expiring email:', error);
+    }
+}
+
+/**
+ * Send an email to a newly authorized tutor.
+ * @param {string} email - Tutor's email address
+ * @param {string} unitName - Name of the unit
+ * @param {string} unitId - The course unit ID
+ * @param {string} assignmentUrl - The assignment URL
+ */
+async function sendTutorAuthorizationEmail(email, unitName, unitId, assignmentUrl) {
+    const cleanUnitId = normalizeUnitId(unitId);
+    const dashboardUrl = buildDashboardUrlForUnit(unitId, 'assignments');
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: `Vibe Coding 課程單元授權通知: ${unitName}`,
+        text: `恭喜您成為 Vibe Coding 授權導師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n您的專屬作業連結為：\n${assignmentUrl || '尚未配置'}\n\n學生點擊此連結報名時，系統將自動計算您的分潤。\n\n請前往導師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
+        html: getEmailHtmlWrapper(
+            '授權導師資格通知',
+            `
+                <p>Hi,</p>
+                <p>恭喜您！您已獲得課程單元 <strong>${unitName}</strong> 的管理授權。現在可以存取導師資源、管理學生作業並獲得推廣分潤權益。</p>
+                ${renderInfoCard(buildSingleInfoRow('您的專屬作業連結', '', {
+                    html: `<span style="font-family: monospace; word-break: break-all; color: #1e293b;"><a href="${escapeHtml(assignmentUrl || '#')}" style="color: #4f46e5; text-decoration: none;">${escapeHtml(assignmentUrl || '尚未配置連結')}</a></span>`
+                }), { padding: '25px', border: '1px solid #d0e7ff' })}
+
+                ${renderNextSteps('下一步建議：', [
+                    '登入導師儀表板獲取推廣專屬 QR Code',
+                    '分享上述作業連結給您的學生',
+                    '在「分潤」分頁即時追蹤您的成交成效'
+                ])}
+
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '前往導師儀表板', color: '#fff' }))}
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 30px; word-break: break-all;">備用網址連結：<br>${dashboardUrl}</p>
+            `,
+            'Happy Teaching!<br>Vibe Coding 教務組'
+        )
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`Tutor authorization email sent to ${email} for unit ${unitId}. MessageId: ${info.messageId}`);
+    } catch (error) {
+        console.error('Error sending tutor authorization email:', error);
+    }
+}
+
+/**
+ * Send an assignment submission notification to the tutor/admin.
+ * @param {string} tutorEmail - Tutor's email address
+ * @param {string} studentName - Student's display name
+ * @param {string} assignmentTitle - Title of the assignment
+ * @param {string} assignmentUrl - Link to the assignment or dashboard
+ */
+async function sendAssignmentNotification(tutorEmail, studentName, assignmentTitle, assignmentUrl, unitId = "") {
+    const targetUrl = assignmentUrl || appUrl('/dashboard.html?tab=assignments');
+    const locale = await resolveUserLocale(tutorEmail);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: tutorEmail,
+        subject: `[作業繳交] ${studentName} 繳交了 "${assignmentTitle}"`,
+        html: getEmailHtmlWrapper(
+            '收到新的作業！',
+            `
+                <p>老師您好,</p>
+                <p>學生 <strong>${studentName}</strong> 剛剛繳交了作業，待您進行批閱：</p>
+                ${renderInfoCard(buildCourseUnitInfoRows({
+                    locale,
+                    courseName,
+                    unitName,
+                    assignmentLabel: locale === 'en' ? 'Assignment Name' : '作業名稱',
+                    assignmentValue: assignmentTitle,
+                    extraRows: [
+                        { label: locale === 'en' ? 'Submission Time' : '繳交時間', value: new Date().toLocaleString(locale === 'zh-TW' ? 'zh-TW' : 'en-US', { timeZone: 'Asia/Taipei' }) }
+                    ]
+                }), { padding: '25px' })}
+                
+                ${renderCalloutPanel({
+                    title: '💡 教學互動建議',
+                    body: '除了批改分數，給予深入的具體反饋能幫助學生更快進步。良好的師生互動是持續學習的最佳動力！',
+                    backgroundColor: '#fefce8',
+                    borderLeft: '4px solid #facc15',
+                    titleColor: '#854d0e',
+                    bodyColor: '#713f12',
+                    padding: '15px',
+                    borderRadius: '4px'
+                })}
+                ${renderNextSteps('建議處理順序：', [
+                    '先打開作業內容確認需求與提交完整性。',
+                    '給出分數前，先留 1-2 個可執行的改進建議。',
+                    '完成評分後，確認學生已收到回饋。'
+                ])}
+
+                ${renderActionButton(renderCtaButton({ href: targetUrl, label: '前往儀表板批改' }))}
+            `,
+            'Vibe Coding 自動化管家'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Assignment notification sent to ${tutorEmail}`);
+    } catch (error) {
+        console.error('Error sending assignment notification:', error);
+    }
+}
+
+/**
+ * Send an email to the student when their assignment is graded.
+ * @param {string} email - Student's email
+ * @param {string} studentName - Student's name
+ * @param {string} assignmentTitle - Assignment title
+ * @param {number} grade - Grade received
+ * @param {string} feedback - Tutor's feedback
+ */
+async function sendGradingNotification(email, studentName, assignmentTitle, grade, feedback, dashboardUrl = appUrl('/dashboard.html?tab=assignments'), unitId = "") {
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+    
+    let subject, title, textHtml, footer;
+    if (locale === 'en') {
+        subject = `[Assignment Graded] Feedback on your assignment "${assignmentTitle}"`;
+        title = 'Assignment Graded';
+        textHtml = `
+            <p>Hi ${studentName},</p>
+            <p>Your tutor has graded and reviewed your assignment. Come check out your feedback and learning milestones!</p>
+            
+                ${renderInfoCard(buildCourseUnitInfoRows({
+                    locale,
+                    courseName,
+                    unitName,
+                    assignmentLabel: 'Assignment Title',
+                    assignmentValue: assignmentTitle,
+                    extraRows: [
+                        { label: 'Grade Received', html: `<span style="font-size: 32px; color: #10b981; font-weight: 800;">${grade}</span>` },
+                        { label: 'Tutor Comments', html: `<span style="color: #1e293b;">${feedback || 'Well done! Keep up the good work.'}</span>` }
+                    ]
+                }), { padding: '25px' })}
+
+            ${renderCalloutPanel({
+                title: '🤝 Build Good Tutor-Student Interactions',
+                body: 'Have questions about the feedback or course? Feel free to ask your tutor via the platform dashboard or Email. Active communication makes your learning much more effective!',
+                backgroundColor: '#eff6ff',
+                borderLeft: '4px solid #3b82f6',
+                titleColor: '#1d4ed8',
+                bodyColor: '#1e40af',
+                padding: '15px',
+                borderRadius: '4px'
+            })}
+            ${renderNextSteps('Recommended next steps:', [
+                'Read the tutor comments and summarize 1-2 key items to revise.',
+                'Return to your code and apply the revisions, submitting again if necessary.',
+                'If there is anything you do not understand, ask your tutor on the platform directly.'
+            ])}
+
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: 'View Tutor Feedback', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }))}
+        `;
+        footer = 'Keep moving forward!<br>Vibe Coding Team';
+    } else {
+        subject = `[作業評改] 老師已評回您的作業 "${assignmentTitle}"`;
+        title = '作業已完成評閱！';
+        textHtml = `
+            <p>Hi ${studentName},</p>
+            <p>老師已經看過您繳交的作業並給予了回饋，快來看看您的學習成果吧！</p>
+            
+                ${renderInfoCard(buildCourseUnitInfoRows({
+                    locale,
+                    courseName,
+                    unitName,
+                    assignmentLabel: '作業名稱',
+                    assignmentValue: assignmentTitle,
+                    extraRows: [
+                        { label: '獲得評分', html: `<span style="font-size: 32px; color: #10b981; font-weight: 800;">${grade}</span>` },
+                        { label: '老師的話', html: `<span style="color: #1e293b;">${feedback || '做得好！繼續加油。'}</span>` }
+                    ]
+                }), { padding: '25px' })}
+
+            ${renderCalloutPanel({
+                title: '🤝 建立良好的師生互動',
+                body: '對評語或課程有疑問嗎？歡迎透過平台的功能或 Email 向老師提問。保持積極的溝通能讓您的學習更有效率！',
+                backgroundColor: '#eff6ff',
+                borderLeft: '4px solid #3b82f6',
+                titleColor: '#1d4ed8',
+                bodyColor: '#1e40af',
+                padding: '15px',
+                borderRadius: '4px'
+            })}
+            ${renderNextSteps('接下來建議：', [
+                '先閱讀老師評語，整理 1-2 個重點修正項目。',
+                '回到程式碼實作修正，必要時二次提交。',
+                '若有不理解的地方，直接在平台向老師提問。'
+            ])}
+
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '查看作業詳情', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }))}
+        `;
+        footer = '持續前進！<br>Vibe Coding 團隊';
+    }
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: subject,
+        html: getEmailHtmlWrapper(title, textHtml, footer)
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Grading notification sent to ${email} (locale: ${locale})`);
+    } catch (error) {
+        console.error('Error sending grading notification:', error);
+    }
+}
+
+/**
+ * Send an email to the student when they are assigned a tutor for a unit.
+ */
+async function sendStudentLinkedToTutorEmail(email, studentName, unitId, tutorEmail) {
+    const cleanUnitId = normalizeUnitId(unitId);
+    const dashboardUrl = buildDashboardUrlForUnit(unitId, 'assignments');
+    
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: `[課程通知] 您的單元 "${unitName || cleanUnitId}" 已指派指導老師`,
+        html: getEmailHtmlWrapper(
+            '專屬老師已指派！',
+            `
+                <p>Hi ${studentName},</p>
+                <p>我們已為您的課程單元指派了專屬指導老師，協助您更精準地掌握技能：</p>
+                ${renderInfoCard([
+                    courseName ? { label: '課程名稱', value: courseName } : null,
+                    unitName ? { label: '單元名稱', value: unitName } : null,
+                    ...buildSingleInfoRow('指導老師 Email', '', {
+                        html: `<span style="font-family: monospace; font-size: 15px; color: #0ea5e9; font-weight: bold;">${escapeHtml(tutorEmail)}</span>`
+                    })
+                ], { padding: '20px' })}
+                <p>在學習過程中若有任何疑問，或完成作業後需要批改，老師都會全程協助您。鼓勵您主動與老師保持聯繫，祝您學習愉快！</p>
+                ${renderNextSteps('現在可以先做這三件事：', [
+                    '到儀表板確認此單元已可進入作業。',
+                    '先完成一次作業提交，建立與老師的互動節奏。',
+                    '若 24 小時內仍無法提交，直接回覆此信求助。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '前往儀表板' }))}
+            `,
+            'Vibe Coding 團隊'
+        )
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending student relationship email:', error);
+    }
+}
+
+/**
+ * Send an email to the tutor when a student is assigned to them.
+ */
+async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
+    const cleanUnitId = normalizeUnitId(unitId);
+    const dashboardUrl = buildDashboardUrlForUnit(unitId, 'assignments', true);
+    
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: `[教學任務] 新學生 ${studentName} 已指派給您 (${unitName || cleanUnitId})`,
+        html: getEmailHtmlWrapper(
+            '新的教學任務',
+            `
+                <p>老師您好，</p>
+                <p>系統已將學生 <strong>${studentName}</strong> 指派給您，進行單元課程指導：</p>
+                ${renderInfoCard([
+                    courseName ? { label: '課程名稱', value: courseName } : null,
+                    unitName ? { label: '單元名稱', value: unitName } : null,
+                    { label: '學生姓名', value: studentName }
+                ], { padding: '20px' })}
+                ${renderCalloutPanel({
+                    title: '💡 教務提醒',
+                    body: '請隨時關注這位學生的學習進度與作業繳交狀況，並透過積極的正向回饋建立良好的教學互動關係。學生的成長是我們最大的成就！',
+                    backgroundColor: '#fffbeb',
+                    borderLeft: '4px solid #fbbf24',
+                    titleColor: '#92400e',
+                    bodyColor: '#92400e',
+                    padding: '20px'
+                })}
+                ${renderNextSteps('建議處理順序：', [
+                    '先打開該單元，確認學生目前進度。',
+                    '主動發出第一則指引訊息，建立互動。',
+                    '學生提交後 24 小時內完成首輪回饋。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '開啟導師後台' }))}
+            `,
+            'Vibe Coding 教務系統'
+        )
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending tutor relationship email:', error);
+    }
+}
+
+/**
+ * Send an email to the admin when a new tutor application is submitted.
+ */
+async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
+    const cleanUnitId = normalizeUnitId(unitId);
+    const dashboardUrl = buildDashboardUrlForUnit(unitId, 'tutors');
+    
+    const locale = await resolveUserLocale(adminEmail);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
+    const mailOptions = {
+        from: '"Vibe Coding System" <info@vibe-coding.tw>',
+        to: adminEmail,
+        subject: `[新申請] 合格導師資格申請: ${userEmail}`,
+        html: getEmailHtmlWrapper(
+            '收到新的合格導師申請',
+            `
+                <p>管理員您好，</p>
+                <p>使用者 <strong>${userEmail}</strong> 提交了合格導師資格申請，待您進行審核：</p>
+                ${renderInfoCard(buildApplicationInfoRows({
+                    locale,
+                    courseName,
+                    unitName,
+                    applicantLabel: '申請人 Email',
+                    applicantValue: userEmail
+                }), { padding: '20px' })}
+                ${renderNextSteps('建議審核流程：', [
+                    '先確認申請單元與作業紀錄是否完整。',
+                    '核准時同步檢查導師設定與授權範圍。',
+                    '完成後確認申請人已收到結果通知。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '開啟合格教師審核', background: '#ea580c', shadow: '0 4px 6px rgba(234, 88, 12, 0.2)' }))}
+            `,
+            'Vibe Coding 自動化管家'
+        )
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending admin application notification:', error);
+    }
+}
+
+/**
+ * Send an email to the user when their tutor application has been resolved.
+ */
+async function sendApplicationResultEmail(email, unitId, status, message = "") {
+    const isApproved = status === 'approved';
+    const cleanUnitId = normalizeUnitId(unitId);
+    const dashboardUrl = buildDashboardUrlForUnit(unitId, 'assignments');
+    
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
+    const subject = isApproved 
+        ? `[申請通過] 恭喜您成為 "${unitName || cleanUnitId}" 的合格導師` 
+        : `[申請結果] 您的 "${unitName || cleanUnitId}" 合格導師申請未通過`;
+    const titleColor = isApproved ? '#2ECC71' : '#E74C3C';
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: subject,
+        html: getEmailHtmlWrapper(
+            isApproved ? '合格導師申請通過！' : '合格導師申請結果通知',
+            `
+                <p>Hi,</p>
+                <p>關於您合格導師進階權限申請，管理員已完成審查：</p>
+                
+                ${renderInfoCard(buildApplicationInfoRows({
+                    locale,
+                    courseName,
+                    unitName,
+                    statusLabel: '審核狀態',
+                    statusHtml: `<span style="font-size: 20px; color: ${titleColor}; font-weight: 800;">${isApproved ? '已通過 (Approved)' : '未通過 (Rejected)'}</span>`,
+                    messageLabel: message ? '管理員回覆' : '',
+                    messageHtml: message ? `<span style="color: #1e293b;">${escapeHtml(message)}</span>` : ''
+                }), { padding: '25px' })}
+
+                ${isApproved ? `
+                <p>恭喜您正式加入導師團隊！您現在已經具備該單元的管理權限。建議您立即登入儀表板查看相關功能：</p>
+                ${renderNextSteps('建議立刻完成：', [
+                    '先進入儀表板確認授權已生效。',
+                    '檢查該單元設定與作業連結是否正確。',
+                    '安排第一位學生的互動回饋節奏。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '開啟導師儀表板', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }))}
+                ` : `
+                <p>若有任何疑問，歡迎回覆此郵件與我們聯繫。您可以持續精進實作技能，並於日後再次提交申請。我們期待您的加入！</p>
+                ${renderNextSteps('建議下一步：', [
+                    '先根據管理員回覆補強不足項目。',
+                    '完成至少一個單元的高品質作業示範。',
+                    '準備好後再重新提交申請。'
+                ])}
+                `}
+            `,
+            '祝 順心！<br>Vibe Coding 團隊'
+        )
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending application result email:', error);
+    }
+}
+
+/**
+ * Send a summary email to the admin about pending student assignments.
+ */
+async function sendAdminAssignmentReminder(adminEmail, pendingList) {
+    const dashboardUrl = appUrl('/dashboard.html?tab=tutors');
+    const listHtml = pendingList.map(item => `
+        <li style="margin-bottom: 10px;">
+            <strong>${item.email}</strong> 尚未指派老師單元: <em>${item.units.join(', ')}</em>
+        </li>
+    `).join('');
+
+    const mailOptions = {
+        from: '"Vibe Coding System" <info@vibe-coding.tw>',
+        to: adminEmail,
+        subject: `[每日提醒] 尚有 ${pendingList.length} 位學生等待指派老師`,
+        html: getEmailHtmlWrapper(
+            '待處理的課程指派任務',
+            `
+                <p>管理員您好，系統掃描到以下已付費學生尚未完成老師指派的課程單元，請撥冗處理：</p>
+                ${renderPanel(`
+                    ${listHtml}
+                `, { tag: 'ul', padding: '25px', margin: '25px 0', borderRadius: '12px', border: '1px solid #e2e8f0', extraStyle: 'list-style-type: none;' })}
+                ${renderNextSteps('建議先處理：', [
+                    '先處理購買時間最早的學生，避免等待過久。',
+                    '指派後抽查 1 次是否可正常進入作業。',
+                    '每日關帳前再重刷一次待辦清單。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '前往後台處理', background: '#ef4444', shadow: '0 4px 6px rgba(239, 68, 68, 0.2)' }))}
+            `,
+            'Vibe Coding 自動化管家'
+        )
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending admin reminder email:', error);
+    }
+}
+
+/**
+ * Send reminder email to student when paid units are still missing tutor binding.
+ */
+async function sendStudentPendingTutorAssignmentReminder(email, studentName, units = []) {
+    if (!email) return;
+    const dashboardUrl = appUrl('/dashboard.html?tab=assignments');
+    const listHtml = (units || []).map(unitId => `
+        <li style="margin-bottom: 8px;"><code>${unitId}</code></li>
+    `).join('');
+
+    const mailOptions = {
+        from: '"Vibe Coding System" <info@vibe-coding.tw>',
+        to: email,
+        subject: `[學習提醒] 單元還沒綁定導師`,
+        html: getEmailHtmlWrapper(
+            '單元還沒綁定導師',
+            `
+                <p>Hi ${studentName || '同學'}，</p>
+                <p>系統偵測到您已付費的部分課程單元，<strong>尚未完成導師綁定</strong>，因此目前無法正常啟動該單元作業流程。</p>
+                ${renderPanel(`
+                    ${listHtml || '<li>（無單元清單）</li>'}
+                `, { tag: 'ul', padding: '20px 24px', margin: '24px 0', borderRadius: '12px', border: '1px solid #e2e8f0', extraStyle: 'list-style-type: none;' })}
+                ${renderNextSteps('請這樣處理：', [
+                    '進入 Dashboard 的 Assignments 分頁。',
+                    '點擊前往教室寫作業，輸入導師 Promotion Code 或導師 Email。',
+                    '完成綁定後即可正常作業與評分。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '前往綁定導師', background: '#2563eb', shadow: 'none' }))}
+            `,
+            'Vibe Coding 學習系統'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending student pending tutor reminder email:', error);
+    }
+}
+
+/**
+ * Send a summary email to the admin about pending shipments.
+ */
+async function sendAdminShipmentReminder(adminEmail, pendingList) {
+    const dashboardUrl = appUrl('/dashboard.html?tab=shipments');
+    const listHtml = pendingList.map(item => `
+        <li style="margin-bottom: 15px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px;">
+            <div style="font-weight: bold; color: #2d3748;">訂單: ${item.orderId}</div>
+            <div style="font-size: 14px; color: #4a5568;">買家: ${item.email} | 付款時間: ${item.paidAt}</div>
+            <div style="font-size: 14px; color: #4f46e5; margin-top: 5px;">項目: ${item.items.join(', ')}</div>
+        </li>
+    `).join('');
+
+    const mailOptions = {
+        from: '"Vibe Coding System" <info@vibe-coding.tw>',
+        to: adminEmail,
+        subject: `[每日提醒] 尚有 ${pendingList.length} 筆訂單等待出貨`,
+        html: getEmailHtmlWrapper(
+            '待處理的實體出貨任務',
+            `
+                <p>管理員您好，系統掃描到以下訂單包含實體教材且尚未標記為已出貨，請撥冗處理：</p>
+                ${renderPanel(`
+                    ${listHtml}
+                `, { tag: 'ul', padding: '25px', margin: '25px 0', borderRadius: '12px', border: '1px solid #e2e8f0', extraStyle: 'list-style-type: none;' })}
+                ${renderNextSteps('建議先處理：', [
+                    '先出貨付款時間最早的訂單。',
+                    '出貨後立即標記為 SHIPPED 並核對物流資訊。',
+                    '收工前再檢查是否仍有未標記訂單。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '前往物流管理後台', background: '#3b82f6', shadow: '0 4px 6px rgba(59, 130, 246, 0.2)' }))}
+            `,
+            'Vibe Coding 自動化管家'
+        )
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending admin shipment reminder email:', error);
+    }
+}
+
+/**
+ * Send auto-grade result to student.
+ */
+async function sendAutogradeResultToStudent(email, studentName, assignmentTitle, score, maxScore, dashboardUrl, runUrl = "", unitId = "") {
+    if (!email) return;
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+    const scoreText = Number.isFinite(maxScore) ? `${score}/${maxScore}` : `${score}`;
+    const targetUrl = dashboardUrl || appUrl('/dashboard.html?tab=assignments');
+    
+    let subject, title, textHtml, footer;
+    if (locale === 'en') {
+        subject = `[Autograde Synced] Score updated for "${assignmentTitle}"`;
+        title = 'Autograde Result Synced';
+        const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub Execution Logs: <a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">View Autograding Flow</a></p>` : '';
+        textHtml = `
+            <p>Hi ${studentName || 'Developer'},</p>
+            <p>Your assignment has finished automatic evaluation. The latest results have been synced:</p>
+            ${renderInfoCard(buildAutogradeInfoRows({ locale: 'en', courseName, unitName, assignmentTitle, scoreText, scoreColor: '#10b981' }), { padding: '20px' })}
+            ${renderNextSteps('Recommended next steps:', [
+                'Check your dashboard to verify the updated score and assignment status.',
+                'If you have not reached your target score, fix any issues and push again.',
+                'If you get stuck, proactively ask your tutor for help, focusing on the specific code segment.'
+            ])}
+            ${renderActionButton(renderCtaButton({ href: targetUrl, label: 'View Assignment', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: 'none' }))}
+            ${runLinkHtml}
+        `;
+        footer = 'Vibe Coding Autograding System';
+    } else {
+        subject = `[自動評分更新] "${assignmentTitle}" 成績已同步`;
+        title = '作業自動評分已更新';
+        const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub 執行紀錄：<a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">查看自動評分流程</a></p>` : '';
+        textHtml = `
+            <p>Hi ${studentName || '同學'},</p>
+            <p>您的作業已完成自動評分，最新分數如下：</p>
+            ${renderInfoCard(buildAutogradeInfoRows({ locale, courseName, unitName, assignmentTitle, scoreText, scoreColor: '#10b981' }), { padding: '20px' })}
+            ${renderNextSteps('接下來建議：', [
+                '先到儀表板確認本次分數與作業狀態。',
+                '若未達目標分數，依錯誤訊息修正後再次 push。',
+                '有卡點時，主動向導師提問，聚焦在「哪一段不確定」。'
+            ])}
+            ${renderActionButton(renderCtaButton({ href: targetUrl, label: '前往查看作業', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: 'none' }))}
+            ${runLinkHtml}
+        `;
+        footer = 'Vibe Coding 自動評分系統';
+    }
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: subject,
+        html: getEmailHtmlWrapper(title, textHtml, footer)
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending student autograde email:', error);
+    }
+}
+
+/**
+ * Send auto-grade result to assigned tutor.
+ */
+async function sendAutogradeResultToTutor(email, studentName, assignmentTitle, score, maxScore, dashboardUrl, runUrl = "", unitId = "") {
+    if (!email) return;
+    const scoreText = Number.isFinite(maxScore) ? `${score}/${maxScore}` : `${score}`;
+    const targetUrl = dashboardUrl || appUrl('/dashboard.html?tab=assignments');
+    const runLinkHtml = runUrl ? `<p style="margin-top: 12px; font-size: 14px;">GitHub 執行紀錄：<a href="${runUrl}" style="color: #4f46e5; text-decoration: none;">查看自動評分流程</a></p>` : '';
+
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: `[自動評分更新] ${studentName || '學生'} - "${assignmentTitle}"`,
+        html: getEmailHtmlWrapper(
+            '學生作業自動評分已更新',
+            `
+                <p>老師您好，</p>
+                <p>學生 <strong>${studentName || '未提供姓名'}</strong> 的作業已完成自動評分：</p>
+                ${renderInfoCard(buildAutogradeInfoRows({ locale, courseName, unitName, assignmentTitle, scoreText, scoreColor: '#2563eb' }), { padding: '20px' })}
+                ${renderNextSteps('建議後續教學動作：', [
+                    '若分數未達標，優先指出 1-2 個最關鍵修正點。',
+                    '請學生先嘗試修正再 push，建立解題迭代節奏。',
+                    '分數達標時，補一則「為何這樣寫是好的」強化理解。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: targetUrl, label: '前往導師後台' }))}
+                ${runLinkHtml}
+            `,
+            'Vibe Coding 教學協作系統'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending tutor autograde email:', error);
+    }
+}
+
+/**
+ * Send shipment completion email to student.
+ */
+async function sendOrderShippedEmail(email, orderId, itemsDesc = "", logistics = {}) {
+    if (!email) return;
+    const dashboardUrl = appUrl('/dashboard.html?tab=overview');
+    const logisticsText = logistics && typeof logistics === 'object'
+        ? Object.entries(logistics).map(([k, v]) => `${k}: ${v}`).join('<br>')
+        : '';
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: `[出貨通知] 訂單 ${orderId} 已出貨`,
+        html: getEmailHtmlWrapper(
+            '您的教材已出貨',
+            `
+                ${renderReminderBlock({
+                    introHtml: '<p>您好，您的實體教材已完成出貨。</p>',
+                    infoRows: [
+                        { label: '訂單編號', value: orderId },
+                        { label: '出貨品項', value: itemsDesc || '請至儀表板查看' },
+                        logisticsText ? { label: '物流資訊', html: `<span>${logisticsText}</span>` } : null
+                    ],
+                    stepsTitle: '接下來建議：',
+                    steps: [
+                        '到儀表板確認本筆訂單狀態已更新為 SHIPPED。',
+                        '請留意物流到貨通知與取件時效。',
+                        '收到教材後即可開始對應單元實作。'
+                    ],
+                    buttonHtml: renderCtaButton({ href: dashboardUrl, label: '前往儀表板查看', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', shadow: 'none' })
+                })}
+            `,
+            'Vibe Coding 物流通知'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending order shipped email:', error);
+    }
+}
+
+/**
+ * Notify candidate student that they were recommended for tutor qualification.
+ */
+async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderEmail = "", applicationId = "") {
+    if (!email) return;
+    const cleanUnitId = normalizeUnitId(unitId);
+    const dashboardPath = cleanUnitId ? `/dashboard.html?unitId=${encodeURIComponent(cleanUnitId)}&tab=assignments` : '/dashboard.html?tab=assignments';
+    const dashboardUrl = applicationId
+        ? `${appUrl(dashboardPath)}&action=submitTutorAssignmentLink&applicationId=${encodeURIComponent(applicationId)}`
+        : appUrl(dashboardPath);
+
+    const locale = await resolveUserLocale(email);
+    const { courseName, unitName } = await resolveCourseAndUnitMeta(unitId, locale);
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: `[資格通知] 您已被推薦申請單元 "${unitName || cleanUnitId}" 合格導師`,
+        html: getEmailHtmlWrapper(
+            '您已被推薦為合格導師候選',
+            `
+                <p>您好，恭喜您！</p>
+                <p>您已被推薦申請合格導師資格：</p>
+                ${renderInfoCard(buildApplicationInfoRows({
+                    locale,
+                    courseName,
+                    unitName,
+                    courseLabel: '推薦課程',
+                    unitLabel: '推薦單元',
+                    applicantLabel: '推薦者 Email',
+                    applicantValue: recommenderEmail
+                }), { padding: '20px' })}
+                <p><strong>下一步：</strong>請先填寫您接下來要使用的作業連結，系統才會正式通知管理員審核。</p>
+                ${renderNextSteps('建議您現在先做：', [
+                    '點擊下方按鈕，進入 Dashboard 填寫作業連結。',
+                    '確認連結可正常開啟，避免管理端審核後無法使用。',
+                    '送出後留意管理員審核通知信。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '前往儀表板查看', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: 'none' }))}
+            `,
+            'Vibe Coding 合格教師計畫'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending tutor recommendation candidate email:', error);
+    }
+}
+
+/**
+ * Notify admin about autograde ingestion failures.
+ */
+async function sendAutogradeFailureAlertEmail(adminEmail, reason, payload = {}) {
+    if (!adminEmail) return;
+    const dashboardUrl = appUrl('/dashboard.html?tab=tutors');
+    const payloadPreview = JSON.stringify(payload || {}, null, 2).slice(0, 3000);
+
+    const mailOptions = {
+        from: '"Vibe Coding System" <info@vibe-coding.tw>',
+        to: adminEmail,
+        subject: `[告警] GitHub 自動評分回寫異常`,
+        html: getEmailHtmlWrapper(
+            'GitHub 自動評分回寫異常',
+            `
+                <p>管理員您好，系統偵測到自動評分回寫異常。</p>
+                <p><strong>原因：</strong>${reason}</p>
+                ${renderInfoCard(buildSingleInfoRow('Payload 摘要', '', {
+                    html: `<pre style="margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 12px; color: #334155;">${escapeHtml(payloadPreview)}</pre>`
+                }), { padding: '16px', margin: '20px 0', borderRadius: '8px' })}
+                ${renderNextSteps('建議處理：', [
+                    '先確認 assignmentDocId 或 userId+assignmentId 是否正確。',
+                    '確認 GitHub webhook 簽名與 secret 一致。',
+                    '必要時重送 webhook。'
+                ])}
+                ${renderActionButton(renderCtaButton({ href: dashboardUrl, label: '前往管理後台', background: '#ef4444', shadow: 'none' }))}
+            `,
+            'Vibe Coding 監控告警'
+        )
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending autograde failure alert email:', error);
+    }
+}
+
+module.exports = {
+    sendWelcomeEmail,
+    sendPaymentSuccessEmail,
+    sendTrialExpiringEmail,
+    sendCourseExpiringEmail,
+    sendAssignmentNotification,
+    sendTutorAuthorizationEmail,
+    sendGradingNotification,
+    sendStudentLinkedToTutorEmail,
+    sendTutorLinkedToStudentEmail,
+    sendAdminAssignmentReminder,
+    sendStudentPendingTutorAssignmentReminder,
+    sendAdminShipmentReminder,
+    sendAdminNewApplicationEmail,
+    sendApplicationResultEmail,
+    sendAutogradeResultToStudent,
+    sendAutogradeResultToTutor,
+    sendOrderShippedEmail,
+    sendTutorRecommendationCandidateEmail,
+    sendAutogradeFailureAlertEmail,
+    resolveCourseAndUnitMeta
+};

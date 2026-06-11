@@ -78,7 +78,7 @@ graph TD
 - `functions/index.js` 目前已將 `tutorConfigs` 的讀寫收斂到共用 helper，包含 dashboard 彙整、授權寫入與歷史快照同步；但資料契約仍維持 `users.tutorConfigs[unitId].authorized = true`。
 - `users.tutorApplications` 仍保留作為 historical compatibility snapshot；現行的 source of truth 仍是 `tutor_applications`。
 - `getDashboardData`、`decideTutorApplication`、`recommendTutorForUnit` 與 `submitTutorRecommendationInviteLink` 的外部行為不變，文件仍以現有流程與通知規格為準。
-- `githubClassroomUrl` / `githubClassroomUrls` 仍屬相容欄位；若後續要正式改名，請先依 [`docs/assignment-url-migration-plan.md`](assignment-url-migration-plan.md) 的 dual read/write + backfill 流程進行，不要直接破壞既有資料。
+- `githubClassroomUrl` / `githubClassroomUrls` 仍屬相容欄位；若後續要正式改名，請先依 [`docs/assignment-url-migration-plan.md`](assignment-url-migration-plan.md) 的 backfill + cutover 流程進行，不要直接破壞既有資料。
 
 ## 7. Related Specs
 - `docs/email-notifications.md` (notification matrix and runbook)

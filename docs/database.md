@@ -21,7 +21,7 @@
 | `locale` | string | 使用者語系（例：`zh-TW`）。 |
 | `region` | string | 使用者地區（例：`TW`）。 |
 | `preferredRegion` | string | 預設 routing 地區；可與 `region` 不同。 |
-| `preferredDistributorId` | string | 預設經銷商；首次綁定後由系統維護。 |
+| `preferredDistributorId` | string | 預設經銷商；登入後的 `learning-path` / checkout 會優先讀這個欄位，首次綁定後由系統維護。 |
 | `bindingSource` | string | 綁定來源，例如 `explicit`, `tutor`, `promotionCode`, `regionDefault`, `manual`。 |
 | `bindingConfidence` | number | 系統對目前經銷商綁定結果的內部信心分數。 |
 | `bindingUpdatedAt` | timestamp | 經銷商綁定最後更新時間。 |
@@ -107,10 +107,12 @@
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
-| `courseId` | string | 課程唯一識別碼。 |
+| `id` | string | Firestore document ID；`metadata_lessons` 的 canonical lesson ID。 |
+| `docId` | string | `id` 的明確別名，僅供回傳資料與 migration 檢查使用。 |
+| `courseId` | string | 課程歷史/顯示識別碼，相容欄位。 |
 | `title` | string | 課程/單元標題。 |
-| `courseUnits` | array | 該課程包含的單元 HTML 檔列表。 |
-| `price` | number | 價格（0 代表免費）。 |
+| `courseUnits` | array | 該課程包含的單元 HTML 檔列表，只用於跨單元 TAB、授權與課程結構；不得用來覆寫單元內 page menu。 |
+| `dealerPrice` | number | runtime join 後的經銷商課程價格；主來源為 `dealer_price_books`。 |
 | `category` | string | 課程類別（如 `prepare`, `start`, `basic`, `advanced`）。 |
 | `isPhysical` | boolean | 是否為實體商品。 |
 | `orderWeight` | number | 排序權重。 |
@@ -127,10 +129,34 @@
 | `hiddenFromCatalog` | boolean | 是否從課程/商品列表隱藏（保留歷史資料時使用）。 |
 | `isDeprecated` | boolean | 是否為已廢止舊資料（保留對帳/歷史用途）。 |
 
-> 重要：課程授權判斷（包含免費課程 `price=0`）以 `metadata_lessons` 為唯一來源（Source of Truth）。
+#### 主鍵規則
+
+- `metadata_lessons`、`dealer_price_books`、`orders` 與其他核心集合都必須以 Firestore document ID 作為唯一主鍵與主要關聯依據。
+- `metadata_lessons.id` / `metadata_lessons.docId` 必須對應 Firestore document ID，並視為 canonical lesson id。
+- `courseId`、`courseKey`、`entryUnitId`、`contentRef`、`productId`、`sku` 等欄位只作為顯示、查詢輔助或 migration 相容資訊，不得再作為新的主關聯鍵。
+- 任何跨集合 join 都應先嘗試以 document ID 關聯；只有在遷移期間才允許讀取歷史 alias 欄位，且必須是明確、窄化的 migration path。
+- 後續新增的 price book、授權、內容路由、作業綁定資料，都應先設計成可直接用 document ID 追蹤與對照。
+
+> 重要：課程價格與授權判斷以 `dealer_price_books` 為主，`metadata_lessons` 僅保留內容與結構 metadata。
 > 不再依賴硬編碼單元白名單。
 > 所有執行期資料比對（包含邀請連結、課程授權、單元歸屬）都必須直接查 Firestore，禁止使用程式碼內相容名單或 fallback 白名單。
-> `metadata_lessons` 可同時承載課程與部分商品 metadata。判斷時請以 `metadataType`/`isPhysical` 區分用途，不可假設所有 `courseId` 都是課程頁檔名。
+> `metadata_lessons` 可同時承載課程與部分商品 metadata，但價格欄位只應視為相容/過渡資訊，正式價格來源是 `dealer_price_books`。
+> 課程 UI 邊界：`metadata_lessons.courseUnits` 是跨單元結構；左側 page menu 必須由目前單元 HTML 的 `window.UNITS` / `#sidebar-nav` 定義。完整規格見 `docs/course-ui-runtime-spec.md`。
+
+#### 價格遷移備註
+
+- `metadata_lessons.price` 已不再是主價格來源。
+- 前端與後端在需要課程價格時，應先查 `dealer_price_books`，再由 runtime join 把 `dealerPrice` / `dealerCurrency` 帶回 lesson。
+- `dealer_price_books` 必須保存對應 lesson 的 Firestore document ID，欄位建議為 `lessonId`，舊資料若暫時缺失可用 `sourceLessonId` 過渡。
+- `dealer_price_books` 的價格規則為：
+  - 先看是否在 `promoEffectiveFrom` / `promoEffectiveTo` 促銷期間內
+  - 若在促銷期間，使用 `promoPrice`
+  - 若不在促銷期間，使用 `salePrice`
+  - `salePrice` / `promoPrice` 任一未填，視為 `0`
+- 沒有對應 `dealer_price_books` 的課程或產品，視為「未定價 / 不可販售」，不得因 `0` 而當作免費商品放行。
+- 歷史資料若尚未補齊 `lessonId` / `sourceLessonId`，請以離線 migration 腳本 [`functions/scripts/backfill_dealer_pricebook_legacy_keys.js`](../functions/scripts/backfill_dealer_pricebook_legacy_keys.js) 補齊，不得在 runtime 再新增對照表。
+- 舊有 `price` / `price_twd` / `price_usd` 欄位只保留過渡相容用途，等資料遷移完成後可逐步清除。
+- 免費課程的判定也應以 dealer price 結果為準，而不是把 `metadata_lessons.price` 視為授權依據。
 >
 > 2026-06-03 價格規則更新：
 > - 課程與硬體商品皆採用多地區定價欄位，前端與後端不做匯率換算。
@@ -177,7 +203,7 @@
 - 欄位維護透過 `admin-i18n.html` 管理頁面，呼叫 `updateLessonI18n` Cloud Function 寫入。
 
 執行期 canonical identity 規則：
-- 課程型 metadata：優先使用 locale-neutral `courseKey`
+- 課程型 metadata：優先使用 Firestore document ID（`id` / `docId`）
 - 商品型 metadata（`metadataType=product|legacy_product` 或 `isPhysical=true`）：優先使用 `productId`
 - `courseId` 保留作為頁面入口 / 歷史相容欄位，不再作為所有執行期判斷的唯一主鍵
 - `contentRef` / 頁面路由仍可保留 `tw-*` 檔名；`courseKey` 與頁面檔名是分離的兩個概念
@@ -391,6 +417,47 @@
 
 ---
 
+## 9.0 `ledger_events` / `ledger_postings` / `ledger_accounts` / `ledger_snapshots` / `ledger_reports` 集合
+建議新增的全域記帳層，用來把所有業務事件統一轉成可稽核、可重算、可報表化的會計資料。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `ledger_events.eventId` | string | Canonical event id，具冪等性。 |
+| `ledger_events.eventType` | string | 事件類型，例如 `order.paid`、`order.refunded`、`expense.paid`。 |
+| `ledger_events.sourceType` | string | 來源類型，例如 `order`、`refund`、`manual`。 |
+| `ledger_events.sourceId` | string | 來源編號。 |
+| `ledger_events.sourceLabel` | string | 來源說明。 |
+| `ledger_events.entityType` | string | 事件主體類型，例如 `order`、`user`、`unit`。 |
+| `ledger_events.entityId` | string | 主體識別碼。 |
+| `ledger_events.currency` | string | 幣別。 |
+| `ledger_events.grossAmount` | number | 原始金額。 |
+| `ledger_events.occurredAt` | timestamp | 發生時間。 |
+| `ledger_events.metadata` | map | 額外上下文，例如 `unitId`、`tutorEmail`、`policyId`。 |
+| `ledger_postings.postingId` | string | 分錄識別碼。 |
+| `ledger_postings.eventId` | string | 對應事件 ID。 |
+| `ledger_postings.accountCode` | string | 會計科目代碼。 |
+| `ledger_postings.debit` / `credit` | number | 借方 / 貸方金額。 |
+| `ledger_postings.periodYear` / `periodMonth` | number / string | 入帳期間。 |
+| `ledger_postings.unitId` | string | 對應單元或事業體。 |
+| `ledger_accounts.accountCode` | string | 科目代碼。 |
+| `ledger_accounts.accountName` | string | 科目名稱。 |
+| `ledger_accounts.accountType` | string | `asset` / `liability` / `equity` / `revenue` / `expense`。 |
+| `ledger_accounts.parentCode` | string | 上層科目。 |
+| `ledger_snapshots.period` | string | 結帳期間，例如 `2026-06`。 |
+| `ledger_snapshots.accountCode` | string | 科目代碼。 |
+| `ledger_snapshots.openingBalance` | number | 期初餘額。 |
+| `ledger_snapshots.debitTotal` / `creditTotal` | number | 本期借貸總額。 |
+| `ledger_snapshots.closingBalance` | number | 期末餘額。 |
+| `ledger_reports.reportType` | string | 報表類型，例如 `trial_balance`、`p_and_l`、`balance_sheet`。 |
+| `ledger_reports.reportPayload` | map | 報表內容。 |
+
+補充說明：
+- 這一層是 **全域記帳與報表基礎層**，不取代既有的 domain projection。
+- `investor_*`、`revenue_share_*`、`profit_ledger`、`balance_sheet_snapshots` 都可視為投影或專用視圖。
+- 報表應優先讀 `ledger_snapshots` / `ledger_reports`，再按需要回查 `ledger_postings` 與 `ledger_events`。
+
+---
+
 ## 9.1 股權主檔與投資人資料總覽
 
 以下集合共同構成目前的股權主檔與投資人資料層：
@@ -409,6 +476,7 @@
 - `valuation_snapshots` 只用來鎖定發股價格，不回寫舊發行紀錄。
 - `investor_finance_events` 與 `investor_credits` 只處理收入 / 支出或其他可結算事件。
 - `investor_equity_positions` 是讀取用的持股快照，來源應可追溯到 `equity_issuances`。
+- 若未來導入全域記帳層，`investor_finance_events` 可作為 `ledger_events` 的投影之一，而不是唯一的業務事實來源。
 
 ### 9.2 `balance_sheet_snapshots` 集合
 儲存公司資產負債快照，供 NAV 與每股淨值計算使用。

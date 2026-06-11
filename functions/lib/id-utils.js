@@ -15,8 +15,13 @@ function buildI18nFilenameCandidates(candidateFileName, locale = "") {
     };
 
     const stripHtml = fileName.replace(/\.html$/i, "");
+    const stripLegacyPrefix = (value) => value.replace(/^(?:tw|en)-/i, "");
     const makeRenamed = (prefix, stem) => `${prefix}-${stem}.html`;
     const hasLegacyLanguagePrefix = /^(?:tw|en)-/i.test(stripHtml);
+
+    if (hasLegacyLanguagePrefix) {
+        addCandidate(`${stripLegacyPrefix(stripHtml)}.html`);
+    }
 
     if (!hasLegacyLanguagePrefix) {
         addCandidate(makeRenamed(regionPrefix, stripHtml));

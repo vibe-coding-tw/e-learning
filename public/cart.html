@@ -190,7 +190,7 @@
 
     <div id="footer-placeholder" data-root="."></div>
     <script src="./js/footer-component.0c8b87eef903.js"></script>
-    <script src="./js/pricing-utils.49fc3c360cd6.js"></script>
+    <script src="./js/pricing-utils.909971c38740.js"></script>
 
 
 
@@ -736,12 +736,12 @@
             const parentCourse = lessons.find(lesson => {
                 const units = (Array.isArray(lesson.courseUnits) ? lesson.courseUnits : []).map(u => normalizeId(u));
                 return units.includes(normalizedReferralId) ||
-                    normalizeId(lesson.courseId) === normalizedReferralId ||
-                    normalizeId(lesson.id) === normalizedReferralId;
+                    normalizeId(lesson.id) === normalizedReferralId ||
+                    normalizeId(lesson.courseId) === normalizedReferralId;
             });
 
             if (parentCourse) {
-                const parentCourseId = parentCourse.courseId || parentCourse.id;
+                const parentCourseId = parentCourse.id || parentCourse.courseId;
                 if (parentCourseId && cart[parentCourseId]) {
                     return parentCourseId;
                 }
@@ -1229,11 +1229,19 @@
                 const distributorId = getPreferredDistributorId();
                 const lessonsResponse = await getLessonsMetadata({ distributorId });
                 const lessons = lessonsResponse.data?.lessons || [];
-                courseMeta = lessons.find(lesson => lesson.courseId === courseId) ||
+                courseMeta = lessons.find(lesson => lesson.id === courseId) ||
+                    lessons.find(lesson => lesson.docId === courseId) ||
+                    lessons.find(lesson => lesson.courseId === courseId) ||
                     lessons.find(lesson => Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(unitId)) ||
                     null;
             } catch (error) {
                 console.warn('Failed to fetch lessons metadata for invite link:', error);
+            }
+
+            const hasPriceData = !!courseMeta && courseMeta.dealerPriceBookId != null;
+            if (courseMeta && !hasPriceData) {
+                setPrefillStatus(window.t('prefill_invite_unavailable', '此課程尚未設定價格，暫時無法加入購物車。'), 'error');
+                return;
             }
 
             const productName = courseMeta?.title || courseMeta?.courseName || fallbackName;
@@ -1426,6 +1434,15 @@
             const checkoutLocale = isEn ? 'en' : 'zh-TW';
             const checkoutRegion = getPreferredRegion();
             const useInternationalShipping = checkoutRegion && checkoutRegion !== 'TW';
+            const preferredDistributorId = getPreferredDistributorId();
+
+            if (cartPrefillStatus) {
+                cartPrefillStatus.textContent = isEn
+                    ? 'Preparing checkout details...'
+                    : '正在檢查結帳資料...';
+                cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-blue-50 border-blue-200 text-blue-700';
+                cartPrefillStatus.classList.remove('hidden');
+            }
 
             // [NEW] 驗證實體商品欄位
             const hasPhysical = checkPhysicalItems();
@@ -1485,6 +1502,7 @@
             // 先向後端解析每個品項的經銷商價格，並確保整筆訂單只落到同一個經銷商
             const cartEntries = Object.entries(cartItems || {});
             const resolvedQuotes = [];
+            const checkoutCartItems = JSON.parse(JSON.stringify(cartItems || {}));
             let resolvedDistributorId = '';
             let resolvedPriceBookId = '';
             let resolvedPricingVersion = '';
@@ -1502,13 +1520,16 @@
                     return;
                 }
 
+                const snapshotPrice = pricingApi.resolveCartPrice(item, checkoutLocale);
                 const quoteResponse = await resolveDistributorCheckoutQuote({
                     productId,
                     region: checkoutRegion,
                     locale: checkoutLocale,
                     tutorId: item.referredTutorEmail || '',
                     promotionCode: item.referralLink || '',
-                    customerId: user.uid
+                    customerId: user.uid,
+                    distributorId: preferredDistributorId,
+                    priceBookId: String(item.priceBookId || '').trim()
                 });
 
                 const quoteData = quoteResponse?.data?.result || quoteResponse?.data || quoteResponse?.result || quoteResponse || {};
@@ -1523,8 +1544,12 @@
                 }
 
                 const quotePrice = quoteData.price || {};
-                const itemCurrency = String(quotePrice.currency || '').toUpperCase();
-                const itemPrice = Number(quotePrice.amount || 0);
+                const existingCurrency = String(snapshotPrice.currency || item.currency || item.price_currency || item.currencyCode || '').toUpperCase();
+                const quoteCurrency = String(quotePrice.currency || '').toUpperCase();
+                const itemCurrency = quoteCurrency || existingCurrency || (Number(snapshotPrice.amount) > 0 && existingCurrency) || '';
+                const quotedAmount = Number(quotePrice.amount);
+                const existingAmount = Number(snapshotPrice.amount || 0);
+                const itemPrice = Number.isFinite(quotedAmount) && quotedAmount > 0 ? quotedAmount : existingAmount;
                 const quantity = parseInt(item.quantity) || 1;
 
                 if (!itemCurrency) {
@@ -1560,7 +1585,7 @@
                 resolvedPricingVersion = resolvedPricingVersion || quotePrice.pricingVersion || quoteData.pricingVersion || '';
                 if (!resolvedCurrency) resolvedCurrency = itemCurrency;
 
-                cartItems[itemId] = {
+                checkoutCartItems[itemId] = {
                     ...item,
                     price: itemPrice,
                     currency: itemCurrency,
@@ -1613,27 +1638,35 @@
                 }
             }
 
-            localStorage.setItem('vibeCodingCart', JSON.stringify(cartItems));
-            renderCartItems();
-            checkPhysicalItems();
+            const isTwdCheckout = resolvedCurrency === 'TWD';
+            const shouldUseStripe = !isTwdCheckout || (checkoutRegion && checkoutRegion !== 'TW');
+            const checkoutGateway = shouldUseStripe ? 'STRIPE' : 'ECPAY';
 
             checkoutBtn.disabled = true;
-            checkoutBtn.textContent = useInternationalShipping
-                ? '🔒 Connecting to payment gateway...'
+            checkoutBtn.textContent = checkoutGateway === 'STRIPE'
+                ? '🔒 Connecting to Stripe...'
                 : window.t('checkout_btn_ecpay', '🔒 正在連接綠界金流...');
+            if (cartPrefillStatus) {
+                cartPrefillStatus.textContent = checkoutGateway === 'STRIPE'
+                    ? '正在建立 Stripe 付款頁面...'
+                    : '正在建立綠界付款單...';
+                cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-blue-50 border-blue-200 text-blue-700';
+                cartPrefillStatus.classList.remove('hidden');
+            }
 
             try {
                 const response = await initiatePayment({
                     amount: calculatedTotal,
+                    currency: resolvedCurrency,
                     userId: user.uid,
-                    cartDetails: cartItems,
+                    cartDetails: checkoutCartItems,
                     logistics: logisticsInfo,
                     referralLink: null,
                     referredTutorEmail: null,
                     distributorId: resolvedDistributorId,
                     priceBookId: resolvedPriceBookId,
                     pricingVersion: resolvedPricingVersion,
-                    gateway: useInternationalShipping ? "STRIPE" : "ECPAY",
+                    gateway: checkoutGateway,
                     region: checkoutRegion,
                     locale: isEn ? "en" : "zh-TW",
                     // 設定交易完成後的返回網址
@@ -1647,10 +1680,20 @@
                     if (resData.gateway === "STRIPE") {
                         console.log("Stripe Checkout URL received, redirecting...");
                         checkoutBtn.textContent = '🚀 Redirecting to Stripe...';
+                        if (cartPrefillStatus) {
+                            cartPrefillStatus.textContent = isEn
+                                ? 'Redirecting to Stripe checkout...'
+                                : '正在前往 Stripe 付款頁面...';
+                        }
                         window.location.href = resData.sessionUrl;
                     } else if (resData.paymentParams) {
                         console.log("取得綠界參數成功，正在跳轉...");
                         checkoutBtn.textContent = window.t('checkout_btn_redirect', '🚀 前往付款頁面...');
+                        if (cartPrefillStatus) {
+                            cartPrefillStatus.textContent = isEn
+                                ? 'Redirecting to ECPay checkout...'
+                                : '正在前往綠界付款頁面...';
+                        }
                         submitECPayForm(resData.paymentParams, resData.apiUrl);
                     } else {
                         throw new Error('無法取得交易參數。');
@@ -1676,6 +1719,8 @@
             const form = document.createElement('form');
             form.method = 'post';
             form.action = apiUrl; // 綠界的 API 網址
+            form.target = '_self';
+            form.style.display = 'none';
 
             // 將後端回傳的所有參數轉為 hidden input
             for (const key in params) {
@@ -1688,7 +1733,7 @@
                 }
             }
 
-            paymentFormContainer.appendChild(form);
+            (paymentFormContainer || document.body).appendChild(form);
             form.submit();
         }
     </script>

@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+const { recordLedgerEvent } = require("./ledger-engine");
 
 const AUTO_BALANCE_SHEET_SNAPSHOT_ID = "auto-current";
 
@@ -1095,6 +1096,59 @@ async function settleAnnualInvestorDividends({
             ...settlementDoc,
             createdByUid: normalizeText(createdByUid)
         }, { merge: true });
+
+        try {
+            if (dividendPayable > 0) {
+                await recordLedgerEvent({
+                    db,
+                    payload: {
+                        eventType: "dividend.declared",
+                        sourceType: "investor_annual_settlement",
+                        sourceId: settlementId,
+                        sourceLabel: `Investor annual settlement ${settlementId}`,
+                        entityType: "investor",
+                        entityId: investorId,
+                        amount: dividendPayable,
+                        currency: "TWD",
+                        occurredAtDate: new Date(),
+                        metadata: {
+                            investorId,
+                            investorEmail: profile.investorEmail || "",
+                            settlementId,
+                            year: targetYear
+                        }
+                    },
+                    createdByUid,
+                    autoGenerateReports: false
+                });
+            }
+            if (dividendPaid > 0) {
+                await recordLedgerEvent({
+                    db,
+                    payload: {
+                        eventType: "dividend.paid",
+                        sourceType: "investor_annual_settlement",
+                        sourceId: `${settlementId}|paid`,
+                        sourceLabel: `Investor dividend payment ${settlementId}`,
+                        entityType: "investor",
+                        entityId: investorId,
+                        amount: dividendPaid,
+                        currency: "TWD",
+                        occurredAtDate: new Date(),
+                        metadata: {
+                            investorId,
+                            investorEmail: profile.investorEmail || "",
+                            settlementId,
+                            year: targetYear
+                        }
+                    },
+                    createdByUid,
+                    autoGenerateReports: false
+                });
+            }
+        } catch (ledgerErr) {
+            console.warn(`[settleAnnualInvestorDividends] Ledger event sync skipped for ${settlementId}:`, ledgerErr.message || ledgerErr);
+        }
 
         await upsertInvestorBalance({
             db,

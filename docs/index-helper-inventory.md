@@ -50,8 +50,7 @@
 
 ### 1.2 Dashboard / Students / Orders
 這組 order / logistics helper 已拆到 `functions/lib/order-utils.js`，`functions/index.js` 只保留呼叫點與 orchestration。
-`normalizeOrderItems`、`extractReferralAssignmentsFromOrder`、`collectPurchasedUnitIds`、`findMatchingOrderItemIdForReferral`、`itemContainsUnit` 已移到 `functions/lib/order-utils.js`，但它們仍依賴由 `functions/index.js` 提供的 lesson / canonical resolvers；下一步會依 [`docs/order-normalization-plan.md`](order-normalization-plan.md) 的拆分方案把依賴邊界收緊。
-`hasActiveOrderForCourse` 也已移到 `functions/lib/order-utils.js`，用來統一課程訂單有效性判斷。
+`normalizeOrderItems`、`extractReferralAssignmentsFromOrder`、`collectPurchasedUnitIds`、`findMatchingOrderItemIdForReferral`、`itemContainsUnit` 與 `hasActiveOrderForCourse` 已移到 `functions/lib/order-utils.js`，並依 [`docs/order-normalization-plan.md`](order-normalization-plan.md) 的拆分方案完成解耦，將 lesson / canonical / lookup helpers 統一由呼叫點以 `resolvers` 依賴注入傳入。
 - `getPhysicalUnitIdSet(lessons)` - 取得實體課程 unitId 集合。
 - `isPhysicalOrderItem(itemId, itemData, physicalUnitIds)` - 判斷訂單項目是否為實體商品。
 - `buildShippingContact(logistics)` - 組裝收件人聯絡資料。
@@ -144,11 +143,9 @@
 - `buildReferralLinkDocId(url)` - referral link doc id 組裝。
 
 ### 1.8 Time / CORS / Misc
-- `getCurrentTime()` - 取得目前時間。
 - `toIsoTimestamp(value, fallback)` - ISO timestamp 轉換。
 - `formatTaipeiDateTime(value, fallback)` - 台北時間格式化。
 - `nowIsoTimestamp()` - 當前 ISO 時間字串。
-- `applyCorsHeaders(res, ...)` - CORS headers 共用設定。
 - `fallbackNameFromEmail(email, defaultName)` - 由 email 推回名稱。
 
 ## 2. `functions/emailService.js` Helpers

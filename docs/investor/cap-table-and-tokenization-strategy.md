@@ -1,6 +1,6 @@
 # Cap Table & Tokenization Strategy
 
-Last updated: 2026-06-04
+Last updated: 2026-06-07
 
 ## 1. Why this document exists
 
@@ -79,6 +79,7 @@ Investment and equity issuance are different from operational income / expense l
 - Operational income / expense should continue to feed the investor ledger if needed
 - Equity issuance should produce a distinct issuance record
 - Dividend settlement should be a third step, not a price recalculation step
+- If a shared ledger layer is introduced, operational events should enter that layer first and then project into the investor ledger, instead of mutating ownership records directly
 
 ### 4.4 Keep tokenization optional
 If tokenization is ever introduced:
@@ -165,6 +166,7 @@ Do not mix these domains:
 - revenue share for tutors / agents
 - dividend settlement
 - crypto payment rails
+- shared event sourcing should not replace the legal cap table; it should only feed read models and reporting projections
 
 Each domain can be linked, but it should remain independently auditable.
 
@@ -182,6 +184,7 @@ For the current product stage:
 - Implementation spec: [Cap Table Implementation Spec](./cap-table-implementation-spec.md)
 - Investor overview: [Cap Table & Tokenization Overview](./cap-table-investor-overview.md)
 - [Investor Ledger System](./investor-ledger-system.md)
+- [Ledger and Reporting Architecture](../ledger-and-reporting-architecture.md)
 - [Valuation Model](./valuation-model.md)
 - [Funding Roadmap](./funding-roadmap.md)
 - [Database Schema](../database.md)

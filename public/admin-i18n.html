@@ -517,7 +517,7 @@ window.saveLessonI18n = async function(safeId, btnEl) {
     await updateLessonI18n({ courseId, titleEn, summaryEn, descriptionEn, coreContentEn, lessonLabelEn });
 
     // 更新本地 lesson 資料（用真正的 courseId 查找）
-    const lesson = allLessons.find(l => l.courseId === courseId);
+    const lesson = allLessons.find(l => l.id === courseId || l.docId === courseId || l.courseId === courseId);
     if (lesson) {
       lesson.titleEn = titleEn;
       lesson.summaryEn = summaryEn;
@@ -589,7 +589,8 @@ function renderLessons(lessons) {
     const badgeClass = 'badge-' + status;
     const badgeText = status === 'done' ? '✅ 完成' : status === 'partial' ? '⚠️ 部分' : '❌ 缺少';
     const icon = lesson.cardIcon || lesson.icon || '📘';
-    const safeId = (lesson.courseId || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const canonicalId = lesson.id || lesson.docId || lesson.courseId || '';
+    const safeId = String(canonicalId).replace(/[^a-zA-Z0-9_-]/g, '_');
 
     // Build core content readonly display
     const coreZh = Array.isArray(lesson.coreContent) ? lesson.coreContent : [];
@@ -600,12 +601,12 @@ function renderLessons(lessons) {
     const translateUrl = `https://translate.google.com/?sl=zh-TW&tl=en&text=${zhTitle}&op=translate`;
 
     return `
-    <div class="course-item" id="course-${safeId}" data-status="${status}" data-name="${(lesson.title||'').toLowerCase()}" data-id="${lesson.courseId||''}">
+    <div class="course-item" id="course-${safeId}" data-status="${status}" data-name="${(lesson.title||'').toLowerCase()}" data-id="${canonicalId}">
       <div class="course-header" onclick="toggleCourse('${safeId}')">
         <div class="course-icon">${icon}</div>
         <div class="course-meta">
-          <div class="course-title">${lesson.title || lesson.courseId || 'Untitled'}</div>
-          <div class="course-id">${lesson.courseId || ''} ${lesson.courseKey ? '· ' + lesson.courseKey : ''}</div>
+          <div class="course-title">${lesson.title || canonicalId || 'Untitled'}</div>
+          <div class="course-id">${canonicalId || ''} ${lesson.courseKey ? '· ' + lesson.courseKey : ''}</div>
         </div>
         <div class="progress-wrap">
           <div class="progress-bar-bg">

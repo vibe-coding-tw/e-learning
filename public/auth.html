@@ -103,9 +103,10 @@
             const targetUrl = urlParams.get('url'); // 真實課程網址 (作業 / YouTube)
             const courseId = urlParams.get('id');   // 課程 ID
             const price = urlParams.get('price');   // 價格 (判斷是否為免費課)
+            const currency = urlParams.get('currency') || '';
             const lang = urlParams.get('lang') || urlParams.get('locale') || '';
 
-            console.log("[Auth] Verifying params:", { targetUrl, courseId, price, lang });
+            console.log("[Auth] Verifying params:", { targetUrl, courseId, price, currency, lang });
             
             // [MODIFIED] Legacy/Cache Fallback: If URLSearchParams fails (e.g. because of multiple ?)
             if (!targetUrl || !courseId) {
@@ -114,18 +115,20 @@
                 const matchUrl = fullSearch.match(/[?&]url=([^&]*)/);
                 const matchId = fullSearch.match(/[?&]id=([^&]*)/);
                 const matchPrice = fullSearch.match(/[?&]price=([^&]*)/);
+                const matchCurrency = fullSearch.match(/[?&]currency=([^&]*)/);
                 const matchLang = fullSearch.match(/[?&](?:lang|locale)=([^&]*)/);
                 
                 const fallbackUrl = matchUrl ? decodeURIComponent(matchUrl[1]) : null;
                 const fallbackId = matchId ? matchId[1] : null;
                 const fallbackPrice = matchPrice ? matchPrice[1] : null;
+                const fallbackCurrency = matchCurrency ? decodeURIComponent(matchCurrency[1]) : '';
                 const fallbackLang = matchLang ? matchLang[1] : '';
                 
-                console.log("[Auth] Fallback results:", { fallbackUrl, fallbackId, fallbackPrice, fallbackLang });
+                console.log("[Auth] Fallback results:", { fallbackUrl, fallbackId, fallbackPrice, fallbackCurrency, fallbackLang });
                 
                 if (fallbackUrl && fallbackId) {
                     // Use fallbacks
-                    proceedWithVerification(fallbackUrl, fallbackId, fallbackPrice, user, fallbackLang);
+                    proceedWithVerification(fallbackUrl, fallbackId, fallbackPrice, fallbackCurrency, user, fallbackLang);
                     return;
                 }
             }
@@ -136,11 +139,11 @@
                 return;
             }
             // If we have them, proceed with the main flow
-            proceedWithVerification(targetUrl, courseId, price, user, lang);
+            proceedWithVerification(targetUrl, courseId, price, currency, user, lang);
         }
 
         // Refactored flow to allow fallbacks
-        async function proceedWithVerification(targetUrl, courseId, price, user, lang = "") {
+        async function proceedWithVerification(targetUrl, courseId, price, currency, user, lang = "") {
             // 2. 付費與免費課程皆需透過後端取得 Token，以通過 serveCourse 的安全檢查
             try {
                 let fileName = "";
@@ -157,10 +160,14 @@
 
                 const isTutorMode = localStorage.getItem('adminTutorMode') === 'true';
                 const primaryPageId = courseId || fileName;
+                const normalizedPageId = String(primaryPageId || '').replace(/\.html$/i, '') || primaryPageId;
+                const normalizedFileName = String(fileName || '').replace(/\.html$/i, '') || fileName;
 
                 let result = await checkAuthFunction({
-                    pageId: primaryPageId,
-                    fileName: fileName,
+                    pageId: normalizedPageId,
+                    fileName: normalizedFileName,
+                    price: price,
+                    currency: currency,
                     tutorMode: isTutorMode
                 });
 
@@ -169,21 +176,34 @@
                     const token = result.data.token;
                     let finalUrl = decodeURIComponent(targetUrl);
 
-                    // Append token
-                    if (finalUrl.includes('?')) {
-                        finalUrl += `&token=${token}`;
-                    } else {
-                        finalUrl += `?token=${token}`;
+                    // 所有已授權課程都帶 token，讓 /courses/* 的 token gate 可以通過。
+                    if (token) {
+                        if (finalUrl.includes('?')) {
+                            finalUrl += `&token=${token}`;
+                        } else {
+                            finalUrl += `?token=${token}`;
+                        }
                     }
 
                     // Append lang/locale if present
                     if (lang) {
-                        finalUrl += `&lang=${encodeURIComponent(lang)}`;
+                        finalUrl += `${finalUrl.includes('?') ? '&' : '?'}lang=${encodeURIComponent(lang)}`;
                     }
 
+                    console.log("[Auth] Redirecting after authorization:", { finalUrl });
                     window.location.replace(finalUrl);
                 } else {
-                    showError("系統查無您的購買紀錄，請確認是否已登入正確帳號。");
+                    const reason = result?.data?.reason || result?.data?.error || null;
+                    let message = "系統查無您的購買紀錄，請確認是否已登入正確帳號。";
+                    if (reason === 'missing-context') {
+                        message = "課程標識失敗，請確認網址是否正確或聯繫客服。";
+                    } else if (reason === 'payment-required') {
+                        message = "此課程尚未授權或付款，請確認是否已完成購買。";
+                    } else if (result?.data?.error) {
+                        message = `授權失敗：${result.data.error}`;
+                    }
+                    console.warn('[Auth] Authorization failed reason:', reason, result?.data, { courseId, fileName, price, currency, lang });
+                    showError(message);
                 }
             } catch (error) {
                 console.error(error);

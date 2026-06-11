@@ -493,15 +493,7 @@ function isCatalogCourseLesson(lesson = {}) {
 }
 
 function lessonRenderKey(lesson = {}) {
-  return normalizeCanonicalCourseKey(
-    lesson.courseKey ||
-    lesson.productId ||
-    lesson.courseId ||
-    lesson.entryUnitId ||
-    lesson.contentRef ||
-    lesson.id ||
-    ""
-  );
+  return lesson.id || "";
 }
 
 function lessonTextBlob(lesson = {}) {
@@ -663,9 +655,10 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const displayLessonLabel = lessonLabel || (isEn ? "Course Unit" : "課程單元");
     const icon = String(lesson.cardIcon || lesson.icon || "📘");
     const imageUrl = pickImage(lesson);
-    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson) : { amount: Number(lesson.price || 0), currency: String(lesson.currency || "").toUpperCase() };
+    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson) : { amount: Number(lesson.dealerPrice ?? 0), currency: String(lesson.dealerCurrency || lesson.currency || "").toUpperCase() };
     const price = Number(priceEntry.amount || 0);
     const priceCurrency = String(priceEntry.currency || "");
+    const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
     const imageHtml = imageUrl
       ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${imageUrl}" alt="${displayTitle || "course"}" class="w-full h-40 object-cover"></div>`
       : "";
@@ -674,11 +667,15 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
       : `<p class="text-sm text-slate-500">${summary}</p>`;
     return `
       <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
-           data-course-id="${lesson.courseId || ""}"
-           data-auth-page-id="${unitFile || lesson.courseId || ""}"
+           data-lesson-id="${lesson.id || lesson.docId || ""}"
+           data-course-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+           data-legacy-course-id="${lesson.courseId || ""}"
+           data-auth-page-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+           data-auth-file-name="${unitFile || ""}"
            data-course-name="${lesson.title || ""}"
            data-course-price="${price}"
            data-course-currency="${priceCurrency}"
+           data-has-price-data="${hasPriceData}"
            data-is-physical="${lesson.isPhysical === true}"
            data-classroom-url="${entryUrl}">
         <div class="flex items-start justify-between gap-3 mb-3">
@@ -694,7 +691,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
           ${listHtml}
         </div>
         <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-          <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : formatPrice(priceEntry, uiLocale)}</span>
+          <span class="text-2xl font-bold text-blue-600">${!hasPriceData ? (uiLocale.startsWith('en') ? 'Not for sale' : '未定價') : (price === 0 ? t.freeLabel : formatPrice(priceEntry, uiLocale))}</span>
         </div>
         ${entryUrl ? `<div class="mt-3"><a href="${entryUrl}" class="block w-full py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium text-center transition">查看內容</a></div>` : ""}
       </div>
@@ -704,9 +701,10 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   const hardwareHtml = hardwareRows.map((lesson) => {
     const entryUrl = resolveEntryUrl(lesson);
     const unitFile = resolveUnitFile(lesson);
-    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson) : { amount: Number(lesson.price || 0), currency: String(lesson.currency || "").toUpperCase() };
+    const priceEntry = window.vibePricing?.resolveLessonPrice ? window.vibePricing.resolveLessonPrice(lesson) : { amount: Number(lesson.dealerPrice ?? 0), currency: String(lesson.dealerCurrency || lesson.currency || "").toUpperCase() };
     const price = Number(priceEntry.amount || 0);
     const priceCurrency = String(priceEntry.currency || "");
+    const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
     const isEn = uiLocale === "en";
     const displayKey = String(lesson.courseKey || lesson.courseId || "");
     const hardwareId = String(lesson.courseId || "").toLowerCase();
@@ -725,11 +723,15 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
       : "";
     return `
       <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
-           data-course-id="${lesson.courseId || ""}"
-           data-auth-page-id="${unitFile || lesson.courseId || ""}"
+           data-lesson-id="${lesson.id || lesson.docId || ""}"
+           data-course-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+           data-legacy-course-id="${lesson.courseId || ""}"
+           data-auth-page-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+           data-auth-file-name="${unitFile || ""}"
            data-course-name="${displayTitle}"
            data-course-price="${price}"
            data-course-currency="${priceCurrency}"
+           data-has-price-data="${hasPriceData}"
            data-is-physical="true"
            data-classroom-url="${entryUrl}">
         <div class="min-w-0 text-xs text-slate-500 mb-2 truncate">${displayKey}</div>
@@ -737,7 +739,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
         ${imageHtml}
         <div class="text-sm text-slate-700 mb-4">${listHtml}</div>
         <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-          <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : formatPrice(priceEntry, uiLocale)}</span>
+          <span class="text-2xl font-bold text-blue-600">${!hasPriceData ? (uiLocale.startsWith('en') ? 'Not for sale' : '未定價') : (price === 0 ? t.freeLabel : formatPrice(priceEntry, uiLocale))}</span>
         </div>
         ${entryUrl ? `<div class="mt-3"><a href="${entryUrl}" class="block w-full py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium text-center transition">查看內容</a></div>` : ""}
       </div>

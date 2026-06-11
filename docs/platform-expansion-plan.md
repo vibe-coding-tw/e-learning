@@ -84,6 +84,7 @@ For `users`:
 - `preferredDistributorId`
 
 Language selection in the catalog should remain a content concern only; checkout currency should come from the selected distributor's active price book.
+`public/learning-path.html` should resolve the catalog distributor from Firestore user preferences first (`preferredDistributorId`), then fall back to region routing or localStorage only when the user is not signed in.
 
 ### 2.3.2 Pricing implementation status (2026-06-03)
 
@@ -528,9 +529,11 @@ Deferred verification plan (next billing cycle):
    - `Remove *-master-* only after pilot validation succeeds`
 
 Operational note:
-- Any change under `functions/private_courses/*` requires `firebase deploy --only functions`.
-- Deploying hosting only will not update `/courses/*` served content.
-- If you only change `public/js/*` (for shared nav/FAB behavior), deploy hosting; if course HTML content under `functions/private_courses/*` is modified, deploy functions.
+- Course UI ownership and acceptance rules are defined in `docs/course-ui-runtime-spec.md`.
+- Changes to `public/js/*` require fingerprinting and hosting deployment.
+- Changes to course runtime injection, token validation, or served HTML normalization require deploying `functions:payment:serveCourse`.
+- Changes to external `content-repo` course HTML require updating Firestore `contentVersion` to invalidate content caches.
+- Firestore `courseUnits` drives cross-unit TAB navigation only; it must never overwrite the current unit's sidebar page menu.
 
 Hotfix note (2026-05-26):
 - A malformed placeholder script token (`P26.05.26...`) was accidentally written into course HTML files and caused:
@@ -564,11 +567,13 @@ Tasks:
 1. Verify all master pages load canonical runtime scripts only:
    - `/js/nav-component.js?v=...`
    - `/js/course-shared.js?v=...`
+   - runtime version must bypass stale CDN cache after a UI hotfix
 2. Verify unit pages no longer contain invalid placeholder script tokens.
 3. Confirm per track:
    - `prepare-*`: FAB visible, no duplicate global nav
    - `start-*`: tab + `.ms-topnav` consistent with `basic/adv`
    - `basic-*`, `adv-*`: unchanged behavior after patch
+   - sidebar page menu shows the current unit's pages and does not duplicate TAB items
 4. Smoke-test authorization path:
    - `checkPaymentAuthorization` -> token -> `serveCourse` works
 5. Deploy sequence:

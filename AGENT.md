@@ -57,6 +57,15 @@
 
 ## 5. 儀表板與介面行為規則
 
+- 課程頁 UI 必須遵守 `docs/course-ui-runtime-spec.md`。
+- 課程頁資訊架構必須區分：
+  - 上方 TAB：跨課程單元導覽，資料來源為 Firestore `metadata_lessons.courseUnits`。
+  - 左側 page menu：目前單元內頁面導覽，資料來源為課程 HTML 的 `window.UNITS` / `#sidebar-nav`。
+- 平台 runtime 嚴禁使用 `courseUnits` 覆寫 `window.UNITS`、`#sidebar-nav` 或 `#index-unit-list`。
+- `.ms-topnav`、TAB、左側 page menu、breadcrumb、語言選單與 FAB 都是課程頁必要元件，不得以 legacy fallback、隱藏或功能縮減掩蓋缺失。
+- `.ms-topnav` 必須顯示 Firestore course metadata 的 `title` / `titleEn`，不得顯示目前單元名稱或以硬編碼 mapping 猜測名稱。
+- 免費課程需要先登入才能進入；非免費課程未登入時仍必須可以加入購物車。
+- `serveCourse` 必須確保課程 runtime scripts 使用可失效 CDN 快取的版本 URL 載入。
 - 單元視角（`unitId` 存在）時：
   - 隱藏 Overview 標籤。
   - 儀表板分頁順序應為 `Admin Console -> Assignments -> Settings`。

@@ -1,6 +1,6 @@
 # Cap Table Implementation Spec
 
-Last updated: 2026-06-04
+Last updated: 2026-06-07
 
 ## 1. Purpose
 
@@ -82,6 +82,7 @@ It is intended for engineering, product, and finance operations.
 - Income and expense are not equity issuance.
 - They create investor events and credits, not new shares.
 - They also roll forward the system-managed current `balance_sheet_snapshots` record so NAV stays in sync with operational activity.
+- If a shared accounting layer exists, these should be projected from canonical ledger events rather than entered independently in multiple places.
 
 ### 6.5 Annual settlement
 - Compute annual dividend payable from accumulated balances and policy.
@@ -101,6 +102,7 @@ It is intended for engineering, product, and finance operations.
 - Do not derive valuation from operational balance.
 - Do not retroactively rewrite an issuance after a later valuation changes.
 - Do not treat a crypto wallet balance as a share balance.
+- Do not use domain projections as the canonical source of truth when a shared ledger layer is available.
 
 ## 8. Future tokenization rule
 

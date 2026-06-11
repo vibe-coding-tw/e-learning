@@ -83,6 +83,111 @@ function canonicalLearningPathHref(pathKey = "") {
     return `/learning-path.html?path=${encodeURIComponent(canonical || 'common')}`;
 }
 
+function syncCourseShellOffsets() {
+    const tabsWrapper = document.querySelector('.unit-tabs-wrapper');
+    const tabsHidden = !tabsWrapper || getComputedStyle(tabsWrapper).display === 'none';
+    const tabsHeight = tabsHidden ? 0 : Math.ceil(tabsWrapper.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--course-tabs-height', `${tabsHeight}px`);
+}
+
+function ensureCourseTopNavShell(file = '', metadataFamily = '') {
+    const path = window.location.pathname || '';
+    let topNav = document.querySelector('.ms-topnav');
+    if (topNav) return topNav;
+
+    const normalizedFile = normalizeLooseKey(file);
+    const family = metadataFamily || getCourseFamilyForCoursePage(normalizedFile);
+    const seemsCourseFile = /^(?:start-\d{2}-unit-|basic-\d{2}-unit-|(?:adv|advanced)-\d{2}-unit-|prepare-\d{2}-unit-|(?:tw|en|common|car-starter|car-basic|car-advanced)-)/i.test(normalizedFile);
+    if (!path.startsWith('/courses/') && !seemsCourseFile && !family) return null;
+
+    const isStarter = family === 'starter' || normalizedFile.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(normalizedFile);
+    const isBasic = family === 'basic' || normalizedFile.startsWith('basic-') || /^(?:tw|en|car-basic)-/i.test(normalizedFile);
+    const isAdvanced = family === 'advanced' || normalizedFile.startsWith('adv-') || normalizedFile.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(normalizedFile);
+    const isPrepare = family === 'prepare' || normalizedFile.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(normalizedFile);
+
+    let navLabelText = '課程';
+    let targetHref = canonicalLearningPathHref('common');
+    if (isStarter) {
+        navLabelText = '入門課程';
+        targetHref = canonicalLearningPathHref('car-starter');
+    } else if (isBasic) {
+        navLabelText = '基礎課程';
+        targetHref = canonicalLearningPathHref('car-basic');
+    } else if (isAdvanced) {
+        navLabelText = '進階課程';
+        targetHref = canonicalLearningPathHref('car-advanced');
+    } else if (isPrepare) {
+        navLabelText = '課前準備';
+        targetHref = canonicalLearningPathHref('common');
+    }
+
+    topNav = document.createElement('nav');
+    topNav.className = 'ms-topnav';
+    topNav.innerHTML = `
+        <a href="/index.html" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+        <div class="divider"></div>
+        <a href="${targetHref}" target="_top" class="nav-label nav-label-link">${navLabelText}</a>
+    `;
+
+    const insertionAnchor = document.querySelector('.ms-layout') || document.querySelector('main') || document.body.firstElementChild;
+    if (insertionAnchor && insertionAnchor.parentNode) {
+        insertionAnchor.parentNode.insertBefore(topNav, insertionAnchor);
+    } else {
+        document.body.insertBefore(topNav, document.body.firstChild);
+    }
+
+    return topNav;
+}
+
+function ensureCourseBreadcrumbShell(file = '', metadataFamily = '') {
+    const path = window.location.pathname || '';
+    let breadcrumb = document.querySelector('.ms-breadcrumb');
+    if (breadcrumb) return breadcrumb;
+
+    const normalizedFile = normalizeLooseKey(file);
+    const family = metadataFamily || getCourseFamilyForCoursePage(normalizedFile);
+    const seemsCourseFile = /^(?:start-\d{2}-unit-|basic-\d{2}-unit-|(?:adv|advanced)-\d{2}-unit-|prepare-\d{2}-unit-|(?:tw|en|common|car-starter|car-basic|car-advanced)-)/i.test(normalizedFile);
+    if (!path.startsWith('/courses/') && !seemsCourseFile && !family) return null;
+
+    const isEn = (() => {
+        const params = new URLSearchParams(window.location.search);
+        const queryLang = params.get('lang') || params.get('locale') || '';
+        return queryLang.trim().toLowerCase().startsWith('en') || normalizedFile.startsWith('en-');
+    })();
+    const overviewText = isEn ? 'Course Overview' : '課程總覽';
+
+    breadcrumb = document.createElement('div');
+    breadcrumb.className = 'ms-breadcrumb';
+    breadcrumb.innerHTML = `<a href="#" id="bc-module-link"></a><span>›</span><span id="bc-current">${overviewText}</span>`;
+
+    const contentAnchor = document.querySelector('.ms-content') || document.querySelector('main') || document.body;
+    if (contentAnchor === document.body) {
+        const topNav = document.querySelector('.ms-topnav');
+        if (topNav && topNav.parentNode) {
+            topNav.parentNode.insertBefore(breadcrumb, topNav.nextSibling);
+        } else {
+            document.body.insertBefore(breadcrumb, document.body.firstChild);
+        }
+    } else {
+        const firstContentNode = contentAnchor.querySelector ? (contentAnchor.querySelector('.ms-unit-page') || contentAnchor.firstElementChild) : null;
+        if (firstContentNode && firstContentNode.parentNode === contentAnchor) {
+            contentAnchor.insertBefore(breadcrumb, firstContentNode);
+        } else {
+            contentAnchor.appendChild(breadcrumb);
+        }
+    }
+
+    const bcCurrent = breadcrumb.querySelector('#bc-current');
+    if (bcCurrent) {
+        if (family === 'starter') bcCurrent.textContent = isEn ? 'Course Overview' : '課程總覽';
+        else if (family === 'basic') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
+        else if (family === 'advanced') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
+        else if (family === 'prepare') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
+    }
+
+    return breadcrumb;
+}
+
 // Initializer
 function init() {
     console.log("[CourseShared] Initializing...");
@@ -97,7 +202,7 @@ function init() {
     hideGlobalNavOnCoursePage();
     applyHideTabsPreference();
     toggleUnitTabsVisibility();
-    upgradeLegacyStartUnitToMsLayout();
+    requestAnimationFrame(syncCourseShellOffsets);
     applyStartUnitModernTheme();
     injectMediaOverlay();
     injectDashboardModal();
@@ -119,14 +224,27 @@ function ensureUnitTabsTheme() {
         const style = document.createElement('style');
         style.id = 'unit-tabs-theme';
         style.textContent = `
+            :root {
+                --ms-blue: #0078d4;
+                --ms-blue-dark: #005a9e;
+                --ms-blue-light: #deecf9;
+                --ms-border: #e1dfdd;
+                --ms-text: #201f1e;
+                --ms-text-muted: #605e5c;
+                --ms-green: #107c10;
+                --ms-green-light: #e7f7ed;
+            }
             .unit-tabs-wrapper {
                 display: block !important;
-                background: #f8fafc !important;
-                border-bottom: 1px solid #e2e8f0 !important;
-                padding: 12px 16px !important;
+                background: linear-gradient(180deg, #fff 0%, #f8fafc 100%) !important;
+                border-bottom: 1px solid var(--ms-border) !important;
+                padding: 12px 20px !important;
                 overflow-x: auto !important;
                 white-space: nowrap !important;
                 -webkit-overflow-scrolling: touch;
+                position: sticky !important;
+                top: 56px !important;
+                z-index: 99 !important;
             }
             .unit-tabs-container {
                 display: block !important;
@@ -134,7 +252,7 @@ function ensureUnitTabsTheme() {
             }
             .unit-tabs-flex {
                 display: inline-flex !important;
-                gap: 4px !important;
+                gap: 8px !important;
                 align-items: center !important;
             }
             .unit-tab-btn {
@@ -148,45 +266,49 @@ function ensureUnitTabsTheme() {
                 font-weight: 700 !important;
                 line-height: 1.2 !important;
                 margin: 0 !important;
-                padding: 8px 22px 8px 22px !important;
-                clip-path: polygon(0% 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 0% 100%, 10px 50%) !important;
+                padding: 10px 18px 10px 20px !important;
+                clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 50%, calc(100% - 12px) 100%, 0% 100%, 12px 50%) !important;
                 border-radius: 0 !important;
-                height: 36px !important;
+                height: 38px !important;
                 white-space: nowrap !important;
                 outline: none !important;
                 position: relative !important;
+                box-shadow: 0 1px 0 rgba(0,0,0,.02) !important;
             }
             .unit-tab-btn.first-tab {
                 padding-left: 14px !important;
-                clip-path: polygon(0% 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 0% 100%) !important;
+                clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 50%, calc(100% - 12px) 100%, 0% 100%) !important;
             }
             .unit-tab-btn span {
                 transition: transform 0.16s ease-in-out !important;
                 display: inline-block !important;
             }
             .unit-tab-btn.pending {
-                background-color: #e2e8f0 !important;
-                color: #475569 !important;
+                background-color: #eef2f7 !important;
+                color: #4b5563 !important;
+                border: 1px solid rgba(148,163,184,.18) !important;
             }
             .unit-tab-btn.pending:hover {
-                background-color: #cbd5e1 !important;
-                color: #1e293b !important;
+                background-color: #dbe3ec !important;
+                color: #1f2937 !important;
             }
             .unit-tab-btn.active {
                 background: linear-gradient(135deg, #0078d4, #005a9e) !important;
                 color: #ffffff !important;
                 font-weight: 700 !important;
+                box-shadow: 0 8px 20px rgba(0,90,158,.18) !important;
             }
             .unit-tab-btn.active:hover {
                 background: linear-gradient(135deg, #0086ed, #0066b3) !important;
             }
             .unit-tab-btn.completed {
-                background-color: #d1fae5 !important;
-                color: #065f46 !important;
+                background-color: var(--ms-green-light) !important;
+                color: #14532d !important;
+                border: 1px solid rgba(16,124,16,.15) !important;
             }
             .unit-tab-btn.completed:hover {
-                background-color: #a7f3d0 !important;
-                color: #047857 !important;
+                background-color: #c9f0d8 !important;
+                color: #064e3b !important;
             }
             .unit-tab-btn .step-badge {
                 display: inline-flex !important;
@@ -212,6 +334,41 @@ function ensureUnitTabsTheme() {
             .unit-tab-btn.completed .step-badge {
                 background-color: #059669 !important;
                 color: #ffffff !important;
+            }
+            #course-lang-select-container {
+                margin-left: auto !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                padding-left: 12px !important;
+                border-left: 1px solid rgba(255,255,255,.18) !important;
+            }
+            #course-lang-select {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                background: rgba(255,255,255,.12) !important;
+                color: #fff !important;
+                border: 1px solid rgba(255,255,255,.2) !important;
+                border-radius: 999px !important;
+                padding: 6px 30px 6px 12px !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                cursor: pointer !important;
+                outline: none !important;
+                line-height: 1 !important;
+                min-height: 30px !important;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,.12) !important;
+                background-image: linear-gradient(45deg, transparent 50%, rgba(255,255,255,.9) 50%), linear-gradient(135deg, rgba(255,255,255,.9) 50%, transparent 50%) !important;
+                background-position: calc(100% - 14px) calc(50% - 2px), calc(100% - 9px) calc(50% - 2px) !important;
+                background-size: 5px 5px, 5px 5px !important;
+                background-repeat: no-repeat !important;
+            }
+            #course-lang-select:hover {
+                background-color: rgba(255,255,255,.18) !important;
+            }
+            #course-lang-select option {
+                color: #1f2937 !important;
             }
             .ms-achievement h3 {
                 color: #ffffff !important;
@@ -265,12 +422,51 @@ function isLikelyAssignmentLink(url = '') {
     return s.includes('classroom.github.com') || s.includes('github.com/classroom');
 }
 
+function resolveUnitAuthPrice(unitFile = '') {
+    const lessons = Array.isArray(window.globalLessonsData) ? window.globalLessonsData : [];
+    if (!Array.isArray(lessons) || lessons.length === 0) {
+        return null;
+    }
+
+    const normalizedTarget = normalizeLooseKey(unitFile);
+    const matchedLesson = lessons.find((lesson) => {
+        const candidates = new Set();
+        const add = (value) => {
+            if (!value) return;
+            candidates.add(normalizeLooseKey(value));
+        };
+
+        add(lesson?.courseId);
+        add(lesson?.courseKey);
+        add(lesson?.id);
+        add(lesson?.entryUnitId);
+        if (Array.isArray(lesson?.courseUnits)) lesson.courseUnits.forEach(add);
+        return candidates.has(normalizedTarget);
+    }) || null;
+
+    if (!matchedLesson) return null;
+
+    const priceEntry = window.vibePricing?.resolveLessonPrice
+        ? window.vibePricing.resolveLessonPrice(matchedLesson, window.__vibeLocale || '')
+        : { amount: Number(matchedLesson.dealerPrice ?? 0), currency: String(matchedLesson.dealerCurrency || matchedLesson.currency || 'TWD').toUpperCase() };
+
+    return {
+        price: Number(priceEntry?.amount ?? matchedLesson.dealerPrice ?? 0) || 0,
+        currency: String(priceEntry?.currency || matchedLesson.currency || 'TWD').toUpperCase() || 'TWD',
+        hasPriceData: priceEntry?.hasPriceData === true || matchedLesson.dealerPriceBookId != null
+    };
+}
+
 function buildUnitAuthUrl(unitFile = '') {
     const target = `/courses/${unitFile}`;
     const urlParams = new URLSearchParams(window.location.search);
     const lang = urlParams.get('lang') || urlParams.get('locale') || '';
     const appendLang = lang ? `&lang=${encodeURIComponent(lang)}` : '';
-    return `/auth.html?url=${encodeURIComponent(target)}&id=${encodeURIComponent(unitFile)}&price=0${appendLang}`;
+    const pricing = resolveUnitAuthPrice(unitFile);
+    const appendPrice = pricing && pricing.hasPriceData && Number.isFinite(Number(pricing.price)) ? `&price=${encodeURIComponent(String(pricing.price))}` : "";
+    const appendCurrency = pricing?.currency ? `&currency=${encodeURIComponent(pricing.currency)}` : '';
+    const canonicalUnitId = normalizeLooseKey(unitFile) || String(unitFile || '').replace(/\.html$/i, '');
+    return `/auth.html?url=${encodeURIComponent(target)}&id=${encodeURIComponent(canonicalUnitId || unitFile)}${appendPrice}${appendCurrency}${appendLang}`;
 }
 
 async function ensureDynamicUnitTabsFromFirestore() {
@@ -293,6 +489,11 @@ async function ensureDynamicUnitTabsFromFirestore() {
                 .includes(targetKey);
         });
         if (!matchedCourse) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
+        const isEn = queryLang.trim().toLowerCase().startsWith('en') || fileName.startsWith('en-');
+        syncCourseTopNavName(document.querySelector('.ms-topnav'), matchedCourse, isEn);
 
         const units = (Array.isArray(matchedCourse.courseUnits) ? matchedCourse.courseUnits : [])
             .map(normalizeUnitFilenameForRoute)
@@ -361,136 +562,65 @@ async function ensureDynamicUnitTabsFromFirestore() {
         } else {
             document.body.insertBefore(wrapper, document.body.firstChild);
         }
+        requestAnimationFrame(syncCourseShellOffsets);
     } catch (e) {
         console.warn('[CourseShared] ensureDynamicUnitTabsFromFirestore failed:', e);
     }
 }
 
-async function ensureDynamicSidebarFromFirestore() {
-    try {
-        const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        const excluded = new Set(['', 'index.html', 'prepare.html', 'start.html', 'basic.html', 'advanced.html', 'learning-path.html', 'dashboard.html', 'students.html', 'tutors.html', 'cart.html', 'payment-return.html']);
-        if (!fileName.endsWith('.html') || excluded.has(fileName)) return;
+function ensureDynamicSidebarFromFirestore() {
+    // Firestore courseUnits drive the cross-unit tabs only. The sidebar is the
+    // current unit's page menu and must remain owned by the course HTML.
+}
 
-        if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
-            globalLessonsData = await vibeFetchLessons();
+function findCourseForCoursePage(file = '') {
+    const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(file));
+    const lessons = Array.isArray(window.globalLessonsData) ? window.globalLessonsData : [];
+    return lessons.find((course) => {
+        const keys = new Set();
+        const add = (value) => {
+            if (value) keys.add(normalizeLooseKey(normalizeUnitFilenameForRoute(value)));
+        };
+        add(course?.courseId);
+        add(course?.courseKey);
+        add(course?.entryUnitId);
+        if (Array.isArray(course?.courseUnits)) course.courseUnits.forEach(add);
+        return keys.has(targetKey);
+    }) || null;
+}
+
+function syncCourseTopNavName(topNav, course, isEn = false) {
+    if (!topNav) return;
+    const navCourseNameId = 'nav-course-name';
+    let navCourseNameSpan = document.getElementById(navCourseNameId);
+    const courseName = String(isEn ? (course?.titleEn || course?.title || '') : (course?.title || course?.titleEn || '')).trim();
+
+    if (!courseName) {
+        if (navCourseNameSpan) {
+            const previousDivider = navCourseNameSpan.previousElementSibling;
+            navCourseNameSpan.remove();
+            if (previousDivider?.classList.contains('divider')) previousDivider.remove();
         }
-        if (!Array.isArray(globalLessonsData) || globalLessonsData.length === 0) return;
-
-        const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(fileName));
-        const matchedCourse = globalLessonsData.find((course) => {
-            const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
-            return units
-                .map(normalizeUnitFilenameForRoute)
-                .map(normalizeLooseKey)
-                .includes(targetKey);
-        });
-        if (!matchedCourse) return;
-
-        const units = (Array.isArray(matchedCourse.courseUnits) ? matchedCourse.courseUnits : [])
-            .map(normalizeUnitFilenameForRoute)
-            .filter(Boolean);
-        if (units.length === 0) return;
-
-        // Determine UI language
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
-        const isEn = queryLang.trim().toLowerCase().startsWith('en') || fileName.startsWith('en-');
-
-        // 1. Update module title in sidebar header
-        const sidebarTitleEl = document.querySelector('.ms-sidebar-header .module-title');
-        if (sidebarTitleEl) {
-            const courseTitle = isEn && matchedCourse.titleEn ? matchedCourse.titleEn : matchedCourse.title;
-            if (courseTitle) sidebarTitleEl.textContent = courseTitle;
-        }
-
-        // 2. Override window.UNITS if defined, or reconstruct sidebar DOM
-        const sidebarNav = document.getElementById('sidebar-nav');
-        if (sidebarNav) {
-            const newUnits = [
-                { id: 0, label: isEn ? 'Module Overview' : '課程總覽', time: '', type: 'index' }
-            ];
-
-            units.forEach((unitFile, idx) => {
-                let labelText = '';
-                if (Array.isArray(matchedCourse.courseUnitTitles) && matchedCourse.courseUnitTitles[idx]) {
-                    labelText = matchedCourse.courseUnitTitles[idx];
-                } else {
-                    labelText = formatUnitTabTitle(unitFile, idx).replace(/^\d+\s*/, '');
-                }
-
-                let type = 'unit';
-                if (unitFile.includes('quiz')) type = 'quiz';
-                else if (unitFile.includes('lab') || unitFile.includes('challenge')) type = 'lab';
-
-                newUnits.push({
-                    id: idx + 1,
-                    label: labelText,
-                    time: isEn ? 'Est. 30 mins' : '約 30 分鐘',
-                    type: type,
-                    file: unitFile
-                });
-            });
-
-            if (Array.isArray(window.UNITS)) {
-                window.UNITS.splice(0, window.UNITS.length, ...newUnits);
-            }
-
-            const activeIndex = units.findIndex(unitFile => normalizeLooseKey(unitFile) === targetKey);
-            const currentActiveId = activeIndex + 1;
-
-            sidebarNav.innerHTML = newUnits.map(u => {
-                const badge = u.type === 'lab' ? ` <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">${isEn ? 'LAB' : '實驗'}</span>`
-                            : u.type === 'quiz' ? ` <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">${isEn ? 'QUIZ' : '測驗'}</span>`
-                            : '';
-                return `
-                <div class="ms-unit-item ${u.id === currentActiveId ? 'active' : ''}" id="nav-${u.id}" onclick="goToUnit(${u.id})">
-                    <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
-                    <div class="unit-meta">
-                        <div class="unit-name">${sanitizeTitle(u.label)}${badge}</div>
-                        ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
-                    </div>
-                </div>`;
-            }).join('');
-
-            const metaEl = document.querySelector('.ms-sidebar-header .meta');
-            if (metaEl) {
-                metaEl.innerHTML = isEn 
-                    ? `<i class="far fa-clock"></i> Est. ${units.length * 30} mins · ${units.length} pages`
-                    : `<i class="far fa-clock"></i> 約 ${units.length * 30} 分鐘 · ${units.length} 頁`;
-            }
-
-            const indexUnitList = document.getElementById('index-unit-list');
-            if (indexUnitList) {
-                indexUnitList.innerHTML = newUnits.filter(u => u.id > 0).map(u => `
-                    <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
-                        <div class="unit-card-num">${u.id}</div>
-                        <div class="unit-card-info">
-                            <div class="unit-card-name">${sanitizeTitle(u.label)}</div>
-                            <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
-                        </div>
-                        <div class="unit-card-arrow">›</div>
-                    </div>
-                `).join('');
-            }
-
-            if (typeof window.updateProgress === 'function') window.updateProgress();
-            if (typeof window.goToUnit === 'function' && window.currentUnit !== undefined) {
-                window.goToUnit(window.currentUnit);
-            }
-        }
-    } catch (e) {
-        console.warn('[CourseShared] ensureDynamicSidebarFromFirestore failed:', e);
+        return;
     }
+
+    if (!navCourseNameSpan) {
+        const divider = document.createElement('div');
+        divider.className = 'divider';
+        navCourseNameSpan = document.createElement('span');
+        navCourseNameSpan.id = navCourseNameId;
+        navCourseNameSpan.style.cssText = 'color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        const languageSelector = document.getElementById('course-lang-select-container');
+        topNav.insertBefore(divider, languageSelector || null);
+        topNav.insertBefore(navCourseNameSpan, languageSelector || null);
+    }
+    navCourseNameSpan.textContent = courseName;
 }
 
 function normalizeCourseTopNav() {
     try {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
         if (!file.endsWith('.html')) return;
-
-        const topNav = document.querySelector('.ms-topnav');
-        if (!topNav) return;
 
         const metadataFamily = getCourseFamilyForCoursePage(file);
         const isStarter = metadataFamily ? metadataFamily === 'starter' : (file.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(file));
@@ -511,6 +641,8 @@ function normalizeCourseTopNav() {
         const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
         const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
         const langQuery = isEn ? '&lang=en' : '';
+        const topNav = ensureCourseTopNavShell(file, metadataFamily);
+        if (!topNav) return;
 
         const translate = (key, defaultText) => {
             if (typeof window.t === 'function') {
@@ -566,129 +698,7 @@ function normalizeCourseTopNav() {
             brandLink.setAttribute('target', '_top');
         }
 
-        if (targetHref) {
-            const navCourseNameId = 'nav-course-name';
-            const shouldShowCourseName = isStarter || isPrepare || isBasic || isAdvanced;
-            let navCourseNameSpan = document.getElementById(navCourseNameId);
-            if (shouldShowCourseName) {
-                if (!navCourseNameSpan) {
-                    const divider = document.createElement('div');
-                    divider.className = 'divider';
-
-                    navCourseNameSpan = document.createElement('span');
-                    navCourseNameSpan.id = navCourseNameId;
-                    navCourseNameSpan.style.cssText = 'color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-
-                    topNav.appendChild(divider);
-                    topNav.appendChild(navCourseNameSpan);
-                }
-
-                const moduleTitleEl = document.querySelector('.ms-sidebar-header .module-title') || document.querySelector('.module-title');
-                if (moduleTitleEl) {
-                    const moduleTitle = moduleTitleEl.textContent.trim();
-                    let courseNum = '';
-
-                    if (isStarter) {
-                        const startMatch = file.match(/^start-(\d{2})-unit-/i);
-                        if (startMatch) {
-                            courseNum = startMatch[1];
-                        } else {
-                            const lookup = {
-                                'html5-basics': '01', 'flexbox-layout': '01', 'ui-ux-standards': '01',
-                                'ble-security': '02', 'ble-async': '02', 'typed-arrays': '02',
-                                'control-panel': '03', 'data-json': '03', 'flow-logic': '03',
-                                'touch-basics': '04', 'long-press': '04', 'prevent-default': '04',
-                                'touch-vs-mouse': '05', 'canvas-joystick': '05', 'joystick-math': '05'
-                            };
-                            const suffixMatch = file.match(/^(?:tw|en|car-starter)-(.+)\.html$/i);
-                            if (suffixMatch && lookup[suffixMatch[1]]) {
-                                courseNum = lookup[suffixMatch[1]];
-                            }
-                        }
-                        navCourseNameSpan.textContent = courseNum
-                            ? `${isEn ? `Starter ${courseNum}: ` : `入門 ${courseNum}：`}${moduleTitle}`
-                            : moduleTitle;
-                    } else if (isPrepare) {
-                        const prepMatch = file.match(/^prepare-(\d{2})-unit-/i);
-                        if (prepMatch) {
-                            courseNum = prepMatch[1];
-                        } else {
-                            const lookup = {
-                                'developer-identity': '01', 'vscode-online': '02', 'vscode-setup': '03',
-                                'agent-mode': '04', 'vibe-coding': '05', 'web-agents': '06',
-                                'github-classroom': '07', 'wifi-setup': '08', 'motor-ramping': '09'
-                            };
-                            const suffixMatch = file.match(/^(?:tw|en|common)-(.+)\.html$/i);
-                            if (suffixMatch && lookup[suffixMatch[1]]) {
-                                courseNum = lookup[suffixMatch[1]];
-                            }
-                        }
-                        navCourseNameSpan.textContent = courseNum
-                            ? `${isEn ? `Preparation ${courseNum}: ` : `準備 ${courseNum}：`}${moduleTitle}`
-                            : moduleTitle;
-                    } else if (isBasic) {
-                        const basicMatch = file.match(/^basic-(\d{2})-unit-/i);
-                        if (basicMatch) {
-                            courseNum = basicMatch[1];
-                        } else {
-                            const lookup = {
-                                'esp32-architecture': '01', 'platformio-setup': '01', 'drivers-ports': '01',
-                                'partition-table': '02', 'ota-principles': '02', 'ota-security': '02',
-                                'pinout': '03', 'pullup-debounce': '03', 'adc-resolution': '03',
-                                'pwm-basics': '04', 'h-bridge': '04', 'ledc-syntax': '04',
-                                'gatt-structure': '05', 'advertising-connection': '05', 'ble-properties': '05',
-                                'fetch-api': '06', 'http-request': '06', 'cors-security': '06',
-                                'wifi-ap-sta': '07', 'http-lifecycle': '07', 'async-webserver': '07',
-                                'joystick-mapping': '08', 'unicycle-model': '08', 'response-curves': '08',
-                                'millis': '09', 'hardware-timer': '09', 'sampling-rate': '09',
-                                'fsm': '10', 'ui-design': '10', 'state-consistency': '10'
-                            };
-                            const suffixMatch = file.match(/^(?:tw|en|car-basic)-(.+)\.html$/i);
-                            if (suffixMatch && lookup[suffixMatch[1]]) {
-                                courseNum = lookup[suffixMatch[1]];
-                            }
-                        }
-                        navCourseNameSpan.textContent = courseNum
-                            ? `${isEn ? `Basic ${courseNum}: ` : `基礎 ${courseNum}：`}${moduleTitle}`
-                            : moduleTitle;
-                    } else if (isAdvanced) {
-                        const advMatch = file.match(/^(?:adv|advanced)-(\d{2})-unit-/i);
-                        if (advMatch) {
-                            courseNum = advMatch[1];
-                        } else {
-                            const lookup = {
-                                's3-interfaces': '01', 'mjpeg-stream': '01', 'jpeg-quality': '01',
-                                'video-streaming': '02', 'canvas-image': '02', 'bandwidth-fps': '02',
-                                'ble-notify': '03', 'json-serialization': '03', 'ble-mtu': '03',
-                                'i2c-spi': '04', 'json-rest': '04', 'filter-algorithms': '04',
-                                'feature-extraction': '05', 'centroid-error': '05', 'closed-loop': '05',
-                                'threshold-filter': '06', 'centroid-algorithm': '06', 'hsv-math': '06', 'look-ahead': '06',
-                                'ui-framework': '07', 'chart-canvas': '07', 'json-parsing': '07', 'event-polling': '07',
-                                'color-spaces': '08', 'error-calculation': '08', 'p-control': '08', 'mobilenet-ssd': '08',
-                                'cnn-audio': '09', 'teachable-machine': '09', 'webspeech-api': '09', 'flow-control': '09',
-                                'icc-geometry': '10', 'api-design': '10', 'pwm-limits': '10',
-                                'sensor-principles': '11', 'hardware-interrupts': '11', 'speed-algorithms': '11',
-                                'pid-control': '12', 'pid-math': '12', 'code-logic': '12',
-                                'robustness': '13', 'system-perf': '13', 'technical-narrative': '13',
-                                'debugging-art': '14', 'kpi-definition': '14', 'refactoring': '14',
-                                'data-flow': '15', 'ble-async': '15', 'pid-simulation': '15', 'image-dma': '15'
-                            };
-                            const suffixMatch = file.match(/^(?:tw|en|car-advanced)-(.+)\.html$/i);
-                            if (suffixMatch && lookup[suffixMatch[1]]) {
-                                courseNum = lookup[suffixMatch[1]];
-                            }
-                        }
-                        navCourseNameSpan.textContent = courseNum
-                            ? `${isEn ? `Advanced ${courseNum}: ` : `進階 ${courseNum}：`}${moduleTitle}`
-                            : moduleTitle;
-                    }
-                }
-            } else if (navCourseNameSpan) {
-                navCourseNameSpan.remove();
-                const divider = topNav.querySelector('.divider:last-of-type');
-                if (divider) divider.remove();
-            }
-        }
+        syncCourseTopNavName(topNav, targetHref ? findCourseForCoursePage(file) : null, isEn);
 
         if (!document.getElementById('course-lang-select-container')) {
             const container = document.createElement('div');
@@ -780,9 +790,12 @@ function normalizeCourseBreadcrumbs() {
 
         const metadataFamily = getCourseFamilyForCoursePage(file);
         const isStarter = metadataFamily ? metadataFamily === 'starter' : (file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file));
-        if (!isStarter) return;
+        const isBasic = metadataFamily ? metadataFamily === 'basic' : (file.startsWith('basic-') || /^(?:tw|en)-car-basic-/i.test(file));
+        const isAdvanced = metadataFamily ? metadataFamily === 'advanced' : (file.startsWith('adv-') || file.startsWith('advanced-') || /^(?:tw|en)-car-advanced-/i.test(file));
+        const isPrepare = metadataFamily ? metadataFamily === 'prepare' : (file.startsWith('prepare-') || /^(?:tw|en)-common-/i.test(file));
+        if (!(isStarter || isBasic || isAdvanced || isPrepare)) return;
 
-        const breadcrumb = document.querySelector('.ms-breadcrumb');
+        const breadcrumb = ensureCourseBreadcrumbShell(file, metadataFamily);
         if (!breadcrumb) return;
 
         let bcModuleLink = document.getElementById('bc-module-link');
@@ -794,6 +807,11 @@ function normalizeCourseBreadcrumbs() {
         const moduleTitleEl = document.querySelector('.ms-sidebar-header .module-title') || document.querySelector('.module-title');
         if (moduleTitleEl && bcModuleLink) {
             bcModuleLink.textContent = moduleTitleEl.textContent.trim();
+        } else if (bcModuleLink) {
+            if (isStarter) bcModuleLink.textContent = '入門課程';
+            else if (isBasic) bcModuleLink.textContent = '基礎課程';
+            else if (isAdvanced) bcModuleLink.textContent = '進階課程';
+            else if (isPrepare) bcModuleLink.textContent = '課前準備';
         }
     } catch (e) {
         console.warn('[CourseShared] normalizeCourseBreadcrumbs failed:', e);
@@ -1069,6 +1087,8 @@ function applyStartUnitModernTheme() {
                 --ms-gray-90: #201f1e;
                 --ms-green: #107c10;
                 --ms-red: #d13438;
+                --ms-surface: #ffffff;
+                --ms-surface-soft: #faf9f8;
             }
             * { box-sizing: border-box !important; }
             body {
@@ -1080,16 +1100,16 @@ function applyStartUnitModernTheme() {
                 line-height: 1.6 !important;
             }
             .ms-topnav {
-                background: var(--ms-blue) !important;
-                height: 48px !important;
+                background: linear-gradient(90deg, #005a9e 0%, #0078d4 55%, #0a84ff 100%) !important;
+                height: 56px !important;
                 display: flex !important;
                 align-items: center !important;
-                padding: 0 20px !important;
-                gap: 16px !important;
+                padding: 0 24px !important;
+                gap: 14px !important;
                 position: sticky !important;
                 top: 0 !important;
                 z-index: 100 !important;
-                box-shadow: 0 1px 4px rgba(0,0,0,.2) !important;
+                box-shadow: 0 8px 24px rgba(15,23,42,.18) !important;
             }
             .ms-topnav .brand {
                 color: #fff !important;
@@ -1099,44 +1119,54 @@ function applyStartUnitModernTheme() {
                 align-items: center !important;
                 gap: 8px !important;
                 text-decoration: none !important;
+                letter-spacing: .01em !important;
             }
-            .ms-topnav .divider { width: 1px !important; height: 20px !important; background: rgba(255,255,255,.3) !important; }
-            .ms-topnav .nav-label { color: rgba(255,255,255,.9) !important; font-size: 14px !important; }
+            .ms-topnav .divider { width: 1px !important; height: 20px !important; background: rgba(255,255,255,.3) !important; flex-shrink: 0 !important; }
+            .ms-topnav .nav-label { color: rgba(255,255,255,.94) !important; font-size: 14px !important; font-weight: 600 !important; }
             .ms-topnav .nav-label-link { text-decoration: none !important; }
             .ms-topnav .nav-label-link:hover { text-decoration: underline !important; color: #fff !important; }
-            .ms-layout { display: flex !important; min-height: calc(100vh - 48px) !important; }
+            .ms-layout { display: flex !important; min-height: calc(100vh - 56px) !important; background: #fff !important; }
             .ms-sidebar {
-                background: #faf9f8 !important;
+                background: linear-gradient(180deg, #faf9f8 0%, #f7f5f3 100%) !important;
                 width: 280px !important;
                 flex-shrink: 0 !important;
-                border-right: 1px solid #e1dfdd !important;
+                border-right: 1px solid var(--ms-gray-20) !important;
                 display: flex !important;
                 flex-direction: column !important;
                 position: sticky !important;
-                top: 48px !important;
-                height: calc(100vh - 48px) !important;
-                overflow-y: auto !important;
+                top: calc(56px + var(--course-tabs-height, 0px)) !important;
+                height: calc(100dvh - 56px - var(--course-tabs-height, 0px)) !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
             }
             .ms-sidebar-header {
                 padding: 16px 16px 12px !important;
-                border-bottom: 1px solid #e1dfdd !important;
+                border-bottom: 1px solid var(--ms-gray-20) !important;
+                flex-shrink: 0 !important;
             }
             .ms-sidebar-header .module-label {
                 font-size: 11px !important;
                 text-transform: uppercase !important;
                 letter-spacing: .08em !important;
-                color: #605e5c !important;
+                color: var(--ms-gray-90) !important;
                 font-weight: 600 !important;
                 margin-bottom: 4px !important;
             }
             .ms-sidebar-header .module-title {
                 font-size: 13px !important;
                 font-weight: 600 !important;
-                color: #201f1e !important;
+                color: var(--ms-gray-90) !important;
                 line-height: 1.4 !important;
             }
             .ms-sidebar-header .meta { font-size: 12px !important; color: #605e5c !important; margin-top: 6px !important; }
-            .ms-unit-list { padding: 8px 0 !important; }
+            .ms-unit-list {
+                padding: 8px 0 !important;
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                overscroll-behavior: contain !important;
+                scrollbar-gutter: stable !important;
+            }
             .ms-unit-item {
                 display: flex !important;
                 align-items: flex-start !important;
@@ -1145,9 +1175,9 @@ function applyStartUnitModernTheme() {
                 cursor: pointer !important;
                 border-left: 3px solid transparent !important;
                 transition: background .12s, border-color .12s !important;
-                color: #201f1e !important;
+                color: var(--ms-gray-90) !important;
             }
-            .ms-unit-item:hover { background: #edebe9 !important; }
+            .ms-unit-item:hover { background: #ece8e4 !important; }
             .unit-icon {
                 width: 20px !important;
                 height: 20px !important;
@@ -1163,7 +1193,7 @@ function applyStartUnitModernTheme() {
             }
             .ms-unit-item.active {
                 border-left-color: var(--ms-blue) !important;
-                background: #deecf9 !important;
+                background: var(--ms-blue-light) !important;
             }
             .ms-unit-item.active .unit-name {
                 color: var(--ms-blue) !important;
@@ -1182,24 +1212,27 @@ function applyStartUnitModernTheme() {
             .unit-meta { flex: 1 !important; min-width: 0 !important; }
             .unit-name { font-size: 13px !important; line-height: 1.4 !important; }
             .unit-time { font-size: 11px !important; color: #605e5c !important; margin-top: 2px !important; }
-            .sidebar-progress { padding: 12px 16px !important; border-top: 1px solid #e1dfdd !important; margin-top: auto !important; }
+            .sidebar-progress { padding: 12px 16px !important; border-top: 1px solid var(--ms-gray-20) !important; margin-top: auto !important; flex-shrink: 0 !important; }
             .progress-bar-bg { background: #e1dfdd !important; border-radius: 4px !important; height: 6px !important; }
             .progress-bar-fill { background: var(--ms-green) !important; border-radius: 4px !important; height: 6px !important; transition: width .4s !important; }
             .progress-text { font-size: 12px !important; color: #605e5c !important; margin-top: 6px !important; }
             .ms-content { flex: 1 !important; min-width: 0 !important; }
             .ms-breadcrumb {
-                padding: 10px 40px !important;
+                padding: 12px 40px !important;
                 font-size: 12px !important;
-                border-bottom: 1px solid #e1dfdd !important;
-                background: #fff !important;
+                border-bottom: 1px solid var(--ms-gray-20) !important;
+                background: linear-gradient(180deg, #fff 0%, #fbfbfb 100%) !important;
                 color: #605e5c !important;
+                display: flex !important;
+                align-items: center !important;
             }
             .ms-breadcrumb a {
                 color: var(--ms-blue) !important;
                 text-decoration: none !important;
+                font-weight: 600 !important;
             }
             .ms-breadcrumb a:hover { text-decoration: underline !important; }
-            .ms-breadcrumb span { margin: 0 6px !important; }
+            .ms-breadcrumb span { margin: 0 8px !important; }
             .ms-unit-page { display: none !important; }
             .ms-unit-page.visible { display: block !important; }
             .unit-content {
@@ -1275,7 +1308,7 @@ function applyStartUnitModernTheme() {
                 justify-content: space-between !important;
                 align-items: center !important;
                 padding: 24px 40px !important;
-                border-top: 1px solid #e1dfdd !important;
+                border-top: 1px solid var(--ms-gray-20) !important;
                 max-width: 820px !important;
                 margin: 0 auto !important;
             }
@@ -1297,6 +1330,14 @@ function applyStartUnitModernTheme() {
             }
             .ms-btn-ghost:hover, .nav-btn-prev:hover {
                 background: var(--ms-blue-light) !important;
+            }
+            #dashboard-fab {
+                box-shadow: 0 16px 40px rgba(0, 90, 158, .28) !important;
+                border: 1px solid rgba(255,255,255,.12) !important;
+                backdrop-filter: blur(8px) !important;
+            }
+            #dashboard-fab:hover {
+                transform: translateY(-2px) scale(1.06) !important;
             }
             @media (max-width: 768px) {
                 .ms-sidebar { display: none !important; }
@@ -1339,39 +1380,19 @@ async function toggleUnitTabsVisibility() {
         if (!tabs) return;
 
         const tabWrapper = tabs.closest('.relative.z-40') || tabs.parentElement?.parentElement;
-        const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(fileName));
+        const params = new URLSearchParams(window.location.search);
+        const hideTabs = (params.get('hideTabs') || '').toLowerCase();
 
-        if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
-            globalLessonsData = await vibeFetchLessons();
-        }
-
-        let shouldHide = false;
-        if (Array.isArray(globalLessonsData) && globalLessonsData.length > 0) {
-            const matchedCourse = globalLessonsData.find((course) => {
-                const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
-                const unitKeys = units
-                    .map(normalizeUnitFilenameForRoute)
-                    .map(normalizeLooseKey);
-                return unitKeys.includes(targetKey);
-            });
-
-            if (matchedCourse) {
-                const unitCount = (Array.isArray(matchedCourse.courseUnits) ? matchedCourse.courseUnits : []).length;
-                shouldHide = unitCount <= 1;
-            } else {
-                // No Firestore mapping found: keep tabs visible to avoid accidental hide.
-                shouldHide = false;
-            }
-        }
-
-        if (shouldHide) {
+        if (hideTabs === '1' || hideTabs === 'true') {
             tabs.style.setProperty('display', 'none', 'important');
             if (tabWrapper) tabWrapper.style.setProperty('display', 'none', 'important');
-        } else {
-            tabs.style.removeProperty('display');
-            if (tabWrapper) tabWrapper.style.removeProperty('display');
+            requestAnimationFrame(syncCourseShellOffsets);
+            return;
         }
+
+        tabs.style.removeProperty('display');
+        if (tabWrapper) tabWrapper.style.removeProperty('display');
+        requestAnimationFrame(syncCourseShellOffsets);
     } catch (e) {
         console.warn('[CourseShared] toggleUnitTabsVisibility failed:', e);
     }
@@ -1388,12 +1409,14 @@ if (document.readyState === 'loading') {
 // Fallback: Ensure animations run even if DOMContentLoaded missed
 window.addEventListener('load', () => {
     console.log("[CourseShared] Window Load fallback check");
+    syncCourseShellOffsets();
     initAnimations();
     enhanceAssignmentEntryButtons();
     toggleUnitTabsVisibility();
     normalizeTerminology();
     interceptGoToUnit();
 });
+window.addEventListener('resize', syncCourseShellOffsets);
 
 // Global State (Using var for redeclaration safety in Master/Unit contexts)
 var currentMode = typeof currentMode !== 'undefined' ? currentMode : null;
@@ -2198,7 +2221,7 @@ async function initFirebaseFeatures() {
                         return false;
                     });
                     if (hasAssignmentUrl) {
-                        return course.courseId;
+                        return course.id || course.docId || course.courseId;
                     }
             }
         }
@@ -3083,8 +3106,8 @@ async function findCourseIdByUnit(fileName) {
                 return candidateKeys.has(targetKey);
             });
             if (course) {
-                console.log(`[CourseShared] Resolved ${fileName} -> ${course.courseId}`);
-                return course.courseId;
+                console.log(`[CourseShared] Resolved ${fileName} -> ${course.id || course.docId || course.courseId}`);
+                return course.id || course.docId || course.courseId;
             } else {
                 console.warn(`[CourseShared] No matching course found for unit ${fileName} in Firestore metadata.`);
             }
