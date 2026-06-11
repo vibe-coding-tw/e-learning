@@ -99,8 +99,6 @@
 
         // 當頁面載入時執行
         window.addEventListener('DOMContentLoaded', () => {
-            clearCart();
-            
             // 根據目前語系動態設定開始上課按鈕的路徑
             const startBtn = document.getElementById('btn-start-learning');
             if (startBtn) {
@@ -111,6 +109,12 @@
             const urlParams = new URLSearchParams(window.location.search);
             const rtnCode = urlParams.get('RtnCode');
             const rtnMsg = urlParams.get('RtnMsg');
+            const gateway = String(urlParams.get('gateway') || '').toUpperCase();
+
+            const isSuccess = rtnCode === '1' || gateway === 'STRIPE';
+            if (isSuccess) {
+                clearCart();
+            }
 
             if (rtnCode === '1') {
                 const currentRegion = String(

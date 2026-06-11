@@ -22,6 +22,10 @@
     return Number.isFinite(n) ? n : 0;
   }
 
+  function normalizeText(value = "") {
+    return String(value || "").trim();
+  }
+
   function isPriceEntryObject(value) {
     return !!value && typeof value === "object" && !Array.isArray(value);
   }
@@ -68,6 +72,10 @@
       || lesson.priceLocales
       || lesson.pricesByRegion
       || null;
+  }
+
+  function hasLessonPriceData(lesson = {}) {
+    return normalizeText(lesson.dealerPriceBookId || lesson.dealerPriceBookLessonId || "") !== "";
   }
 
   function lookupCatalogPrice(catalog, currencyHint = "") {
@@ -124,35 +132,26 @@
   }
 
   function resolveLessonPrice(lesson = {}, currencyHint = "") {
-    const catalog = priceCatalogFromLesson(lesson);
-    const normalizedCurrencyHint = normalizeCurrency(
-      lesson.currency || lesson.price_currency || lesson.priceCurrency || lesson.currencyCode || "",
+    // Dealer price is the primary source of truth.
+    // If dealerPrice is present, use it before any legacy catalog fallback.
+    const hasPriceData = hasLessonPriceData(lesson);
+    if (hasPriceData && lesson.dealerPrice != null) {
+      const dealerCurrency = normalizeCurrency(
+        lesson.dealerCurrency || lesson.currency || lesson.price_currency || lesson.priceCurrency || lesson.currencyCode || "",
+        ""
+      );
+      return {
+        amount: normalizeAmount(lesson.dealerPrice),
+        currency: dealerCurrency || normalizeCurrency(currencyHint, ""),
+        source: "dealer:lesson",
+        hasPriceData: true
+      };
+    }
+    const fallbackCurrency = normalizeCurrency(
+      lesson.dealerCurrency || lesson.currency || lesson.price_currency || lesson.priceCurrency || lesson.currencyCode || currencyHint || "",
       ""
     );
-    const catalogHit = lookupCatalogPrice(catalog, normalizedCurrencyHint || currencyHint);
-    if (catalogHit) return catalogHit;
-
-    const effectiveCurrencyHint = normalizedCurrencyHint || normalizeCurrency(currencyHint, "");
-
-    if (effectiveCurrencyHint === "USD" && lesson.price_usd != null) {
-      return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
-    }
-    if (effectiveCurrencyHint === "TWD" && lesson.price_twd != null) {
-      return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
-    }
-    if (lesson.price_usd != null) {
-      return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
-    }
-    if (lesson.price_twd != null) {
-      return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
-    }
-
-    const fallbackCurrency = effectiveCurrencyHint || normalizeCurrency(lesson.currency, "");
-    return {
-      amount: normalizeAmount(lesson.price),
-      currency: fallbackCurrency,
-      source: "legacy:price",
-    };
+    return { amount: 0, currency: fallbackCurrency, source: "none", hasPriceData: false };
   }
 
   function resolveCartPrice(item = {}, currencyHint = "") {
@@ -228,5 +227,6 @@
     resolveLessonPrice,
     resolveCartPrice,
     formatPrice,
+    hasLessonPriceData,
   };
 })();

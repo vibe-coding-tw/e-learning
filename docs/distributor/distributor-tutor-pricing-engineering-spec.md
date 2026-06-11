@@ -228,6 +228,7 @@ Validation:
 1. `salePrice` must be numeric and non-negative.
 2. `promoPrice`, if present, must be less than or equal to `salePrice`.
 3. Updated records must be versioned and audited.
+4. A course or product without a matching `dealer_price_books` record is not sellable; `0` only means free when the price book exists explicitly.
 
 ### 6.2 Distributor resolution
 

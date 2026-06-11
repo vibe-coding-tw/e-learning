@@ -21,6 +21,10 @@ function normalizeAmount(value) {
     return Number.isFinite(n) ? n : 0;
 }
 
+function normalizeText(value = "") {
+    return String(value || "").trim();
+}
+
 function isPriceEntryObject(value) {
     return !!value && typeof value === "object" && !Array.isArray(value);
 }
@@ -56,104 +60,35 @@ function readPriceEntry(value, fallbackCurrency = "") {
     };
 }
 
-function priceCatalogFromLesson(lesson = {}) {
-    return lesson.pricing
-        || lesson.prices
-        || lesson.priceByLocale
-        || lesson.priceByRegion
-        || lesson.priceMap
-        || lesson.localizedPrices
-        || lesson.localizedPricing
-        || lesson.priceLocales
-        || lesson.pricesByRegion
-        || null;
-}
-
-function lookupCatalogPrice(catalog, currencyHint = "") {
-    if (!isPriceEntryObject(catalog)) return null;
-    const normalizedCurrencyHint = normalizeCurrency(currencyHint, "");
-    const candidates = [
-        "default",
-        "base",
-        "price",
-        "salePrice",
-        "amount",
-        "current",
-        "primary",
-    ];
-    const hintCandidates = [];
-    if (normalizedCurrencyHint) {
-        hintCandidates.push(
-            normalizedCurrencyHint,
-            normalizedCurrencyHint.toLowerCase()
-        );
-        if (normalizedCurrencyHint === "TWD") {
-            hintCandidates.push("tw", "TW", "zh-TW", "zh-tw");
-        }
-        if (normalizedCurrencyHint === "USD") {
-            hintCandidates.push("us", "US", "en", "en-US", "en-us");
-        }
-    }
-    candidates.push(...hintCandidates);
-    candidates.push(
-        "TWD",
-        "USD",
-        "HKD",
-        "JPY",
-        "CNY",
-        "twd",
-        "usd",
-        "hkd",
-        "jpy",
-        "cny",
-        "tw",
-        "us"
-    );
-
-    for (const key of candidates) {
-        if (catalog[key] == null) continue;
-        const entry = readPriceEntry(catalog[key], "");
-        if (entry) return { ...entry, source: `catalog:${key}` };
-    }
-
-    const fallbackKey = Object.keys(catalog).find((key) => catalog[key] != null);
-    if (fallbackKey) {
-        const entry = readPriceEntry(catalog[fallbackKey], "");
-        if (entry) return { ...entry, source: `catalog:${fallbackKey}` };
-    }
-
-    return null;
+function hasLessonPriceData(lesson = {}) {
+    return normalizeText(lesson.dealerPriceBookId || lesson.dealerPriceBookLessonId || "") !== "";
 }
 
 function resolveLessonPrice(lesson = {}, currencyHint = "") {
-    const catalog = priceCatalogFromLesson(lesson);
-    const normalizedCurrencyHint = normalizeCurrency(
-        lesson.currency || lesson.price_currency || lesson.priceCurrency || lesson.currencyCode || "",
+    // Dealer price is the primary source of truth.
+    // If dealerPrice is present, use it before any legacy catalog fallback.
+    const hasPriceData = hasLessonPriceData(lesson);
+    if (hasPriceData && lesson.dealerPrice != null) {
+        const dealerCurrency = normalizeCurrency(
+            lesson.dealerCurrency || lesson.currency || lesson.price_currency || lesson.priceCurrency || lesson.currencyCode || "",
+            ""
+        );
+        return {
+            amount: normalizeAmount(lesson.dealerPrice),
+            currency: dealerCurrency || normalizeCurrency(currencyHint, ""),
+            source: "dealer:lesson",
+            hasPriceData: true
+        };
+    }
+    const fallbackCurrency = normalizeCurrency(
+        lesson.dealerCurrency || lesson.currency || lesson.price_currency || lesson.priceCurrency || lesson.currencyCode || currencyHint || "",
         ""
     );
-    const catalogHit = lookupCatalogPrice(catalog, normalizedCurrencyHint || currencyHint);
-    if (catalogHit) return catalogHit;
-
-    const effectiveCurrencyHint = normalizedCurrencyHint || normalizeCurrency(currencyHint, "");
-
-    if (effectiveCurrencyHint === "USD" && lesson.price_usd != null) {
-        return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
-    }
-    if (effectiveCurrencyHint === "TWD" && lesson.price_twd != null) {
-        return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
-    }
-    if (lesson.price_usd != null) {
-        return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
-    }
-    if (lesson.price_twd != null) {
-        return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
-    }
-
-    const fallbackCurrency = effectiveCurrencyHint || normalizeCurrency(lesson.currency, "");
     return {
-        amount: normalizeAmount(lesson.price),
+        amount: 0,
         currency: fallbackCurrency,
-        source: "legacy:price",
+        source: "none",
+        hasPriceData: false
     };
 }
 
@@ -217,11 +152,11 @@ function formatPrice(priceEntry = {}, locale = "zh-TW") {
 
 module.exports = {
     formatPrice,
-    lookupCatalogPrice,
     normalizeAmount,
     normalizeCurrency,
     normalizeLocale,
     readPriceEntry,
     resolveCartPrice,
     resolveLessonPrice,
+    hasLessonPriceData,
 };

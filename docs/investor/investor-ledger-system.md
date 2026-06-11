@@ -1,6 +1,6 @@
 # Investor Ledger System
 
-Last updated: 2026-06-04
+Last updated: 2026-06-07
 
 ## 1. Goal
 把投資人計劃變成可執行的系統模組：
@@ -10,6 +10,7 @@ Last updated: 2026-06-04
 - 員工 / 顧問折抵與外部投資者都走同一套 equity issuance
 - 年度結算時發放股利
 - 結算後保留最後餘額，作為下一年度的起始餘額
+- 若全域 ledger layer 上線，`investor_finance_events` 會成為投資人視角的 projection，而非唯一入口
 
 See also:
 - [Cap Table & Tokenization Strategy](./cap-table-and-tokenization-strategy.md)
@@ -29,15 +30,17 @@ See also:
 
 ## 3. Data Flow
 1. 來源事件發生。
-2. 系統寫入 `investor_finance_events/{eventId}`。
-3. 系統依 `shareUnits` 拆分為 `investor_credits/{creditId}`。
-4. 系統同步更新 `investor_balances/{investorId}`。
-5. 系統依收入 / 支出金額自動更新 current `balance_sheet_snapshots`，若 active snapshot 已鎖定，則寫入系統管理的 `auto-current` 快照。
-6. 估值快照先寫入 `valuation_snapshots/{valuationId}`，發股時引用該快照，不回寫舊發股紀錄。
-7. 發股時產生 `equity_issuances/{issuanceId}` 與 `investor_equity_positions/{investorId}`。
-8. 每年 1 月 1 日執行年度結算，產生 `investor_annual_settlements/{year-investorId}`。
+2. 若全域記帳層存在，先寫入 canonical `ledger_events/{eventId}`。
+3. 系統寫入 `investor_finance_events/{eventId}` 作為投資人領域投影。
+4. 系統依 `shareUnits` 拆分為 `investor_credits/{creditId}`。
+5. 系統同步更新 `investor_balances/{investorId}`。
+6. 系統依收入 / 支出金額自動更新 current `balance_sheet_snapshots`，若 active snapshot 已鎖定，則寫入系統管理的 `auto-current` 快照。
+7. 估值快照先寫入 `valuation_snapshots/{valuationId}`，發股時引用該快照，不回寫舊發股紀錄。
+8. 發股時產生 `equity_issuances/{issuanceId}` 與 `investor_equity_positions/{investorId}`。
+9. 每年 1 月 1 日執行年度結算，產生 `investor_annual_settlements/{year-investorId}`。
 
 ## 4. Current Integration Points
+- `ledger_events` 若啟用，會作為全域事實來源；`recordInvestorFinanceEvent` 只負責把事件投影到投資人子系統。
 - 訂單成功付款後，會自動建立 `income` 類 investor event。
 - `manual` 支出可透過 admin callable 補登。
 - `calculateAnnualInvestorDividends` 為年度結算排程。
@@ -60,3 +63,7 @@ See also:
 - 若未來有退款、補貼、行銷費、雲端成本等來源，可全部走同一套 event 入口。
 - 這套模型刻意與 `revenue_share_*` 分離，避免投資人結算與 tutor/agent 分潤互相污染。
 - 股權主檔、估值快照與年度結算的法律 / 財務語意，請以 [Cap Table & Tokenization Strategy](./cap-table-and-tokenization-strategy.md) 為準。
+- 若系統後續導入統一記帳層，建議先讓 operational events 進 `ledger_events`，再由投影工作回寫到 `investor_finance_events`、`revenue_share_*` 與報表快照。
+
+See also:
+- [Ledger and Reporting Architecture](../ledger-and-reporting-architecture.md)

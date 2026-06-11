@@ -364,13 +364,27 @@ async function loadDashboard() {
         const hasUnitContext = !!filterUnitId;
         
         // [V12.1.2] SECURITY RULE: Global dashboard (no orientation) is ADMIN ONLY.
-        const getDashboardData = httpsCallable(functions, 'getDashboardData');
-        const response = await getDashboardData({ 
-            unitId: filterUnitId, 
+        const dashboardPayload = {
+            unitId: filterUnitId,
             courseId: filterCourseId,
             tutorMode: adminTutorMode // [V13.0.8] Pass simulation flag to backend
-        });
+        };
+
+        let response = null;
+        let usedAdminEntry = false;
+        try {
+            const getAdminDashboardData = httpsCallable(functions, 'adminGetDashboardData');
+            response = await getAdminDashboardData(dashboardPayload);
+            usedAdminEntry = true;
+        } catch (adminErr) {
+            console.warn('[dashboard] adminGetDashboardData failed, falling back to legacy getDashboardData:', adminErr?.message || adminErr);
+            const getDashboardData = httpsCallable(functions, 'getDashboardData');
+            response = await getDashboardData(dashboardPayload);
+        }
         const data = response.data;
+        if (usedAdminEntry) {
+            console.log('[dashboard] Loaded dashboard data from adminGetDashboardData.');
+        }
 
         // [FIX] Aggregate data (map filename IDs to real Course IDs)
         aggregateData(data);
@@ -413,7 +427,7 @@ async function loadDashboard() {
                 Number(getLessonBusinessPrice(activeLesson, "en").amount || 0)
             )
             : null;
-        const isFreeCourseContext = !!(hasUnitContext && activeLesson && Number(activeLessonPrice) === 0);
+        const isFreeCourseContext = !!(hasUnitContext && activeLesson && activeLesson.dealerPriceBookId && Number(activeLessonPrice) === 0);
 
         if (!isAdmin && !isQualifiedTutor && !isPaidStudent && isFreeCourseContext) {
             console.log(`[Dashboard] Free course context detected for ${filterCourseId || filterUnitId}; allowing student dashboard access.`);
@@ -3876,7 +3890,7 @@ window.setupBusinessFeature = window.setupBusinessFeature || function() {
 
 function isBusinessPricedLesson(lesson = {}) {
     if (!lesson || typeof lesson !== 'object') return false;
-    if (lesson.price != null || lesson.price_twd != null || lesson.price_usd != null) return true;
+    if (lesson.dealerPrice != null || lesson.dealerCurrency != null) return true;
     if (lesson.pricing || lesson.prices || lesson.priceByLocale || lesson.priceByRegion || lesson.priceMap) return true;
     return false;
 }
@@ -3886,12 +3900,10 @@ function getLessonBusinessPrice(lesson = {}, locale = 'zh-TW') {
         return window.vibePricing.resolveLessonPrice(lesson, locale);
     }
     const normalizedLocale = String(locale || '').startsWith('en') ? 'en' : 'zh-TW';
-    const amount = normalizedLocale === 'en'
-        ? Number(lesson.price_usd ?? lesson.price ?? 0)
-        : Number(lesson.price_twd ?? lesson.price ?? 0);
+    const amount = Number(lesson.dealerPrice ?? 0);
     return {
         amount: Number.isFinite(amount) ? amount : 0,
-        currency: normalizedLocale === 'en' ? 'USD' : 'TWD'
+        currency: String(lesson.dealerCurrency || (normalizedLocale === 'en' ? 'USD' : 'TWD')).toUpperCase()
     };
 }
 
@@ -3977,7 +3989,7 @@ function buildBusinessPricingOverviewHtml() {
         : 0;
 
     const rows = filteredLessons.map((lesson) => {
-        const courseId = String(lesson.courseId || lesson.id || '').trim();
+        const courseId = String(lesson.id || lesson.docId || lesson.courseId || '').trim();
         const safeId = courseId.replace(/[^a-z0-9_-]/gi, '-');
         const title = lesson.title || lesson.courseTitle || lesson.courseName || courseId || '未命名課程';
         const displayId = String(
@@ -4632,6 +4644,26 @@ function formatInvestorLedgerDate(value, fallback = '—') {
     return parsed.toISOString().slice(0, 10);
 }
 
+function getCurrentLedgerPeriod() {
+    return new Date().toISOString().slice(0, 7);
+}
+
+function triggerDownloadFile({ fileName, content, contentType = 'text/plain;charset=utf-8' } = {}) {
+    const safeFileName = String(fileName || 'ledger-export.txt');
+    const blob = new Blob([String(content ?? '')], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = safeFileName;
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    window.setTimeout(() => {
+        URL.revokeObjectURL(url);
+        anchor.remove();
+    }, 250);
+}
+
 window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
     const profiles = Array.isArray(window.__loadedInvestorProfiles) ? window.__loadedInvestorProfiles : [];
     const snapshots = Array.isArray(window.__loadedValuationSnapshots) ? window.__loadedValuationSnapshots : [];
@@ -4663,6 +4695,56 @@ window.buildInvestorPlanHtml = window.buildInvestorPlanHtml || function() {
                 <div class="flex flex-wrap gap-2">
                     <button onclick="window.loadInvestorProfiles()" class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">重新整理</button>
                     <button onclick="window.settleInvestorYear()" class="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700">執行年結</button>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60">
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <div class="text-sm font-black text-slate-900">總帳與報表工具</div>
+                            <div class="text-[11px] text-slate-500 mt-1">在這裡匯出試算表 / 損益表 / 資產負債表，也可以直接登記退款事件，讓總帳自動重算。</div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <input id="ledger-report-period" type="month" value="${getCurrentLedgerPeriod()}" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100">
+                            <select id="ledger-report-type" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100">
+                                <option value="trial_balance">試算表 (Trial Balance)</option>
+                                <option value="profit_and_loss">損益表 (Profit & Loss)</option>
+                                <option value="balance_sheet">資產負債表 (Balance Sheet)</option>
+                            </select>
+                            <select id="ledger-report-format" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-100">
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                            </select>
+                            <button onclick="window.exportLedgerReportFromForm()" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-700 active:scale-95">匯出報表</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 lg:grid-cols-4 gap-3">
+                        <label class="lg:col-span-1">
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">退款訂單 ID</div>
+                            <input id="ledger-refund-order-id" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100" placeholder="order-123">
+                        </label>
+                        <label class="lg:col-span-1">
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">退款金額</div>
+                            <input id="ledger-refund-amount" type="number" min="0" step="0.01" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100" placeholder="0">
+                        </label>
+                        <label class="lg:col-span-1">
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">退款日期</div>
+                            <input id="ledger-refund-date" type="date" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100">
+                        </label>
+                        <label class="lg:col-span-1">
+                            <div class="text-[11px] font-bold text-slate-500 mb-1">原因 / 備註</div>
+                            <input id="ledger-refund-reason" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100" placeholder="客戶取消 / 退款協議">
+                        </label>
+                    </div>
+
+                    <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="text-[11px] text-slate-500 leading-5">退款會寫入 <code class="rounded bg-slate-100 px-1 py-0.5 text-[10px] font-mono text-slate-700">order.refunded</code> ledger event，並同步影響總帳與報表快照。</div>
+                        <div class="flex gap-2">
+                            <button onclick="window.recordOrderRefundEventFromForm()" class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-700 active:scale-95">登記退款 / 沖回</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -5196,6 +5278,10 @@ window.loadInvestorProfiles = async function () {
             const now = new Date();
             dateInput.value = now.toISOString().slice(0, 10);
         }
+        const refundDateInput = document.getElementById('ledger-refund-date');
+        if (refundDateInput && !refundDateInput.value) {
+            refundDateInput.value = new Date().toISOString().slice(0, 10);
+        }
     } catch (e) {
         container.innerHTML = `<div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">載入投資人資料失敗：${escapeHtml(e.message || 'unknown')}</div>`;
     }
@@ -5600,6 +5686,60 @@ window.settleInvestorYear = async function () {
     }
 };
 
+window.exportLedgerReportFromForm = async function () {
+    const period = document.getElementById('ledger-report-period')?.value || getCurrentLedgerPeriod();
+    const reportType = document.getElementById('ledger-report-type')?.value || 'trial_balance';
+    const format = document.getElementById('ledger-report-format')?.value || 'csv';
+
+    try {
+        const fn = httpsCallable(functions, 'exportLedgerReport');
+        const res = await fn({ period, reportType, format });
+        const data = res?.data || {};
+        if (!data.content) {
+            throw new Error('報表內容為空');
+        }
+        triggerDownloadFile({
+            fileName: data.fileName || `ledger_${reportType}_${period}.${format}`,
+            content: data.content,
+            contentType: data.contentType || (format === 'json' ? 'application/json' : 'text/csv')
+        });
+        notify(`已匯出 ${reportType}（${period}）`, 'success');
+    } catch (e) {
+        alert(`匯出報表失敗：${e.message}`);
+    }
+};
+
+window.recordOrderRefundEventFromForm = async function () {
+    const orderId = document.getElementById('ledger-refund-order-id')?.value || '';
+    const amount = Number(document.getElementById('ledger-refund-amount')?.value || 0);
+    const refundAtDate = document.getElementById('ledger-refund-date')?.value || '';
+    const reason = document.getElementById('ledger-refund-reason')?.value || '';
+
+    if (!orderId.trim()) {
+        alert('請輸入退款訂單 ID');
+        return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+        alert('請輸入有效退款金額');
+        return;
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'recordOrderRefundEvent');
+        await fn({
+            orderId: orderId.trim(),
+            amount,
+            refundAtDate,
+            reason,
+            note: reason
+        });
+        notify(`已登記退款：${orderId.trim()}`, 'success');
+        await loadInvestorProfiles();
+    } catch (e) {
+        alert(`登記退款失敗：${e.message}`);
+    }
+};
+
 async function renderBusinessTab() {
     if (myRole !== 'admin' || !dashboardData) return;
     normalizeDistributorPriceBookPlacement();
@@ -5831,7 +5971,7 @@ window.isUserAuthorizedForUnit = window.isUserAuthorizedForUnit || function(file
             (l.courseId === canonicalUnitId) || 
             (Array.isArray(l.courseUnits) && l.courseUnits.includes(canonicalUnitId))
         );
-        return lesson ? (Number(lesson.price) === 0) : false;
+        return !!(lesson && lesson.dealerPriceBookId && Number(lesson.dealerPrice ?? 0) === 0);
     };
     const isFreeUnit = getIsFreeUnit(fileName);
     

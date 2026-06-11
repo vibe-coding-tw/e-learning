@@ -34,6 +34,7 @@
     function getLessonLookupKeys(lesson = {}) {
         const keys = new Set();
         addLookupKey(keys, lesson.id);
+        addLookupKey(keys, lesson.docId);
         addLookupKey(keys, lesson.courseId);
         addLookupKey(keys, lesson.courseKey);
         addLookupKey(keys, lesson.entryUnitId);
@@ -54,16 +55,18 @@
             return String(
                 lesson.productId ||
                 lesson.courseKey ||
+                lesson.docId ||
                 lesson.courseId ||
                 lesson.id ||
                 ''
             ).trim();
         }
         return String(
+            lesson.id ||
+            lesson.docId ||
             lesson.courseKey ||
             lesson.courseId ||
             lesson.productId ||
-            lesson.id ||
             ''
         ).trim();
     }
@@ -71,11 +74,12 @@
     function resolveLessonByAnyKey(key = '', lessons = []) {
         if (!key) return null;
         const cleanKey = normalizeDashboardLooseKey(key);
-        const legacyKey = normalizeLegacyCourseKey(key);
-        return (Array.isArray(lessons) ? lessons : []).find((lesson) => {
-            const keys = getLessonLookupKeys(lesson);
-            return keys.has(cleanKey) || keys.has(key) || keys.has(legacyKey);
-        }) || null;
+        return (Array.isArray(lessons) ? lessons : []).find((lesson) => 
+            lesson.id === cleanKey || 
+            lesson.docId === cleanKey || 
+            lesson.productId === cleanKey || 
+            lesson.courseId === cleanKey
+        ) || null;
     }
 
     function getEquivalentUnitIds(unitId) {
@@ -104,35 +108,27 @@
     }
 
     function resolveCanonicalUnitId(unitId, lessons = [], unitToDocId = {}) {
-        const candidates = getEquivalentUnitIds(unitId);
-        if (candidates.length === 0) return '';
-
+        if (!unitId) return '';
+        const cleanKey = normalizeDashboardLooseKey(unitId);
+        
         const activeLessons = (Array.isArray(lessons) && lessons.length > 0)
             ? lessons
             : (window.dashboardData?.lessons || []);
 
-        const activeUnitToDocId = (unitToDocId && Object.keys(unitToDocId).length > 0)
-            ? unitToDocId
-            : (window.dashboardData?.unitToDocId || {});
+        const matchedLesson = activeLessons.find(lesson => 
+            lesson.id === cleanKey || 
+            lesson.docId === cleanKey ||
+            lesson.productId === cleanKey || 
+            lesson.courseId === cleanKey ||
+            (Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(unitId)) ||
+            (Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(cleanKey))
+        );
 
-        for (const candidate of candidates) {
-            if (activeUnitToDocId?.[candidate]) return candidate;
-            if (activeLessons.some((lesson) => Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(candidate))) return candidate;
-            const matched = activeLessons.find((lesson) => getLessonLookupKeys(lesson).has(candidate));
-            if (matched) return getCanonicalLessonIdentity(matched) || candidate;
+        if (matchedLesson) {
+            return matchedLesson.id || matchedLesson.docId || matchedLesson.courseId || cleanKey;
         }
 
-        for (const lesson of activeLessons) {
-            if (!Array.isArray(lesson.courseUnits)) continue;
-            const matched = lesson.courseUnits.find((courseUnit) => {
-                const a = normalizeLegacyCourseKey(courseUnit);
-                const b = normalizeLegacyCourseKey(unitId);
-                return normalizeDashboardLooseKey(courseUnit) === normalizeDashboardLooseKey(unitId) || a === b;
-            });
-            if (matched) return matched;
-        }
-
-        return candidates.find((id) => id.endsWith('.html')) || candidates[0];
+        return cleanKey;
     }
 
     function findParentCourseIdByUnit(unitId, lessons = []) {

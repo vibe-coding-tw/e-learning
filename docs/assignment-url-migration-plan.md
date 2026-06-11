@@ -23,7 +23,7 @@
 | 現行欄位 | 建議目標欄位 | 用途 |
 | :--- | :--- | :--- |
 | `githubClassroomUrl` | `assignmentUrl` | 單一單元的作業派發 / 入口連結 |
-| `githubClassroomUrls` | `assignmentUrlMap` 或 `assignmentUrls` | course / unit 對 tutor 的作業連結映射 |
+| `githubClassroomUrls` | `assignmentUrlMap` | course / unit 對 tutor 的作業連結映射 |
 | `candidateClassroomInviteUrl` | `candidateAssignmentUrl` | 候選導師 / 學生提交的作業綁定連結 |
 | `classroomUrl`（顯示層 / 內部暫存） | `assignmentUrl` / `repositoryUrl` | 依實際流程分成作業入口或 Native Repo URL |
 
@@ -43,11 +43,11 @@
 ### 3.3 Phase 3 - Backfill
 - 透過批次腳本或一次性 Cloud Function：
   - 將 `githubClassroomUrl` 複製到 `assignmentUrl`
-  - 將 `githubClassroomUrls` 複製到 `assignmentUrlMap` / `assignmentUrls`
+  - 將 `githubClassroomUrls` 複製到 `assignmentUrlMap`
   - 將 `candidateClassroomInviteUrl` 複製到 `candidateAssignmentUrl`
 - 針對 `classroom.github.com` 與 `github.com/...` 的不同型態，保留原始 URL，不在 backfill 階段改寫語意。
 - 目前已先落地最小 backfill 腳本：[`functions/scripts/backfill_tutor_assignment_urls.js`](../functions/scripts/backfill_tutor_assignment_urls.js)，只處理 `users.tutorConfigs[unitId].githubClassroomUrl -> assignmentUrl`。
-- `metadata_lessons` 的第二階段 backfill 已落地：[`functions/scripts/backfill_metadata_lessons_assignment_urls.js`](../functions/scripts/backfill_metadata_lessons_assignment_urls.js)，會把舊的 `githubClassroomUrls` 補成 `assignmentUrlMap` / `assignmentUrls`，並優先保留既有新欄位。
+- `metadata_lessons` 的第二階段 backfill 已落地：[`functions/scripts/backfill_metadata_lessons_assignment_urls.js`](../functions/scripts/backfill_metadata_lessons_assignment_urls.js)，會把舊的 `githubClassroomUrls` 補成 `assignmentUrlMap`，並優先保留既有新欄位。
 
 ### 3.4 Phase 4 - Cutover
 - 切換所有讀取點到新欄位。
@@ -85,19 +85,19 @@
 ### 7.1 已可直接吃 `assignmentUrl`
 這些流程已經優先使用 `assignmentUrl`（部分仍保留 fallback），所以對 `users.tutorConfigs[unitId].githubClassroomUrl -> assignmentUrl` 的 backfill 最敏感：
 
-- [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `getLessonsMetadata` 回傳資料已補上 `assignmentUrlMap` / `assignmentUrls` 別名，前端可優先讀新欄位，舊的 `githubClassroomUrls` 仍保留相容性。
-- [`functions/scripts/backfill_metadata_lessons_assignment_urls.js`](../functions/scripts/backfill_metadata_lessons_assignment_urls.js) 可把 Firestore 文件本體補上 `assignmentUrlMap` / `assignmentUrls`，讓前端不必完全依賴 runtime alias。
+- [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `getLessonsMetadata` 回傳資料已補上 `assignmentUrlMap`，前端可優先讀新欄位，舊的 `githubClassroomUrls` 仍保留相容性。
+- [`functions/scripts/backfill_metadata_lessons_assignment_urls.js`](../functions/scripts/backfill_metadata_lessons_assignment_urls.js) 可把 Firestore 文件本體補上 `assignmentUrlMap`，讓前端不必完全依賴 runtime alias。
 - [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `sendTutorAuthorizationEmail` 流程，直接讀 `getUserTutorConfig(tutorData, courseId)?.assignmentUrl`
-- [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `getTutorConfigs` 已改成只輸出 `assignmentUrlMap` / `assignmentUrls`，不再回傳 `githubClassroomUrls`。
-- [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `getTutorAssignmentUrlFromConfig` 已優先讀 `assignmentUrlMap` / `assignmentUrls`。
+- [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `getTutorConfigs` 已改成只輸出 `assignmentUrlMap`，不再回傳 `githubClassroomUrls`。
+- [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `getTutorAssignmentUrlFromConfig` 已優先讀 `assignmentUrlMap`。
 - [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `resolveAssignmentAccess` 已改成優先讀 `assignmentUrl`，課程層 fallback 也改由共用 helper 取得，避免直接碰舊欄位。
 - [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `saveTutorConfigs` 新寫入已優先只寫 `assignmentUrl`，不再把 `githubClassroomUrl` 當成新資料的輸出欄位。
 - [`functions/lib/tutor-utils.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/lib/tutor-utils.js) 的 `resolveAssignmentUrlMaps(...)` 集中處理 `saveTutorConfigs` 的舊欄位 fallback，並優先挑選第一個非空的 assignment map，避免主流程散落 legacy 判斷。
 - [`functions/lib/tutor-utils.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/lib/tutor-utils.js) 的 `getPreferredAssignmentUrl(...)` 集中處理 `saveTutorConfigs` custom config 的 URL 優先序，避免主流程重複寫 `assignmentUrl || githubClassroomUrl`。
 - [`functions/index.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/index.js) 的 `getTutorConfigs` 目前也直接用 `getPreferredAssignmentUrl(...)`，避免重複組字串時散落相同 fallback。
-- [`functions/lib/tutor-utils.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/lib/tutor-utils.js) 的 dashboard synthesis 已移除 `githubClassroomUrls` 的輸出殘影，改只保留 `assignmentUrlMap` / `assignmentUrls`。
+- [`functions/lib/tutor-utils.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/lib/tutor-utils.js) 的 dashboard synthesis 已移除 `githubClassroomUrls` 的輸出殘影，改只保留 `assignmentUrlMap`。
 - [`public/js/dashboard.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/js/dashboard.js) 的 tutor 設定 UI 已優先顯示 `assignmentUrl`，讀取側已移除 `githubClassroomUrls` fallback，儲存側改為雙寫新欄位與兼容 payload。
-- [`public/cart.html`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/cart.html) 與 [`public/js/course-shared.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/js/course-shared.js) 已優先讀 `assignmentUrlMap` / `assignmentUrls`，並移除對舊的 `githubClassroomUrls` 的 fallback。
+- [`public/cart.html`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/cart.html) 與 [`public/js/course-shared.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/js/course-shared.js) 已優先讀 `assignmentUrlMap`，並移除對舊的 `githubClassroomUrls` 的 fallback。
 - [`functions/emailService.js`](/Users/roverchen/Documents/Apps/vibe-coding-tw/functions/emailService.js) 的導師授權 / 推薦候選通知文案已改成中性 `作業連結`，不再在通知內容中稱呼為舊作業邀請流程。
 
 ### 7.2 仍需要雙讀 / 舊欄位 fallback
@@ -119,7 +119,7 @@
 - `getPreferredTutorAssignmentUrl(...)` 已改名為 `getPreferredAssignmentUrl(...)`。
 - `submitTutorRecommendationInviteLink` 的主參數已改為 `assignmentLink`，舊的 `classroomInviteUrl` 僅作相容 fallback。
 - `public/js/dashboard.js` 的 UI mode/local state 已改成 `assignment` / `legacyAssignmentUrl`，只有送到後端時才保留相容欄位名。
-- `functions/lib/tutor-utils.js` 的 dashboard synthesis 已移除 `githubClassroomUrls` 的輸出殘影，只保留 `assignmentUrlMap` / `assignmentUrls`。
+- `functions/lib/tutor-utils.js` 的 dashboard synthesis 已移除 `githubClassroomUrls` 的輸出殘影，只保留 `assignmentUrlMap`。
 
 目前仍保留的 `githubClassroom*` 多半只屬於：
 
@@ -159,7 +159,7 @@
 ### 9.3 實務判斷
 - **可保留** = 牽涉到 API 契約、歷史資料、backfill、或還有 consumer 讀取。
 - **可移除** = 只剩內部命名殘影、已沒有 runtime 依賴、或只是文件歷史說明。
-- 在真正移除前，先確認所有 consumer 都已能只讀 `assignmentUrl` / `assignmentUrlMap` / `assignmentUrls`。
+- 在真正移除前，先確認所有 consumer 都已能只讀 `assignmentUrl` / `assignmentUrlMap`。
 
 ### 9.4 可排程移除的優先順序
 
