@@ -1,4 +1,6 @@
+const admin = require("firebase-admin");
 const { registerProxyExports } = require('./index-export-utils');
+const { gradeAssignment } = require("./assignment-flow");
 
 const registerAutogradeExports = ({ target, proxyAutogradeCallable, proxyAutogradeRequest, onCall, HttpsError }) => {
     registerProxyExports(target, [
@@ -11,11 +13,15 @@ const registerAutogradeExports = ({ target, proxyAutogradeCallable, proxyAutogra
         ["testGithubToken", "autogradeTestGithubToken"]
     ], proxyAutogradeCallable);
 
-    target.gradeAssignment = onCall(async () => {
-        throw new HttpsError(
-            'failed-precondition',
-            'Manual grading has been removed. Please use GitHub autograde sync.'
-        );
+    target.gradeAssignment = onCall(async (request) => {
+        const { data, auth } = request;
+        const db = admin.firestore();
+        return gradeAssignment(db, {
+            graderUid: auth?.uid,
+            assignmentId: data.assignmentId,
+            grade: data.grade,
+            feedback: data.feedback
+        });
     });
 
     registerProxyExports(target, [
