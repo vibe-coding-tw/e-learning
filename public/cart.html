@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.f2e4b73484a5.js"></script>
+    <script src="./js/i18n-helper.77b4475481bc.js"></script>
     <script>
         (function() {
             const w = console.warn;
@@ -1212,7 +1212,7 @@
 
             const courseId = params.get('courseId');
             const unitId = params.get('unitId') || courseId;
-            const rawReferral = (params.get('referralLink') || params.get('promoCode') || '').trim();
+            const rawReferral = (params.get('tutor') || params.get('tutorEmail') || params.get('referralLink') || params.get('promoCode') || '').trim();
             const isUrl = rawReferral.toLowerCase().includes('github.com/classroom/') || rawReferral.toLowerCase().includes('classroom.github.com/');
             const referralLink = isUrl ? normalizeAssignmentInviteUrl(rawReferral) : rawReferral;
             const fallbackName = params.get('courseName') || courseId;
@@ -1268,12 +1268,12 @@
                 ? window.t('prefill_invite_added', '已將「{name}」加入購物車，您可以直接前往結帳。').replace('{name}', productName)
                 : window.t('prefill_invite_exists', '「{name}」原本已在購物車中，已保留現有品項。').replace('{name}', productName);
 
-            if (referralLink) statusMessage += window.t('prefill_invite_referral_ignored', '（已忽略推薦碼/連結參數，綁定導師請在作業頁輸入 Promotion code）');
+            if (referralLink) statusMessage += window.t('prefill_invite_referral_ignored', '（已忽略推薦碼/連結參數，綁定導師請在作業頁輸入授課老師 Email）');
 
             setPrefillStatus(statusMessage, 'success');
 
             [
-                'action', 'courseId', 'unitId', 'referralLink', 'promoCode',
+                'action', 'courseId', 'unitId', 'referralLink', 'promoCode', 'tutor', 'tutorEmail',
                 'courseName', 'coursePrice', 'isPhysical'
             ].forEach(key => params.delete(key));
             history.replaceState({}, '', `${url.pathname}${params.toString() ? `?${params.toString()}` : ''}`);

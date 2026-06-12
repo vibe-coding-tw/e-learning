@@ -1,5 +1,5 @@
 # 歷史與 Backlog
-**Last updated**: 2026-06-08
+**Last updated**: 2026-06-12
 
 這份文件把過去分散在舊的歷史與 backlog 內容，以及部分 `platform-expansion-plan.md` 的重疊內容收斂到單一入口。
 
@@ -53,6 +53,16 @@
 - 平台層不得把 Firestore `courseUnits` 寫入 `window.UNITS`、`#sidebar-nav` 或 `#index-unit-list`；這會造成 TAB 與 page menu 重複。
 - `serveCourse` 必須使用版本化 runtime script URL，避免 CDN 舊快取讓已部署的 UI 修復仍顯示舊行為。
 - 課程卡片 CTA：免費課程未登入時要求登入；非免費課程未登入時仍可加入購物車。
+
+### `referral_links` 退役條件
+
+`referral_links` 目前仍是導師綁定與驗證流程的一部分。若未來要退役，建議先滿足以下條件，再做一次性 migration 與資料驗證：
+
+1. `adminVerifyReferralLink` 不再依賴 `referral_links`，改為直接從可追溯的 tutor / assignment 關聯取得結果。
+2. `adminFindClassroomInviteBinding` 與 `adminBindTutorToUnit` 不再需要 URL 索引查詢。
+3. 歷史 `orders`、`tutor_applications`、`users.tutorConfigs` 都已完成 canonical 關聯補齊，可重建綁定關係。
+4. 需要一份明確的 migration report，列出所有 `referral_links` 文件的去向，並確認沒有任何 active flow 仍在讀取該集合。
+5. 若要刪除集合，必須先關閉對應的 webhook / callable 寫入路徑，避免退役後又重新寫回。
 
 ## 2. Current Backlog
 

@@ -132,7 +132,7 @@
 #### 主鍵規則
 
 - `metadata_lessons`、`dealer_price_books`、`orders` 與其他核心集合都必須以 Firestore document ID 作為唯一主鍵與主要關聯依據。
-- `metadata_lessons.id` / `metadata_lessons.docId` 必須對應 Firestore document ID，並視為 canonical lesson id。
+- `metadata_lessons.id` / `metadata_lessons.docId` 必須對應 Firestore document ID，並視為 canonical lesson id；建立後不建議直接修改，若要換 ID 請複製成新課程再停用舊資料。
 - `courseId`、`courseKey`、`entryUnitId`、`contentRef`、`productId`、`sku` 等欄位只作為顯示、查詢輔助或 migration 相容資訊，不得再作為新的主關聯鍵。
 - 任何跨集合 join 都應先嘗試以 document ID 關聯；只有在遷移期間才允許讀取歷史 alias 欄位，且必須是明確、窄化的 migration path。
 - 後續新增的 price book、授權、內容路由、作業綁定資料，都應先設計成可直接用 document ID 追蹤與對照。
@@ -142,6 +142,7 @@
 > 所有執行期資料比對（包含邀請連結、課程授權、單元歸屬）都必須直接查 Firestore，禁止使用程式碼內相容名單或 fallback 白名單。
 > `metadata_lessons` 可同時承載課程與部分商品 metadata，但價格欄位只應視為相容/過渡資訊，正式價格來源是 `dealer_price_books`。
 > 課程 UI 邊界：`metadata_lessons.courseUnits` 是跨單元結構；左側 page menu 必須由目前單元 HTML 的 `window.UNITS` / `#sidebar-nav` 定義。完整規格見 `docs/course-ui-runtime-spec.md`。
+> 新課程的新增 / 修改 / 停用流程，請參考 [`docs/course-management-runbook.md`](course-management-runbook.md)。
 
 #### 價格遷移備註
 
@@ -180,27 +181,28 @@
 | `level` | string | 課程層級，例如 `common`、`starter`、`basic`、`advanced`。 |
 | `entryUnitId` | string | 課程入口單元 ID，用於取代 `*-master-*` 頁面的進入責任（2026-05-30 起統一修正並指向課程的第一個單元，即 `courseUnits[0]`）。 |
 | `contentRef` | string | 對應外部內容倉的內容路徑，例如 `courses/zh-TW/car-starter-html5-basics.html`。 |
-| `i18n` | map | 可選的多語內容設定，例如各語系內容路徑或語系可用性資訊。 |
+| `i18n` | map | 多語內容主結構。Key 為 locale，例如 `en`、`zh-TW`、`ja`、`fr`；每個 locale 內通常包含 `title`、`summary`、`description`、`coreContent`。 |
 | `learningPathLabel*` / `categoryLabel*` / `navLabel*` | string | 學習路徑分類顯示名稱。前端會優先讀取 Firestore / lesson metadata，而不是在程式碼中寫死。 |
 
-### `metadata_lessons` 英文多語系欄位（i18n Content Fields）
+### `metadata_lessons` 多語與相容欄位（i18n Content Fields）
 
-下列欄位於 2026-05-30 新增，供英文使用者在課程目錄頁看到對應的英文課程資訊。
+英文現在是多語內容維護的主體 locale，但仍保留舊的 `*En` 與中文頂層欄位作相容用途。
 **命名約定**：延續 `learningPathLabelEn` / `navLabelEn` 已有慣例，一律以 `*En` 後綴表示英文版欄位。
 
 | 欄位名稱 | 類型 | 中文對應欄位 | 說明 |
 | :--- | :--- | :--- | :--- |
-| `titleEn` | string | `title` | 課程英文標題（必填，優先級最高）。 |
-| `summaryEn` | string | `summary` | 課程英文摘要（一句話簡介）。 |
-| `descriptionEn` | string | `description` | 課程英文詳細說明（較長）。 |
-| `coreContentEn` | array | `coreContent` | 核心學習內容英文列表（對應中文 bullet list）。 |
+| `titleEn` | string | `title` | 課程英文標題（legacy / compatibility）。 |
+| `summaryEn` | string | `summary` | 課程英文摘要（一句話簡介，legacy / compatibility）。 |
+| `descriptionEn` | string | `description` | 課程英文詳細說明（legacy / compatibility）。 |
+| `coreContentEn` | array | `coreContent` | 核心學習內容英文列表（legacy / compatibility）。 |
 | `lessonLabelEn` | string | `lessonLabel` / `tagText` | 課程分類標籤英文（藍色 badge 顯示）。 |
 
 **使用規則**：
 - 前端（`learning-path.html`）在英文模式（`uiLocale === 'en'`）下優先讀取 `*En` 欄位，若欄位不存在則 fallback 到中文欄位。
 - 這些 `*En` 欄位僅影響內容文案，不影響價格解析。
 - `getLessonsMetadata` Cloud Function 直接傳回 Firestore 文件所有欄位，**不需要後端修改**即可生效。
-- 欄位維護透過 `admin-i18n.html` 管理頁面，呼叫 `updateLessonI18n` Cloud Function 寫入。
+- 欄位維護現在可在 `admin-courses.html` 一起編輯多語內容；`admin-i18n.html` 保留作舊版相容入口。
+- 建議以 `i18n.en` 為主體，其他 locale 例如 `zh-TW`、`ja`、`fr` 可按課程需求一起維護。
 
 執行期 canonical identity 規則：
 - 課程型 metadata：優先使用 Firestore document ID（`id` / `docId`）
@@ -395,6 +397,7 @@
 - `unitId` 現行規格應為 canonical unit page URL，例如 `common-developer-identity.html`。
 - 2026-05-28 已完成歷史 `referral_links.unitId` 清理；8 筆 historical unit 已轉為 canonical unit，另 1 筆 malformed referral index（`url = "authorized"`）已刪除。
 - `functions/index.js` 目前透過共用 helper 產生 referral link doc id 與 normalised URL；這是內部實作細節，不影響集合 schema。
+- `referral_links` 目前仍在導師綁定與驗證流程中使用，包含 `adminVerifyReferralLink`、`adminFindClassroomInviteBinding` 與 `adminBindTutorToUnit`；在這些流程尚未完全退役前，不建議移除集合。
 
 ---
 
@@ -414,6 +417,14 @@
 - `settlementMonth`：年度結算月份，預設 12。
 - `settlementDay`：年度結算日期，預設 31。
 - `defaultPayoutAccount`：缺省投資人收款帳號（若個別投資人未填時可作為 fallback）。
+
+若要規劃全站共用的 locale 設定，建議收斂到 `metadata_settings`，例如：
+- `defaultLocale`
+- `supportedLocales`
+- `localeLabels`
+- `localeFallbackMap`
+
+這類設定屬於平台層設定，適合集中管理，不建議散落在前端常數或各頁面硬編碼。
 
 ---
 

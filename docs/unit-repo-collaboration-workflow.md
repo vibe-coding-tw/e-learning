@@ -24,6 +24,7 @@
 5. merge 後在課堂公告或群組同步「本次單元 repo 改動重點」
 
 延伸：若本次改動需要回補到既有學生作業 repo，請使用 [舊版學生 Repo 同步 PR 流程](/Users/roverchen/Documents/Apps/vibe-coding-tw/docs/classroom-sync-pr-workflow.md)（歷史備查）。
+若改動的是課程生命週期資料（新增 / 修改 / 停用課程、綁定內容路徑、價格或 grader），請先看 [`docs/course-management-runbook.md`](course-management-runbook.md)。
 
 ### 流程圖：提案到合併
 ```mermaid

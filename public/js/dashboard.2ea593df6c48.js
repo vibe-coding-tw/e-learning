@@ -2839,7 +2839,30 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
         </div>
     `;
 
+    const courseManagementShortcutHtml = `
+        <div class="mb-6 rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-cyan-50 p-6 shadow-sm">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="max-w-3xl">
+                    <div class="text-[11px] font-black uppercase tracking-[0.24em] text-indigo-500">Course Admin</div>
+                    <h4 class="mt-2 text-xl font-black text-slate-900">課程入口管理</h4>
+                    <p class="mt-2 text-sm leading-7 text-slate-600">
+                        新增 / 修改 / 停用課程主檔、同步 \`metadata_lessons\` 與 \`dealer_price_books\`，以及前往雙語內容編輯頁。
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <a href="admin-courses.html" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700">
+                        <i class="fa-solid fa-layer-group"></i> 開啟課程管理
+                    </a>
+                    <a href="admin-i18n.html" class="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm font-bold text-indigo-700 transition hover:bg-indigo-50">
+                        <i class="fa-solid fa-language"></i> 雙語內容管理
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+
     let html = `
+        ${courseManagementShortcutHtml}
         ${pendingHtml}
         <div id="admin-console-header" class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h3 class="text-2xl font-black text-orange-900 flex items-center gap-3">
@@ -6506,8 +6529,8 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
         promoCodeEl.innerHTML = `
             <div class="space-y-3">
                 <div>
-                    <div class="text-[10px] uppercase tracking-wider text-gray-400">Promotion Code</div>
-                    <div class="font-mono text-indigo-700 text-sm">${escapeHtml(data.myPromotionCode || window.t('dash_not_generated', 'Not generated'))}</div>
+                    <div class="text-[10px] uppercase tracking-wider text-gray-400">Tutor Email</div>
+                    <div class="font-mono text-indigo-700 text-sm">${escapeHtml(myEmail)}</div>
                 </div>
                 <div>
                     <div class="text-[10px] uppercase tracking-wider text-gray-400">作業連結</div>
@@ -6520,8 +6543,8 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
         promoCodeEl.innerHTML = `
             <div class="space-y-3">
                 <div>
-                    <div class="text-[10px] uppercase tracking-wider text-gray-400">Promotion Code</div>
-                    <div class="font-mono text-indigo-700 text-sm break-all">${escapeHtml(data.myPromotionCode || window.t('dash_not_generated', 'Not generated'))}</div>
+                    <div class="text-[10px] uppercase tracking-wider text-gray-400">Tutor Email</div>
+                    <div class="font-mono text-indigo-700 text-sm break-all">${escapeHtml(myEmail)}</div>
                 </div>
                 <div>
                     <div class="text-[10px] uppercase tracking-wider text-gray-400">作業連結</div>
@@ -6594,7 +6617,7 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
             <div class="text-[10px] text-indigo-600 font-bold uppercase tracking-widest mb-3">
                 🧑‍🏫 ${window.t('dash_tutor_info_title', 'Tutor Information')}
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <div class="text-xs text-gray-400">${window.t('dash_tutor_name_label', 'Tutor Name')}</div>
                     <div class="text-sm font-bold text-gray-800">${escapeHtml(tutorName)}</div>
@@ -6602,10 +6625,6 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
                 <div>
                     <div class="text-xs text-gray-400">${window.t('dash_tutor_email_label', 'Email')}</div>
                     <div class="text-sm font-bold text-gray-800 font-mono">${escapeHtml(myEmail)}</div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-400">${window.t('dash_tutor_promo_code_label', 'Promo Code')}</div>
-                    <div class="text-sm font-black text-indigo-700 font-mono">${escapeHtml(promoCode || window.t('dash_not_generated', 'Not generated'))}</div>
                 </div>
             </div>
         </div>

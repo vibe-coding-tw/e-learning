@@ -297,6 +297,30 @@
     }
     .auth-error-box h2 { font-size: 20px; margin-bottom: 8px; color: var(--red); }
     .auth-error-box p { font-size: 14px; color: var(--text2); }
+    .auth-meta {
+      margin: 16px auto 18px;
+      width: min(100%, 420px);
+      text-align: left;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text2);
+    }
+    .auth-meta code {
+      display: block;
+      margin-top: 4px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      word-break: break-all;
+      user-select: all;
+    }
+    .auth-meta .muted { color: var(--text3); font-size: 12px; margin-top: 6px; }
     #auth-error.show { display: flex; }
 
     /* Empty state */
@@ -329,6 +353,14 @@
   <div class="auth-error-box">
     <h2><i class="fa-solid fa-shield-halved"></i> 存取被拒</h2>
     <p>此頁面僅限 Admin 帳號使用。<br><a href="index.html" style="color:var(--accent2);">返回首頁</a></p>
+    <div class="auth-meta">
+      <div><strong>目前登入帳號</strong></div>
+      <div>Email: <span id="auth-email">—</span></div>
+      <div>UID:</div>
+      <code id="auth-uid">—</code>
+      <div>Firestore role: <span id="auth-role">—</span></div>
+      <div class="muted">若你確定自己是 admin，請確認 `users/{uid}.role` 是否已設為 `admin`。</div>
+    </div>
   </div>
 </div>
 
@@ -338,6 +370,9 @@
       🚀 Vibe Coding <span>Admin</span> &nbsp;/&nbsp; 雙語內容管理
     </div>
     <div class="topbar-right">
+      <a href="admin-courses.html" style="color:var(--text3);font-size:13px;text-decoration:none;">
+        <i class="fa-solid fa-layer-group"></i> 課程管理
+      </a>
       <div class="user-chip">
         <i class="fa-solid fa-user-shield"></i>
         <span id="admin-email">—</span>
@@ -635,7 +670,7 @@ function renderLessons(lessons) {
             </div>
             <div class="field-group">
               <div class="field-label"><i class="fa-solid fa-align-left"></i> 摘要</div>
-              <div class="field-readonly ${!lesson.summary ? 'empty' : ''}">${lesson.summary || '（無）'}</div>
+              <div class="field-readonly ${!(lesson.summary || lesson.tagText) ? 'empty' : ''}">${lesson.summary || lesson.tagText || '（無）'}</div>
             </div>
             <div class="field-group">
               <div class="field-label"><i class="fa-solid fa-tag"></i> 課程標籤</div>
@@ -732,6 +767,9 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.exists() ? (userDoc.data() || {}) : {};
+    document.getElementById('auth-email').textContent = user.email || user.uid;
+    document.getElementById('auth-uid').textContent = user.uid;
+    document.getElementById('auth-role').textContent = userData.role || '(missing)';
     if (userData.role !== 'admin') {
       document.getElementById('loading-overlay').style.display = 'none';
       document.getElementById('auth-error').classList.add('show');

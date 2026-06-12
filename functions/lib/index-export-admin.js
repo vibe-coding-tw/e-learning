@@ -10,12 +10,15 @@ const registerAdminExports = (target, proxyAdminCallable, proxyAdminRequest) => 
     target.getDistributorRoutingOptions = onCall(async (request) => loadDistributorRoutingOptions(request));
 
     registerProxyExports(target, [
+        ["upsertLessonMetadata", "adminUpsertLessonMetadata"],
         ["updateLessonI18n", "adminUpdateLessonI18n"],
         ["updateSystemConfig", "adminUpdateSystemConfig"],
+        ["getSystemConfig", "adminGetSystemConfig"],
         ["purgeContentCache", "adminPurgeContentCache"],
         ["updateUserRelationships", "adminUpdateUserRelationships"],
         ["getUserRelationships", "adminGetUserRelationships"],
         ["upsertLessonPricing", "adminUpsertLessonPricing"],
+        ["getLessonPriceBooks", "adminGetLessonPriceBooks"],
         ["getDistributorPriceBooks", "adminGetDistributorPriceBooks"],
         ["upsertDistributorPriceBook", "adminUpsertDistributorPriceBook"],
         ["seedDistributorPriceBooksFromLessons", "adminSeedDistributorPriceBooksFromLessons"],

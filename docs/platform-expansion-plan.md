@@ -26,6 +26,8 @@ The goal is to keep one source of truth for the next-stage platform changes.
 - Prepare for multi-region, multi-language, and external instructor onboarding.
 - Preserve current authorization, grading, and writeback during migration.
 
+- 新課程的新增 / 修改 / 停用流程與欄位定義，請以 [`docs/course-management-runbook.md`](course-management-runbook.md) 為準。
+
 ### 2.2 Core principles
 
 1. Firestore remains the source of truth.
