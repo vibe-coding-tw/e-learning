@@ -87,15 +87,18 @@ This spec covers:
 | `pricePolicyMode` | string | `FREE`, `GUIDED`, `ADMIN_ONLY` |
 | `settlementMethod` | string | Settlement method identifier |
 
-### 4.2 `tutors`
+### 4.2 `users` (Tutor Context)
+
+Tutors are stored inside the `users` collection, with relevant details under `tutorConfigs` and main fields:
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `id` | string | Tutor ID |
+| `uid` | string | Tutor UID (corresponds to `id` in legacy definitions) |
 | `name` | string | Display name |
+| `email` | string | Tutor registered email address (used for student tutor-binding) |
 | `status` | string | `ACTIVE`, `PAUSED`, `INACTIVE` |
 | `distributorId` | string | Owning distributor |
-| `promotionCode` | string | Binding code used by customers |
+| `promotionCode` | string | Legacy binding code used by customers (kept for backward compatibility) |
 | `serviceSplitRuleId` | string | Internal split rule identifier |
 
 ### 4.3 `products`
@@ -175,7 +178,7 @@ The checkout and onboarding flow may persist the following user-preference field
 | :--- | :--- | :--- |
 | `preferredRegion` | string | Default routing region |
 | `preferredDistributorId` | string | Last successful or manually chosen distributor |
-| `bindingSource` | string | `explicit`, `tutor`, `promotionCode`, `regionDefault`, `manual` |
+| `bindingSource` | string | `explicit`, `tutor`, `promotionCode` (or `promotionCodeBinding`), `regionDefault`, `manual` |
 | `bindingConfidence` | number | Internal confidence score for routing |
 | `bindingUpdatedAt` | timestamp | Last binding update time |
 
@@ -240,13 +243,13 @@ Request query:
 
 - `region`
 - `tutorId`
-- `promotionCode`
+- `tutorEmail` (or legacy `promotionCode`)
 - `productId`
 - `customerId`
 
 Resolution order:
 
-1. promotion code -> tutor -> distributor
+1. tutor email (or legacy promotion code) -> tutor -> distributor
 2. customer geo -> distributor
 3. manual distributor selection
 
@@ -299,7 +302,7 @@ Inputs:
 
 - region
 - tutor binding
-- promotion code
+- tutor email / promotion code
 - customer address
 
 Outputs:
@@ -363,7 +366,7 @@ Required modules:
 - bound distributor
 - linked students
 - service revenue summary
-- promotion code
+- tutor email / promotion code
 - internal split preview
 
 ### 8.4 Checkout

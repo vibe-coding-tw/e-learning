@@ -8,7 +8,7 @@
 | :--- | :--- | :--- |
 | `Admin Console` | Manage distributors, tutors, pricing, settlement, audit | Platform/Admin |
 | `Distributor Storefront` | Publish distributor-specific hardware pricing | Distributor |
-| `Tutor Dashboard` | View tutor binding, service summary, and promo code | Tutor |
+| `Tutor Dashboard` | View tutor binding, service summary, and tutor email | Tutor |
 | `Checkout` | Resolve distributor and show frozen quote | Customer |
 | `Settlement View` | Inspect monthly ledger and payout status | Platform/Admin, Distributor |
 
@@ -53,7 +53,7 @@ Must allow:
 Must show:
 
 - bound distributor
-- promotion code
+- tutor email (or legacy promotion code)
 - linked student count
 - service revenue summary
 - internal split preview

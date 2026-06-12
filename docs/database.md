@@ -17,12 +17,12 @@
 | `hasPendingApplication` | boolean | 是否有待審導師申請。 |
 | `unitAssignments` | map | 學生單元指派導師。Key = unitId，Value = tutorEmail。 |
 | `unitAssignmentMeta` | map | 學生單元綁定資訊。Key = unitId，常見欄位：`tutorUid`, `tutorEmail`, `promotionCode`, `linkedAt`。 |
-| `promotionCode` | string | Tutor 專屬 Promotion code（全域唯一）。 |
+| `promotionCode` | string | Tutor 專屬 Promotion code（已棄用，由 Tutor email 取代，保留作歷史相容）。 |
 | `locale` | string | 使用者語系（例：`zh-TW`）。 |
 | `region` | string | 使用者地區（例：`TW`）。 |
 | `preferredRegion` | string | 預設 routing 地區；可與 `region` 不同。 |
 | `preferredDistributorId` | string | 預設經銷商；登入後的 `learning-path` / checkout 會優先讀這個欄位，首次綁定後由系統維護。 |
-| `bindingSource` | string | 綁定來源，例如 `explicit`, `tutor`, `promotionCode`, `regionDefault`, `manual`。 |
+| `bindingSource` | string | 綁定來源，例如 `explicit`, `tutor`, `promotionCode` (或 `promotionCodeBinding`), `regionDefault`, `manual`。 |
 | `bindingConfidence` | number | 系統對目前經銷商綁定結果的內部信心分數。 |
 | `bindingUpdatedAt` | timestamp | 經銷商綁定最後更新時間。 |
 | `courseProgress` | map | 學習進度聚合資料。 |

@@ -7,7 +7,7 @@
 | Collection | Purpose | Canonical owner |
 | :--- | :--- | :--- |
 | `distributors` | Distributor profile, regions, status, pricing mode | Platform/Admin |
-| `tutors` | Tutor profile and distributor binding | Platform/Admin |
+| `users` | Tutor profile and distributor binding (consolidated in `users` collection) | Platform/Admin |
 | `products` | Product master, MSRP, suggested price band | Platform/Admin |
 | `region_distributor_rules` | Region-to-distributor routing defaults and ranking | Platform/Admin |
 | `dealer_price_books` | Distributor-specific sale and promo prices | Distributor |
@@ -30,14 +30,18 @@
 | `createdAt` | timestamp | yes | Creation time |
 | `updatedAt` | timestamp | yes | Update time |
 
-### 2.2 `tutors/{tutorId}`
+### 2.2 `users/{uid}` (Tutor Role Context)
+
+> [!NOTE]
+> There is no standalone `tutors` collection in the live database. Tutors are represented as `users` documents where the role is `"teacher"` or `"admin"`. Tutor-specific configurations are stored under the `tutorConfigs` map, and their binding is resolved primarily via their `email`.
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `name` | string | yes | Display name |
 | `status` | string | yes | `ACTIVE`, `PAUSED`, `INACTIVE` |
 | `distributorId` | string | yes | Owning distributor |
-| `promotionCode` | string | yes | Tutor binding code |
+| `email` | string | yes | Tutor registered email address (used for student tutor-binding) |
+| `promotionCode` | string | no | Legacy tutor binding code (deprecated in favor of `email`, kept for compatibility) |
 | `serviceSplitRuleId` | string | no | Internal split rule |
 | `createdAt` | timestamp | yes | Creation time |
 | `updatedAt` | timestamp | yes | Update time |
@@ -134,7 +138,7 @@
 | :--- | :--- | :--- | :--- |
 | `preferredRegion` | string | no | Preferred routing region |
 | `preferredDistributorId` | string | no | Preferred distributor |
-| `bindingSource` | string | no | `explicit`, `tutor`, `promotionCode`, `regionDefault`, `manual` |
+| `bindingSource` | string | no | `explicit`, `tutor`, `promotionCode` (or `promotionCodeBinding`), `regionDefault`, `manual` |
 | `bindingConfidence` | number | no | Internal routing score |
 | `bindingUpdatedAt` | timestamp | no | Last preference update time |
 | `locale` | string | no | UI locale |
@@ -167,7 +171,7 @@ Common query:
 
 Common query:
 
-- `tutors where promotionCode == X`
+- `users where email == X` (Tutor Email lookup) or legacy `users where promotionCode == X`
 - then resolve `distributorId`
 - `region_distributor_rules where region == X`
 - then resolve default or fallback distributor
