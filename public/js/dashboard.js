@@ -6610,7 +6610,6 @@ window.renderReferralInviteKitSection = window.renderReferralInviteKitSection ||
 
     const currentTutor = (data.tutors || []).find(t => normalizeEmail(t.email) === normalizeEmail(myEmail));
     const tutorName = currentTutor?.name || auth.currentUser?.displayName || window.t('dash_tutor_name_label', 'Tutor Name');
-    const promoCode = data.myPromotionCode || '';
 
     const tutorInfoHtml = `
         <div class="mb-6 p-5 bg-indigo-50 border border-indigo-100 rounded-3xl">

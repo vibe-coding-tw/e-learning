@@ -12,7 +12,7 @@
 5. 刪除課程時以「停用」為主，不以硬刪為主。
 6. `metadata_lessons.docId` 建立後視為不可直接更改；若要換 ID，請複製成新課程再停用舊資料。
 
-> 建議的 canonical course identity 仍以 `metadata_lessons.id` / `docId` 與 `courseKey` 為基礎；舊路徑與舊檔名只作相容用途。
+> 建議的 canonical course identity 以 `metadata_lessons.id` / `docId` 為唯一主鍵；若需要 key，請直接整合進 document ID，不要再另外維護 `courseKey`。
 
 > 目前可直接使用的 Admin 入口：
 > - [`public/admin-courses.html`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/admin-courses.html)：課程主檔、多語內容、停用與價格表
@@ -27,20 +27,11 @@
 | 欄位 | 必填 | 來源 / 寫入位置 | 說明 |
 |---|---:|---|---|
 | `id` / `docId` | 是 | Firestore `metadata_lessons` document ID | canonical lesson id，建立後不建議直接更改；若要變更，請複製成新課程再停用舊資料 |
-| `courseKey` | 是 | Firestore `metadata_lessons` | locale-neutral 主鍵，例如 `car-starter-web-app` |
-| `title` | 是 | Firestore `metadata_lessons` | 中文或預設語系標題 |
-| `titleEn` | 否 | Firestore `metadata_lessons` | 英文標題（legacy / compatibility） |
-| `summary` | 否 | Firestore `metadata_lessons` | 課程簡介 |
-| `summaryEn` | 否 | Firestore `metadata_lessons` | 英文簡介（legacy / compatibility） |
-| `description` / `descriptionEn` | 否 | Firestore `metadata_lessons` | 詳細描述與其英文相容欄位 |
-| `coreContent` / `coreContentEn` | 否 | Firestore `metadata_lessons` | 核心條列與其英文相容欄位 |
-| `i18n` | 否 | Firestore `metadata_lessons` | 多語內容主結構，key 為 locale，例如 `en`、`zh-TW`、`ja`；每個 locale 內可含 `title`、`summary`、`description`、`coreContent` |
+| `i18n` | 是 | Firestore `metadata_lessons` | 多語內容主結構，key 為 locale，例如 `en`、`zh-TW`、`ja`；每個 locale 內只維護 `title`、`summary`、`description`、`coreContent` |
 | `track` | 是 | Firestore `metadata_lessons` | 例如 `common`、`car` |
 | `level` | 是 | Firestore `metadata_lessons` | 例如 `starter`、`basic`、`advanced` |
 | `category` | 是 | Firestore `metadata_lessons` | 課程分類，供 catalog 與路由使用 |
-| `entryUnitId` | 是 | Firestore `metadata_lessons` | 課程入口單元，必須指向有效單元檔 |
-| `courseUnits` | 是 | Firestore `metadata_lessons` | 跨單元 TAB 清單，只表示課程結構 |
-| `contentRef` | 是 | Firestore `metadata_lessons` | 外部內容倉路徑，例如 `courses/zh-TW/car-starter-web-app.html` |
+| `course_units` | 是 | Firestore `metadata_lessons` | 外部課程單元檔案名稱清單，只表示課程結構 |
 | `metadataType` | 是 | Firestore `metadata_lessons` | `course` / `product` / `legacy_product` |
 | `productId` | 否 | Firestore `metadata_lessons` | 商品型 metadata 才需要 |
 | `isPhysical` | 否 | Firestore `metadata_lessons` | 是否為實體商品 |
@@ -66,9 +57,9 @@
 
 ### 3.1 新增課程
 
-1. 先定 `courseKey`
-   - 確認這門課的 canonical slug。
-   - 先決定中文與英文內容是否共用同一組單元 slug。
+1. 先定 `docId`
+   - 確認這門課的 canonical key，若需要可讀 slug，請直接整合進 document ID。
+   - 先決定中文與英文內容是否共用同一組 `course_units`。
 
 2. 建立 `content-repo` 課程 HTML
    - 放入對應語系資料夾，例如 `courses/zh-TW/...`
@@ -77,10 +68,8 @@
 
 3. 建立或更新 Firestore `metadata_lessons`
    - 寫入 `id` / `docId`
-   - 寫入 `courseKey`
-   - 寫入 `entryUnitId`
-   - 寫入 `courseUnits`
-   - 寫入 `contentRef`
+   - 寫入 `i18n`
+   - 寫入 `course_units`
    - 補上 `track`、`level`、`category`
 
 4. 建立 `dealer_price_books`
@@ -92,7 +81,7 @@
 5. 建立多語內容
    - 以 `i18n.en` 作為主體內容
    - 其他 locale 可在同一個課程對話框內一起維護
-   - 舊有 `titleEn` / `summaryEn` / `descriptionEn` / `coreContentEn` 保留相容用途
+   - 舊有 `titleEn` / `summaryEn` / `descriptionEn` / `coreContentEn` 僅保留過渡相容
 
 6. 建立 template repo / student repo workflow
    - `.github/workflows/autograde-and-sync.yml` 保持最小化
@@ -154,8 +143,8 @@
 | 面向 | Firestore | content-repo | template repo / student repo | `public/graders` |
 |---|---|---|---|---|
 | 課程主檔 | `metadata_lessons` | 課程 HTML 的內容源 | 不負責 | 不負責 |
-| 課程入口 | `entryUnitId`、`courseUnits` | 單元頁面與 sidebar | 不負責 | 不負責 |
-| 內容路徑 | `contentRef` | 真正存放課程 HTML 的路徑 | 不負責 | 不負責 |
+| 課程入口 | `course_units[0]`（或兼容 `entryUnitId`） | 單元頁面與 sidebar | 不負責 | 不負責 |
+| 內容路徑 | `contentRef`（相容欄位） | 真正存放課程 HTML 的路徑 | 不負責 | 不負責 |
 | 作業說明 | 從課程 HTML 的 `assignment-guide` / `tutor-guide` 讀取 | 存放與維護 | 不負責 | 不負責 |
 | 作業骨架 | 只保留關聯與授權資料 | 可附帶說明頁 | `.github/workflows/autograde-and-sync.yml` | 不負責 |
 | 自動評分 | 只寫回結果到 `assignments` | 不負責 | 只觸發中央 grader | `run.sh` + 對應 unit grader |
@@ -175,10 +164,10 @@
 ## 5. 建議驗收清單
 
 1. `metadata_lessons.docId` 與 Firestore doc ID 一致，且建立後不直接改動。
-2. `courseKey` 是 locale-neutral，且沒有跟檔名綁死。
+2. `docId` 若承載課程 key，必須保持唯一且可追溯。
 3. `i18n.en` 至少存在，其他語言可按需求新增。
-4. `contentRef` 指向正確 HTML。
-5. `entryUnitId` 有效且屬於 `courseUnits`。
+4. `course_units` 指向正確外部 HTML。
+5. 若仍保留 `entryUnitId`，其值必須等於 `course_units[0]`。
 6. 課程 HTML 可讀到 `assignment-guide` 與 `tutor-guide`。
 7. `dealer_price_books` 已建立且價格可查。
 8. template repo 的 workflow 只呼叫中央 grader。
