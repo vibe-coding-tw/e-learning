@@ -736,9 +736,9 @@
                 <div id="course-unit-list" class="unit-list"></div>
                 <details class="unit-advanced">
                   <summary>進階文字編輯</summary>
-                  <textarea id="lesson-course-units" class="textarea-list" placeholder="一行一個單元檔名，例如&#10;start-01-unit-html5-basics.html&#10;start-01-unit-flexbox-layout.html"></textarea>
+                  <textarea id="lesson-course-units" class="textarea-list" placeholder="一行一個 course_units 檔名，例如&#10;start-01-unit-html5-basics.html&#10;start-01-unit-flexbox-layout.html"></textarea>
                   <textarea id="lesson-course-unit-titles" class="textarea-list" placeholder="一行一個單元標題，順序需與上方單元一致，例如&#10;HTML5 Basics&#10;Flexbox Layout"></textarea>
-                  <div class="hint">點擊下方單元可回填到上方輸入框；修改後按「新增 / 更新單元」即可覆寫所選項目。這裡會同步維護 `courseUnits` 與 `courseUnitTitles`。</div>
+                  <div class="hint">點擊下方單元可回填到上方輸入框；修改後按「新增 / 更新單元」即可覆寫所選項目。這裡會同步維護 `course_units` / `course_unit_titles`，並保留 camelCase 別名供舊 runtime 相容。</div>
                 </details>
               </div>
             </div>
@@ -1523,10 +1523,13 @@
       $("lesson-description").value = target.description || "";
       $("lesson-content-ref").value = target.contentRef || "";
       $("lesson-entry-unit-id").value = target.entryUnitId || "";
-      $("lesson-course-units").value = Array.isArray(target.courseUnits) ? target.courseUnits.join("\n") : "";
-      $("lesson-course-unit-titles").value = Array.isArray(target.courseUnitTitles)
-        ? target.courseUnitTitles.join("\n")
-        : "";
+      const units = Array.isArray(target.course_units) ? target.course_units : (Array.isArray(target.courseUnits) ? target.courseUnits : []);
+      const unitTitles = Array.isArray(target.course_unit_titles)
+        ? target.course_unit_titles
+        : (Array.isArray(target.courseUnitTitles) ? target.courseUnitTitles : []);
+      $("lesson-course-units").value = units.join("\n");
+      $("lesson-course-unit-titles").value = unitTitles
+        .join("\n");
       renderCourseUnitsEditor();
       $("lesson-track").value = target.track || "";
       $("lesson-level").value = target.level || "";
@@ -1599,10 +1602,10 @@
       state.locales["zh-TW"].summary = summary;
       state.locales["zh-TW"].description = description;
 
-      const courseUnits = normalizeList($("lesson-course-units").value);
-      const courseUnitTitles = normalizeList($("lesson-course-unit-titles").value);
-      while (courseUnitTitles.length < courseUnits.length) {
-        courseUnitTitles.push(courseUnits[courseUnitTitles.length] || "");
+      const course_units = normalizeList($("lesson-course-units").value);
+      const course_unit_titles = normalizeList($("lesson-course-unit-titles").value);
+      while (course_unit_titles.length < course_units.length) {
+        course_unit_titles.push(course_units[course_unit_titles.length] || "");
       }
       const i18n = {};
       Object.entries(state.locales || {}).forEach(([locale, data]) => {
@@ -1644,8 +1647,10 @@
         metadataType: normalizeText($("lesson-metadata-type").value) || "course",
         contentRef: normalizeText($("lesson-content-ref").value),
         entryUnitId: normalizeText($("lesson-entry-unit-id").value),
-        courseUnits,
-        courseUnitTitles,
+        course_units,
+        course_unit_titles,
+        courseUnits: course_units,
+        courseUnitTitles: course_unit_titles,
         productId,
         orderWeight: Number($("lesson-order-weight").value || 0) || 0,
         isPhysical: $("lesson-is-physical").checked,

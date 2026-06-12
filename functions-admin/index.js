@@ -970,17 +970,30 @@ function normalizeLessonMetadataPatch(payload = {}) {
         }
         if (Object.keys(i18n).length > 0) patch.i18n = i18n;
     }
-    if (hasOwn("courseUnits")) {
-        if (Array.isArray(payload.courseUnits)) {
-            patch.courseUnits = payload.courseUnits.map((unit) => normalizeText(unit)).filter(Boolean);
+    const rawCourseUnits = hasOwn("course_units")
+        ? payload.course_units
+        : payload.courseUnits;
+    if (hasOwn("course_units") || hasOwn("courseUnits")) {
+        if (Array.isArray(rawCourseUnits)) {
+            const normalizedUnits = rawCourseUnits.map((unit) => normalizeText(unit)).filter(Boolean);
+            patch.course_units = normalizedUnits;
+            patch.courseUnits = normalizedUnits;
         } else {
+            patch.course_units = [];
             patch.courseUnits = [];
         }
     }
-    if (hasOwn("courseUnitTitles")) {
-        if (Array.isArray(payload.courseUnitTitles)) {
-            patch.courseUnitTitles = payload.courseUnitTitles.map((title) => normalizeText(title)).filter(Boolean);
+
+    const rawCourseUnitTitles = hasOwn("course_unit_titles")
+        ? payload.course_unit_titles
+        : payload.courseUnitTitles;
+    if (hasOwn("course_unit_titles") || hasOwn("courseUnitTitles")) {
+        if (Array.isArray(rawCourseUnitTitles)) {
+            const normalizedTitles = rawCourseUnitTitles.map((title) => normalizeText(title)).filter(Boolean);
+            patch.course_unit_titles = normalizedTitles;
+            patch.courseUnitTitles = normalizedTitles;
         } else {
+            patch.course_unit_titles = [];
             patch.courseUnitTitles = [];
         }
     }
