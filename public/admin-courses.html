@@ -595,114 +595,15 @@
             <button class="modal-close" onclick="window.closeLessonModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
           </div>
 
-          <div class="editor-card">
-            <div class="card-title">
-              <div>
-                <h2>課程主檔</h2>
-                <span>修改 `metadata_lessons` 的 canonical 欄位與內容路徑</span>
-              </div>
-              <div id="lesson-status" style="color:var(--muted);font-size:12px;">尚未選擇課程</div>
-            </div>
-
-            <div class="editor-grid">
-              <div class="field readonly">
-                <label>Document ID / docId</label>
-                <input id="lesson-id" placeholder="自動產生 UUID-like ID" readonly />
-                <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
-              </div>
-              <div class="field">
-                <label>courseKey</label>
-                <input id="lesson-course-key" placeholder="car-starter-web-app" />
-                <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
-              </div>
-              <div class="field full">
-                <label>title (課程名稱)</label>
-                <input id="lesson-title" oninput="window.updateLocaleField('zh-TW', 'title', this.value)" placeholder="例如：Web App 基礎開發" />
-              </div>
-              <div class="field full">
-                <label>summary (課程簡介)</label>
-                <textarea id="lesson-summary" oninput="window.updateLocaleField('zh-TW', 'summary', this.value)" placeholder="例如：本課程介紹 Web App 開發基礎。"></textarea>
-              </div>
-              <div class="field full">
-                <label>description (詳細描述)</label>
-                <textarea id="lesson-description" oninput="window.updateLocaleField('zh-TW', 'description', this.value)" placeholder="例如：詳細的課程大綱與學習目標。"></textarea>
-              </div>
-              <div class="field full">
-                <label>contentRef</label>
-                <input id="lesson-content-ref" placeholder="courses/zh-TW/car-starter-web-app.html" />
-                <div class="hint">指向外部 content-repo 的課程 HTML 路徑。</div>
-              </div>
-              <div class="field full">
-                <label>entryUnitId</label>
-                <input id="lesson-entry-unit-id" placeholder="start-01-unit-flexbox-layout.html" />
-              </div>
-              <div class="field">
-                <label>track</label>
-                <input id="lesson-track" placeholder="car / common" />
-              </div>
-              <div class="field">
-                <label>level</label>
-                <input id="lesson-level" placeholder="starter / basic / advanced" />
-              </div>
-              <div class="field">
-                <label>category</label>
-                <input id="lesson-category" placeholder="prepare / start / basic / advanced" />
-              </div>
-              <div class="field">
-                <label>metadataType</label>
-                <select id="lesson-metadata-type">
-                  <option value="course">course</option>
-                  <option value="product">product</option>
-                  <option value="legacy_product">legacy_product</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>productId</label>
-                <input id="lesson-product-id" placeholder="預設可與 docId 相同" />
-              </div>
-              <div class="field">
-                <label>orderWeight</label>
-                <input id="lesson-order-weight" type="number" step="1" placeholder="0" />
-              </div>
-              <div class="field full">
-                <label>可見性 / 狀態</label>
-                <div class="switch-row">
-                  <label class="switch"><input id="lesson-is-physical" type="checkbox" /> isPhysical</label>
-                  <label class="switch"><input id="lesson-hidden" type="checkbox" /> hiddenFromCatalog</label>
-                  <label class="switch"><input id="lesson-deprecated" type="checkbox" /> isDeprecated</label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="editor-card">
-            <div class="card-title">
-              <div>
-                <h2>多國語言內容</h2>
-                <span>英文 (`en`) 是主體，其他語言會一起寫入 `metadata_lessons.i18n`</span>
-              </div>
-              <div style="display:flex;gap:10px;align-items:center;">
-                <button class="btn btn-muted btn-small" onclick="window.addLocalePrompt()"><i class="fa-solid fa-plus"></i> 新增語言</button>
-              </div>
-            </div>
-            <div id="locale-editor"></div>
-          </div>
-
-            <div class="action-row">
-              <div class="left">
-                <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> 複製</button>
-                <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> 清空</button>
-                <a class="btn btn-muted btn-small" href="admin-i18n.html"><i class="fa-solid fa-language"></i> 舊雙語頁</a>
-              </div>
-              <div class="right">
-                <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
-                <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
-              </div>
-            </div>
-
           <!-- Tabs container -->
           <div class="editor-tabs-header">
-            <button class="tab-btn active" data-tab="unit-maintenance" onclick="window.switchEditorTab('unit-maintenance')">
+            <button class="tab-btn active" data-tab="course-master" onclick="window.switchEditorTab('course-master')">
+              <i class="fa-solid fa-circle-info"></i> 課程主檔
+            </button>
+            <button class="tab-btn" data-tab="locale-content" onclick="window.switchEditorTab('locale-content')">
+              <i class="fa-solid fa-language"></i> 多國語言內容
+            </button>
+            <button class="tab-btn" data-tab="unit-maintenance" onclick="window.switchEditorTab('unit-maintenance')">
               <i class="fa-solid fa-list-check"></i> 課程單元維護
             </button>
             <button class="tab-btn" data-tab="pricebook" onclick="window.switchEditorTab('pricebook')">
@@ -716,7 +617,105 @@
             </button>
           </div>
 
-          <div class="editor-tab-content active" id="tab-unit-maintenance">
+          <div class="editor-tab-content active" id="tab-course-master">
+            <div class="editor-card">
+              <div class="card-title">
+                <div>
+                  <h2>課程主檔</h2>
+                  <span>修改 `metadata_lessons` 的 canonical 欄位與內容路徑</span>
+                </div>
+                <div id="lesson-status" style="color:var(--muted);font-size:12px;">尚未選擇課程</div>
+              </div>
+
+              <div class="editor-grid">
+                <div class="field readonly">
+                  <label>Document ID / docId</label>
+                  <input id="lesson-id" placeholder="自動產生 UUID-like ID" readonly />
+                  <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
+                </div>
+                <div class="field">
+                  <label>courseKey</label>
+                  <input id="lesson-course-key" placeholder="car-starter-web-app" />
+                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
+                </div>
+                <div class="field full">
+                  <label>title (課程名稱)</label>
+                  <input id="lesson-title" oninput="window.updateLocaleField('zh-TW', 'title', this.value)" placeholder="例如：Web App 基礎開發" />
+                </div>
+                <div class="field full">
+                  <label>summary (課程簡介)</label>
+                  <textarea id="lesson-summary" oninput="window.updateLocaleField('zh-TW', 'summary', this.value)" placeholder="例如：本課程介紹 Web App 開發基礎。"></textarea>
+                </div>
+                <div class="field full">
+                  <label>description (詳細描述)</label>
+                  <textarea id="lesson-description" oninput="window.updateLocaleField('zh-TW', 'description', this.value)" placeholder="例如：詳細的課程大綱與學習目標。"></textarea>
+                </div>
+                <div class="field full">
+                  <label>contentRef</label>
+                  <input id="lesson-content-ref" placeholder="courses/zh-TW/car-starter-web-app.html" />
+                  <div class="hint">指向外部 content-repo 的課程 HTML 路徑。</div>
+                </div>
+                <div class="field full">
+                  <label>entryUnitId</label>
+                  <input id="lesson-entry-unit-id" placeholder="start-01-unit-flexbox-layout.html" />
+                </div>
+                <div class="field">
+                  <label>track</label>
+                  <input id="lesson-track" placeholder="car / common" />
+                </div>
+                <div class="field">
+                  <label>level</label>
+                  <input id="lesson-level" placeholder="starter / basic / advanced" />
+                </div>
+                <div class="field">
+                  <label>category</label>
+                  <input id="lesson-category" placeholder="prepare / start / basic / advanced" />
+                </div>
+                <div class="field">
+                  <label>metadataType</label>
+                  <select id="lesson-metadata-type">
+                    <option value="course">course</option>
+                    <option value="product">product</option>
+                    <option value="legacy_product">legacy_product</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>productId</label>
+                  <input id="lesson-product-id" placeholder="預設可與 docId 相同" />
+                </div>
+                <div class="field">
+                  <label>orderWeight</label>
+                  <input id="lesson-order-weight" type="number" step="1" placeholder="0" />
+                </div>
+                <div class="field full">
+                  <label>可見性 / 狀態</label>
+                  <div class="switch-row">
+                    <label class="switch"><input id="lesson-is-physical" type="checkbox" /> isPhysical</label>
+                    <label class="switch"><input id="lesson-hidden" type="checkbox" /> hiddenFromCatalog</label>
+                    <label class="switch"><input id="lesson-deprecated" type="checkbox" /> isDeprecated</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-tab-content" id="tab-locale-content">
+            <div class="editor-card">
+              <div class="card-title">
+                <div>
+                  <h2>多國語言內容</h2>
+                  <span>英文 (`en`) 是主體，其他語言會一起寫入 `metadata_lessons.i18n`</span>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                  <button class="btn btn-muted btn-small" onclick="window.addLocalePrompt()"><i class="fa-solid fa-plus"></i> 新增語言</button>
+                </div>
+              </div>
+              <div id="locale-editor"></div>
+            </div>
+          </div>
+
+
+          <div class="editor-tab-content" id="tab-unit-maintenance">
             <div class="editor-card">
               <div class="card-title">
                 <div>
@@ -914,6 +913,18 @@
               <pre id="log">等待載入課程資料。</pre>
             </div>
           </div>
+
+            <div class="action-row">
+              <div class="left">
+                <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> 複製</button>
+                <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> 清空</button>
+                <a class="btn btn-muted btn-small" href="admin-i18n.html"><i class="fa-solid fa-language"></i> 舊雙語頁</a>
+              </div>
+              <div class="right">
+                <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
+                <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
+              </div>
+            </div>
         </div>
       </div>
     </div>
@@ -1272,7 +1283,7 @@
       syncModalHeader();
       renderLocaleEditor();
       renderCourseUnitsEditor();
-      window.switchEditorTab('unit-maintenance');
+      window.switchEditorTab('course-master');
     }
 
     function closeLessonModal() {
