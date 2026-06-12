@@ -909,6 +909,84 @@ async function purgeContentCacheHelper(dbRef) {
     console.log(`[purgeContentCacheHelper] ✅ Purged ${count} cache files from content_cache.`);
 }
 
+function normalizeLessonLocalePayload(localeData = {}) {
+    return {
+        title: normalizeText(localeData.title || ""),
+        summary: normalizeText(localeData.summary || ""),
+        description: normalizeText(localeData.description || ""),
+        coreContent: Array.isArray(localeData.coreContent)
+            ? localeData.coreContent.map((item) => normalizeText(item)).filter(Boolean)
+            : []
+    };
+}
+
+function normalizeLessonMetadataPatch(payload = {}) {
+    const docId = normalizeText(payload.docId || payload.id || "");
+    assertRequiredValue(docId, "missing-lesson-id");
+
+    const hasOwn = (key) => Object.prototype.hasOwnProperty.call(payload, key);
+    const patch = {
+        id: docId,
+        docId,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedBy: payload.updatedBy || payload.updatedByUid || payload.updatedByEmail || payload.updatedByName || null
+    };
+
+    if (hasOwn("courseKey")) patch.courseKey = normalizeText(payload.courseKey || docId);
+    if (hasOwn("title")) patch.title = normalizeText(payload.title || "");
+    if (hasOwn("summary")) patch.summary = normalizeText(payload.summary || "");
+    if (hasOwn("description")) patch.description = normalizeText(payload.description || "");
+    if (hasOwn("coreContent")) {
+        patch.coreContent = Array.isArray(payload.coreContent)
+            ? payload.coreContent.map((item) => normalizeText(item)).filter(Boolean)
+            : [];
+    }
+    if (hasOwn("titleEn")) patch.titleEn = normalizeText(payload.titleEn || "");
+    if (hasOwn("summaryEn")) patch.summaryEn = normalizeText(payload.summaryEn || "");
+    if (hasOwn("descriptionEn")) patch.descriptionEn = normalizeText(payload.descriptionEn || "");
+    if (hasOwn("coreContentEn")) {
+        patch.coreContentEn = Array.isArray(payload.coreContentEn)
+            ? payload.coreContentEn.map((item) => normalizeText(item)).filter(Boolean)
+            : [];
+    }
+    if (hasOwn("track")) patch.track = normalizeText(payload.track || "");
+    if (hasOwn("level")) patch.level = normalizeText(payload.level || "");
+    if (hasOwn("category")) patch.category = normalizeText(payload.category || "");
+    if (hasOwn("metadataType")) patch.metadataType = normalizeText(payload.metadataType || "course") || "course";
+    if (hasOwn("contentRef")) patch.contentRef = normalizeText(payload.contentRef || "");
+    if (hasOwn("entryUnitId")) patch.entryUnitId = normalizeText(payload.entryUnitId || "");
+    if (hasOwn("productId")) patch.productId = normalizeText(payload.productId || docId);
+    if (hasOwn("orderWeight")) patch.orderWeight = Number(payload.orderWeight || 0) || 0;
+    if (hasOwn("isPhysical")) patch.isPhysical = payload.isPhysical === true;
+    if (hasOwn("hiddenFromCatalog")) patch.hiddenFromCatalog = payload.hiddenFromCatalog === true;
+    if (hasOwn("isDeprecated")) patch.isDeprecated = payload.isDeprecated === true;
+
+    if (payload.i18n && typeof payload.i18n === "object" && !Array.isArray(payload.i18n)) {
+        const i18n = {};
+        for (const [locale, localeData] of Object.entries(payload.i18n)) {
+            const key = normalizeText(locale).replace("_", "-");
+            if (!key || !localeData || typeof localeData !== "object" || Array.isArray(localeData)) continue;
+            i18n[key] = normalizeLessonLocalePayload(localeData);
+        }
+        if (Object.keys(i18n).length > 0) patch.i18n = i18n;
+    }
+    if (hasOwn("courseUnits")) {
+        if (Array.isArray(payload.courseUnits)) {
+            patch.courseUnits = payload.courseUnits.map((unit) => normalizeText(unit)).filter(Boolean);
+        } else {
+            patch.courseUnits = [];
+        }
+    }
+    if (hasOwn("courseUnitTitles")) {
+        if (Array.isArray(payload.courseUnitTitles)) {
+            patch.courseUnitTitles = payload.courseUnitTitles.map((title) => normalizeText(title)).filter(Boolean);
+        } else {
+            patch.courseUnitTitles = [];
+        }
+    }
+    return patch;
+}
+
 exports.adminUpdateLessonI18n = onCall(async (request) => {
     const { auth, data } = request;
 
@@ -946,6 +1024,38 @@ exports.adminUpdateLessonI18n = onCall(async (request) => {
     return { success: true, courseId };
 });
 
+exports.adminUpsertLessonMetadata = onCall(async (request) => {
+    const { auth, data } = request;
+
+    assertAuthenticated(auth);
+    const role = await getRole(auth.uid);
+    assertAdminRole(role);
+
+    const dbRef = admin.firestore();
+    const payload = data || {};
+    const patch = normalizeLessonMetadataPatch(payload);
+    const docRef = dbRef.collection("metadata_lessons").doc(patch.docId);
+    const existing = await docRef.get();
+
+    if (existing.exists && existing.data()?.createdAt) {
+        patch.createdAt = existing.data().createdAt;
+    } else if (!patch.createdAt) {
+        patch.createdAt = admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    if (!patch.updatedBy) {
+        patch.updatedBy = auth.uid;
+    }
+
+    await docRef.set(patch, { merge: true });
+    console.log(`[adminUpsertLessonMetadata] Upserted lesson metadata for docId=${patch.docId} by uid=${auth.uid}`);
+
+    return {
+        success: true,
+        docId: patch.docId
+    };
+});
+
 exports.adminUpdateSystemConfig = onCall(async (request) => {
     const { auth, data } = request;
 
@@ -979,6 +1089,28 @@ exports.adminUpdateSystemConfig = onCall(async (request) => {
     }
 
     return { success: true };
+});
+
+exports.adminGetSystemConfig = onCall(async (request) => {
+    const { auth } = request;
+
+    assertAuthenticated(auth);
+    const role = await getRole(auth.uid);
+    assertAdminRole(role);
+
+    const docSnap = await db.collection("metadata_settings").doc("content_runtime").get();
+    const data = docSnap.exists ? (docSnap.data() || {}) : {};
+
+    return {
+        success: true,
+        contentVersion: data.contentVersion || "",
+        defaultRegion: data.defaultRegion || "US",
+        defaultDistributorId: data.defaultDistributorId || "default-usd",
+        defaultLocale: data.defaultLocale || "en",
+        supportedLocales: Array.isArray(data.supportedLocales) ? data.supportedLocales : [],
+        localeLabels: data.localeLabels && typeof data.localeLabels === "object" && !Array.isArray(data.localeLabels) ? data.localeLabels : {},
+        localeFallbackMap: data.localeFallbackMap && typeof data.localeFallbackMap === "object" && !Array.isArray(data.localeFallbackMap) ? data.localeFallbackMap : {}
+    };
 });
 
 exports.adminPurgeContentCache = onCall(async (request) => {
@@ -1160,6 +1292,59 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
     }, { merge: true });
 
     return { success: true, priceBookId, distributorId, productId };
+});
+
+exports.adminGetLessonPriceBooks = onCall(async (request) => {
+    const { auth, data } = request;
+
+    assertAuthenticated(auth);
+    const role = await getRole(auth.uid);
+    assertAdminRole(role);
+
+    const dbRef = admin.firestore();
+    const lessonId = normalizeText(data?.lessonId || data?.docId || "");
+    const productId = normalizeText(data?.productId || "");
+    const distributorId = normalizeText(data?.distributorId || "");
+
+    const targetKeys = new Set([
+        lessonId,
+        productId,
+        lessonId ? `${lessonId}.html` : "",
+        productId ? `${productId}.html` : ""
+    ].filter(Boolean));
+
+    const snap = await dbRef.collection("dealer_price_books").get();
+    const items = [];
+    snap.forEach((doc) => {
+        const book = { id: doc.id, ...(doc.data() || {}) };
+        if (distributorId && normalizeText(book.distributorId) !== distributorId) return;
+
+        const bookKeys = [
+            book.id,
+            book.priceBookId,
+            book.lessonId,
+            book.sourceLessonId,
+            book.productId
+        ].map((value) => normalizeText(value)).filter(Boolean);
+
+        const matches = targetKeys.size === 0 || bookKeys.some((value) => targetKeys.has(value));
+        if (!matches) return;
+        items.push(book);
+    });
+
+    items.sort((a, b) => {
+        const aKey = `${normalizeText(a.distributorId)}::${normalizeText(a.productId)}::${normalizeText(a.id)}`;
+        const bKey = `${normalizeText(b.distributorId)}::${normalizeText(b.productId)}::${normalizeText(b.id)}`;
+        return aKey.localeCompare(bKey);
+    });
+
+    return {
+        success: true,
+        lessonId,
+        productId,
+        distributorId,
+        items
+    };
 });
 
 exports.adminSeedDistributorPriceBooksFromLessons = onCall(async (request) => {

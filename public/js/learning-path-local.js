@@ -649,7 +649,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const displayKey = String(lesson.courseKey || lesson.courseId || "");
     const contentList = translateBulletList(toList(isEn ? (lesson.coreContentEn || []) : lesson.coreContent).slice(0, 4), uiLocale).filter(Boolean);
     const summary = String((isEn ? (lesson.summaryEn || lesson.descriptionEn)
-      : (lesson.summary || lesson.description)) || (isEn ? "Course content loaded locally." : "課程內容由本機資料載入。"));
+      : (lesson.summary || lesson.description || lesson.tagText)) || (isEn ? "Course content loaded locally." : "課程內容由本機資料載入。"));
     const duration = String(lesson.duration || lesson.estimatedDuration || "");
     const lessonLabel = String((isEn ? (lesson.lessonLabelEn || "") : (lesson.lessonLabel || lesson.tagText)) || "").trim();
     const displayLessonLabel = lessonLabel || (isEn ? "Course Unit" : "課程單元");
@@ -710,7 +710,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const hardwareId = String(lesson.courseId || "").toLowerCase();
     const imageUrl = pickImage(lesson);
     const summary = String(isEn ? (lesson.summaryEn || lesson.descriptionEn)
-      : (lesson.summary || lesson.description) || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations"));
+      : (lesson.summary || lesson.description || lesson.tagText) || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations"));
     const displayTitle = String((isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId) : lesson.title) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit"));
     const contentList = translateBulletList(toList(isEn ? (lesson.coreContentEn || []) : lesson.coreContent).slice(0, 4), uiLocale).filter(Boolean);
     const listHtml = contentList.length

@@ -42,6 +42,30 @@ function isPhysicalOrderItem(itemId, itemData = {}, physicalUnitIds = new Set())
     return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(itemId);
 }
 
+function toMillis(value) {
+    if (!value) return null;
+    if (typeof value.toMillis === "function") {
+        const millis = value.toMillis();
+        return Number.isFinite(millis) ? millis : null;
+    }
+    if (typeof value.toDate === "function") {
+        const date = value.toDate();
+        return date instanceof Date && !Number.isNaN(date.getTime()) ? date.getTime() : null;
+    }
+    if (value instanceof Date) {
+        const millis = value.getTime();
+        return Number.isFinite(millis) ? millis : null;
+    }
+    if (typeof value === "number") {
+        return Number.isFinite(value) ? value : null;
+    }
+    if (typeof value === "string") {
+        const parsed = Date.parse(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+}
+
 function normalizeLogisticsData(logisticsData = {}) {
     const receiverName = normalizeText(logisticsData.receiverName || logisticsData.ReceiverName || '');
     const receiverPhone = normalizeText(logisticsData.receiverPhone || logisticsData.ReceiverCellPhone || logisticsData.ReceiverPhone || '');
@@ -312,7 +336,7 @@ function hasActiveOrderForCourse(ordersSnapshot, courseId, lessons = [], resolve
 
         let orderDate = null;
         if (data.paymentDate) {
-            orderDate = new Date(data.paymentDate).getTime();
+            orderDate = toMillis(data.paymentDate);
         } else if (data.createdAt?.toDate) {
             orderDate = data.createdAt.toDate().getTime();
         }

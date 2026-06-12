@@ -2767,7 +2767,7 @@ function openTutorBindingModal(courseId, unitId, assignmentId, title, promotionC
     document.getElementById('link-unit-id').value = unitId || '';
     document.getElementById('link-assignment-id').value = assignmentId || '';
     document.getElementById('link-assignment-title').value = title || assignmentId || '';
-    // 預填目前已設定的 promotion code（若有）
+    // 預填目前已設定的 tutor email / promotion code（若有）
     document.getElementById('link-promotion-code').value = promotionCode || '';
     document.getElementById('assignment-link-modal').classList.remove('hidden');
 }
@@ -2785,7 +2785,7 @@ function injectAssignmentLinkModal() {
                     🎓
                 </div>
                 <h3 class="text-2xl font-bold text-gray-800">確認 / 更換授課老師</h3>
-                <p class="text-sm text-gray-500 mt-2">請確認您目前的授課老師，或輸入新的 Promotion code 更換。<br><span class="text-blue-500 font-medium">留空將使用預設導師邀請連結。</span></p>
+                <p class="text-sm text-gray-500 mt-2">請確認您目前的授課老師，或輸入新的授課老師 Email 更換。<br><span class="text-blue-500 font-medium">留空將使用預設導師邀請連結。</span></p>
             </div>
             
             <input type="hidden" id="link-course-id">
@@ -2795,10 +2795,10 @@ function injectAssignmentLinkModal() {
             <input type="hidden" id="link-force-mode">
 
             <div class="mb-6">
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">老師 Promotion code</label>
-                <input type="text" id="link-promotion-code" placeholder="輸入 Promotion code 或 Tutor email（留空使用預設導師）"
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">授課老師 Email</label>
+                <input type="text" id="link-promotion-code" placeholder="輸入授課老師 Email（留空使用預設導師）"
                     class="w-full border-2 border-gray-100 bg-gray-50 p-4 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition font-mono text-sm">
-                <p class="text-[10px] text-gray-400 mt-2">※ 可填 Promotion code 或 Tutor email；留空將使用預設導師（rover.k.chen@gmail.com）。</p>
+                <p class="text-[10px] text-gray-400 mt-2">※ 請輸入授課老師的 Email 帳號；留空將使用預設導師（rover.k.chen@gmail.com）。</p>
             </div>
 
             <div class="flex flex-col gap-3">
@@ -2823,7 +2823,8 @@ window.closeAssignmentLinkModal = function () {
 window.submitBindTutorAction = async function () {
     const btn = document.getElementById('btn-bind-tutor');
     const codeInput = document.getElementById('link-promotion-code');
-    const promotionCode = String(codeInput.value || '').trim().toUpperCase();
+    const rawValue = String(codeInput.value || '').trim();
+    const promotionCode = rawValue.includes('@') ? rawValue : rawValue.toUpperCase();
     const courseId = document.getElementById('link-course-id').value;
     const unitId = document.getElementById('link-unit-id').value;
     const assignmentId = document.getElementById('link-assignment-id').value;
@@ -2878,8 +2879,8 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
                 document.getElementById('link-unit-id').value = fileName;
                 document.getElementById('link-assignment-id').value = assignmentId;
                 document.getElementById('link-assignment-title').value = title;
-                // 預填目前已設定的 promotion code，讓使用者確認或修改
-                document.getElementById('link-promotion-code').value = assignmentAccess?.assignedPromotionCode || '';
+                // 預填目前已設定的 tutor email 或 promotion code，讓使用者確認或修改
+                document.getElementById('link-promotion-code').value = assignmentAccess?.assignedTutorEmail || assignmentAccess?.assignedPromotionCode || '';
 
                 // 原生 API 系統：固定設為 native-api 模式
                 const forceModeInput = document.getElementById('link-force-mode');
