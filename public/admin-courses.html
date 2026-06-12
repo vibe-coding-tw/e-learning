@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>課程管理 — Vibe Coding Admin</title>
+  <meta name="description" content="Vibe Coding 管理後台：課程新增、修改、停用與價格表管理" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(99,102,241,.16), transparent 26%),
+        radial-gradient(circle at top right, rgba(16,185,129,.12), transparent 24%),
+        linear-gradient(180deg, #0b1020 0%, #0f172a 38%, #f8fafc 38%, #f8fafc 100%);
+      color: #0f172a;
+    }
+    a { color: inherit; }
+    button, input, textarea, select { font: inherit; }
+    :root {
+      --panel: rgba(255,255,255,.92);
+      --panel-strong: #ffffff;
+      --line: #e2e8f0;
+      --line-strong: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+      --muted-2: #94a3b8;
+      --accent: #4f46e5;
+      --accent-2: #06b6d4;
+      --success: #059669;
+      --warn: #d97706;
+      --danger: #dc2626;
+      --shadow: 0 24px 80px rgba(15,23,42,.14);
+      --radius: 22px;
+    }
+    .wrap { max-width: 1600px; margin: 0 auto; padding: 24px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 18px 22px; border: 1px solid rgba(255,255,255,.18);
+      background: rgba(15,23,42,.58); backdrop-filter: blur(18px);
+      color: #fff; border-radius: 24px; box-shadow: var(--shadow);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .01em;
+    }
+    .brand .mark {
+      width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center;
+      background: linear-gradient(135deg, #818cf8, #22d3ee); color: #081120;
+      box-shadow: 0 12px 40px rgba(34,211,238,.24);
+    }
+    .top-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer;
+      border-radius: 14px; padding: 10px 14px; font-weight: 700; text-decoration: none;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #22d3ee); color: #07111f; }
+    .btn-dark { background: rgba(255,255,255,.11); color: #fff; border: 1px solid rgba(255,255,255,.18); }
+    .btn-ghost { background: #fff; border: 1px solid var(--line); color: var(--text); }
+    .page-head {
+      margin: 26px 0 18px;
+      display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px;
+      align-items: stretch;
+    }
+    .hero, .quick-card, .list-card, .editor-card, .price-card, .log-card {
+      background: var(--panel); border: 1px solid rgba(226,232,240,.92);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+    .hero { padding: 24px; }
+    .hero h1 {
+      margin: 0 0 10px; font-size: 32px; line-height: 1.06; letter-spacing: -.03em;
+    }
+    .hero p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .hero-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+      padding: 7px 11px; font-size: 12px; font-weight: 700; color: #0f172a;
+      background: #eef2ff; border: 1px solid #dbeafe;
+    }
+    .quick-card { padding: 20px; display: grid; gap: 14px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stat {
+      border-radius: 18px; padding: 14px; background: linear-gradient(180deg, #fff, #f8fafc);
+      border: 1px solid var(--line);
+    }
+    .stat .label { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted-2); font-weight: 800; }
+    .stat .value { font-size: 28px; font-weight: 900; margin-top: 6px; letter-spacing: -.04em; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+      margin: 0 0 18px;
+    }
+    .search {
+      flex: 1; min-width: 240px;
+      border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+      background: #fff; outline: none; color: var(--text);
+    }
+    .search:focus { border-color: #818cf8; box-shadow: 0 0 0 4px rgba(99,102,241,.12); }
+    .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      border: 1px solid var(--line); background: #fff; color: var(--muted);
+      border-radius: 999px; padding: 9px 13px; font-weight: 700; font-size: 12px; cursor: pointer;
+    }
+    .pill.active { background: #111827; color: #fff; border-color: #111827; }
+    .grid {
+      display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start;
+    }
+    .list-card { padding: 14px; position: sticky; top: 18px; }
+    .list-title, .card-title {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      margin-bottom: 14px;
+    }
+    .list-title h2, .card-title h2, .card-title h3 { margin: 0; }
+    .list-title h2, .card-title h2 { font-size: 18px; letter-spacing: -.02em; }
+    .list-title span, .card-title span { color: var(--muted); font-size: 12px; }
+    .course-list { display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 270px); overflow: auto; padding-right: 2px; }
+    .course-item {
+      border: 1px solid var(--line); border-radius: 18px; background: #fff; padding: 14px;
+      cursor: pointer; transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+    }
+    .course-item:hover { transform: translateY(-1px); border-color: #c7d2fe; box-shadow: 0 12px 30px rgba(79,70,229,.08); }
+    .course-item.active { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,.10); }
+    .course-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .course-name { font-size: 14px; font-weight: 800; color: var(--text); line-height: 1.4; }
+    .course-meta { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.6; font-family: "JetBrains Mono", monospace; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 6px 9px;
+      font-size: 11px; font-weight: 800; border: 1px solid var(--line); background: #f8fafc;
+      color: #334155;
+    }
+    .badge.green { background: #ecfdf5; border-color: #bbf7d0; color: #047857; }
+    .badge.orange { background: #fff7ed; border-color: #fed7aa; color: #b45309; }
+    .badge.red { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+    .badge.blue { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+
+    .editor-area {
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+    }
+    body.modal-open .editor-area {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      padding: 28px 18px;
+      background: rgba(2, 6, 23, .82);
+      overflow: auto;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    body.modal-open .editor-area > * {
+      width: min(1280px, 100%);
+    }
+    .editor-card, .price-card, .log-card { padding: 18px; }
+    .editor-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 12px; font-weight: 800; letter-spacing: .04em; color: #334155;
+      text-transform: uppercase;
+    }
+    .field input, .field textarea, .field select {
+      width: 100%; border: 1px solid var(--line); border-radius: 14px; padding: 12px 13px;
+      background: #fff; color: var(--text); outline: none;
+    }
+    .field textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,.12);
+    }
+    .field .hint { color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .field.readonly input[readonly] {
+      background: #f8fafc;
+      color: #475569;
+      cursor: not-allowed;
+    }
+    .full { grid-column: 1 / -1; }
+    .switch-row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+    .switch {
+      display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #334155;
+      padding: 8px 12px; border-radius: 999px; background: #f8fafc; border: 1px solid var(--line);
+    }
+    .switch input { width: 16px; height: 16px; accent-color: #4f46e5; }
+    .textarea-list {
+      min-height: 120px;
+      font-family: "JetBrains Mono", monospace;
+    }
+    .action-row {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;
+      margin-top: 14px;
+    }
+    .action-row .left, .action-row .right { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn-soft { background: #fff; border: 1px solid var(--line); color: var(--text); }
+    .btn-danger { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
+    .btn-success { background: #ecfdf5; color: #047857; border: 1px solid #bbf7d0; }
+    .btn-muted { background: #f8fafc; color: var(--muted); border: 1px solid var(--line); }
+    .btn-small { padding: 9px 12px; border-radius: 12px; font-size: 12px; }
+    .notice {
+      border-radius: 18px; padding: 14px 16px; border: 1px solid #fde68a; background: #fffbeb; color: #92400e;
+      font-size: 13px; line-height: 1.65;
+    }
+    .notice strong { font-weight: 900; }
+    .modal-chrome {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 4px 4px 18px;
+      color: #fff;
+    }
+    .modal-chrome .title { font-size: 22px; font-weight: 900; letter-spacing: -.03em; }
+    .modal-chrome .subtitle { font-size: 13px; color: #cbd5e1; margin-top: 4px; }
+    .modal-close {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .modal-close:hover { background: rgba(255,255,255,.14); }
+    .locale-toolbar {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .locale-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+    .locale-tab {
+      border: 1px solid var(--line); background: #fff; color: var(--muted);
+      border-radius: 999px; padding: 8px 12px; font-weight: 800; font-size: 12px; cursor: pointer;
+    }
+    .locale-tab.active { background: #111827; color: #fff; border-color: #111827; }
+    .locale-panel { display: none; gap: 12px; }
+    .locale-panel.active { display: grid; }
+    .locale-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .locale-card {
+      border: 1px solid var(--line); border-radius: 18px; padding: 14px; background: linear-gradient(180deg, #fff, #f8fafc);
+    }
+    .locale-card-head {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .locale-card-head strong { font-size: 14px; }
+    .locale-card-head small { color: var(--muted); font-size: 12px; }
+    .locale-card-actions { display: flex; gap: 8px; }
+    .locale-empty {
+      border: 1px dashed var(--line); border-radius: 16px; padding: 14px; color: var(--muted);
+      background: #fff; font-size: 13px;
+    }
+    .unit-maintenance {
+      display: grid;
+      gap: 12px;
+    }
+    .unit-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .unit-toolbar input {
+      min-width: 220px;
+      flex: 1;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 13px;
+      background: #fff;
+      color: var(--text);
+    }
+    .unit-toolbar input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,.12);
+      outline: none;
+    }
+    .unit-list {
+      display: grid;
+      gap: 8px;
+    }
+    .unit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+    .unit-item:hover {
+      transform: translateY(-1px);
+      border-color: #c7d2fe;
+      box-shadow: 0 10px 24px rgba(79,70,229,.08);
+    }
+    .unit-item.active {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,.08);
+    }
+    .unit-item.selected {
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(13,148,136,.10);
+    }
+    .unit-item-code {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      color: #334155;
+      word-break: break-all;
+    }
+    .unit-item-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .unit-advanced {
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      background: #fff;
+      padding: 10px 12px;
+    }
+    .unit-advanced summary {
+      cursor: pointer;
+      font-weight: 800;
+      color: #334155;
+    }
+    .unit-advanced summary::-webkit-details-marker {
+      display: none;
+    }
+    .unit-advanced textarea {
+      width: 100%;
+      margin-top: 10px;
+      min-height: 120px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 13px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      resize: vertical;
+      font-family: "JetBrains Mono", monospace;
+      line-height: 1.6;
+    }
+    .unit-advanced textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,.12);
+    }
+    .pricebook-list {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .pricebook-list table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .pricebook-list tbody tr {
+      cursor: pointer;
+      transition: background .15s ease;
+    }
+    .pricebook-list tbody tr:hover {
+      background: #f8fafc;
+    }
+    .pricebook-list td,
+    .pricebook-list th {
+      padding: 12px 14px;
+      border-top: 1px solid var(--line);
+    }
+    .pricebook-meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .pricebook-maintenance {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      padding: 14px;
+    }
+    .pricebook-maintenance summary {
+      cursor: pointer;
+      font-weight: 900;
+      color: #0f172a;
+      list-style: none;
+    }
+    .pricebook-maintenance summary::-webkit-details-marker {
+      display: none;
+    }
+    .pricebook-maintenance .maintenance-body {
+      display: grid;
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .log-card pre {
+      margin: 0; white-space: pre-wrap; word-break: break-word;
+      font-size: 12px; line-height: 1.7; color: #334155;
+    }
+    #loading-overlay, #auth-error {
+      position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+      background: rgba(2,6,23,.78); backdrop-filter: blur(12px);
+    }
+    #auth-error { display: none; }
+    #auth-error.show { display: flex; }
+    .overlay-box {
+      width: min(560px, calc(100vw - 32px)); border-radius: 24px; padding: 28px;
+      background: rgba(15,23,42,.95); color: #fff; border: 1px solid rgba(255,255,255,.08); box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .auth-meta {
+      margin: 16px auto 18px;
+      width: min(100%, 420px);
+      text-align: left;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #cbd5e1;
+    }
+    .auth-meta code {
+      display: block;
+      margin-top: 4px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      font-family: "JetBrains Mono", monospace;
+      word-break: break-all;
+      user-select: all;
+    }
+    .auth-meta .muted {
+      color: #94a3b8;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .spinner {
+      width: 42px; height: 42px; border-radius: 999px; border: 3px solid rgba(255,255,255,.18);
+      border-top-color: #22d3ee; animation: spin .8s linear infinite; margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .muted-link { color: #c7d2fe; text-decoration: none; }
+    .muted-link:hover { text-decoration: underline; }
+    .empty-state {
+      padding: 22px; text-align: center; color: var(--muted);
+      border: 1px dashed var(--line); border-radius: 18px; background: #fff;
+    }
+    /* Editor Tabs styling */
+    .editor-tabs-header {
+      display: flex;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      align-self: flex-start;
+      margin-top: 8px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .20s ease;
+    }
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .tab-btn.active {
+      background: #4f46e5;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.24);
+    }
+    .editor-tab-content {
+      display: none;
+    }
+    .editor-tab-content.active {
+      display: block;
+      animation: fadeInTab .25s ease-out;
+    }
+    @keyframes fadeInTab {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 1120px) {
+      .page-head, .grid { grid-template-columns: 1fr; }
+      .list-card { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-overlay">
+    <div class="overlay-box">
+      <div class="spinner"></div>
+      <div style="font-weight:900;font-size:18px;margin-bottom:6px;">驗證中...</div>
+      <div style="color:#94a3b8;font-size:14px;line-height:1.7;">正在檢查 Admin 權限與載入課程資料。</div>
+    </div>
+  </div>
+
+  <div id="auth-error">
+    <div class="overlay-box">
+      <div style="font-size:22px;font-weight:900;margin-bottom:8px;">存取被拒</div>
+      <div style="color:#cbd5e1;font-size:14px;line-height:1.8;margin-bottom:18px;">此頁面僅限 Admin 帳號使用。</div>
+      <div class="auth-meta">
+        <div><strong>目前登入帳號</strong></div>
+        <div>Email: <span id="auth-email">—</span></div>
+        <div>UID:</div>
+        <code id="auth-uid">—</code>
+        <div>Firestore role: <span id="auth-role">—</span></div>
+        <div class="muted">若你確定自己是 admin，請確認 `users/{uid}.role` 是否已設為 `admin`。</div>
+      </div>
+      <a class="btn btn-dark" href="dashboard.html"><i class="fa-solid fa-arrow-left"></i> 返回 Dashboard</a>
+    </div>
+  </div>
+
+  <div id="app" style="display:none;">
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="mark"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div>
+            <div style="font-size:15px;">Vibe Coding Admin</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.72);font-weight:600;">課程管理 / 入口 / 停用 / 價格表</div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <a class="btn btn-dark" href="dashboard.html"><i class="fa-solid fa-table-columns"></i> Dashboard</a>
+          <a class="btn btn-dark" href="admin-i18n.html"><i class="fa-solid fa-language"></i> 雙語內容</a>
+        </div>
+      </div>
+
+      <div class="page-head">
+        <div class="hero">
+          <h1>課程管理入口</h1>
+          <p>這裡可以新增、修改、停用課程主檔，並同步管理 `metadata_lessons` 與 `dealer_price_books`。主畫面只顯示清單，點擊任一課程會打開編輯對話框。</p>
+          <div class="hero-tags">
+            <span class="tag"><i class="fa-solid fa-database"></i> Firestore source of truth</span>
+            <span class="tag"><i class="fa-solid fa-file-lines"></i> contentRef / entryUnitId</span>
+            <span class="tag"><i class="fa-solid fa-tags"></i> dealer_price_books</span>
+            <span class="tag"><i class="fa-solid fa-circle-check"></i> Soft delete by default</span>
+            <span class="tag"><i class="fa-solid fa-language"></i> i18n multi-locale editor</span>
+          </div>
+        </div>
+        <div class="quick-card">
+          <div class="stat-grid">
+            <div class="stat"><div class="label">Total</div><div class="value" id="stat-total">—</div></div>
+            <div class="stat"><div class="label">Active</div><div class="value" id="stat-active">—</div></div>
+            <div class="stat"><div class="label">Hidden</div><div class="value" id="stat-hidden">—</div></div>
+          </div>
+          <div class="notice">
+            <strong>流程提示：</strong>先在清單點課程開啟對話框，再改主檔、多語內容與價格表。英文是主體，其他語言可在同一個對話框中新增。
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input id="search-input" class="search" type="search" placeholder="搜尋課程名稱、courseKey、docId..." />
+        <div class="pill-group">
+          <button class="pill active" data-filter="all" onclick="window.setCourseFilter('all')">全部</button>
+          <button class="pill" data-filter="active" onclick="window.setCourseFilter('active')">啟用</button>
+          <button class="pill" data-filter="hidden" onclick="window.setCourseFilter('hidden')">已隱藏</button>
+          <button class="pill" data-filter="deprecated" onclick="window.setCourseFilter('deprecated')">已停用</button>
+        </div>
+        <button class="btn btn-ghost" onclick="window.createBlankLesson()"><i class="fa-solid fa-plus"></i> 新增課程</button>
+      </div>
+
+      <div class="grid">
+        <div class="list-card">
+          <div class="list-title">
+            <h2>課程清單</h2>
+            <span id="lesson-count">0 items</span>
+          </div>
+          <div id="course-list" class="course-list">
+            <div class="empty-state">載入中...</div>
+          </div>
+        </div>
+
+        <div class="editor-area">
+          <div class="modal-chrome">
+            <div>
+              <div class="title" id="modal-title">課程編輯</div>
+              <div class="subtitle" id="modal-subtitle">點選清單中的課程後，在對話框中維護內容。</div>
+            </div>
+            <button class="modal-close" onclick="window.closeLessonModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
+          </div>
+
+          <div class="editor-card">
+            <div class="card-title">
+              <div>
+                <h2>課程主檔</h2>
+                <span>修改 `metadata_lessons` 的 canonical 欄位與內容路徑</span>
+              </div>
+              <div id="lesson-status" style="color:var(--muted);font-size:12px;">尚未選擇課程</div>
+            </div>
+
+            <div class="editor-grid">
+              <div class="field readonly">
+                <label>Document ID / docId</label>
+                <input id="lesson-id" placeholder="自動產生 UUID-like ID" readonly />
+                <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
+              </div>
+              <div class="field">
+                <label>courseKey</label>
+                <input id="lesson-course-key" placeholder="car-starter-web-app" />
+                <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
+              </div>
+              <div class="field full">
+                <label>title (課程名稱)</label>
+                <input id="lesson-title" oninput="window.updateLocaleField('zh-TW', 'title', this.value)" placeholder="例如：Web App 基礎開發" />
+              </div>
+              <div class="field full">
+                <label>summary (課程簡介)</label>
+                <textarea id="lesson-summary" oninput="window.updateLocaleField('zh-TW', 'summary', this.value)" placeholder="例如：本課程介紹 Web App 開發基礎。"></textarea>
+              </div>
+              <div class="field full">
+                <label>description (詳細描述)</label>
+                <textarea id="lesson-description" oninput="window.updateLocaleField('zh-TW', 'description', this.value)" placeholder="例如：詳細的課程大綱與學習目標。"></textarea>
+              </div>
+              <div class="field full">
+                <label>contentRef</label>
+                <input id="lesson-content-ref" placeholder="courses/zh-TW/car-starter-web-app.html" />
+                <div class="hint">指向外部 content-repo 的課程 HTML 路徑。</div>
+              </div>
+              <div class="field full">
+                <label>entryUnitId</label>
+                <input id="lesson-entry-unit-id" placeholder="start-01-unit-flexbox-layout.html" />
+              </div>
+              <div class="field">
+                <label>track</label>
+                <input id="lesson-track" placeholder="car / common" />
+              </div>
+              <div class="field">
+                <label>level</label>
+                <input id="lesson-level" placeholder="starter / basic / advanced" />
+              </div>
+              <div class="field">
+                <label>category</label>
+                <input id="lesson-category" placeholder="prepare / start / basic / advanced" />
+              </div>
+              <div class="field">
+                <label>metadataType</label>
+                <select id="lesson-metadata-type">
+                  <option value="course">course</option>
+                  <option value="product">product</option>
+                  <option value="legacy_product">legacy_product</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>productId</label>
+                <input id="lesson-product-id" placeholder="預設可與 docId 相同" />
+              </div>
+              <div class="field">
+                <label>orderWeight</label>
+                <input id="lesson-order-weight" type="number" step="1" placeholder="0" />
+              </div>
+              <div class="field full">
+                <label>可見性 / 狀態</label>
+                <div class="switch-row">
+                  <label class="switch"><input id="lesson-is-physical" type="checkbox" /> isPhysical</label>
+                  <label class="switch"><input id="lesson-hidden" type="checkbox" /> hiddenFromCatalog</label>
+                  <label class="switch"><input id="lesson-deprecated" type="checkbox" /> isDeprecated</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-card">
+            <div class="card-title">
+              <div>
+                <h2>多國語言內容</h2>
+                <span>英文 (`en`) 是主體，其他語言會一起寫入 `metadata_lessons.i18n`</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <button class="btn btn-muted btn-small" onclick="window.addLocalePrompt()"><i class="fa-solid fa-plus"></i> 新增語言</button>
+              </div>
+            </div>
+            <div id="locale-editor"></div>
+          </div>
+
+            <div class="action-row">
+              <div class="left">
+                <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> 複製</button>
+                <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> 清空</button>
+                <a class="btn btn-muted btn-small" href="admin-i18n.html"><i class="fa-solid fa-language"></i> 舊雙語頁</a>
+              </div>
+              <div class="right">
+                <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
+                <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
+              </div>
+            </div>
+
+          <!-- Tabs container -->
+          <div class="editor-tabs-header">
+            <button class="tab-btn active" data-tab="unit-maintenance" onclick="window.switchEditorTab('unit-maintenance')">
+              <i class="fa-solid fa-list-check"></i> 課程單元維護
+            </button>
+            <button class="tab-btn" data-tab="pricebook" onclick="window.switchEditorTab('pricebook')">
+              <i class="fa-solid fa-tags"></i> PRICEBOOK
+            </button>
+            <button class="tab-btn" data-tab="locale-settings" onclick="window.switchEditorTab('locale-settings')">
+              <i class="fa-solid fa-globe"></i> 站台 locale 設定
+            </button>
+            <button class="tab-btn" data-tab="log" onclick="window.switchEditorTab('log')">
+              <i class="fa-solid fa-terminal"></i> 提示 / Log
+            </button>
+          </div>
+
+          <div class="editor-tab-content active" id="tab-unit-maintenance">
+            <div class="editor-card">
+              <div class="card-title">
+                <div>
+                  <h2>課程單元維護</h2>
+                  <span>只維護跨單元 TAB，不會覆寫單元內 sidebar 或 `window.UNITS`。</span>
+                </div>
+                <div style="color:var(--muted);font-size:12px;" id="course-unit-status">尚未載入</div>
+              </div>
+              <div class="unit-maintenance">
+                <div class="editor-grid" style="margin-bottom: 8px;">
+                  <div class="field">
+                    <label>單元檔名 / unitId</label>
+                    <input id="course-unit-input" type="text" placeholder="例如 start-01-unit-html5-basics.html" />
+                  </div>
+                  <div class="field">
+                    <label>單元顯示標題</label>
+                    <input id="course-unit-title-input" type="text" placeholder="例如 HTML5 Basics" />
+                  </div>
+                </div>
+                <div class="action-row" style="margin-top: 0; margin-bottom: 12px;">
+                  <div class="left">
+                    <button class="btn btn-ghost btn-small" onclick="window.addEntryUnitToCourseUnits()"><i class="fa-solid fa-bolt"></i> 同步 entryUnitId</button>
+                  </div>
+                  <div class="right">
+                    <button class="btn btn-primary btn-small" onclick="window.addCourseUnitFromInput()"><i class="fa-solid fa-plus"></i> 新增 / 更新所選單元</button>
+                  </div>
+                </div>
+                <div id="course-unit-list" class="unit-list"></div>
+                <details class="unit-advanced">
+                  <summary>進階文字編輯</summary>
+                  <textarea id="lesson-course-units" class="textarea-list" placeholder="一行一個單元檔名，例如&#10;start-01-unit-html5-basics.html&#10;start-01-unit-flexbox-layout.html"></textarea>
+                  <textarea id="lesson-course-unit-titles" class="textarea-list" placeholder="一行一個單元標題，順序需與上方單元一致，例如&#10;HTML5 Basics&#10;Flexbox Layout"></textarea>
+                  <div class="hint">點擊下方單元可回填到上方輸入框；修改後按「新增 / 更新單元」即可覆寫所選項目。這裡會同步維護 `courseUnits` 與 `courseUnitTitles`。</div>
+                </details>
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-tab-content" id="tab-pricebook">
+            <div class="price-card">
+              <div class="card-title">
+                <div>
+                  <h3 style="margin:0;font-size:18px;">PRICEBOOK</h3>
+                  <span>先看清單，點擊後再進入維護</span>
+                </div>
+                <div id="pricebook-status" style="color:var(--muted);font-size:12px;">尚未載入</div>
+              </div>
+
+              <div class="pricebook-list" style="margin-top:14px;">
+                <table>
+                  <thead>
+                    <tr style="background:#f8fafc; color:#475569; font-size:12px; text-transform:uppercase; letter-spacing:.08em;">
+                      <th style="text-align:left;">PRICEBOOK</th>
+                      <th style="text-align:left;">Distributor / Product</th>
+                      <th style="text-align:left;">Status</th>
+                      <th style="text-align:right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pricebook-table">
+                    <tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未載入</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <details id="pricebook-editor" class="pricebook-maintenance" style="margin-top:14px;">
+                <summary>維護 PRICEBOOK</summary>
+                <div class="maintenance-body">
+                  <div class="editor-grid">
+                    <div class="field">
+                      <label>distributorId</label>
+                      <input id="price-distributor-id" list="distributor-options" placeholder="default-usd" />
+                      <datalist id="distributor-options"></datalist>
+                    </div>
+                    <div class="field">
+                      <label>priceBookId</label>
+                      <input id="price-book-id" placeholder="自動產生：distributorId_productId" />
+                    </div>
+                    <div class="field">
+                      <label>productId</label>
+                      <input id="price-product-id" placeholder="預設跟 lesson 的 productId 一樣" />
+                    </div>
+                    <div class="field">
+                      <label>currency</label>
+                      <input id="price-currency" placeholder="TWD / USD" />
+                    </div>
+                    <div class="field">
+                      <label>salePrice</label>
+                      <input id="price-sale" type="number" min="0" step="0.01" placeholder="1200" />
+                    </div>
+                    <div class="field">
+                      <label>promoPrice</label>
+                      <input id="price-promo" type="number" min="0" step="0.01" placeholder="999" />
+                    </div>
+                    <div class="field">
+                      <label>version</label>
+                      <input id="price-version" placeholder="v1" />
+                    </div>
+                    <div class="field">
+                      <label>isActive</label>
+                      <div class="switch-row" style="padding-top: 10px;">
+                        <label class="switch"><input id="price-is-active" type="checkbox" checked /> 啟用價格表</label>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label>effectiveFrom</label>
+                      <input id="price-effective-from" type="datetime-local" />
+                    </div>
+                    <div class="field">
+                      <label>effectiveTo</label>
+                      <input id="price-effective-to" type="datetime-local" />
+                    </div>
+                    <div class="field">
+                      <label>promoEffectiveFrom</label>
+                      <input id="price-promo-from" type="datetime-local" />
+                    </div>
+                    <div class="field">
+                      <label>promoEffectiveTo</label>
+                      <input id="price-promo-to" type="datetime-local" />
+                    </div>
+                  </div>
+
+                  <div class="action-row" style="margin-top: 0;">
+                    <div class="left">
+                      <button class="btn btn-soft btn-small" onclick="window.loadSelectedLessonPriceBooks()"><i class="fa-solid fa-rotate"></i> 重新整理</button>
+                      <span class="hint" id="pricebook-hint">先點選上方 PRICEBOOK 進入維護。</span>
+                    </div>
+                    <div class="right">
+                      <button class="btn btn-primary btn-small" onclick="window.saveSelectedPriceBook()"><i class="fa-solid fa-tag"></i> 儲存價格表</button>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <div class="editor-tab-content" id="tab-locale-settings">
+            <div class="editor-card">
+              <div class="card-title">
+                <div>
+                  <h2>站台 locale 設定</h2>
+                  <span>寫入 `metadata_settings/content_runtime`，作為全站語系預設與 fallback 真實來源。</span>
+                </div>
+                <div id="system-config-status" style="color:var(--muted);font-size:12px;">尚未載入</div>
+              </div>
+              <div class="editor-grid">
+                <div class="field">
+                  <label>defaultLocale</label>
+                  <input id="default-locale" placeholder="en / zh-TW" />
+                </div>
+                <div class="field">
+                  <label>defaultRegion</label>
+                  <input id="default-region" placeholder="US / TW" />
+                </div>
+                <div class="field">
+                  <label>defaultDistributorId</label>
+                  <input id="default-distributor-id" placeholder="default-usd" />
+                </div>
+                <div class="field">
+                  <label>contentVersion</label>
+                  <input id="content-version" placeholder="hash / version string" />
+                </div>
+                <div class="field full">
+                  <label>supportedLocales</label>
+                  <textarea id="supported-locales" class="textarea-list" placeholder="一行一個 locale，例如&#10;en&#10;zh-TW&#10;ja"></textarea>
+                  <div class="hint">前端可讀取的語系白名單，請保持簡潔且穩定。</div>
+                </div>
+                <div class="field full">
+                  <label>localeLabels (JSON)</label>
+                  <textarea id="locale-labels" class="textarea-list" placeholder='{"en":"English","zh-TW":"繁體中文"}'></textarea>
+                </div>
+                <div class="field full">
+                  <label>localeFallbackMap (JSON)</label>
+                  <textarea id="locale-fallback-map" class="textarea-list" placeholder='{"zh":"zh-TW","en-US":"en"}'></textarea>
+                </div>
+              </div>
+              <div class="action-row" style="margin-top: 14px;">
+                <div class="left">
+                  <span class="hint">這些值會集中寫入 `metadata_settings/content_runtime`，不要分散到前端常數。</span>
+                </div>
+                <div class="right">
+                  <button class="btn btn-primary btn-small" onclick="window.saveSystemConfig()"><i class="fa-solid fa-floppy-disk"></i> 儲存站台設定</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-tab-content" id="tab-log">
+            <div class="log-card">
+              <div class="card-title">
+                <div>
+                  <h3 style="margin:0;font-size:18px;">提示 / Log</h3>
+                  <span>顯示當前操作與驗證訊息</span>
+                </div>
+              </div>
+              <pre id="log">等待載入課程資料。</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+    import { firebaseConfig, connectFirebaseEmulators } from "./js/firebase-local.js?v=3";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const functions = getFunctions(app, "asia-east1");
+    connectFirebaseEmulators({ auth, db, functions });
+
+    const getLessonsMetadata = httpsCallable(functions, "getLessonsMetadata");
+    const getDistributorPortalData = httpsCallable(functions, "getDistributorPortalData");
+    const getSystemConfig = httpsCallable(functions, "getSystemConfig");
+    const upsertLessonMetadata = httpsCallable(functions, "upsertLessonMetadata");
+    const getLessonPriceBooks = httpsCallable(functions, "getLessonPriceBooks");
+    const upsertDistributorPriceBook = httpsCallable(functions, "upsertDistributorPriceBook");
+    const updateSystemConfig = httpsCallable(functions, "updateSystemConfig");
+
+    const state = {
+      lessons: [],
+      filteredLessons: [],
+      currentLessonId: "",
+      currentFilter: "all",
+      distributors: [],
+      currentPriceBooks: [],
+      locales: {},
+      courseUnitTitles: [],
+      systemConfig: {
+        defaultLocale: "en",
+        supportedLocales: [],
+        localeLabels: {},
+        localeFallbackMap: {}
+      },
+      activeLocale: "en",
+      selectedCourseUnitIndex: -1,
+      isReady: false
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(value = "") {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function normalizeText(value = "") {
+      return String(value || "").trim();
+    }
+
+    function normalizeList(value = "") {
+      return String(value || "")
+        .split(/\r?\n|,/g)
+        .map((item) => normalizeText(item))
+        .filter(Boolean);
+    }
+
+    function parseJsonLoose(text, fallback) {
+      const raw = normalizeText(text || "");
+      if (!raw) return fallback;
+      try {
+        return JSON.parse(raw);
+      } catch (err) {
+        throw new Error(`JSON 解析失敗：${err.message}`);
+      }
+    }
+
+    function toPrettyJson(value) {
+      try {
+        return JSON.stringify(value ?? {}, null, 2);
+      } catch (_) {
+        return "{}";
+      }
+    }
+
+    function getCourseUnitValues() {
+      return normalizeList($("lesson-course-units")?.value || "");
+    }
+
+    function setCourseUnitValues(values = []) {
+      const normalized = Array.isArray(values) ? values.map((item) => normalizeText(item)).filter(Boolean) : [];
+      if ($("lesson-course-units")) {
+        $("lesson-course-units").value = normalized.join("\n");
+      }
+      renderCourseUnitsEditor();
+    }
+
+    function getCourseUnitTitleValues() {
+      return normalizeList($("lesson-course-unit-titles")?.value || "");
+    }
+
+    function setCourseUnitTitleValues(values = []) {
+      const normalized = Array.isArray(values) ? values.map((item) => normalizeText(item)).filter(Boolean) : [];
+      if ($("lesson-course-unit-titles")) {
+        $("lesson-course-unit-titles").value = normalized.join("\n");
+      }
+      renderCourseUnitsEditor();
+    }
+
+    function normalizeCourseUnitPairState() {
+      const units = getCourseUnitValues();
+      const titles = getCourseUnitTitleValues();
+      const nextTitles = units.map((unitId, index) => normalizeText(titles[index] || unitId));
+      state.courseUnitTitles = nextTitles;
+      return { units, titles: nextTitles };
+    }
+
+    function renderSystemConfigEditor() {
+      if (!$("default-locale")) return;
+      $("default-locale").value = normalizeText(state.systemConfig.defaultLocale || "en");
+      $("supported-locales").value = Array.isArray(state.systemConfig.supportedLocales)
+        ? state.systemConfig.supportedLocales.join("\n")
+        : "";
+      $("locale-labels").value = toPrettyJson(state.systemConfig.localeLabels || {});
+      $("locale-fallback-map").value = toPrettyJson(state.systemConfig.localeFallbackMap || {});
+      $("content-version").value = normalizeText(state.systemConfig.contentVersion || "");
+      $("default-region").value = normalizeText(state.systemConfig.defaultRegion || "US");
+      $("default-distributor-id").value = normalizeText(state.systemConfig.defaultDistributorId || "default-usd");
+      $("system-config-status").textContent = "已載入";
+    }
+
+    function renderCourseUnitsEditor() {
+      const host = $("course-unit-list");
+      const status = $("course-unit-status");
+      if (!host) return;
+      const { units, titles } = normalizeCourseUnitPairState();
+      const entryUnitId = normalizeText($("lesson-entry-unit-id")?.value || "");
+      if (status) {
+        const selected = state.selectedCourseUnitIndex >= 0 && state.selectedCourseUnitIndex < units.length
+          ? units[state.selectedCourseUnitIndex]
+          : "";
+        status.textContent = units.length
+          ? `${units.length} 個單元${selected ? ` · 已選取：${selected}` : ""}`
+          : "尚未設定";
+      }
+      if (!units.length) {
+        host.innerHTML = '<div class="empty-state" style="padding:16px;">尚未加入任何單元。請先從上方新增或貼上清單。</div>';
+        return;
+      }
+      host.innerHTML = units.map((unitId, index) => {
+        const title = normalizeText(titles[index] || unitId);
+        const isEntry = entryUnitId && normalizeText(entryUnitId) === unitId;
+        const isSelected = state.selectedCourseUnitIndex === index;
+        return `
+          <div class="unit-item ${isEntry ? "active" : ""} ${isSelected ? "selected" : ""}" onclick="window.selectCourseUnit(${index})" title="點擊回填到單元輸入框">
+            <div>
+              <div class="unit-item-code">${escapeHtml(title || unitId)}</div>
+              ${title && title !== unitId ? `<div class="pricebook-meta">${escapeHtml(unitId)}</div>` : ''}
+              ${isEntry ? '<div class="pricebook-meta">entryUnitId</div>' : ''}
+            </div>
+            <div class="unit-item-actions">
+              <button class="btn btn-muted btn-small" onclick="event.stopPropagation(); window.moveCourseUnit(${index}, -1)"><i class="fa-solid fa-arrow-up"></i></button>
+              <button class="btn btn-muted btn-small" onclick="event.stopPropagation(); window.moveCourseUnit(${index}, 1)"><i class="fa-solid fa-arrow-down"></i></button>
+              <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); window.removeCourseUnit(${index})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function toDatetimeLocal(value) {
+      if (!value) return "";
+      try {
+        const date = value?.toDate ? value.toDate() : new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        const offset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+      } catch (_) {
+        return "";
+      }
+    }
+
+    function fromDatetimeLocal(value) {
+      if (!value) return null;
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return null;
+      return date;
+    }
+
+    function lessonStatus(lesson) {
+      if (!lesson) return "active";
+      if (lesson.isDeprecated === true) return "deprecated";
+      if (lesson.hiddenFromCatalog === true) return "hidden";
+      return "active";
+    }
+
+    function lessonLabel(lesson) {
+      const bits = [];
+      if (lesson.track) bits.push(String(lesson.track));
+      if (lesson.level) bits.push(String(lesson.level));
+      if (lesson.category) bits.push(String(lesson.category));
+      return bits.join(" · ");
+    }
+
+    function currentLesson() {
+      const found = state.lessons.find((lesson) => String(lesson.id || lesson.docId || "") === state.currentLessonId) || null;
+      if (found) return found;
+      const draftId = normalizeText($("lesson-id")?.value || "");
+      if (!draftId) return null;
+      return {
+        id: draftId,
+        docId: draftId,
+        courseKey: normalizeText($("lesson-course-key")?.value || draftId),
+        productId: normalizeText($("lesson-product-id")?.value || draftId)
+      };
+    }
+
+    function generateLessonDocId() {
+      if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+      return `lesson-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    function normalizeLocaleKey(locale = "") {
+      return String(locale || "").trim().replace("_", "-");
+    }
+
+    function cloneLocaleContent(value = {}) {
+      return {
+        title: normalizeText(value.title || ""),
+        summary: normalizeText(value.summary || ""),
+        description: normalizeText(value.description || ""),
+        coreContentText: Array.isArray(value.coreContent)
+          ? value.coreContent.join("\n")
+          : normalizeText(value.coreContentText || value.coreContent || "")
+      };
+    }
+
+    function inferLessonLocales(lesson = {}) {
+      const locales = {};
+      const sourceI18n = lesson.i18n && typeof lesson.i18n === "object" ? lesson.i18n : {};
+      Object.entries(sourceI18n).forEach(([locale, data]) => {
+        const key = normalizeLocaleKey(locale);
+        if (!key) return;
+        locales[key] = cloneLocaleContent(data || {});
+      });
+
+      if (!locales.en) {
+        locales.en = cloneLocaleContent({
+          title: lesson.titleEn || lesson.title || "",
+          summary: lesson.summaryEn || lesson.summary || lesson.tagText || "",
+          description: lesson.descriptionEn || lesson.description || "",
+          coreContent: lesson.coreContentEn || lesson.coreContent || []
+        });
+      }
+
+      if (!locales["zh-TW"] && (lesson.title || lesson.summary || lesson.tagText || lesson.description || lesson.coreContent)) {
+        locales["zh-TW"] = cloneLocaleContent({
+          title: lesson.title || "",
+          summary: lesson.summary || lesson.tagText || "",
+          description: lesson.description || "",
+          coreContent: lesson.coreContent || []
+        });
+      }
+
+      return locales;
+    }
+
+    function renderLocaleEditor() {
+      const host = $("locale-editor");
+      if (!host) return;
+      const locales = Object.entries(state.locales || {});
+      const ordered = [
+        ...locales.filter(([locale]) => locale === "en"),
+        ...locales.filter(([locale]) => locale !== "en").sort((a, b) => a[0].localeCompare(b[0]))
+      ];
+
+      if (!ordered.length) {
+        host.innerHTML = '<div class="locale-empty">尚未建立任何語言內容。請先新增 `en` 或其他 locale。</div>';
+        return;
+      }
+
+      host.innerHTML = `
+        <div class="locale-toolbar">
+          <div class="locale-tabs">
+            ${ordered.map(([locale]) => `
+              <button class="locale-tab ${locale === state.activeLocale ? 'active' : ''}" onclick="window.setActiveLocale('${escapeHtml(locale)}')">
+                ${escapeHtml(locale)}
+              </button>
+            `).join("")}
+          </div>
+          <div class="locale-card-actions">
+            <button class="btn btn-muted btn-small" onclick="window.addLocalePrompt()"><i class="fa-solid fa-plus"></i> 新增語言</button>
+          </div>
+        </div>
+        <div class="locale-grid">
+          ${ordered.map(([locale, data]) => `
+            <div class="locale-panel ${locale === state.activeLocale ? 'active' : ''}" data-locale="${escapeHtml(locale)}">
+              <div class="locale-card">
+                <div class="locale-card-head">
+                  <div>
+                    <strong>${escapeHtml(locale)}</strong>
+                    <small>${locale === 'en' ? '主體語言' : '附加語言'}</small>
+                  </div>
+                  <div class="locale-card-actions">
+                    ${locale === 'en' ? '' : `<button class="btn btn-muted btn-small" onclick="window.removeLocale('${escapeHtml(locale)}')">移除</button>`}
+                  </div>
+                </div>
+                <div class="editor-grid">
+                  <div class="field full">
+                    <label>title</label>
+                    <input value="${escapeHtml(data.title || '')}" oninput="window.updateLocaleField('${escapeHtml(locale)}', 'title', this.value)" placeholder="Title" />
+                  </div>
+                  <div class="field full">
+                    <label>summary</label>
+                    <textarea oninput="window.updateLocaleField('${escapeHtml(locale)}', 'summary', this.value)" placeholder="Summary">${escapeHtml(data.summary || '')}</textarea>
+                  </div>
+                  <div class="field full">
+                    <label>description</label>
+                    <textarea oninput="window.updateLocaleField('${escapeHtml(locale)}', 'description', this.value)" placeholder="Description">${escapeHtml(data.description || '')}</textarea>
+                  </div>
+                  <div class="field full">
+                    <label>coreContent</label>
+                    <textarea class="textarea-list" oninput="window.updateLocaleField('${escapeHtml(locale)}', 'coreContentText', this.value)" placeholder="一行一個 bullet">${escapeHtml(data.coreContentText || '')}</textarea>
+                    <div class="hint">會在儲存時轉成陣列並寫入 metadata_lessons.i18n.${escapeHtml(locale)}.coreContent。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function syncModalHeader() {
+      const lesson = currentLesson();
+      const persisted = state.lessons.find((item) => String(item.id || item.docId || "") === String(state.currentLessonId)) || null;
+      const title = $("modal-title");
+      const subtitle = $("modal-subtitle");
+      if (title) title.textContent = persisted ? `編輯課程：${lesson.id || lesson.docId || ""}` : "新增課程";
+      if (subtitle) subtitle.textContent = persisted
+        ? "在這個對話框裡維護主檔、i18n、價格表。"
+        : "建立一門新課程，Document ID 會自動產生且不可直接修改。";
+    }
+
+    function openLessonModal() {
+      document.body.classList.add("modal-open");
+      document.body.style.overflow = "hidden";
+      const editorArea = document.querySelector(".editor-area");
+      if (editorArea) editorArea.scrollTop = 0;
+      window.scrollTo(0, 0);
+      syncModalHeader();
+      renderLocaleEditor();
+      renderCourseUnitsEditor();
+      window.switchEditorTab('unit-maintenance');
+    }
+
+    function closeLessonModal() {
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+    }
+
+    window.closeLessonModal = closeLessonModal;
+    window.openLessonModal = openLessonModal;
+
+    window.switchEditorTab = function(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+      });
+      document.querySelectorAll('.editor-tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `tab-${tabId}`);
+      });
+    };
+
+    window.selectCourseUnit = function(index) {
+      const units = getCourseUnitValues();
+      const titles = getCourseUnitTitleValues();
+      if (index < 0 || index >= units.length) return;
+      const input = $("course-unit-input");
+      const titleInput = $("course-unit-title-input");
+      
+      if (state.selectedCourseUnitIndex === index) {
+        // Toggle deselect
+        state.selectedCourseUnitIndex = -1;
+        if (input) input.value = "";
+        if (titleInput) titleInput.value = "";
+        renderCourseUnitsEditor();
+        setLog("已取消選取單元");
+      } else {
+        // Select
+        state.selectedCourseUnitIndex = index;
+        if (input) {
+          input.value = units[index];
+          try {
+            input.focus({ preventScroll: true });
+          } catch (_) {
+            input.focus();
+          }
+          input.select?.();
+        }
+        if (titleInput) {
+          titleInput.value = normalizeText(titles[index] || units[index]);
+        }
+        renderCourseUnitsEditor();
+        setLog(`已選取單元：${units[index]}`);
+      }
+    };
+    window.addCourseUnitFromInput = function() {
+      const input = $("course-unit-input");
+      const titleInput = $("course-unit-title-input");
+      const value = normalizeText(input?.value || "");
+      const titleValue = normalizeText(titleInput?.value || "");
+      if (!value) {
+        alert("請輸入單元檔名。");
+        return;
+      }
+      const units = getCourseUnitValues();
+      const titles = getCourseUnitTitleValues();
+      const selectedIndex = state.selectedCourseUnitIndex;
+      let nextSelectedIndex = -1;
+      if (selectedIndex >= 0 && selectedIndex < units.length) {
+        units[selectedIndex] = value;
+        titles[selectedIndex] = titleValue || value;
+        nextSelectedIndex = selectedIndex;
+      } else if (!units.includes(value)) {
+        units.push(value);
+        titles.push(titleValue || value);
+        nextSelectedIndex = units.length - 1;
+      } else {
+        nextSelectedIndex = units.indexOf(value);
+        titles[nextSelectedIndex] = titleValue || value;
+      }
+      state.selectedCourseUnitIndex = nextSelectedIndex;
+      setCourseUnitValues(units);
+      setCourseUnitTitleValues(titles);
+      setLog(selectedIndex >= 0 ? `已更新所選單元：${value}` : `已新增單元：${value}`);
+    };
+    window.addEntryUnitToCourseUnits = function() {
+      const entryUnitId = normalizeText($("lesson-entry-unit-id")?.value || "");
+      if (!entryUnitId) {
+        alert("請先填寫 entryUnitId。");
+        return;
+      }
+      const units = getCourseUnitValues();
+      const titles = getCourseUnitTitleValues();
+      let targetIndex = units.indexOf(entryUnitId);
+      if (targetIndex < 0) {
+        units.unshift(entryUnitId);
+        titles.unshift(entryUnitId);
+        targetIndex = 0;
+      }
+      state.selectedCourseUnitIndex = targetIndex;
+      setCourseUnitValues(units);
+      setCourseUnitTitleValues(titles);
+
+      // Populate DOM inputs
+      const input = $("course-unit-input");
+      const titleInput = $("course-unit-title-input");
+      if (input) input.value = entryUnitId;
+      if (titleInput) titleInput.value = normalizeText(titles[targetIndex] || entryUnitId);
+
+      setLog(`已同步 entryUnitId 到課程單元：${entryUnitId}`);
+    };
+    window.moveCourseUnit = function(index, direction) {
+      const units = getCourseUnitValues();
+      const titles = getCourseUnitTitleValues();
+      const nextIndex = index + direction;
+      if (index < 0 || index >= units.length || nextIndex < 0 || nextIndex >= units.length) return;
+      const [item] = units.splice(index, 1);
+      const [titleItem] = titles.splice(index, 1);
+      units.splice(nextIndex, 0, item);
+      titles.splice(nextIndex, 0, titleItem);
+      setCourseUnitValues(units);
+      setCourseUnitTitleValues(titles);
+    };
+    window.removeCourseUnit = function(index) {
+      const units = getCourseUnitValues();
+      const titles = getCourseUnitTitleValues();
+      if (index < 0 || index >= units.length) return;
+      const removed = units.splice(index, 1)[0];
+      titles.splice(index, 1);
+      if (state.selectedCourseUnitIndex === index) {
+        state.selectedCourseUnitIndex = -1;
+      } else if (state.selectedCourseUnitIndex > index) {
+        state.selectedCourseUnitIndex -= 1;
+      }
+      setCourseUnitValues(units);
+      setCourseUnitTitleValues(titles);
+      setLog(`已移除單元：${removed}`);
+    };
+    window.setActiveLocale = function(locale) {
+      state.activeLocale = normalizeLocaleKey(locale) || "en";
+      renderLocaleEditor();
+    };
+    window.updateLocaleField = function(locale, field, value) {
+      const key = normalizeLocaleKey(locale);
+      if (!key) return;
+      if (!state.locales[key]) state.locales[key] = cloneLocaleContent();
+      state.locales[key][field] = value;
+
+      // 若修改的語系是 zh-TW，則同步回主檔輸入框
+      if (key === "zh-TW") {
+        if (field === "title") {
+          const el = $("lesson-title");
+          if (el && el.value !== value) el.value = value;
+        } else if (field === "summary") {
+          const el = $("lesson-summary");
+          if (el && el.value !== value) el.value = value;
+        } else if (field === "description") {
+          const el = $("lesson-description");
+          if (el && el.value !== value) el.value = value;
+        }
+      }
+    };
+    window.addLocalePrompt = function() {
+      const locale = normalizeLocaleKey(prompt("請輸入 locale，例如 zh-TW、ja、fr：") || "");
+      if (!locale) return;
+      if (!state.locales[locale]) {
+        state.locales[locale] = cloneLocaleContent();
+      }
+      state.activeLocale = locale;
+      renderLocaleEditor();
+    };
+    window.removeLocale = function(locale) {
+      const key = normalizeLocaleKey(locale);
+      if (!key || key === "en") return;
+      delete state.locales[key];
+      if (state.activeLocale === key) state.activeLocale = "en";
+      renderLocaleEditor();
+    };
+
+    function setLog(message) {
+      const el = $("log");
+      if (el) el.textContent = message;
+    }
+
+    function updateStats() {
+      const total = state.lessons.length;
+      const hidden = state.lessons.filter((item) => item.hiddenFromCatalog === true).length;
+      const deprecated = state.lessons.filter((item) => item.isDeprecated === true).length;
+      const active = total - hidden - deprecated;
+      $("stat-total").textContent = String(total);
+      $("stat-active").textContent = String(Math.max(active, 0));
+      $("stat-hidden").textContent = String(hidden + deprecated);
+    }
+
+    function renderLessons() {
+      const q = normalizeText($("search-input")?.value || "").toLowerCase();
+      const filtered = state.lessons.filter((lesson) => {
+        const status = lessonStatus(lesson);
+        const statusOk = state.currentFilter === "all" || status === state.currentFilter;
+        const text = [
+          lesson.id,
+          lesson.docId,
+          lesson.courseKey,
+          lesson.title,
+          lesson.titleEn,
+          lesson.contentRef
+        ].join(" ").toLowerCase();
+        const searchOk = !q || text.includes(q);
+        return statusOk && searchOk;
+      });
+
+      state.filteredLessons = filtered;
+      $("lesson-count").textContent = `${filtered.length} / ${state.lessons.length}`;
+
+      const list = $("course-list");
+      if (!filtered.length) {
+        list.innerHTML = '<div class="empty-state">找不到符合條件的課程</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map((lesson) => {
+        const status = lessonStatus(lesson);
+        const active = String(lesson.id || lesson.docId || "") === state.currentLessonId;
+        const badges = [];
+        badges.push(`<span class="badge ${status === "active" ? "green" : status === "hidden" ? "orange" : "red"}">${status}</span>`);
+        if (lesson.metadataType) badges.push(`<span class="badge blue">${escapeHtml(lesson.metadataType)}</span>`);
+        if (lesson.isPhysical) badges.push('<span class="badge">physical</span>');
+        return `
+          <div class="course-item ${active ? "active" : ""}" onclick="window.selectLesson('${escapeHtml(String(lesson.id || lesson.docId || ""))}')">
+            <div class="course-row">
+              <div>
+                <div class="course-name">${escapeHtml(lesson.title || lesson.titleEn || lesson.id || "Untitled")}</div>
+                <div class="course-meta">${escapeHtml(lesson.id || "")}${lesson.courseKey ? ` · ${escapeHtml(lesson.courseKey)}` : ""}</div>
+              </div>
+              <div style="font-size:18px;color:#cbd5e1;">${active ? '<i class="fa-solid fa-circle-dot" style="color:#6366f1"></i>' : '<i class="fa-regular fa-circle"></i>'}</div>
+            </div>
+            <div class="course-meta" style="margin-top:8px;">${escapeHtml(lessonLabel(lesson) || "—")}</div>
+            <div class="badge-row">${badges.join("")}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function fillLessonForm(lesson) {
+      const target = lesson || {};
+      $("lesson-id").value = target.id || target.docId || generateLessonDocId();
+      $("lesson-course-key").value = target.courseKey || "";
+      $("lesson-title").value = target.title || "";
+      $("lesson-summary").value = target.summary || target.tagText || "";
+      $("lesson-description").value = target.description || "";
+      $("lesson-content-ref").value = target.contentRef || "";
+      $("lesson-entry-unit-id").value = target.entryUnitId || "";
+      $("lesson-course-units").value = Array.isArray(target.courseUnits) ? target.courseUnits.join("\n") : "";
+      $("lesson-course-unit-titles").value = Array.isArray(target.courseUnitTitles)
+        ? target.courseUnitTitles.join("\n")
+        : "";
+      renderCourseUnitsEditor();
+      $("lesson-track").value = target.track || "";
+      $("lesson-level").value = target.level || "";
+      $("lesson-category").value = target.category || "";
+      $("lesson-metadata-type").value = target.metadataType || "course";
+      $("lesson-product-id").value = target.productId || target.id || "";
+      $("lesson-order-weight").value = target.orderWeight ?? 0;
+      $("lesson-is-physical").checked = target.isPhysical === true;
+      $("lesson-hidden").checked = target.hiddenFromCatalog === true;
+      $("lesson-deprecated").checked = target.isDeprecated === true;
+      $("lesson-status").textContent = target.id ? `編輯：${target.id}` : "新增空白課程";
+      state.locales = inferLessonLocales(target);
+      state.activeLocale = "en";
+      state.selectedCourseUnitIndex = -1;
+      renderLocaleEditor();
+      syncModalHeader();
+      $("price-product-id").value = normalizeText(target.productId || target.id || "");
+      $("price-book-id").value = "";
+      $("price-currency").value = target.currency || "";
+      $("price-sale").value = "";
+      $("price-promo").value = "";
+      $("price-version").value = "v1";
+      $("price-is-active").checked = true;
+      $("price-effective-from").value = "";
+      $("price-effective-to").value = "";
+      $("price-promo-from").value = "";
+      $("price-promo-to").value = "";
+      $("price-distributor-id").value = "";
+      $("pricebook-status").textContent = "尚未載入價格表";
+      $("pricebook-hint").textContent = target.id ? "選定分銷商後可載入或建立價格表。" : "先儲存課程，再處理價格表會比較穩。";
+      const pricebookPanel = $("pricebook-editor");
+      if (pricebookPanel) pricebookPanel.open = false;
+      renderLessons();
+      loadCurrentLessonPriceBooks().catch((err) => setLog(`價格表載入失敗：${err.message}`));
+    }
+
+    function fillPriceBookForm(book = null) {
+      const target = book || {};
+      $("price-distributor-id").value = target.distributorId || "";
+      $("price-book-id").value = target.id || "";
+      $("price-product-id").value = target.productId || target.lessonId || currentLesson()?.productId || currentLesson()?.id || "";
+      $("price-currency").value = target.currency || $("price-currency").value || "TWD";
+      $("price-sale").value = target.salePrice ?? "";
+      $("price-promo").value = target.promoPrice ?? "";
+      $("price-version").value = target.version || "v1";
+      $("price-is-active").checked = target.isActive !== false;
+      $("price-effective-from").value = toDatetimeLocal(target.effectiveFrom || target.createdAt || "");
+      $("price-effective-to").value = toDatetimeLocal(target.effectiveTo || "");
+      $("price-promo-from").value = toDatetimeLocal(target.promoEffectiveFrom || "");
+      $("price-promo-to").value = toDatetimeLocal(target.promoEffectiveTo || "");
+      $("pricebook-hint").textContent = target.id
+        ? `已載入價格表：${target.id}`
+        : "可從左側課程選單重新載入價格表。";
+    }
+
+    function serializeLessonForm() {
+      const docId = normalizeText($("lesson-id").value) || generateLessonDocId();
+      $("lesson-id").value = docId;
+      const courseKey = normalizeText($("lesson-course-key").value) || docId;
+      const productId = normalizeText($("lesson-product-id").value) || docId;
+      const title = normalizeText($("lesson-title").value);
+      const summary = normalizeText($("lesson-summary").value);
+      const description = normalizeText($("lesson-description").value);
+
+      // 強制同步主檔內容至 state 的 zh-TW 語系中
+      if (!state.locales["zh-TW"]) {
+        state.locales["zh-TW"] = cloneLocaleContent();
+      }
+      state.locales["zh-TW"].title = title;
+      state.locales["zh-TW"].summary = summary;
+      state.locales["zh-TW"].description = description;
+
+      const courseUnits = normalizeList($("lesson-course-units").value);
+      const courseUnitTitles = normalizeList($("lesson-course-unit-titles").value);
+      while (courseUnitTitles.length < courseUnits.length) {
+        courseUnitTitles.push(courseUnits[courseUnitTitles.length] || "");
+      }
+      const i18n = {};
+      Object.entries(state.locales || {}).forEach(([locale, data]) => {
+        const key = normalizeLocaleKey(locale);
+        if (!key) return;
+        i18n[key] = {
+          title: normalizeText(data.title),
+          summary: normalizeText(data.summary),
+          description: normalizeText(data.description),
+          coreContent: normalizeList(data.coreContentText)
+        };
+      });
+      if (!i18n.en) {
+        i18n.en = {
+          title: "",
+          summary: "",
+          description: "",
+          coreContent: []
+        };
+      }
+      const primaryLocale = i18n.en;
+      const legacyLocale = i18n["zh-TW"] || primaryLocale;
+      return {
+        id: docId,
+        docId,
+        courseKey,
+        title: title || legacyLocale.title || primaryLocale.title || "",
+        summary: summary || legacyLocale.summary || primaryLocale.summary || "",
+        description: description || legacyLocale.description || primaryLocale.description || "",
+        coreContent: legacyLocale.coreContent || primaryLocale.coreContent || [],
+        titleEn: primaryLocale.title || "",
+        summaryEn: primaryLocale.summary || "",
+        descriptionEn: primaryLocale.description || "",
+        coreContentEn: primaryLocale.coreContent || [],
+        i18n,
+        track: normalizeText($("lesson-track").value),
+        level: normalizeText($("lesson-level").value),
+        category: normalizeText($("lesson-category").value),
+        metadataType: normalizeText($("lesson-metadata-type").value) || "course",
+        contentRef: normalizeText($("lesson-content-ref").value),
+        entryUnitId: normalizeText($("lesson-entry-unit-id").value),
+        courseUnits,
+        courseUnitTitles,
+        productId,
+        orderWeight: Number($("lesson-order-weight").value || 0) || 0,
+        isPhysical: $("lesson-is-physical").checked,
+        hiddenFromCatalog: $("lesson-hidden").checked,
+        isDeprecated: $("lesson-deprecated").checked
+      };
+    }
+
+    async function loadDistributors() {
+      try {
+        const response = await getDistributorPortalData({});
+        const options = Array.isArray(response?.data?.accessibleDistributors)
+          ? response.data.accessibleDistributors
+          : [];
+        state.distributors = options;
+        const dt = $("distributor-options");
+        dt.innerHTML = options.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name || item.id)}${item.status ? ` · ${escapeHtml(item.status)}` : ""}</option>`).join("");
+      } catch (err) {
+        console.error("[admin-courses] loadDistributors failed:", err);
+        state.distributors = [];
+        const dt = $("distributor-options");
+        if (dt) dt.innerHTML = "";
+        setLog(`經銷商清單載入失敗：${err?.message || err}`);
+      }
+    }
+
+    async function loadSystemConfig() {
+      try {
+        const response = await getSystemConfig({});
+        const data = response?.data || {};
+        state.systemConfig = {
+          contentVersion: data.contentVersion || "",
+          defaultLocale: data.defaultLocale || "en",
+          defaultRegion: data.defaultRegion || "US",
+          defaultDistributorId: data.defaultDistributorId || "default-usd",
+          supportedLocales: Array.isArray(data.supportedLocales) ? data.supportedLocales : [],
+          localeLabels: data.localeLabels && typeof data.localeLabels === "object" && !Array.isArray(data.localeLabels) ? data.localeLabels : {},
+          localeFallbackMap: data.localeFallbackMap && typeof data.localeFallbackMap === "object" && !Array.isArray(data.localeFallbackMap) ? data.localeFallbackMap : {}
+        };
+        renderSystemConfigEditor();
+      } catch (err) {
+        console.error("[admin-courses] loadSystemConfig failed:", err);
+        $("system-config-status").textContent = `載入失敗：${err?.message || err}`;
+      }
+    }
+
+    async function loadPriceBooksForLesson(lesson = currentLesson()) {
+      const body = $("pricebook-table");
+      if (!lesson) {
+        body.innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">先選擇一門課程</td></tr>';
+        return [];
+      }
+
+      const productId = normalizeText($("price-product-id").value || lesson.productId || lesson.id || "");
+      const response = await getLessonPriceBooks({
+        lessonId: lesson.id || lesson.docId || "",
+        productId,
+        distributorId: ""
+      });
+      const books = Array.isArray(response?.data?.items)
+        ? response.data.items.map((item) => ({ id: item.id || "", ...item }))
+        : [];
+      state.currentPriceBooks = books;
+      $("pricebook-status").textContent = `${books.length} 筆價格表`;
+      if (!books.length) {
+        body.innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚無價格表</td></tr>';
+        fillPriceBookForm(null);
+        return books;
+      }
+      body.innerHTML = books.map((book) => {
+        const status = book.isActive === false ? "停用" : "啟用";
+        return `
+          <tr style="border-top:1px solid var(--line);" onclick="window.loadPriceBookIntoForm('${escapeHtml(book.id)}')">
+            <td style="font-family:JetBrains Mono, monospace;font-size:12px;color:#334155;">${escapeHtml(book.id)}</td>
+            <td>
+              <div style="font-weight:800;color:#0f172a;">${escapeHtml(book.distributorId || "—")}</div>
+              <div class="pricebook-meta">${escapeHtml(book.productId || book.lessonId || "—")}${book.currency ? ` · ${escapeHtml(book.currency)}` : ""}</div>
+            </td>
+            <td>
+              <div style="font-weight:800;">${status}</div>
+              <div class="pricebook-meta">${escapeHtml(toDatetimeLocal(book.effectiveFrom) || "—")} → ${escapeHtml(toDatetimeLocal(book.effectiveTo) || "—")}</div>
+            </td>
+            <td style="text-align:right;">
+              <button class="btn btn-muted btn-small" onclick="window.loadPriceBookIntoForm('${escapeHtml(book.id)}'); event.stopPropagation();">維護</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+      fillPriceBookForm(null);
+      return books;
+    }
+
+    async function loadCurrentLessonPriceBooks() {
+      const lesson = currentLesson();
+      if (!lesson) {
+        $("pricebook-table").innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未選擇課程</td></tr>';
+        return [];
+      }
+      return loadPriceBooksForLesson(lesson);
+    }
+
+    function mergeLessonToState(updatedLesson) {
+      const id = String(updatedLesson.id || updatedLesson.docId || "");
+      const idx = state.lessons.findIndex((lesson) => String(lesson.id || lesson.docId || "") === id);
+      if (idx >= 0) {
+        state.lessons[idx] = { ...state.lessons[idx], ...updatedLesson };
+      } else {
+        state.lessons.unshift(updatedLesson);
+      }
+      state.currentLessonId = id;
+      updateStats();
+      renderLessons();
+      fillLessonForm(updatedLesson);
+    }
+
+    window.setCourseFilter = function(filter) {
+      state.currentFilter = filter;
+      document.querySelectorAll('.pill').forEach((btn) => btn.classList.toggle('active', btn.dataset.filter === filter));
+      renderLessons();
+    };
+
+    window.selectLesson = function(id) {
+      const lesson = state.lessons.find((item) => String(item.id || item.docId || "") === String(id));
+      if (!lesson) return;
+      state.currentLessonId = String(id);
+      fillLessonForm(lesson);
+      openLessonModal();
+    };
+
+    window.createBlankLesson = function() {
+      const nextDocId = generateLessonDocId();
+      state.currentLessonId = nextDocId;
+      fillLessonForm({
+        id: nextDocId,
+        docId: nextDocId,
+        metadataType: "course",
+        orderWeight: 0,
+        isPhysical: false,
+        hiddenFromCatalog: false,
+        isDeprecated: false
+      });
+      $("lesson-status").textContent = "新增課程";
+      syncModalHeader();
+      openLessonModal();
+      setLog("已建立空白課程表單。Document ID 已自動產生。");
+    };
+
+    window.resetLessonForm = function() {
+      const selected = currentLesson();
+      if (selected) {
+        fillLessonForm(selected);
+        setLog(`已重置為目前選定課程：${selected.id || selected.docId || ""}`);
+        openLessonModal();
+      } else {
+        window.createBlankLesson();
+      }
+    };
+
+    window.duplicateCurrentLesson = function() {
+      const lesson = currentLesson();
+      if (!lesson) {
+        alert("請先選擇一門課程。");
+        return;
+      }
+      const nextDocId = generateLessonDocId();
+      state.currentLessonId = nextDocId;
+      fillLessonForm({
+        ...lesson,
+        id: nextDocId,
+        docId: nextDocId,
+        title: `${lesson.title || ""} (Copy)`,
+        courseKey: `${lesson.courseKey || lesson.id || ""}-copy`,
+        productId: "",
+        hiddenFromCatalog: true,
+        isDeprecated: false
+      });
+      $("lesson-status").textContent = "複製模式";
+      syncModalHeader();
+      openLessonModal();
+      setLog("已複製目前課程成為新表單，Document ID 已重新產生。");
+    };
+
+    window.toggleSelectedLessonVisibility = async function() {
+      const lesson = state.lessons.find((item) => String(item.id || item.docId || "") === String(state.currentLessonId)) || null;
+      if (!lesson) {
+        alert("請先儲存課程後，再調整可見性。");
+        return;
+      }
+      const hidden = lesson.hiddenFromCatalog === true;
+      const deprecated = lesson.isDeprecated === true;
+      const patch = {
+        docId: lesson.id || lesson.docId || "",
+        hiddenFromCatalog: !hidden,
+        isDeprecated: !deprecated
+      };
+      await upsertLessonMetadata(patch);
+      mergeLessonToState({ ...lesson, ...patch });
+      setLog(`${lesson.id} 已更新可見性：hiddenFromCatalog=${!hidden}, isDeprecated=${!deprecated}`);
+    };
+
+    window.saveLessonMetadata = async function() {
+      const patch = serializeLessonForm();
+      const docId = patch.id;
+      const existing = state.lessons.find((lesson) => String(lesson.id || lesson.docId || "") === docId);
+      if (existing && existing.createdAt) patch.createdAt = existing.createdAt;
+      patch.docId = docId;
+      patch.id = docId;
+      try {
+        await upsertLessonMetadata(patch);
+        const merged = existing ? { ...existing, ...patch } : patch;
+        mergeLessonToState(merged);
+        setLog(`已儲存課程主檔：${docId}`);
+        $("lesson-status").textContent = `已儲存：${docId}`;
+        await loadCurrentLessonPriceBooks();
+      } catch (err) {
+        console.error("[admin-courses] saveLessonMetadata failed:", err);
+        alert(`儲存課程失敗：${err.message}`);
+      }
+    };
+
+    function buildPriceBookPayload(lesson) {
+      const distributorId = normalizeText($("price-distributor-id").value);
+      if (!distributorId) throw new Error("請輸入 distributorId");
+      const productId = normalizeText($("price-product-id").value || lesson.productId || lesson.id || "");
+      const priceBookId = normalizeText($("price-book-id").value) || `${distributorId}_${productId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
+      return {
+        id: priceBookId,
+        distributorId,
+        productId,
+        lessonId: lesson.id || lesson.docId || "",
+        sourceLessonId: lesson.id || lesson.docId || "",
+        currency: normalizeText($("price-currency").value).toUpperCase() || "TWD",
+        salePrice: Number($("price-sale").value || 0) || 0,
+        promoPrice: $("price-promo").value === "" ? null : Number($("price-promo").value || 0),
+        version: normalizeText($("price-version").value) || "v1",
+        isActive: $("price-is-active").checked,
+        effectiveFrom: fromDatetimeLocal($("price-effective-from").value),
+        effectiveTo: fromDatetimeLocal($("price-effective-to").value),
+        promoEffectiveFrom: fromDatetimeLocal($("price-promo-from").value),
+        promoEffectiveTo: fromDatetimeLocal($("price-promo-to").value),
+        updatedBy: ""
+      };
+    }
+
+    window.saveSelectedPriceBook = async function() {
+      const lesson = state.lessons.find((item) => String(item.id || item.docId || "") === String(state.currentLessonId)) || null;
+      if (!lesson) {
+        alert("請先儲存課程後，再建立價格表。");
+        return;
+      }
+      try {
+        const payload = buildPriceBookPayload(lesson);
+        const existing = state.currentPriceBooks.find((item) => String(item.id || "") === String(payload.id));
+        if (existing && existing.createdAt) payload.createdAt = existing.createdAt;
+        payload.updatedBy = state.currentUserUid || "";
+        await upsertDistributorPriceBook(payload);
+        setLog(`已儲存價格表：${payload.id}`);
+        $("pricebook-status").textContent = "價格表已儲存";
+        await loadCurrentLessonPriceBooks();
+      } catch (err) {
+        console.error("[admin-courses] saveSelectedPriceBook failed:", err);
+        alert(`儲存價格表失敗：${err.message}`);
+      }
+    };
+
+    window.loadPriceBookIntoForm = function(priceBookId) {
+      const book = state.currentPriceBooks.find((item) => String(item.id || "") === String(priceBookId));
+      if (!book) return;
+      fillPriceBookForm(book);
+      const panel = $("pricebook-editor");
+      if (panel) panel.open = true;
+      setLog(`已載入價格表：${book.id}`);
+    };
+
+    window.loadSelectedLessonPriceBooks = async function() {
+      try {
+        await loadCurrentLessonPriceBooks();
+        setLog("已重新整理價格表。");
+      } catch (err) {
+        console.error("[admin-courses] loadSelectedLessonPriceBooks failed:", err);
+        alert(`載入價格表失敗：${err.message}`);
+      }
+    };
+
+    window.saveSystemConfig = async function() {
+      try {
+        const supportedLocales = normalizeList($("supported-locales")?.value || "");
+        const localeLabels = parseJsonLoose($("locale-labels")?.value || "{}", {});
+        const localeFallbackMap = parseJsonLoose($("locale-fallback-map")?.value || "{}", {});
+        const payload = {
+          defaultLocale: normalizeText($("default-locale")?.value || "") || "en",
+          defaultRegion: normalizeText($("default-region")?.value || "") || "US",
+          defaultDistributorId: normalizeText($("default-distributor-id")?.value || "") || "default-usd",
+          contentVersion: normalizeText($("content-version")?.value || ""),
+          supportedLocales,
+          localeLabels,
+          localeFallbackMap
+        };
+        if (!payload.contentVersion) delete payload.contentVersion;
+        await updateSystemConfig(payload);
+        state.systemConfig = { ...state.systemConfig, ...payload };
+        renderSystemConfigEditor();
+        setLog("已儲存站台 locale 設定。");
+      } catch (err) {
+        console.error("[admin-courses] saveSystemConfig failed:", err);
+        alert(`儲存站台設定失敗：${err.message}`);
+      }
+    };
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (!document.body.classList.contains("modal-open")) return;
+      closeLessonModal();
+    });
+
+    async function loadLessons() {
+      const response = await getLessonsMetadata({});
+      const lessons = Array.isArray(response?.data?.lessons) ? response.data.lessons : [];
+      state.lessons = lessons.sort((a, b) => {
+        const aRank = lessonStatus(a) === "active" ? 0 : lessonStatus(a) === "hidden" ? 1 : 2;
+        const bRank = lessonStatus(b) === "active" ? 0 : lessonStatus(b) === "hidden" ? 1 : 2;
+        if (aRank !== bRank) return aRank - bRank;
+        return String(a.title || a.courseKey || a.id || "").localeCompare(String(b.title || b.courseKey || b.id || ""));
+      });
+      updateStats();
+      renderLessons();
+      if (state.lessons.length > 0) {
+        const first = state.lessons[0];
+        state.currentLessonId = String(first.id || first.docId || "");
+        fillLessonForm(first);
+      } else {
+        window.createBlankLesson();
+      }
+    }
+
+    async function loadAdminContext(user) {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userData = userDoc.exists() ? (userDoc.data() || {}) : {};
+      $("auth-email").textContent = user.email || user.uid;
+      $("auth-uid").textContent = user.uid;
+      $("auth-role").textContent = userData.role || "(missing)";
+      if (userData.role !== "admin") {
+        throw new Error("此頁面僅限 Admin 帳號使用");
+      }
+      state.currentUserUid = user.uid;
+      $("loading-overlay").style.display = "none";
+      $("app").style.display = "block";
+      $("course-list").innerHTML = '<div class="empty-state">載入中...</div>';
+      $("lesson-status").textContent = "載入中...";
+      $("pricebook-status").textContent = "載入中...";
+      await Promise.all([loadDistributors(), loadLessons(), loadSystemConfig()]);
+      state.isReady = true;
+      setLog("管理頁已載入，請從左側選擇課程開始編輯。");
+    }
+
+    $("search-input").addEventListener("input", renderLessons);
+    $("lesson-course-units")?.addEventListener("input", renderCourseUnitsEditor);
+    $("lesson-course-unit-titles")?.addEventListener("input", renderCourseUnitsEditor);
+    $("lesson-entry-unit-id")?.addEventListener("input", renderCourseUnitsEditor);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        $("loading-overlay").style.display = "none";
+        $("auth-error").classList.add("show");
+        return;
+      }
+      try {
+        await loadAdminContext(user);
+      } catch (err) {
+        console.error("[admin-courses] init failed:", err);
+        $("loading-overlay").style.display = "none";
+        $("auth-error").classList.add("show");
+      }
+    });
+  </script>
+</body>
+</html>
