@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
-const { sendAutogradeResultToStudent, sendAutogradeResultToTutor } = require("../emailService");
+const { HttpsError } = require("firebase-functions/v2/https");
+const { sendAutogradeResultToStudent, sendAutogradeResultToTutor, sendGradingNotification } = require("../emailService");
 const { upsertGithubActionsVariable } = require("./github-utils");
 const { normalizeLegacyId } = require("./id-utils");
 
@@ -429,6 +430,109 @@ function normalizeTemplateRepoName(id) {
     return v;
 }
 
+/**
+ * 評改學生作業，並將分數與回饋寫回系統。
+ * @param {admin.firestore.Firestore} db - Firestore 資料庫實例
+ * @param {Object} params - 參數
+ * @param {string} params.graderUid - 評分者的 UID
+ * @param {string} params.assignmentId - 作業的 Document ID
+ * @param {number} params.grade - 評分分數
+ * @param {string} params.feedback - 導師回饋評語
+ * @returns {Promise<{success: boolean}>}
+ */
+async function gradeAssignment(db, { graderUid, assignmentId, grade, feedback }) {
+    if (!graderUid) {
+        throw new HttpsError('unauthenticated', 'Must be logged in.');
+    }
+
+    // 檢查評分者的角色與權限
+    const graderDoc = await db.collection('users').doc(graderUid).get();
+    const graderData = graderDoc.exists ? graderDoc.data() : {};
+    const requesterRole = graderData.role || 'user';
+    const requesterHasTutorAccess = graderData.hasTutorAccess || false;
+
+    if (requesterRole !== 'admin' && requesterRole !== 'teacher' && !requesterHasTutorAccess) {
+        throw new HttpsError('permission-denied', 'Only teachers or tutors can grade.');
+    }
+
+    const docRef = db.collection('assignments').doc(assignmentId);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) {
+        throw new HttpsError('not-found', 'Assignment not found.');
+    }
+    const assignmentData = docSnap.data() || {};
+    const studentUid = assignmentData.userId || assignmentData.uid || assignmentId.split('_')[0];
+    const unitId = assignmentData.unitId || assignmentId.split('_').slice(1).join('_');
+    const studentEmail = assignmentData.userEmail || assignmentData.studentEmail || '';
+    const studentName = assignmentData.userName || assignmentData.studentName || '學生';
+    const assignmentTitle = assignmentData.assignmentTitle || assignmentData.assignmentId || unitId;
+
+    const scoreVal = Number(grade);
+    if (Number.isNaN(scoreVal)) {
+        throw new HttpsError('invalid-argument', 'Grade must be a valid number.');
+    }
+
+    const now = admin.firestore.Timestamp.now();
+    const historyEntry = {
+        timestamp: now,
+        content: `Grade: ${scoreVal}, Feedback: ${feedback || ''}`,
+        action: 'GRADE',
+        grader: graderUid
+    };
+
+    let learningStateUpdate = null;
+    if (scoreVal >= 70) {
+        // 解除卡點警示
+        await updateActiveAssignmentInterventions(db, {
+            assignmentId: assignmentData.assignmentId || unitId,
+            studentUid,
+            status: 'resolved',
+            updatedAt: now,
+            resolvedAt: now,
+            ownerTutorEmail: null
+        });
+        if (assignmentData.learningState === 'blocked') {
+            learningStateUpdate = 'resolved';
+        }
+    }
+
+    const updatePayload = {
+        grade: scoreVal,
+        teacherFeedback: feedback || '',
+        tutorFeedback: feedback || '',
+        status: 'graded',
+        currentStatus: 'graded',
+        updatedAt: now,
+        submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
+    };
+
+    if (learningStateUpdate) {
+        updatePayload.learningState = learningStateUpdate;
+    }
+
+    await docRef.update(updatePayload);
+
+    // 發送通知信給學生
+    if (studentEmail) {
+        try {
+            const dashboardUrl = `https://vibe-coding.tw/dashboard.html?unitId=${encodeURIComponent(unitId)}&tab=assignments`;
+            await sendGradingNotification(
+                studentEmail,
+                studentName,
+                assignmentTitle,
+                scoreVal,
+                feedback || '',
+                dashboardUrl,
+                unitId
+            );
+        } catch (mailErr) {
+            console.error('[gradeAssignment] Failed to send email notification:', mailErr);
+        }
+    }
+
+    return { success: true };
+}
+
 module.exports = {
     addAssignmentHistoryEntry,
     backfillAutogradeGithubVariables,
@@ -436,6 +540,7 @@ module.exports = {
     buildGithubAutogradePayload,
     buildNativeRepositoryAssignmentRecord,
     compareAutogradeAssignmentCandidates,
+    gradeAssignment,
     isAssignmentAuthorized,
     queryActiveAssignmentInterventions,
     resolveAutogradeAssignmentDocId,
