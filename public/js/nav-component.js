@@ -76,6 +76,75 @@ const pathKeyCandidatesFromValue = REPO_UTILS.learningPathKeyCandidatesFromValue
     return [...new Set([String(value || "").trim(), canonical, legacyLearningPathKeyFromCanonical(canonical, "zh-TW"), legacyLearningPathKeyFromCanonical(canonical, "en"), locale ? legacyLearningPathKeyFromCanonical(value, locale) : ""].filter(Boolean))];
 };
 
+const normalizeRuntimeLocaleCode = window.__vibeNormalizeLocaleCode || function (value = "") {
+    return String(value || "").trim().replace(/_/g, "-");
+};
+
+function getRuntimeContentConfig() {
+    const runtime = window.__vibeContentRuntimeConfig && typeof window.__vibeContentRuntimeConfig === "object"
+        ? window.__vibeContentRuntimeConfig
+        : {};
+    const defaults = {
+        defaultLocale: "en",
+        supportedLocales: ["zh-TW", "en"],
+        localeLabels: { "zh-TW": "繁體中文", "en": "English" },
+        localeFallbackMap: { "zh-TW": "zh-TW", "en": "en" }
+    };
+    return {
+        ...defaults,
+        ...runtime,
+        supportedLocales: Array.isArray(runtime.supportedLocales) && runtime.supportedLocales.length
+            ? runtime.supportedLocales.map((locale) => normalizeRuntimeLocaleCode(locale)).filter(Boolean)
+            : defaults.supportedLocales,
+        localeLabels: {
+            ...defaults.localeLabels,
+            ...(runtime.localeLabels && typeof runtime.localeLabels === "object" ? runtime.localeLabels : {})
+        },
+        localeFallbackMap: {
+            ...defaults.localeFallbackMap,
+            ...(runtime.localeFallbackMap && typeof runtime.localeFallbackMap === "object" ? runtime.localeFallbackMap : {})
+        }
+    };
+}
+
+function getLocaleOptions() {
+    const runtime = getRuntimeContentConfig();
+    const active = new Set(runtime.supportedLocales.length ? runtime.supportedLocales : ["zh-TW", "en"]);
+    if (runtime.defaultLocale) active.add(normalizeRuntimeLocaleCode(runtime.defaultLocale));
+    return Array.from(active).map((locale) => {
+        const normalized = normalizeRuntimeLocaleCode(locale);
+        const label = runtime.localeLabels[normalized]
+            || (normalized.startsWith("zh") ? "繁體中文" : normalized.startsWith("en") ? "English" : normalized);
+        return { locale: normalized, label };
+    }).filter((item) => item.locale);
+}
+
+function isZhLikeLocale(locale = "") {
+    return normalizeRuntimeLocaleCode(locale).toLowerCase().startsWith("zh");
+}
+
+async function ensureContentRuntimeConfig() {
+    if (window.__vibeContentRuntimeConfig && typeof window.__vibeContentRuntimeConfig === "object" && Array.isArray(window.__vibeContentRuntimeConfig.supportedLocales)) {
+        return window.__vibeContentRuntimeConfig;
+    }
+    if (window.__vibeContentRuntimeConfigPromise) return window.__vibeContentRuntimeConfigPromise;
+    const load = async () => {
+        try {
+            const callable = httpsCallable(functions, "getContentRuntimeConfig");
+            const response = await callable({});
+            const config = response?.data || response || {};
+            window.__vibeContentRuntimeConfig = config && typeof config === "object" ? config : {};
+            return window.__vibeContentRuntimeConfig;
+        } catch (error) {
+            console.warn("[NavComp] Failed to load content runtime config:", error);
+            window.__vibeContentRuntimeConfig = window.__vibeContentRuntimeConfig || {};
+            return window.__vibeContentRuntimeConfig;
+        }
+    };
+    window.__vibeContentRuntimeConfigPromise = load();
+    return window.__vibeContentRuntimeConfigPromise;
+}
+
 function canonicalLearningPathHref(pathKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);
     if (!canonical) return "learning-path.html?path=common";
@@ -94,12 +163,12 @@ function getDefaultLearningPaths(uiLocale = "zh-TW") {
 
 const LOCALIZED_SITE_PAGES = {
     students: {
-        zh: { href: "/tw/students.html", label: "課程購買與使用指南" },
+        zh: { href: "/tw/students.html", label: "學員指南" },
         en: { href: "/en/students.html", label: "Student Guide" },
     },
     tutors: {
-        zh: { href: "/tw/tutors.html", label: "專業導師與合作洽談" },
-        en: { href: "/en/tutors.html", label: "Tutor Guide" },
+        zh: { href: "/tw/tutors.html", label: "導師合作" },
+        en: { href: "/en/tutors.html", label: "Tutor Collaboration" },
     },
 };
 
@@ -192,11 +261,12 @@ function detectUiLocale() {
 }
 
 window.__vibeSwitchLocale = async function (locale) {
+    const normalizedLocale = normalizeRuntimeLocaleCode(locale) || "en";
     try {
-        localStorage.setItem('vibe_user_locale', locale);
+        localStorage.setItem('vibe_user_locale', normalizedLocale);
         if (auth.currentUser) {
             try {
-                await setDoc(doc(db, 'users', auth.currentUser.uid), { locale: locale }, { merge: true });
+                await setDoc(doc(db, 'users', auth.currentUser.uid), { locale: normalizedLocale }, { merge: true });
                 console.info('[NavComp] Local user profile synchronized to Firestore');
             } catch (e) {
                 console.warn('[NavComp] Failed to sync locale to Firestore:', e);
@@ -212,18 +282,19 @@ window.__vibeSwitchLocale = async function (locale) {
                 const canonicalPath = normalizeCanonicalLearningPathKey(pathParam) || pathParam;
                 if (canonicalPath !== pathParam) {
                     url.searchParams.set('path', canonicalPath);
-                    window.location.href = url.toString();
-                    return;
                 }
             }
         }
+
+        url.searchParams.set('lang', normalizedLocale);
+        url.searchParams.set('locale', normalizedLocale);
 
         const currentFile = (url.pathname.split('/').pop() || '').toLowerCase();
         const currentIsEnSection = url.pathname.includes('/en/');
         const currentIsTwSection = url.pathname.includes('/tw/');
         const currentIsLegacyRoot = !currentIsEnSection && !currentIsTwSection;
-        const localeIsEn = String(locale || '').toLowerCase().startsWith('en');
-        const localeIsZh = String(locale || '').toLowerCase().startsWith('zh');
+        const localeIsEn = normalizedLocale.toLowerCase().startsWith('en');
+        const localeIsZh = normalizedLocale.toLowerCase().startsWith('zh');
 
         const supportsLocalizedSupportPages = new Set(['students.html', 'tutors.html']);
         if (supportsLocalizedSupportPages.has(currentFile)) {
@@ -237,7 +308,7 @@ window.__vibeSwitchLocale = async function (locale) {
                 window.location.href = url.toString();
                 return;
             }
-            if (currentIsLegacyRoot) {
+            if (currentIsLegacyRoot && (localeIsEn || localeIsZh)) {
                 url.pathname = localeIsEn ? `/en/${currentFile}` : `/tw/${currentFile}`;
                 window.location.href = url.toString();
                 return;
@@ -251,7 +322,7 @@ window.__vibeSwitchLocale = async function (locale) {
 };
 
 function isZhLocale(locale) {
-    return String(locale || "").toLowerCase().startsWith("zh");
+    return isZhLikeLocale(locale);
 }
 
 function resolveCategoryFromFilename(filename = "") {
@@ -296,6 +367,36 @@ function resolveCategoryFromLesson(lesson = {}) {
 function getCategoryHref(categoryKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(categoryKey);
     return canonicalLearningPathHref(canonical || categoryKey || "common");
+}
+
+function normalizeCategoryLabelEntry(value = "") {
+    if (typeof value === "string") {
+        return {
+            "zh-TW": value.trim(),
+            en: value.trim(),
+        };
+    }
+    if (!value || typeof value !== "object") return {};
+
+    const zh = String(value["zh-TW"] || value.zhTW || value.zh || value.tw || value.labelZh || value.twLabel || "").trim();
+    const en = String(value.en || value["en-US"] || value.labelEn || value.enLabel || "").trim();
+    const fallback = String(value.label || value.name || "").trim();
+
+    return {
+        "zh-TW": zh || fallback || en,
+        en: en || fallback || zh,
+    };
+}
+
+function normalizeCategoryLabelsMap(rawMap = {}) {
+    const out = {};
+    if (!rawMap || typeof rawMap !== "object") return out;
+    Object.entries(rawMap).forEach(([key, value]) => {
+        const canonical = normalizeCanonicalLearningPathKey(key);
+        if (!canonical) return;
+        out[canonical] = normalizeCategoryLabelEntry(value);
+    });
+    return out;
 }
 
 function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
@@ -466,6 +567,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         const res = await getLessons({});
         const allLessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
         const lessons = allLessons.filter(isCatalogCourseLesson);
+        const categoryLabels = normalizeCategoryLabelsMap(res?.data?.categoryLabels || {});
         const keys = new Set();
         const labels = new Map();
         lessons.forEach((lesson) => {
@@ -493,8 +595,13 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         const dynamic = sortCategoryKeys(Array.from(keys), uiLocale).map((key) => ({
             key,
             href: getCategoryHref(key),
-            // 優先使用 Firestore 課程的多語系標籤，否則 fallback 到 CATEGORY_TRANSLATIONS 字典
-            label: labels.get(key) || getCategoryLabel(key, uiLocale),
+            // 優先使用 Firestore 設定的 categoryLabels，再回退到課程標籤與內建字典
+            label:
+                labels.get(key) ||
+                categoryLabels[normalizeCanonicalLearningPathKey(key)]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] ||
+                categoryLabels[normalizeCanonicalLearningPathKey(key)]?.en ||
+                categoryLabels[normalizeCanonicalLearningPathKey(key)]?.["zh-TW"] ||
+                getCategoryLabel(key, uiLocale),
             icon: key.includes("advanced") ? "fa-microchip" :
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"
@@ -582,7 +689,15 @@ window.renderNav = function (rootPath = '.', options = {}) {
     const isFluid = options.isFluid !== undefined ? options.isFluid : true;
 
     const uiLocale = detectUiLocale();
-    const isZh = isZhLocale(uiLocale);
+    const runtimeConfig = getRuntimeContentConfig();
+    const localeOptions = getLocaleOptions();
+    const activeLocale = normalizeRuntimeLocaleCode(uiLocale);
+    const currentLocaleOption = localeOptions.find((item) => {
+        return item.locale === activeLocale
+            || activeLocale.startsWith(item.locale.toLowerCase())
+            || item.locale.toLowerCase().startsWith(activeLocale.split('-')[0] || "");
+    }) || localeOptions[0] || { locale: "en", label: "English" };
+    const isZh = isZhLocale(activeLocale);
     const defaultPaths = getDefaultLearningPaths(uiLocale);
 
     const resolve = (path) => {
@@ -644,10 +759,10 @@ window.renderNav = function (rootPath = '.', options = {}) {
                             </button>
                             <div class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-3 w-64 mt-0 border border-slate-100 left-0 animate-in fade-in slide-in-from-top-2 duration-200">
                                 <a href="${resolve('students.html')}" data-localized-page="students" class="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
-                                    <i class="fa-solid fa-graduation-cap text-xs opacity-40"></i> ${isZh ? '課程購買與使用指南' : 'Student Guide'}
+                                    <i class="fa-solid fa-graduation-cap text-xs opacity-40"></i> ${isZh ? '學員指南' : 'Student Guide'}
                                 </a>
                                 <a href="${resolve('tutors.html')}" data-localized-page="tutors" class="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
-                                    <i class="fa-solid fa-handshake text-xs opacity-40"></i> ${isZh ? '專業導師與合作洽談' : 'Tutor Guide'}
+                                    <i class="fa-solid fa-handshake text-xs opacity-40"></i> ${isZh ? '導師合作' : 'Tutor Collaboration'}
                                 </a>
                                 <div class="my-2 border-t border-slate-50"></div>
                                 <a href="${resolve('examples/index.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 hover:text-slate-700 transition-colors">
@@ -661,18 +776,17 @@ window.renderNav = function (rootPath = '.', options = {}) {
                         <div class="hidden md:flex relative dropdown group items-center">
                             <button id="lang-btn" aria-expanded="false" aria-haspopup="true" class="flex items-center hover:text-cyan-600 transition-all cursor-pointer py-2 gap-1.5 text-gray-600 font-medium select-none">
                                 <i class="fa-solid fa-globe opacity-70 text-sm"></i>
-                                <span class="text-sm">${isZh ? '繁中' : 'EN'}</span>
+                                <span class="text-sm">${currentLocaleOption.label || currentLocaleOption.locale}</span>
                                 <svg class="w-3 h-3 opacity-50 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </button>
-                            <div class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-2 w-28 mt-0 border border-slate-100 right-0 top-full animate-in fade-in slide-in-from-top-2 duration-200" style="z-index: 1000000;">
-                                <button onclick="window.__vibeSwitchLocale('zh-TW')" class="w-full text-left flex items-center px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors text-sm font-medium ${isZh ? 'text-cyan-600 bg-cyan-50/40 font-bold' : 'text-gray-700'}">
-                                    繁體中文
-                                </button>
-                                <button onclick="window.__vibeSwitchLocale('en')" class="w-full text-left flex items-center px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors text-sm font-medium ${!isZh ? 'text-cyan-600 bg-cyan-50/40 font-bold' : 'text-gray-700'}">
-                                    English
-                                </button>
+                            <div class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-2 w-40 mt-0 border border-slate-100 right-0 top-full animate-in fade-in slide-in-from-top-2 duration-200" style="z-index: 1000000;">
+                                ${localeOptions.map((option) => `
+                                    <button onclick="window.__vibeSwitchLocale('${option.locale}')" class="w-full text-left flex items-center px-4 py-2.5 hover:bg-cyan-50 hover:text-cyan-700 transition-colors text-sm font-medium ${activeLocale === option.locale ? 'text-cyan-600 bg-cyan-50/40 font-bold' : 'text-gray-700'}">
+                                        ${option.label || option.locale}
+                                    </button>
+                                `).join("")}
                             </div>
                         </div>
 
@@ -714,21 +828,22 @@ window.renderNav = function (rootPath = '.', options = {}) {
                 </div>` : ''}
 
                 <!-- Mobile Language Selector -->
-                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
-                            <i class="fa-solid fa-globe"></i>
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                                    <i class="fa-solid fa-globe"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Language / 語言</p>
+                            <span class="text-sm font-bold text-slate-700">${currentLocaleOption.label || currentLocaleOption.locale}</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                ${localeOptions.map((option) => `
+                                    <button onclick="window.__vibeSwitchLocale('${option.locale}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeLocale === option.locale ? 'bg-cyan-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600'}">${option.label || option.locale}</button>
+                                `).join("")}
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Language / 語言</p>
-                            <span class="text-sm font-bold text-slate-700">${isZh ? '繁體中文' : 'English'}</span>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="window.__vibeSwitchLocale('zh-TW')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isZh ? 'bg-cyan-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600'}">繁中</button>
-                        <button onclick="window.__vibeSwitchLocale('en')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${!isZh ? 'bg-cyan-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600'}">EN</button>
-                    </div>
-                </div>
 
                 <div class="space-y-3">
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1">${isZh ? '學習路徑' : 'Learning Path'}</span>
@@ -741,13 +856,13 @@ window.renderNav = function (rootPath = '.', options = {}) {
                         <a href="${resolve('students.html')}" data-localized-page="students" class="flex items-center justify-between py-3.5 px-5 bg-cyan-50/50 border border-cyan-100 rounded-2xl hover:bg-cyan-100 hover:text-cyan-700 transition-all">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-graduation-cap text-cyan-600"></i>
-                                <span class="text-sm font-bold text-cyan-900" data-localized-label="students">${isZh ? '課程購買與使用指南' : 'Student Guide'}</span>
+                                <span class="text-sm font-bold text-cyan-900" data-localized-label="students">${isZh ? '學員指南' : 'Student Guide'}</span>
                             </div>
                         </a>
                         <a href="${resolve('tutors.html')}" data-localized-page="tutors" class="flex items-center justify-between py-3.5 px-5 bg-indigo-50/30 border border-indigo-100/50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-handshake text-indigo-600"></i>
-                                <span class="text-sm font-bold text-indigo-900" data-localized-label="tutors">${isZh ? '專業導師與合作洽談' : 'Tutor Guide'}</span>
+                                <span class="text-sm font-bold text-indigo-900" data-localized-label="tutors">${isZh ? '導師合作' : 'Tutor Collaboration'}</span>
                             </div>
                         </a>
                         <a href="${resolve('examples/index.html')}" class="flex items-center justify-between py-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 hover:text-slate-700 transition-all">
@@ -956,9 +1071,11 @@ function normalizeCourseTopNavBrandLink() {
 
 // --- 3. Initializer Bootloader ---
 
-function initNavComponent() {
+async function initNavComponent() {
     const path = window.location.pathname || '';
     const isCoursePage = path.startsWith('/courses/');
+
+    await ensureContentRuntimeConfig();
 
     if (isCoursePage) {
         // Do not inject global nav inside course pages.

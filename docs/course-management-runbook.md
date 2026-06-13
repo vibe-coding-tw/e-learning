@@ -1,5 +1,5 @@
 # Course Management Runbook
-**Last updated**: 2026-06-11
+**Last updated**: 2026-06-13
 
 這份文件定義新課程從建立、修改到停用的標準操作方式，目標是讓課程內容、作業、Template repo、評分與 Firestore 資料保持一致。
 
@@ -13,10 +13,11 @@
 6. `metadata_lessons.docId` 建立後視為不可直接更改；若要換 ID，請複製成新課程再停用舊資料。
 
 > 建議的 canonical course identity 以 `metadata_lessons.id` / `docId` 為唯一主鍵；若需要 key，請直接整合進 document ID，不要再另外維護 `courseKey`。
+>
+> 若要批次收斂既有課程資料，優先使用 [`functions/scripts/backfill_metadata_lessons_canonical_schema.js`](../functions/scripts/backfill_metadata_lessons_canonical_schema.js)；預設只做 normalize，不會主動刪欄位，刪除舊欄位需顯式帶 `--delete=...`。
 
 > 目前可直接使用的 Admin 入口：
 > - [`public/admin-courses.html`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/admin-courses.html)：課程主檔、多語內容、停用與價格表
-> - [`public/admin-i18n.html`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/admin-i18n.html)：舊版雙語欄位維護入口（相容用途）
 
 ---
 
@@ -103,6 +104,7 @@
 - 改內容：只改 `content-repo`
 - 改結構：改 `metadata_lessons`
 - 改多語：在同一個課程對話框內更新 `metadata_lessons.i18n`
+- 批次收斂既有資料：使用 [`functions/scripts/backfill_metadata_lessons_canonical_schema.js`](../functions/scripts/backfill_metadata_lessons_canonical_schema.js)
 - 改價格：改 `dealer_price_books`
 - 改作業規格：改 `content-repo` 內的 `assignment-guide` / `tutor-guide`
 - 改評分邏輯：改 `public/graders`
@@ -168,12 +170,13 @@
 3. `i18n.en` 至少存在，其他語言可按需求新增。
 4. `course_units` 指向正確外部 HTML。
 5. 若仍保留 `entryUnitId`，其值必須等於 `course_units[0]`。
-6. 課程 HTML 可讀到 `assignment-guide` 與 `tutor-guide`。
-7. `dealer_price_books` 已建立且價格可查。
-8. template repo 的 workflow 只呼叫中央 grader。
-9. `public/graders` 有對應腳本或 fallback。
-10. `assignments.autoGrade*` 可正常回寫。
-11. `hiddenFromCatalog` / `isDeprecated` 能正確控制停用課程的前台顯示。
+6. `title` / `summary` / `description` 已可由 `i18n` 取代，舊欄位僅作過渡相容。
+7. 課程 HTML 可讀到 `assignment-guide` 與 `tutor-guide`。
+8. `dealer_price_books` 已建立且價格可查。
+9. template repo 的 workflow 只呼叫中央 grader。
+10. `public/graders` 有對應腳本或 fallback。
+11. `assignments.autoGrade*` 可正常回寫。
+12. `hiddenFromCatalog` / `isDeprecated` 能正確控制停用課程的前台顯示。
 
 ---
 

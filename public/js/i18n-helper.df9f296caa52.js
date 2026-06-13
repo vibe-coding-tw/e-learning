@@ -1,5 +1,105 @@
 (function () {
     // 1. 語系偵測邏輯
+    function normalizeLocaleCode(value = "") {
+        return String(value || "").trim().replace(/_/g, "-");
+    }
+
+    function getContentRuntimeConfig() {
+        const defaults = {
+            defaultLocale: "en",
+            supportedLocales: ["zh-TW", "en"],
+            localeLabels: { "zh-TW": "繁體中文", "en": "English" },
+            localeFallbackMap: { "zh-TW": "zh-TW", "en": "en" }
+        };
+        const runtime = window.__vibeContentRuntimeConfig && typeof window.__vibeContentRuntimeConfig === "object"
+            ? window.__vibeContentRuntimeConfig
+            : {};
+        return {
+            ...defaults,
+            ...runtime,
+            supportedLocales: Array.isArray(runtime.supportedLocales) && runtime.supportedLocales.length
+                ? runtime.supportedLocales.map((locale) => normalizeLocaleCode(locale)).filter(Boolean)
+                : defaults.supportedLocales,
+            localeLabels: {
+                ...defaults.localeLabels,
+                ...(runtime.localeLabels && typeof runtime.localeLabels === "object" ? runtime.localeLabels : {})
+            },
+            localeFallbackMap: {
+                ...defaults.localeFallbackMap,
+                ...(runtime.localeFallbackMap && typeof runtime.localeFallbackMap === "object" ? runtime.localeFallbackMap : {})
+            }
+        };
+    }
+
+    function resolveLocaleCandidates(locale = "") {
+        const normalized = normalizeLocaleCode(locale);
+        const runtime = getContentRuntimeConfig();
+        const candidates = [];
+        const push = (value) => {
+            const clean = normalizeLocaleCode(value);
+            if (clean && !candidates.includes(clean)) candidates.push(clean);
+        };
+
+        push(normalized);
+        push(runtime.localeFallbackMap?.[normalized]);
+        if (normalized.startsWith("zh")) {
+            push("zh-TW");
+            push("zh");
+            push("zh-Hant");
+        }
+        if (normalized.startsWith("en")) {
+            push("en");
+        }
+        push(runtime.defaultLocale);
+        push("zh-TW");
+        push("en");
+        return candidates;
+    }
+
+    function resolveDictionaryLocale(locale = "") {
+        const runtime = getContentRuntimeConfig();
+        const candidates = resolveLocaleCandidates(locale);
+        for (const candidate of candidates) {
+            if (Object.prototype.hasOwnProperty.call(DICTIONARY, candidate)) return candidate;
+        }
+        const fallback = normalizeLocaleCode(runtime.localeFallbackMap?.[normalizeLocaleCode(locale)] || "");
+        if (fallback && Object.prototype.hasOwnProperty.call(DICTIONARY, fallback)) return fallback;
+        if (String(locale || "").toLowerCase().startsWith("zh")) return "zh-TW";
+        return "en";
+    }
+
+    function resolveLocalizedFieldValue(source = {}, field = "", locale = currentLocale, fallback = "") {
+        const rawSource = source && typeof source === "object" ? source : {};
+        const i18n = rawSource.i18n && typeof rawSource.i18n === "object" && !Array.isArray(rawSource.i18n)
+            ? rawSource.i18n
+            : {};
+        const candidates = resolveLocaleCandidates(locale);
+        const normalizedField = String(field || "").trim();
+        const legacyFields = {
+            title: ["titleEn", "title"],
+            summary: ["summaryEn", "summary", "descriptionEn", "description", "tagText"],
+            description: ["descriptionEn", "description"],
+            lessonLabel: ["lessonLabelEn", "lessonLabel", "tagText"],
+            coreContent: ["coreContentEn", "coreContent"]
+        }[normalizedField] || [normalizedField];
+
+        for (const candidate of candidates) {
+            const bucket = i18n[candidate];
+            if (!bucket || typeof bucket !== "object" || Array.isArray(bucket)) continue;
+            const value = bucket[normalizedField];
+            if (Array.isArray(value) && value.length) return value;
+            if (typeof value === "string" && value.trim()) return value.trim();
+        }
+
+        for (const legacyField of legacyFields) {
+            const value = rawSource[legacyField];
+            if (Array.isArray(value) && value.length) return value;
+            if (typeof value === "string" && value.trim()) return value.trim();
+        }
+
+        return fallback;
+    }
+
     function detectUiLocale() {
         try {
             const pathname = window.location.pathname;
@@ -23,9 +123,8 @@
         try {
             const stored = localStorage.getItem('vibe_user_locale');
             if (stored) {
-                const clean = String(stored).trim().toLowerCase();
-                if (clean.startsWith('zh')) return 'zh-TW';
-                if (clean.startsWith('en')) return 'en';
+                const clean = normalizeLocaleCode(stored);
+                if (clean) return clean;
             }
         } catch (_) {}
 
@@ -33,9 +132,8 @@
             const params = new URLSearchParams(window.location.search);
             const queryLang = params.get('lang') || params.get('locale');
             if (queryLang) {
-                const clean = String(queryLang).trim().toLowerCase();
-                if (clean.startsWith('zh')) return 'zh-TW';
-                if (clean.startsWith('en')) return 'en';
+                const clean = normalizeLocaleCode(queryLang);
+                if (clean) return clean;
             }
         } catch (_) {}
 
@@ -43,7 +141,8 @@
         const navLang = String(navigator.language || "").toLowerCase();
         const raw = htmlLang || navLang;
         if (raw.startsWith("zh")) return "zh-TW";
-        return "en";
+        if (raw) return normalizeLocaleCode(raw);
+        return normalizeLocaleCode(getContentRuntimeConfig().defaultLocale || "en");
     }
 
     const currentLocale = detectUiLocale();
@@ -57,6 +156,16 @@
             "doc_title_cart": "Vibe Coding 待結帳項目",
             "doc_title_payment_return": "付款結果 - Vibe Coding",
             "doc_title_dashboard": "學習儀表板 - Vibe Coding",
+            "nav_students_label": "學員指南",
+            "nav_tutors_label": "導師合作",
+            "footer_home": "首頁",
+            "footer_learning_path": "學習路徑",
+            "footer_student_guide": "學員指南",
+            "footer_tutor_guide": "導師合作",
+            "footer_business_entity": "營業人",
+            "footer_company_name": "腳丫健康科技有限公司",
+            "footer_tax_id": "統編",
+            "footer_contact_us": "聯絡我們",
 
             // index.html
             "hero_title": "Vibe Coding",
@@ -429,6 +538,16 @@
             "doc_title_cart": "Vibe Coding Shopping Cart",
             "doc_title_payment_return": "Payment Result - Vibe Coding",
             "doc_title_dashboard": "Learning Dashboard - Vibe Coding",
+            "nav_students_label": "Student Guide",
+            "nav_tutors_label": "Tutor Collaboration",
+            "footer_home": "Home",
+            "footer_learning_path": "Learning Path",
+            "footer_student_guide": "Student Guide",
+            "footer_tutor_guide": "Tutor Collaboration",
+            "footer_business_entity": "Business Entity",
+            "footer_company_name": "Joy Foot Health Technology Co., Ltd.",
+            "footer_tax_id": "Tax ID",
+            "footer_contact_us": "Contact Us",
 
             // index.html
             "hero_title": "Vibe Coding",
@@ -800,7 +919,7 @@
     window.detectUiLocale = detectUiLocale;
     window.currentLocale = currentLocale;
     window.t = function (key, fallback) {
-        const localeDict = DICTIONARY[currentLocale];
+        const localeDict = DICTIONARY[resolveDictionaryLocale(currentLocale)];
         if (localeDict && localeDict[key] !== undefined) {
             return localeDict[key];
         }
@@ -809,11 +928,11 @@
 
     // 4. 動態翻譯 DOM 元素
     window.applyI18n = function () {
-        const localeDict = DICTIONARY[currentLocale];
+        const localeDict = DICTIONARY[resolveDictionaryLocale(currentLocale)];
         if (!localeDict) return;
 
         // 設定 html 屬性 lang
-        document.documentElement.lang = currentLocale === "zh-TW" ? "zh-Hant" : "en";
+        document.documentElement.lang = resolveDictionaryLocale(currentLocale) === "zh-TW" ? "zh-Hant" : resolveDictionaryLocale(currentLocale);
 
         // 翻譯網頁 document.title
         const bodyTag = document.body;
@@ -868,6 +987,12 @@
             }
         });
     };
+
+    window.__vibeNormalizeLocaleCode = normalizeLocaleCode;
+    window.__vibeGetContentRuntimeConfig = getContentRuntimeConfig;
+    window.__vibeResolveLocaleCandidates = resolveLocaleCandidates;
+    window.__vibeResolveDictionaryLocale = resolveDictionaryLocale;
+    window.__vibeResolveLocalizedFieldValue = resolveLocalizedFieldValue;
 
     // 5. 自動在 DOMContentLoaded 觸發
     if (document.readyState === "loading") {

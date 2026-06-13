@@ -199,7 +199,7 @@
 | `entryUnitId` | string | 入口單元相容欄位；原則上可由 `course_units[0]` 推導。 |
 | `contentRef` | string | 外部內容倉路徑相容欄位；若路徑規則完全標準化，未來可改為推導欄位。 |
 | `title` / `summary` / `description` | string | 舊有頂層內容欄位，已由 `i18n` 取代。 |
-| `titleEn` / `summaryEn` / `descriptionEn` / `coreContentEn` | string / array | 舊雙語相容欄位。 |
+| `titleEn` / `summaryEn` / `descriptionEn` / `coreContentEn` | string / array | 歷史相容欄位。 |
 | `learningPathLabel*` / `categoryLabel*` / `navLabel*` | string | 學習路徑分類顯示名稱的相容欄位。 |
 
 ### `metadata_lessons` 多語與相容欄位（i18n Content Fields）
@@ -213,13 +213,28 @@
 | `summaryEn` | string | `summary` | 課程英文摘要（一句話簡介，legacy / compatibility）。 |
 | `descriptionEn` | string | `description` | 課程英文詳細說明（legacy / compatibility）。 |
 | `coreContentEn` | array | `coreContent` | 核心學習內容英文列表（legacy / compatibility）。 |
-| `lessonLabelEn` | string | `lessonLabel` / `tagText` | 課程分類標籤英文（藍色 badge 顯示）。 |
+| `lessonLabelEn` | string | `lessonLabel` / `tagText` | 舊版英文相容欄位。新資料應改寫入 `i18n.en.lessonLabel`。 |
 
 **使用規則**：
 - 前端在需要文字時，優先讀取 `i18n.{locale}`，舊 `*En` 欄位只作歷史相容。
+- `lessonLabel` 也應併入 `i18n` 管理，建議使用 `i18n.zh-TW.lessonLabel`、`i18n.en.lessonLabel`。
+- 若要保留相容層，頂層 `lessonLabel` 可視為中文 fallback，`lessonLabelEn` 視為英文 fallback。
 - `getLessonsMetadata` Cloud Function 直接傳回 Firestore 文件所有欄位，**不需要後端修改**即可生效。
-- 欄位維護以 `admin-courses.html` 的 `i18n` 編輯器為主；`admin-i18n.html` 只保留作舊版相容入口。
+- 欄位維護以 `admin-courses.html` 的 `i18n` 編輯器為主。
 - 建議以 `i18n.en`、`i18n.zh-TW` 這類 locale key 管理全部文字，不再依賴頂層 `title` / `summary` / `description`。
+
+### `lessonLabel` 收斂建議
+
+`lessonLabel` 的用途是「課程 badge / 分類顯示字串」，通常不屬於核心內容本體，因此建議：
+
+| 欄位名稱 | 建議定位 | 說明 |
+| :--- | :--- | :--- |
+| `lessonLabel` | 相容 fallback | 中文顯示文字，僅在 `i18n.zh-TW.lessonLabel` 缺席時使用。 |
+| `lessonLabelEn` | 相容 fallback | 英文顯示文字，僅在 `i18n.en.lessonLabel` 缺席時使用。 |
+| `i18n.zh-TW.lessonLabel` | canonical | 中文 badge / 標籤顯示。 |
+| `i18n.en.lessonLabel` | canonical | 英文 badge / 標籤顯示。 |
+
+如果該字串可由 `level`、`sequence` 或 `labelKey` 組合推導，優先使用推導，減少重複存放。
 
 執行期 canonical identity 規則：
 - 課程型 metadata：優先使用 Firestore document ID（`id` / `docId`）
@@ -442,6 +457,32 @@
 - `localeFallbackMap`
 
 這類設定屬於平台層設定，適合集中管理，不建議散落在前端常數或各頁面硬編碼。
+
+#### `metadata_settings/learning_paths`
+
+`learning_paths` 建議作為「課程分類與導覽顯示字典」的唯一來源，集中管理像 `common`、`car-starter`、`car-basic`、`car-advanced` 這類 path key 對應的顯示文字。
+
+Canonical schema：
+
+```json
+{
+  "schemaVersion": 1,
+  "categoryLabels": {
+    "common": { "zh-TW": "課前準備", "en": "Preparation" },
+    "car-starter": { "zh-TW": "入門課程", "en": "Starter Unit" },
+    "car-basic": { "zh-TW": "基礎課程", "en": "Basic Unit" },
+    "car-advanced": { "zh-TW": "進階課程", "en": "Advanced Unit" }
+  },
+  "updatedAt": "timestamp"
+}
+```
+
+使用規則：
+- `categoryLabels` 是全站共用 taxonomy 顯示字典，不是單一 lesson 的內容欄位。
+- key 必須使用 canonical path key，不要長期保存 `tw-...` / `en-...` 這類 legacy 前綴；前端與後端需要時再做 locale 對照。
+- 若某個分類文字可從 `level`、`track`、`sequence` 推導，前端可先推導，`categoryLabels` 僅作覆寫與相容。
+- `metadata_lessons.i18n` 負責 lesson 本體文字，`metadata_settings.learning_paths.categoryLabels` 負責分類 / badge / 導覽文字，兩者應分層管理。
+- 舊資料若仍保存成 `zh-TW` / `en` 置頂 bucket 或 `tw-*` / `en-*` key，應透過 migration 一次性轉成 canonical schema，不再新增新的 legacy 寫入路徑。
 
 ---
 

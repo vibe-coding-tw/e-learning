@@ -589,11 +589,62 @@ function findCourseForCoursePage(file = '') {
     }) || null;
 }
 
-function syncCourseTopNavName(topNav, course, isEn = false) {
+function getCourseRuntimeConfig() {
+    if (typeof window.__vibeGetContentRuntimeConfig === 'function') {
+        return window.__vibeGetContentRuntimeConfig() || {};
+    }
+    return {
+        supportedLocales: ['zh-TW', 'en'],
+        localeLabels: { 'zh-TW': '繁體中文', en: 'English' },
+        defaultLocale: 'zh-TW'
+    };
+}
+
+function getCourseLocaleOptions() {
+    const runtime = getCourseRuntimeConfig();
+    const supported = Array.isArray(runtime.supportedLocales) && runtime.supportedLocales.length
+        ? runtime.supportedLocales
+        : ['zh-TW', 'en'];
+    const labels = runtime.localeLabels && typeof runtime.localeLabels === 'object' ? runtime.localeLabels : {};
+    return supported.map((locale) => {
+        const normalized = String(locale || '').trim();
+        return {
+            value: normalized,
+            label: labels[normalized] || labels[String(normalized).toLowerCase()] || normalized
+        };
+    }).filter((item) => item.value);
+}
+
+function getActiveCourseLocale() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const queryLocale = String(params.get('locale') || params.get('lang') || '').trim();
+        if (queryLocale) return queryLocale;
+    } catch (_) {}
+    try {
+        const stored = String(localStorage.getItem('vibe_user_locale') || '').trim();
+        if (stored) return stored;
+    } catch (_) {}
+    const htmlLang = String(document.documentElement?.lang || '').trim();
+    if (htmlLang) return htmlLang;
+    const navLang = String(navigator.language || '').trim();
+    if (navLang) return navLang;
+    return getCourseRuntimeConfig().defaultLocale || 'zh-TW';
+}
+
+function isZhLikeCourseLocale(locale = '') {
+    return String(locale || '').toLowerCase().startsWith('zh');
+}
+
+function syncCourseTopNavName(topNav, course, locale = 'zh-TW') {
     if (!topNav) return;
     const navCourseNameId = 'nav-course-name';
     let navCourseNameSpan = document.getElementById(navCourseNameId);
-    const courseName = String(isEn ? (course?.titleEn || course?.title || '') : (course?.title || course?.titleEn || '')).trim();
+    const courseName = String(
+        (window.__vibeResolveLocalizedFieldValue
+            ? window.__vibeResolveLocalizedFieldValue(course || {}, 'title', locale, course?.title || course?.titleEn || '')
+            : (String(locale || '').toLowerCase().startsWith('en') ? (course?.titleEn || course?.title || '') : (course?.title || course?.titleEn || '')))
+    ).trim();
 
     if (!courseName) {
         if (navCourseNameSpan) {
@@ -637,10 +688,11 @@ function normalizeCourseTopNav() {
                         ? canonicalLearningPathHref('common')
                         : '';
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
-        const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
-        const langQuery = isEn ? '&lang=en' : '';
+        const runtimeConfig = getCourseRuntimeConfig();
+        const localeOptions = getCourseLocaleOptions();
+        const activeLocale = getActiveCourseLocale();
+        const isEn = String(activeLocale || '').trim().toLowerCase().startsWith('en') || file.startsWith('en-');
+        const langQuery = activeLocale ? `&lang=${encodeURIComponent(activeLocale)}` : '';
         const topNav = ensureCourseTopNavShell(file, metadataFamily);
         if (!topNav) return;
 
@@ -694,11 +746,11 @@ function normalizeCourseTopNav() {
         if (brandLink) {
             const isEnMode = isEn;
             brandLink.innerHTML = '<i class="fas fa-rocket"></i> Vibe Coding';
-            brandLink.setAttribute('href', isEnMode ? '/index.html?lang=en' : '/index.html');
+            brandLink.setAttribute('href', isEnMode ? `/index.html?lang=${encodeURIComponent(activeLocale || 'en')}` : '/index.html');
             brandLink.setAttribute('target', '_top');
         }
 
-        syncCourseTopNavName(topNav, targetHref ? findCourseForCoursePage(file) : null, isEn);
+        syncCourseTopNavName(topNav, targetHref ? findCourseForCoursePage(file) : null, activeLocale);
 
         if (!document.getElementById('course-lang-select-container')) {
             const container = document.createElement('div');
@@ -708,8 +760,10 @@ function normalizeCourseTopNav() {
             container.innerHTML = `
                 <i class="fa-solid fa-globe" style="color: rgba(255,255,255,0.75); font-size: 13px;"></i>
                 <select id="course-lang-select" style="background: transparent; color: #fff; border: none; font-size: 13px; font-weight: 500; cursor: pointer; outline: none; padding: 4px 6px; border-radius: 4px;">
-                    <option value="zh-TW" ${!isEn ? 'selected' : ''} style="color: #333;">繁中</option>
-                    <option value="en" ${isEn ? 'selected' : ''} style="color: #333;">EN</option>
+                    ${localeOptions.map((locale) => {
+                        const selected = String(locale.value).toLowerCase() === String(activeLocale || '').toLowerCase();
+                        return `<option value="${locale.value}" ${selected ? 'selected' : ''} style="color: #333;">${locale.label}</option>`;
+                    }).join('')}
                 </select>
             `;
 
@@ -717,15 +771,18 @@ function normalizeCourseTopNav() {
 
             const select = container.querySelector('#course-lang-select');
             select.addEventListener('change', (e) => {
-                const newLocale = e.target.value;
+                const newLocale = String(e.target.value || '').trim();
                 try {
                     localStorage.setItem('vibe_user_locale', newLocale);
+                } catch (_) {}
+                try {
+                    document.documentElement.lang = newLocale || document.documentElement.lang || 'zh-TW';
                 } catch (_) {}
 
                 const currentFile = window.location.pathname.split('/').pop() || '';
                 let targetFile = currentFile;
 
-                if (newLocale === 'en') {
+                if (newLocale.toLowerCase().startsWith('en')) {
                     if (currentFile.startsWith('tw-')) {
                         targetFile = currentFile.replace(/^tw-/, 'en-');
                     } else if (currentFile.startsWith('start-')) {
@@ -751,7 +808,7 @@ function normalizeCourseTopNav() {
                     } else if (currentFile.match(/^prepare-/)) {
                         targetFile = currentFile.replace(/^prepare-/, 'en-common-');
                     }
-                } else {
+                } else if (isZhLikeCourseLocale(newLocale)) {
                     if (targetFile.startsWith('en-car-starter-')) {
                         targetFile = targetFile.replace(/^en-car-starter-/, 'tw-car-starter-');
                     } else if (targetFile.startsWith('en-car-basic-')) {
@@ -763,11 +820,13 @@ function normalizeCourseTopNav() {
                     } else if (targetFile.startsWith('en-')) {
                         targetFile = targetFile.replace(/^en-/, 'tw-');
                     }
+                } else {
+                    targetFile = currentFile;
                 }
 
                 const urlParams = new URLSearchParams(window.location.search);
-                urlParams.set('lang', newLocale === 'en' ? 'en' : 'zh-TW');
-                urlParams.set('locale', newLocale === 'en' ? 'en' : 'zh-TW');
+                urlParams.set('lang', newLocale || 'zh-TW');
+                urlParams.set('locale', newLocale || 'zh-TW');
 
                 const newSearch = urlParams.toString();
                 const newPath = window.location.pathname.replace(currentFile, targetFile);
@@ -2164,7 +2223,7 @@ async function initFirebaseFeatures() {
         window.firebaseResolveAssignmentAccess = async (payload) => {
             try {
                 // [V13.0.21] Automatically inject tutorMode from browser session
-                const isTutorMode = localStorage.getItem('adminTutorMode') === 'true';
+                const isTutorMode = isAdminTutorModeActive();
                 const resolveAssignmentAccess = httpsCallable(functions, 'resolveAssignmentAccess');
                 const result = await resolveAssignmentAccess({
                     ...payload,
@@ -2930,7 +2989,18 @@ function resolveAssignmentUrl(urlConfig) {
 
 function isAdminTutorModeActive() {
     try {
-        return localStorage.getItem('adminTutorMode') === 'true';
+        const uid = auth.currentUser?.uid;
+        if (!uid) return false;
+        const scopedKey = `adminTutorMode:${uid}`;
+        const scopedValue = localStorage.getItem(scopedKey);
+        if (scopedValue !== null) return scopedValue === 'true';
+        const legacyValue = localStorage.getItem('adminTutorMode');
+        if (legacyValue !== null) {
+            localStorage.setItem(scopedKey, legacyValue);
+            localStorage.removeItem('adminTutorMode');
+            return legacyValue === 'true';
+        }
+        return false;
     } catch (_) {
         return false;
     }
