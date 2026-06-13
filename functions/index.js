@@ -19,8 +19,19 @@ const {
 const {
     initializeFunctionsRuntime
 } = require('./lib/functions-bootstrap');
+const admin = require("firebase-admin");
+const { getContentRuntimeConfig } = require("./lib/runtime-state");
 
 initializeFunctionsRuntime();
+
+exports.getContentRuntimeConfig = onCall(async () => {
+    const db = admin.firestore();
+    const config = await getContentRuntimeConfig(db);
+    return {
+        success: true,
+        ...config
+    };
+});
 
 registerIndexExports({
     target: exports,

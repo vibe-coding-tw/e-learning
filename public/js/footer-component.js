@@ -51,12 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const LOCALIZED_SITE_PAGES = {
         students: {
-            zh: { href: '/tw/students.html', label: window.t ? window.t('nav_students_label', '課程購買與使用指南') : '課程購買與使用指南' },
+            zh: { href: '/tw/students.html', label: window.t ? window.t('nav_students_label', '學員指南') : '學員指南' },
             en: { href: '/en/students.html', label: 'Student Guide' },
         },
         tutors: {
-            zh: { href: '/tw/tutors.html', label: window.t ? window.t('nav_tutors_label', '專業導師與合作洽談') : '專業導師與合作洽談' },
-            en: { href: '/en/tutors.html', label: 'Tutor Guide' },
+            zh: { href: '/tw/tutors.html', label: window.t ? window.t('nav_tutors_label', '導師合作') : '導師合作' },
+            en: { href: '/en/tutors.html', label: 'Tutor Collaboration' },
         },
     };
     const localeBucket = (locale = '') => (String(locale || '').toLowerCase().startsWith('zh') ? 'zh' : 'en');
@@ -99,8 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-400 font-bold text-sm uppercase tracking-wide">
                     <a href="${resolve('index.html')}" class="hover:text-white transition-colors">${window.t ? window.t('footer_home', isZh ? '首頁' : 'Home') : (isZh ? '首頁' : 'Home')}</a>
                     <a href="${resolve(learningPathHref('common'))}" class="hover:text-white transition-colors">${window.t ? window.t('footer_learning_path', isZh ? '學習路徑' : 'Learning Path') : (isZh ? '學習路徑' : 'Learning Path')}</a>
-                    <a href="${resolve('students.html')}" data-localized-page="students" class="hover:text-white transition-colors"><span data-localized-label="students">${window.t ? window.t('footer_student_guide', isZh ? '課程指南' : 'Student Guide') : (isZh ? '課程指南' : 'Student Guide')}</span></a>
-                    <a href="${resolve('tutors.html')}" data-localized-page="tutors" class="hover:text-white transition-colors"><span data-localized-label="tutors">${window.t ? window.t('footer_tutor_guide', isZh ? '導師合作' : 'Tutor Guide') : (isZh ? '導師合作' : 'Tutor Guide')}</span></a>
+                    <a href="${resolve('students.html')}" data-localized-page="students" class="hover:text-white transition-colors"><span data-localized-label="students">${window.t ? window.t('footer_student_guide', isZh ? '學員指南' : 'Student Guide') : (isZh ? '學員指南' : 'Student Guide')}</span></a>
+                    <a href="${resolve('tutors.html')}" data-localized-page="tutors" class="hover:text-white transition-colors"><span data-localized-label="tutors">${window.t ? window.t('footer_tutor_guide', isZh ? '導師合作' : 'Tutor Collaboration') : (isZh ? '導師合作' : 'Tutor Collaboration')}</span></a>
                 </div>
             </div>
             
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <span class="hidden md:inline opacity-20">|</span>
                         <div class="flex items-center gap-2">
-                            <span class="opacity-50">${window.t ? window.t('footer_contact_us', isZh ? '合作洽談' : 'Contact Us') : (isZh ? '合作洽談' : 'Contact Us')}</span>
+                            <span class="opacity-50">${window.t ? window.t('footer_contact_us', isZh ? '聯絡我們' : 'Contact Us') : (isZh ? '聯絡我們' : 'Contact Us')}</span>
                             <a href="mailto:info@vibe-coding.tw" class="text-indigo-400 hover:text-indigo-300 transition-colors font-bold">info@vibe-coding.tw</a>
                         </div>
                     </div>

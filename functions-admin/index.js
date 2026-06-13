@@ -914,6 +914,7 @@ function normalizeLessonLocalePayload(localeData = {}) {
         title: normalizeText(localeData.title || ""),
         summary: normalizeText(localeData.summary || ""),
         description: normalizeText(localeData.description || ""),
+        lessonLabel: normalizeText(localeData.lessonLabel || ""),
         coreContent: Array.isArray(localeData.coreContent)
             ? localeData.coreContent.map((item) => normalizeText(item)).filter(Boolean)
             : []
@@ -944,6 +945,8 @@ function normalizeLessonMetadataPatch(payload = {}) {
     if (hasOwn("titleEn")) patch.titleEn = normalizeText(payload.titleEn || "");
     if (hasOwn("summaryEn")) patch.summaryEn = normalizeText(payload.summaryEn || "");
     if (hasOwn("descriptionEn")) patch.descriptionEn = normalizeText(payload.descriptionEn || "");
+    if (hasOwn("lessonLabel")) patch.lessonLabel = normalizeText(payload.lessonLabel || "");
+    if (hasOwn("lessonLabelEn")) patch.lessonLabelEn = normalizeText(payload.lessonLabelEn || "");
     if (hasOwn("coreContentEn")) {
         patch.coreContentEn = Array.isArray(payload.coreContentEn)
             ? payload.coreContentEn.map((item) => normalizeText(item)).filter(Boolean)
@@ -1030,6 +1033,7 @@ exports.adminUpdateLessonI18n = onCall(async (request) => {
     if (typeof descriptionEn === "string") updatePayload.descriptionEn = normalizeText(descriptionEn);
     if (Array.isArray(coreContentEn)) updatePayload.coreContentEn = coreContentEn.map((s) => normalizeText(s)).filter(Boolean);
     if (typeof lessonLabelEn === "string") updatePayload.lessonLabelEn = normalizeText(lessonLabelEn);
+    if (typeof lessonLabelEn === "string") updatePayload["i18n.en.lessonLabel"] = normalizeText(lessonLabelEn);
 
     await lessonDocRef.set(updatePayload, { merge: true });
     console.log(`[adminUpdateLessonI18n] Updated i18n fields for courseId=${courseId} by uid=${auth.uid}`);
@@ -3315,6 +3319,124 @@ async function fetchGuideContentFromLocalFiles({ lessons, courseId, unitId, pref
     return aggregatedGuides;
 }
 
+function normalizeLearningPathCategoryLabelEntry(value = {}) {
+    if (typeof value === "string") {
+        const text = String(value || "").trim();
+        return {
+            "zh-TW": text,
+            en: text,
+        };
+    }
+
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+    const zh = String(
+        value["zh-TW"] ||
+        value.zhTW ||
+        value.zh ||
+        value.tw ||
+        value.labelZh ||
+        value.twLabel ||
+        value.label ||
+        value.title ||
+        ""
+    ).trim();
+    const en = String(
+        value.en ||
+        value["en-US"] ||
+        value.labelEn ||
+        value.enLabel ||
+        value.titleEn ||
+        value.label ||
+        value.title ||
+        ""
+    ).trim();
+
+    return {
+        "zh-TW": zh || en,
+        en: en || zh,
+    };
+}
+
+function normalizeCanonicalLearningPathKey(value = "") {
+    const v = String(value || "").trim().toLowerCase().split("/").pop().split("?")[0].split("#")[0].replace(/\.html$/i, "");
+    if (!v) return "";
+    if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
+    if (/^(?:tw|en)-common$/i.test(v)) return "common";
+    if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+    if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
+    if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
+    if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
+    if (/^\d{2}-unit-/i.test(v)) return "common";
+    if (/^prepare-\d+/i.test(v)) return "common";
+    return v;
+}
+
+function normalizeLearningPathCategoryLabels(sourceMap = {}) {
+    const normalized = {};
+    if (!sourceMap || typeof sourceMap !== "object" || Array.isArray(sourceMap)) return normalized;
+
+    const ensureEntry = (canonicalKey) => {
+        if (!normalized[canonicalKey]) normalized[canonicalKey] = {};
+        return normalized[canonicalKey];
+    };
+
+    const assignLabel = (rawKey, rawValue, localeHint = "") => {
+        const canonicalKey = normalizeCanonicalLearningPathKey(rawKey);
+        if (!canonicalKey) return;
+
+        const entry = ensureEntry(canonicalKey);
+        const normalizedEntry = normalizeLearningPathCategoryLabelEntry(rawValue);
+
+        if (localeHint === "zh-TW") {
+            entry["zh-TW"] = entry["zh-TW"] || String(rawValue || "").trim() || normalizedEntry["zh-TW"] || normalizedEntry.en || "";
+            if (!entry.en) entry.en = normalizedEntry.en || normalizedEntry["zh-TW"] || String(rawValue || "").trim() || "";
+            return;
+        }
+
+        if (localeHint === "en") {
+            entry.en = entry.en || String(rawValue || "").trim() || normalizedEntry.en || normalizedEntry["zh-TW"] || "";
+            if (!entry["zh-TW"]) entry["zh-TW"] = normalizedEntry["zh-TW"] || normalizedEntry.en || String(rawValue || "").trim() || "";
+            return;
+        }
+
+        if (typeof rawValue === "string") {
+            const text = String(rawValue || "").trim();
+            if (!text) return;
+            entry["zh-TW"] = entry["zh-TW"] || text;
+            entry.en = entry.en || text;
+            return;
+        }
+
+        if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) {
+            if (normalizedEntry["zh-TW"]) entry["zh-TW"] = entry["zh-TW"] || normalizedEntry["zh-TW"];
+            if (normalizedEntry.en) entry.en = entry.en || normalizedEntry.en;
+        }
+    };
+
+    for (const [key, value] of Object.entries(sourceMap)) {
+        const isLocaleBucket = key === "zh-TW" || key === "zhTW" || key === "zh" || key === "tw" || key === "en" || key === "en-US";
+        if (isLocaleBucket && value && typeof value === "object" && !Array.isArray(value)) {
+            const localeHint = key.startsWith("en") ? "en" : "zh-TW";
+            for (const [nestedKey, nestedValue] of Object.entries(value)) {
+                assignLabel(nestedKey, nestedValue, localeHint);
+            }
+            continue;
+        }
+
+        assignLabel(key, value, "");
+    }
+
+    for (const [key, value] of Object.entries(normalized)) {
+        normalized[key] = {
+            "zh-TW": String(value["zh-TW"] || value.en || "").trim(),
+            en: String(value.en || value["zh-TW"] || "").trim(),
+        };
+    }
+
+    return normalized;
+}
+
 exports.getLessonsMetadata = onCall(async (request) => {
     try {
         const data = request?.data || {};
@@ -3322,7 +3444,8 @@ exports.getLessonsMetadata = onCall(async (request) => {
         const lessons = await loadLessonsWithOptionalDistributorOverride(distributorId);
 
         const settingsSnap = await db.collection("metadata_settings").doc("learning_paths").get();
-        const categoryLabels = settingsSnap.exists ? ((settingsSnap.data() || {}).categoryLabels || {}) : {};
+        const rawCategoryLabels = settingsSnap.exists ? ((settingsSnap.data() || {}).categoryLabels || {}) : {};
+        const categoryLabels = normalizeLearningPathCategoryLabels(rawCategoryLabels);
 
         return {
             lessons,
@@ -4038,9 +4161,16 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
         const now = Date.now();
         const userRecord = await admin.auth().getUser(uid);
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-        const isTrialCourse = !!(course && (course.category === "start" || course.category === "started") && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
+        const trialLesson = course || lessonByCourseRef || freeCourseContext || null;
+        const isTrialCourse = !!(trialLesson && (
+            trialLesson.category === "start" ||
+            trialLesson.category === "started" ||
+            trialLesson.level === "starter" ||
+            trialLesson.level === "start" ||
+            trialLesson.level === "started"
+        ) && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
         if (isTrialCourse) {
-            return { authorized: true, accessMode: "trial_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
+            return { authorized: true, accessMode: "trial_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course: trialLesson };
         }
     }
 

@@ -155,7 +155,7 @@ function normalizeGuideTitleText(text = '') {
     // Remove simple unit slug prefix like "03-unit-github-classroom："
     value = value.replace(/^[a-z0-9]+-unit-[a-z0-9-]+\s*[：:]\s*/i, '');
     // Normalize tutor-guide title patterns and remove slug tail
-    value = value.replace(/^(導師指南|Tutor Guide)\s*[-：:|｜]\s*[a-z0-9-]+\s*/i, '$1：');
+    value = value.replace(/^(導師合作|Tutor Collaboration)\s*[-：:|｜]\s*[a-z0-9-]+\s*/i, '$1：');
     // Remove trailing slug in parentheses
     value = value.replace(/\s*\(([a-z0-9]+-unit-[a-z0-9-]+)\)\s*$/i, '');
 
@@ -258,14 +258,50 @@ async function loadMarkdownFromRepoWithFallback(org, candidateSlugs) {
 
 // [NEW] Admin Super Mode state
 // [NEW] Admin Tutor Mode state (formerly Super Mode)
-let adminTutorMode = localStorage.getItem('adminTutorMode') === 'true'; 
+const ADMIN_TUTOR_MODE_STORAGE_KEY = 'adminTutorMode';
+
+function getAdminTutorModeStorageKey(uid = '') {
+    const cleanUid = String(uid || '').trim();
+    return cleanUid ? `${ADMIN_TUTOR_MODE_STORAGE_KEY}:${cleanUid}` : ADMIN_TUTOR_MODE_STORAGE_KEY;
+}
+
+function readAdminTutorModeForUid(uid = '') {
+    const cleanUid = String(uid || '').trim();
+    if (!cleanUid) return false;
+    try {
+        const scopedKey = getAdminTutorModeStorageKey(cleanUid);
+        const scopedValue = localStorage.getItem(scopedKey);
+        if (scopedValue !== null) return scopedValue === 'true';
+
+        const legacyValue = localStorage.getItem(ADMIN_TUTOR_MODE_STORAGE_KEY);
+        if (legacyValue !== null) {
+            localStorage.setItem(scopedKey, legacyValue);
+            localStorage.removeItem(ADMIN_TUTOR_MODE_STORAGE_KEY);
+            return legacyValue === 'true';
+        }
+    } catch (_) {}
+    return false;
+}
+
+function writeAdminTutorModeForUid(uid = '', enabled = false) {
+    const cleanUid = String(uid || '').trim();
+    if (!cleanUid) return false;
+    try {
+        localStorage.setItem(getAdminTutorModeStorageKey(cleanUid), enabled ? 'true' : 'false');
+        localStorage.removeItem(ADMIN_TUTOR_MODE_STORAGE_KEY);
+    } catch (_) {}
+    return enabled === true;
+}
+
+let adminTutorMode = false;
+let forceTutorModeByQuery = false;
 window.vibeShowInterventionDashboard = window.vibeShowInterventionDashboard ?? false;
 try {
     const initialParams = new URLSearchParams(window.location.search);
     const forceTutorMode = initialParams.get('tutorMode');
     if (forceTutorMode === '1' || forceTutorMode === 'true') {
         adminTutorMode = true;
-        localStorage.setItem('adminTutorMode', 'true');
+        forceTutorModeByQuery = true;
     }
 } catch (_) {}
 
@@ -310,10 +346,15 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         myUid = user.uid;
         myEmail = user.email;
+        adminTutorMode = forceTutorModeByQuery ? true : readAdminTutorModeForUid(user.uid);
+        if (forceTutorModeByQuery) {
+            writeAdminTutorModeForUid(user.uid, true);
+        }
         if (userDisplay) userDisplay.textContent = `您好, ${user.displayName || '使用者'}`;
         await loadLessons();
         loadDashboard();
     } else {
+        adminTutorMode = false;
         // [MODIFIED] No more redirect, show guest view for Incognito/Unauthenticated
         console.log("[Auth] No user detected, showing guest prompt.");
         showAccessDenied("GUEST");
@@ -1468,8 +1509,12 @@ function renderAdminDashboard(data, filterUnitId = null) {
             const lessonObj = resolveLessonByAnyKey(canonicalCid);
             let courseTitle = canonicalCid;
             if (lessonObj) {
-                if (lessonObj.lessonLabel && lessonObj.title) {
-                    courseTitle = `${lessonObj.lessonLabel}：${lessonObj.title}`;
+                const lessonLabel = lessonObj.lessonLabel
+                    || lessonObj.i18n?.["zh-TW"]?.lessonLabel
+                    || lessonObj.i18n?.en?.lessonLabel
+                    || "";
+                if (lessonLabel && lessonObj.title) {
+                    courseTitle = `${lessonLabel}：${lessonObj.title}`;
                 } else {
                     courseTitle = lessonObj.title || canonicalCid;
                 }
@@ -2188,14 +2233,14 @@ async function vibeRefreshReadmeContent(filterUnitId, targetKinds = ['settings',
         return;
     }
 
-    selected.forEach(({ kind, el }) => {
-        el.classList.remove('hidden');
-        const loadingText = kind === 'settings'
-            ? '正在讀取導師指南 (tutor-guide)...'
+        selected.forEach(({ kind, el }) => {
+            el.classList.remove('hidden');
+            const loadingText = kind === 'settings'
+            ? '正在讀取導師合作 (tutor-guide)...'
             : '正在讀取課程頁內容...';
-        el.innerHTML = `
-            <div class="flex items-center gap-3 text-slate-400 italic">
-                <span class="animate-pulse">⏳</span> ${loadingText}
+            el.innerHTML = `
+                <div class="flex items-center gap-3 text-slate-400 italic">
+                    <span class="animate-pulse">⏳</span> ${loadingText}
             </div>
         `;
     });
@@ -2275,13 +2320,13 @@ async function renderTutorGuideMain(filterUnitId) {
     }
 
     placeholder.classList.remove('hidden');
-    placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在讀取導師指南 (tutor-guide)...</div>`;
+    placeholder.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在讀取導師合作 (tutor-guide)...</div>`;
     const extracted = await fetchGuideSectionFromUnitPage(filterUnitId, 'tutor-guide');
     if (extracted) {
         placeholder.innerHTML = extracted;
         normalizeGuideHeadingStyles(placeholder);
     } else {
-        placeholder.innerHTML = `<div class="text-amber-600 text-sm">⚠️ 該單元目前沒有 tutor-guide，已顯示可用內容。</div>`;
+        placeholder.innerHTML = `<div class="text-amber-600 text-sm">⚠️ 該單元目前沒有導師合作內容，已顯示可用內容。</div>`;
     }
 }
 
@@ -2846,15 +2891,15 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                     <div class="text-[11px] font-black uppercase tracking-[0.24em] text-indigo-500">Course Admin</div>
                     <h4 class="mt-2 text-xl font-black text-slate-900">課程入口管理</h4>
                     <p class="mt-2 text-sm leading-7 text-slate-600">
-                        新增 / 修改 / 停用課程主檔、同步 \`metadata_lessons\` 與 \`dealer_price_books\`，以及前往雙語內容編輯頁。
+                        新增 / 修改 / 停用課程主檔、同步 \`metadata_lessons\` 與 \`dealer_price_books\`，以及前往語系設定。
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <a href="admin-courses.html" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700">
                         <i class="fa-solid fa-layer-group"></i> 開啟課程管理
                     </a>
-                    <a href="admin-i18n.html" class="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm font-bold text-indigo-700 transition hover:bg-indigo-50">
-                        <i class="fa-solid fa-language"></i> 雙語內容管理
+                    <a href="admin-courses.html#locale-editor" class="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm font-bold text-indigo-700 transition hover:bg-indigo-50">
+                        <i class="fa-solid fa-language"></i> 語系設定
                     </a>
                 </div>
             </div>
@@ -3273,7 +3318,8 @@ window.handleUnitTutorAuth = async function (courseId, unitFile, tutorEmail, act
 };
 
 window.toggleAdminTutorMode = function (enabled) {
-    localStorage.setItem('adminTutorMode', enabled);
+    adminTutorMode = enabled === true;
+    writeAdminTutorModeForUid(myUid, adminTutorMode);
     // [V13.0.21] Force reload to ensure ALL functions and UI respect the new simulation state
     window.location.reload();
 };

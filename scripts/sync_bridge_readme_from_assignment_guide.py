@@ -29,7 +29,7 @@ def normalize_title(text: str, unit_slug: str) -> str:
         return unit_slug
     t = re.sub(r'^(?:[a-z]+-\\d{2}-)?unit-[a-z0-9-]+\\s*[：:]\\s*', '', t, flags=re.I)
     t = re.sub(r'^[a-z0-9]+-unit-[a-z0-9-]+\\s*[：:]\\s*', '', t, flags=re.I)
-    t = re.sub(r'^(導師指南|Tutor Guide)\\s*[-：:|｜]\\s*[a-z0-9-]+\\s*', r'\\1：', t, flags=re.I)
+    t = re.sub(r'^(導師合作|Tutor Collaboration)\\s*[-：:|｜]\\s*[a-z0-9-]+\\s*', r'\\1：', t, flags=re.I)
     t = re.sub(r'\\s*\\(([a-z0-9]+-unit-[a-z0-9-]+)\\)\\s*$', '', t, flags=re.I)
     t = re.sub(r'\\s+', ' ', t).strip(' -：:')
     return t or unit_slug

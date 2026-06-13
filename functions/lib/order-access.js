@@ -202,6 +202,14 @@ function createOrderAccessHelpers({
         return normalizedLessonId.startsWith("car-starter-") || category === "start" || category === "started";
     }
 
+    function isStarterTrialLesson(lesson = {}) {
+        const canonicalLessonId = getCanonicalLessonIdentity(lesson) || lesson.courseKey || lesson.courseId || lesson.id || "";
+        const normalizedLessonId = normalizeText(canonicalLessonId).toLowerCase();
+        const category = normalizeText(lesson.category || "").toLowerCase();
+        const level = normalizeText(lesson.level || "").toLowerCase();
+        return normalizedLessonId.startsWith("car-starter-") || category === "start" || category === "started" || level === "starter" || level === "start" || level === "started";
+    }
+
     async function syncReferralLink(db, url, tutorEmail, tutorName, unitId) {
         if (!url) return;
         const normalized = normalizeGitHubUrl(url);
@@ -332,14 +340,15 @@ function createOrderAccessHelpers({
                 };
             }
 
-            const now = Date.now();
-            const userRecord = await admin.auth().getUser(uid);
-            const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-            const isTrialCourse = !!(course && (course.category === "start" || course.category === "started") && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
-            if (isTrialCourse) {
-                return { authorized: true, accessMode: "trial_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
-            }
+        const now = Date.now();
+        const userRecord = await admin.auth().getUser(uid);
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+        const trialLesson = course || lessonByCourseRef || pricingLesson || null;
+        const isTrialCourse = !!(trialLesson && isStarterTrialLesson(trialLesson) && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
+        if (isTrialCourse) {
+            return { authorized: true, accessMode: "trial_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course: trialLesson };
         }
+    }
 
         if (!effectiveCourseId) {
             console.warn(`[resolveAccess] FAIL: Missing context for UID:${uid} Page:${courseId} Unit:${unitId}`);
