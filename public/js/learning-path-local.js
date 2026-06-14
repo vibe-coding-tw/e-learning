@@ -756,11 +756,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   const courseHtml = rows.map((lesson) => {
     const entryUrl = resolveEntryUrl(lesson);
     const unitFile = resolveUnitFile(lesson);
-    const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-    const displayTitle = resolveLessonCardTitle(lesson, uiLocale);
-    const displayKey = isEn
-      ? String(lesson.courseKey || lesson.courseId || "")
-      : String(resolveLessonLabel(lesson, uiLocale) || categoryLabel(pathKey, categoryLabelsMap) || "");
+    const displayKey = categoryLabel(pathKey, categoryLabelsMap);
     const contentList = translateBulletList(toList(window.__vibeResolveLocalizedFieldValue
       ? window.__vibeResolveLocalizedFieldValue(lesson, "coreContent", uiLocale, isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])
       : (isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])).slice(0, 4), uiLocale).filter(Boolean);
@@ -820,10 +816,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const price = Number(priceEntry.amount || 0);
     const priceCurrency = String(priceEntry.currency || "");
     const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
-    const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-    const displayKey = isEn
-      ? String(lesson.courseKey || lesson.courseId || "")
-      : String(resolveLessonLabel(lesson, uiLocale) || categoryLabel(pathKey, categoryLabelsMap) || "");
+    const displayKey = categoryLabel(pathKey, categoryLabelsMap);
     const hardwareId = String(lesson.courseId || "").toLowerCase();
     const imageUrl = pickImage(lesson);
     const summary = isEn

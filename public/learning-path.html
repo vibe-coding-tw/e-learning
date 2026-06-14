@@ -22,7 +22,7 @@
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
   <script type="module" src="./js/nav-component.148940692df3.js"></script>
-  <script src="./js/dashboard-lookup-utils.371b7a3ab8a2.js"></script>
+  <script src="./js/dashboard-lookup-utils.d70c831244bb.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
   <script src="./js/course-shared.3dc005098a8e.js"></script>
   <script src="./js/pricing-utils.909971c38740.js"></script>
@@ -701,10 +701,10 @@
       };
     }
 
-    function addToCart(productId, productName, productPrice, isPhysical, currency = "") {
+    function addToCart(docId, productName, productPrice, isPhysical, currency = "") {
       const cart = JSON.parse(localStorage.getItem("vibeCodingCart") || "{}");
-      if (cart[productId]) return false;
-      cart[productId] = {
+      if (cart[docId]) return false;
+      cart[docId] = {
         name: productName,
         price: Number(productPrice || 0),
         currency: currency || "",
@@ -890,7 +890,7 @@
     function lessonRenderKey(lesson = {}) {
       return normalizeCanonicalCourseKey(
         lesson.courseKey ||
-        lesson.productId ||
+        lesson.docId ||
         lesson.courseId ||
         lesson.entryUnitId ||
         lesson.contentRef ||
@@ -995,9 +995,7 @@
         const unitFile = resolveUnitFile(lesson);
         const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
         const displayTitle = resolveLessonCardTitle(lesson, uiLocale);
-        const displayKey = isEn
-          ? String(lesson.courseKey || lesson.courseId || "")
-          : String(resolveLessonLabel(lesson, uiLocale) || categoryLabel(pathKey) || "");
+        const displayKey = categoryLabel(pathKey);
         const contentList = translateBulletList(
           toList(window.__vibeResolveLocalizedFieldValue
             ? window.__vibeResolveLocalizedFieldValue(lesson, "coreContent", uiLocale, isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])
@@ -1070,9 +1068,7 @@
         const priceCurrency = String(priceEntry.currency || "");
         const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
         const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-        const displayKey = isEn
-          ? String(lesson.courseKey || lesson.courseId || "")
-          : String(resolveLessonLabel(lesson, uiLocale) || categoryLabel(pathKey) || "");
+        const displayKey = categoryLabel(pathKey);
         const hardwareId = String(lesson.courseId || "").toLowerCase();
         const imageUrl = pickImage(lesson);
         const summary = isEn
