@@ -1033,7 +1033,7 @@ function upgradeLegacyStartUnitToMsLayout() {
             const prevTarget = pageNo === 1 ? 0 : pageNo - 1;
             const nextTarget = pageNo === legacySections.length ? 0 : pageNo + 1;
             nav.innerHTML = `
-                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;${pageNo === 1 ? '總覽' : '上一頁'}</button>
+                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;上一頁</button>
                 <span class="unit-page-indicator">${pageNo} / ${legacySections.length}</span>
                 <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? '返回總覽' : '下一頁'} &nbsp;›</button>
             `;
@@ -3830,6 +3830,13 @@ function normalizeTerminology() {
                 meta.innerHTML = meta.innerHTML.replace(/(\d+)\s*個單元/g, '$1 頁');
             }
         }
+
+        // 5b. Force the back button on the second page (index 1) to say "上一頁" if it has class `.nav-btn-prev` and has the text "總覽"
+        document.querySelectorAll('.nav-btn-prev').forEach(el => {
+            if (el.textContent.includes('總覽')) {
+                el.innerHTML = el.innerHTML.replace('總覽', '上一頁');
+            }
+        });
 
         // 6. Update document title fallback
         if (isEn) {

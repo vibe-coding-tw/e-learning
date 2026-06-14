@@ -358,6 +358,34 @@ function resolveLessonLabel(lesson = {}, uiLocale = "zh-TW") {
   return String(localizedLessonLabel || (lesson.lessonLabel || lesson.tagText) || "").trim();
 }
 
+function resolveLessonCardTitle(lesson = {}, uiLocale = "zh-TW") {
+  const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
+  if (isEn) {
+    return String(
+      lesson.titleEn
+      || inferEnglishTitle(lesson)
+      || lesson.courseId
+      || lesson.courseKey
+      || ""
+    ).trim();
+  }
+  const resolved = window.__vibeResolveLocalizedFieldValue
+    ? window.__vibeResolveLocalizedFieldValue(lesson, "title", uiLocale, lesson.title || "")
+    : lesson.title;
+  return String(resolved || lesson.title || "").trim();
+}
+
+function resolveLessonCardSummary(lesson = {}, uiLocale = "zh-TW") {
+  const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
+  if (isEn) {
+    return String(lesson.summaryEn || lesson.descriptionEn || "English translation pending.").trim();
+  }
+  const resolved = window.__vibeResolveLocalizedFieldValue
+    ? window.__vibeResolveLocalizedFieldValue(lesson, "summary", uiLocale, lesson.summary || lesson.description || lesson.tagText || "")
+    : (lesson.summary || lesson.description || lesson.tagText || "");
+  return String(resolved || lesson.summary || lesson.description || lesson.tagText || "").trim();
+}
+
 function normalizeCanonicalCourseKey(value = "") {
   const raw = String(value || "").trim().replace(/\.html$/i, "").replace(/^(?:tw|en)-/i, "").toLowerCase();
   if (!raw) return "";
@@ -644,6 +672,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   const uiLocale = detectUiLocale();
   const container = document.getElementById("lesson-container");
   const title = document.getElementById("page-title");
+  const pageTitleText = window.t ? window.t("lp_title", uiLocale.startsWith("en") ? "Learning Path" : "學習路徑") : (uiLocale.startsWith("en") ? "Learning Path" : "學習路徑");
   const t = uiLocale.startsWith("en")
     ? {
         hardwareHeader: "Hardware Kits",
@@ -660,7 +689,11 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
         emptyCategory: "目前此分類尚無課程。",
       };
 
-  title.textContent = categoryLabel(pathKey, categoryLabelsMap);
+  if (title) {
+    title.textContent = pageTitleText;
+    title.setAttribute("data-path-title", categoryLabel(pathKey, categoryLabelsMap));
+  }
+  document.title = pageTitleText;
   const catalogCourses = lessons.filter(isCatalogCourseLesson);
   const matchingPathKeys = pathKeyCandidates(pathKey, uiLocale);
   const isCommonPath = normalizeCanonicalLearningPathKey(pathKey) === "common";
@@ -701,18 +734,14 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const entryUrl = resolveEntryUrl(lesson);
     const unitFile = resolveUnitFile(lesson);
     const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-    const displayTitle = String((window.__vibeResolveLocalizedFieldValue
-      ? window.__vibeResolveLocalizedFieldValue(lesson, "title", uiLocale, lesson.title || lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId || "")
-      : (isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId) : lesson.title))
-      || lesson.courseId || "");
-    const displayKey = String(lesson.courseKey || lesson.courseId || "");
+    const displayTitle = resolveLessonCardTitle(lesson, uiLocale);
+    const displayKey = isEn
+      ? String(lesson.courseKey || lesson.courseId || "")
+      : String(resolveLessonLabel(lesson, uiLocale) || categoryLabel(pathKey, categoryLabelsMap) || "");
     const contentList = translateBulletList(toList(window.__vibeResolveLocalizedFieldValue
       ? window.__vibeResolveLocalizedFieldValue(lesson, "coreContent", uiLocale, isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])
       : (isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])).slice(0, 4), uiLocale).filter(Boolean);
-    const summary = String((window.__vibeResolveLocalizedFieldValue
-      ? window.__vibeResolveLocalizedFieldValue(lesson, "summary", uiLocale, lesson.summary || lesson.description || lesson.tagText || lesson.summaryEn || lesson.descriptionEn || "")
-      : (isEn ? (lesson.summaryEn || lesson.descriptionEn)
-        : (lesson.summary || lesson.description || lesson.tagText))) || (isEn ? "Course content loaded locally." : "課程內容由本機資料載入。"));
+    const summary = resolveLessonCardSummary(lesson, uiLocale) || (isEn ? "English translation pending." : "課程內容由本機資料載入。");
     const duration = String(lesson.duration || lesson.estimatedDuration || "");
     const lessonLabel = resolveLessonLabel(lesson, uiLocale);
     const displayLessonLabel = lessonLabel || (isEn ? "Course Unit" : "課程單元");
@@ -772,13 +801,12 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const displayKey = String(lesson.courseKey || lesson.courseId || "");
     const hardwareId = String(lesson.courseId || "").toLowerCase();
     const imageUrl = pickImage(lesson);
-    const summary = String((window.__vibeResolveLocalizedFieldValue
-      ? window.__vibeResolveLocalizedFieldValue(lesson, "summary", uiLocale, lesson.summary || lesson.description || lesson.tagText || lesson.summaryEn || lesson.descriptionEn || "")
-      : (isEn ? (lesson.summaryEn || lesson.descriptionEn)
-        : (lesson.summary || lesson.description || lesson.tagText))) || (uiLocale === "zh-TW" ? "硬體設備推薦" : "Hardware recommendations"));
-    const displayTitle = String((window.__vibeResolveLocalizedFieldValue
-      ? window.__vibeResolveLocalizedFieldValue(lesson, "title", uiLocale, lesson.title || lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId || "")
-      : (isEn ? (lesson.titleEn || inferEnglishTitle(lesson) || lesson.courseId) : lesson.title)) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit"));
+    const summary = isEn
+      ? String(lesson.summaryEn || lesson.descriptionEn || "Hardware recommendations")
+      : String((window.__vibeResolveLocalizedFieldValue
+        ? window.__vibeResolveLocalizedFieldValue(lesson, "summary", uiLocale, lesson.summary || lesson.description || lesson.tagText || "")
+        : (lesson.summary || lesson.description || lesson.tagText)) || "硬體設備推薦");
+    const displayTitle = resolveLessonCardTitle(lesson, uiLocale) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit");
     const contentList = translateBulletList(toList(window.__vibeResolveLocalizedFieldValue
       ? window.__vibeResolveLocalizedFieldValue(lesson, "coreContent", uiLocale, isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])
       : (isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])).slice(0, 4), uiLocale).filter(Boolean);
@@ -817,13 +845,17 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
 
   const specsHtml = specsRows.map((spec) => {
     const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-    const displayTitle = String((window.__vibeResolveLocalizedFieldValue
-      ? window.__vibeResolveLocalizedFieldValue(spec, "title", uiLocale, spec.title || spec.titleEn || inferEnglishTitle(spec) || "")
-      : (isEn ? (spec.titleEn || inferEnglishTitle(spec) || spec.title) : spec.title)) || "");
+    const displayTitle = isEn
+      ? String(spec.titleEn || inferEnglishTitle(spec) || spec.title || "").trim()
+      : String((window.__vibeResolveLocalizedFieldValue
+        ? window.__vibeResolveLocalizedFieldValue(spec, "title", uiLocale, spec.title || "")
+        : spec.title) || "");
     const specImg = pickImage(spec);
-    const specSummary = String((window.__vibeResolveLocalizedFieldValue
-      ? window.__vibeResolveLocalizedFieldValue(spec, "summary", uiLocale, spec.summary || spec.description || spec.summaryEn || spec.descriptionEn || "")
-      : (isEn ? (spec.summaryEn || spec.summary || spec.descriptionEn || spec.description) : (spec.summary || spec.description || ""))));
+    const specSummary = isEn
+      ? String(spec.summaryEn || spec.descriptionEn || "Computer Spec Recommendations")
+      : String((window.__vibeResolveLocalizedFieldValue
+        ? window.__vibeResolveLocalizedFieldValue(spec, "summary", uiLocale, spec.summary || spec.description || "")
+        : (spec.summary || spec.description || "")));
     const specContentList = translateBulletList(toList(window.__vibeResolveLocalizedFieldValue
       ? window.__vibeResolveLocalizedFieldValue(spec, "coreContent", uiLocale, isEn ? (spec.coreContentEn || spec.coreContent) : spec.coreContent || [])
       : (isEn ? (spec.coreContentEn || spec.coreContent) : spec.coreContent || [])), uiLocale);
