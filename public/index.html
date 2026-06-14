@@ -296,6 +296,8 @@
             const normalized = {};
             if (!sourceMap || typeof sourceMap !== "object" || Array.isArray(sourceMap)) return normalized;
 
+            const isEn = String(locale || "").toLowerCase().startsWith("en");
+
             const assign = (key, value) => {
                 const canonical = normalizeCanonicalLearningPathKey(key);
                 if (!canonical) return;
@@ -304,7 +306,21 @@
             };
 
             for (const [key, value] of Object.entries(sourceMap)) {
+                const lowerKey = key.trim().toLowerCase();
+                if (isEn) {
+                    if (lowerKey.startsWith("tw-") || lowerKey.startsWith("tw_") || lowerKey.startsWith("zh-") || lowerKey.startsWith("zh_")) {
+                        continue;
+                    }
+                } else {
+                    if (lowerKey.startsWith("en-") || lowerKey.startsWith("en_")) {
+                        continue;
+                    }
+                }
+
                 if (key === "zh-TW" || key === "en") {
+                    const isKeyEn = key.startsWith("en");
+                    if (isEn !== isKeyEn) continue;
+
                     if (value && typeof value === "object" && !Array.isArray(value)) {
                         for (const [nestedKey, nestedValue] of Object.entries(value)) {
                             assign(nestedKey, nestedValue);

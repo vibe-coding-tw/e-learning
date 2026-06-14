@@ -450,7 +450,7 @@ function pickCategoryLabelFromLesson(lesson = {}, uiLocale = "zh-TW") {
 }
 
 function normalizeCategoryLabelEntry(entry = {}, uiLocale = "zh-TW") {
-  if (typeof entry === "string") return String(uiLocale || "").toLowerCase().startsWith("en") ? "" : entry.trim();
+  if (typeof entry === "string") return entry.trim();
   if (!entry || typeof entry !== "object" || Array.isArray(entry)) return "";
   const locale = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
   return String(
@@ -469,6 +469,8 @@ function normalizeCategoryLabelsMap(sourceMap = {}, uiLocale = "zh-TW") {
   const normalized = {};
   if (!sourceMap || typeof sourceMap !== "object" || Array.isArray(sourceMap)) return normalized;
 
+  const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
+
   const assign = (key, value) => {
     const canonical = normalizeCanonicalLearningPathKey(key);
     if (!canonical) return;
@@ -477,7 +479,21 @@ function normalizeCategoryLabelsMap(sourceMap = {}, uiLocale = "zh-TW") {
   };
 
   for (const [key, value] of Object.entries(sourceMap)) {
+    const lowerKey = key.trim().toLowerCase();
+    if (isEn) {
+      if (lowerKey.startsWith("tw-") || lowerKey.startsWith("tw_") || lowerKey.startsWith("zh-") || lowerKey.startsWith("zh_")) {
+        continue;
+      }
+    } else {
+      if (lowerKey.startsWith("en-") || lowerKey.startsWith("en_")) {
+        continue;
+      }
+    }
+
     if (key === "zh-TW" || key === "en") {
+      const isKeyEn = key.startsWith("en");
+      if (isEn !== isKeyEn) continue;
+
       if (value && typeof value === "object" && !Array.isArray(value)) {
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
           assign(nestedKey, nestedValue);
