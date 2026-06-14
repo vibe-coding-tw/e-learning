@@ -6,6 +6,7 @@
  * - Normalize multi-locale content into `i18n`
  * - Normalize external unit filenames into `course_units`
  * - Keep camelCase aliases for current runtime compatibility unless explicitly removed
+ * - Do not backfill entryUnitId; entry should be derived from course_units[0]
  *
  * Usage:
  *   node functions/scripts/backfill_metadata_lessons_canonical_schema.js --dry-run
@@ -177,10 +178,6 @@ function buildPatch(data, { deleteFields = [] } = {}) {
   patch.courseUnitTitles = course_unit_titles;
   if (i18n["zh-TW"]?.lessonLabel) patch.lessonLabel = i18n["zh-TW"].lessonLabel;
   if (i18n.en?.lessonLabel) patch.lessonLabelEn = i18n.en.lessonLabel;
-
-  if (!normalizeText(data.entryUnitId) && course_units.length > 0) {
-    patch.entryUnitId = course_units[0];
-  }
 
   const deleteSet = new Set(deleteFields.map((field) => normalizeText(field)).filter(Boolean));
   for (const field of deleteSet) {

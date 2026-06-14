@@ -549,7 +549,7 @@
           <p>這裡可以新增、修改、停用課程主檔，並同步管理 `metadata_lessons` 與 `dealer_price_books`。主畫面只顯示清單，點擊任一課程會打開編輯對話框。</p>
           <div class="hero-tags">
             <span class="tag"><i class="fa-solid fa-database"></i> Firestore source of truth</span>
-            <span class="tag"><i class="fa-solid fa-file-lines"></i> contentRef / entryUnitId</span>
+            <span class="tag"><i class="fa-solid fa-file-lines"></i> 課程主檔</span>
             <span class="tag"><i class="fa-solid fa-tags"></i> dealer_price_books</span>
             <span class="tag"><i class="fa-solid fa-circle-check"></i> Soft delete by default</span>
             <span class="tag"><i class="fa-solid fa-language"></i> i18n multi-locale editor</span>
@@ -628,14 +628,6 @@
               </div>
 
               <div class="editor-grid">
-                <div class="field">
-                  <label>track</label>
-                  <input id="lesson-track" placeholder="car / common" />
-                </div>
-                <div class="field">
-                  <label>level</label>
-                  <input id="lesson-level" placeholder="starter / basic / advanced" />
-                </div>
                 <div class="field full" style="display: none;">
                   <label>title (課程名稱)</label>
                   <input id="lesson-title" oninput="window.updateLocaleField('zh-TW', 'title', this.value)" placeholder="例如：Web App 基礎開發" />
@@ -653,14 +645,13 @@
                   <div id="locale-editor"></div>
                 </div>
 
-                <div class="field full">
-                  <label>contentRef</label>
-                  <input id="lesson-content-ref" placeholder="courses/zh-TW/car-starter-web-app.html" />
-                  <div class="hint">指向外部 content-repo 的課程 HTML 路徑。</div>
+                <div class="field">
+                  <label>track</label>
+                  <input id="lesson-track" placeholder="car / common" />
                 </div>
-                <div class="field full">
-                  <label>entryUnitId</label>
-                  <input id="lesson-entry-unit-id" placeholder="start-01-unit-flexbox-layout.html" />
+                <div class="field">
+                  <label>level</label>
+                  <input id="lesson-level" placeholder="starter / basic / advanced" />
                 </div>
                 <div class="field">
                   <label>category</label>
@@ -726,9 +717,7 @@
                   </div>
                 </div>
                 <div class="action-row" style="margin-top: 0; margin-bottom: 12px;">
-                  <div class="left">
-                    <button class="btn btn-ghost btn-small" onclick="window.addEntryUnitToCourseUnits()"><i class="fa-solid fa-bolt"></i> 同步 entryUnitId</button>
-                  </div>
+                  <div class="left"></div>
                   <div class="right">
                     <button class="btn btn-primary btn-small" onclick="window.addCourseUnitFromInput()"><i class="fa-solid fa-plus"></i> 新增 / 更新所選單元</button>
                   </div>
@@ -1056,7 +1045,6 @@
       const status = $("course-unit-status");
       if (!host) return;
       const { units, titles } = normalizeCourseUnitPairState();
-      const entryUnitId = normalizeText($("lesson-entry-unit-id")?.value || "");
       if (status) {
         const selected = state.selectedCourseUnitIndex >= 0 && state.selectedCourseUnitIndex < units.length
           ? units[state.selectedCourseUnitIndex]
@@ -1071,14 +1059,12 @@
       }
       host.innerHTML = units.map((unitId, index) => {
         const title = normalizeText(titles[index] || unitId);
-        const isEntry = entryUnitId && normalizeText(entryUnitId) === unitId;
         const isSelected = state.selectedCourseUnitIndex === index;
         return `
-          <div class="unit-item ${isEntry ? "active" : ""} ${isSelected ? "selected" : ""}" onclick="window.selectCourseUnit(${index})" title="點擊回填到單元輸入框">
+          <div class="unit-item ${isSelected ? "selected" : ""}" onclick="window.selectCourseUnit(${index})" title="點擊回填到單元輸入框">
             <div>
               <div class="unit-item-code">${escapeHtml(title || unitId)}</div>
               ${title && title !== unitId ? `<div class="pricebook-meta">${escapeHtml(unitId)}</div>` : ''}
-              ${isEntry ? '<div class="pricebook-meta">entryUnitId</div>' : ''}
             </div>
             <div class="unit-item-actions">
               <button class="btn btn-muted btn-small" onclick="event.stopPropagation(); window.moveCourseUnit(${index}, -1)"><i class="fa-solid fa-arrow-up"></i></button>
@@ -1363,32 +1349,6 @@
       setCourseUnitTitleValues(titles);
       setLog(selectedIndex >= 0 ? `已更新所選單元：${value}` : `已新增單元：${value}`);
     };
-    window.addEntryUnitToCourseUnits = function() {
-      const entryUnitId = normalizeText($("lesson-entry-unit-id")?.value || "");
-      if (!entryUnitId) {
-        alert("請先填寫 entryUnitId。");
-        return;
-      }
-      const units = getCourseUnitValues();
-      const titles = getCourseUnitTitleValues();
-      let targetIndex = units.indexOf(entryUnitId);
-      if (targetIndex < 0) {
-        units.unshift(entryUnitId);
-        titles.unshift(entryUnitId);
-        targetIndex = 0;
-      }
-      state.selectedCourseUnitIndex = targetIndex;
-      setCourseUnitValues(units);
-      setCourseUnitTitleValues(titles);
-
-      // Populate DOM inputs
-      const input = $("course-unit-input");
-      const titleInput = $("course-unit-title-input");
-      if (input) input.value = entryUnitId;
-      if (titleInput) titleInput.value = normalizeText(titles[targetIndex] || entryUnitId);
-
-      setLog(`已同步 entryUnitId 到課程單元：${entryUnitId}`);
-    };
     window.moveCourseUnit = function(index, direction) {
       const units = getCourseUnitValues();
       const titles = getCourseUnitTitleValues();
@@ -1528,15 +1488,12 @@
       $("lesson-title").value = target.title || "";
       $("lesson-summary").value = target.summary || target.tagText || "";
       $("lesson-description").value = target.description || "";
-      $("lesson-content-ref").value = target.contentRef || "";
-      $("lesson-entry-unit-id").value = target.entryUnitId || "";
       const units = Array.isArray(target.course_units) ? target.course_units : (Array.isArray(target.courseUnits) ? target.courseUnits : []);
       const unitTitles = Array.isArray(target.course_unit_titles)
         ? target.course_unit_titles
         : (Array.isArray(target.courseUnitTitles) ? target.courseUnitTitles : []);
       $("lesson-course-units").value = units.join("\n");
-      $("lesson-course-unit-titles").value = unitTitles
-        .join("\n");
+      $("lesson-course-unit-titles").value = unitTitles.join("\n");
       renderCourseUnitsEditor();
       $("lesson-track").value = target.track || "";
       $("lesson-level").value = target.level || "";
@@ -1657,8 +1614,6 @@
         level: normalizeText($("lesson-level").value),
         category: normalizeText($("lesson-category").value),
         metadataType: normalizeText($("lesson-metadata-type").value) || "course",
-        contentRef: normalizeText($("lesson-content-ref").value),
-        entryUnitId: normalizeText($("lesson-entry-unit-id").value),
         course_units,
         course_unit_titles,
         courseUnits: course_units,
@@ -2021,7 +1976,6 @@
     $("search-input").addEventListener("input", renderLessons);
     $("lesson-course-units")?.addEventListener("input", renderCourseUnitsEditor);
     $("lesson-course-unit-titles")?.addEventListener("input", renderCourseUnitsEditor);
-    $("lesson-entry-unit-id")?.addEventListener("input", renderCourseUnitsEditor);
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {

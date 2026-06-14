@@ -956,8 +956,6 @@ function normalizeLessonMetadataPatch(payload = {}) {
     if (hasOwn("level")) patch.level = normalizeText(payload.level || "");
     if (hasOwn("category")) patch.category = normalizeText(payload.category || "");
     if (hasOwn("metadataType")) patch.metadataType = normalizeText(payload.metadataType || "course") || "course";
-    if (hasOwn("contentRef")) patch.contentRef = normalizeText(payload.contentRef || "");
-    if (hasOwn("entryUnitId")) patch.entryUnitId = normalizeText(payload.entryUnitId || "");
     if (hasOwn("productId")) patch.productId = normalizeText(payload.productId || docId);
     if (hasOwn("orderWeight")) patch.orderWeight = Number(payload.orderWeight || 0) || 0;
     if (hasOwn("isPhysical")) patch.isPhysical = payload.isPhysical === true;
@@ -3247,7 +3245,7 @@ async function fetchGuideContentFromLocalFiles({ lessons, courseId, unitId, pref
     const course = findLessonByCourseRef(courseId || unitId || "", lessons);
     if (!course) return {};
 
-    const entryUnitId = normalizeCourseFile(course.entryUnitId || "");
+    const entryUnitId = normalizeCourseFile(Array.isArray(course.courseUnits) ? course.courseUnits[0] : "");
     const legacyLessonUrl = course.classroomUrl || "";
     const assignmentFile = normalizeCourseFile(legacyLessonUrl);
     const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];

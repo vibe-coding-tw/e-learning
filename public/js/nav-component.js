@@ -41,14 +41,14 @@ async function startGoogleLogin() {
         }
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v4";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v5";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
-    { key: "common", href: "learning-path.html?path=common", icon: "fa-book-open", label: "課前準備" },
-    { key: "car-starter", href: "learning-path.html?path=car-starter", icon: "fa-rocket", label: "入門課程" },
-    { key: "car-basic", href: "learning-path.html?path=car-basic", icon: "fa-code", label: "基礎課程" },
-    { key: "car-advanced", href: "learning-path.html?path=car-advanced", icon: "fa-microchip", label: "進階課程" }
+    { key: "common", href: "learning-path.html?path=common", icon: "fa-book-open" },
+    { key: "car-starter", href: "learning-path.html?path=car-starter", icon: "fa-rocket" },
+    { key: "car-basic", href: "learning-path.html?path=car-basic", icon: "fa-code" },
+    { key: "car-advanced", href: "learning-path.html?path=car-advanced", icon: "fa-microchip" }
 ];
 
 const REPO_UTILS = window.repoSlugUtils || {};
@@ -152,12 +152,11 @@ function canonicalLearningPathHref(pathKey = "") {
 }
 
 function getDefaultLearningPaths(uiLocale = "zh-TW") {
-    const isZh = isZhLocale(uiLocale);
     return [
-        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: isZh ? "課前準備" : "Preparation" },
-        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: isZh ? "入門課程" : "Starter Unit" },
-        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: isZh ? "基礎課程" : "Basic Unit" },
-        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: isZh ? "進階課程" : "Advanced Unit" }
+        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: getCategoryLabel("common", uiLocale) },
+        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: getCategoryLabel("car-starter", uiLocale) },
+        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: getCategoryLabel("car-basic", uiLocale) },
+        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: getCategoryLabel("car-advanced", uiLocale) }
     ];
 }
 
