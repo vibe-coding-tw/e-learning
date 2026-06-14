@@ -141,11 +141,8 @@ function createOrderAccessHelpers({
         add(lesson.courseId);
         add(lesson.courseKey);
         add(lesson.entryUnitId);
-        add(lesson.productId);
+        add(lesson.docId);
         add(lesson.sku);
-
-        if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);
-        if (Array.isArray(lesson.legacyProductIds)) lesson.legacyProductIds.forEach(add);
         if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
         if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
 
@@ -158,7 +155,6 @@ function createOrderAccessHelpers({
         return lessons.find((lesson) =>
             lesson.id === cleanKey ||
             lesson.docId === cleanKey ||
-            lesson.productId === cleanKey ||
             lesson.courseId === cleanKey
         ) || findCourseByPageOrUnit(itemKey, itemKey, lessons);
     }
@@ -341,10 +337,17 @@ function createOrderAccessHelpers({
             }
 
         const now = Date.now();
-        const userRecord = await admin.auth().getUser(uid);
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const trialLesson = course || lessonByCourseRef || pricingLesson || null;
-        const isTrialCourse = !!(trialLesson && isStarterTrialLesson(trialLesson) && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
+        const firestoreRegisteredAt = userData.createdAt?.toMillis
+            ? userData.createdAt.toMillis()
+            : (userData.createdAt?.seconds ? userData.createdAt.seconds * 1000 : (userData.createdAt ? new Date(userData.createdAt).getTime() : 0));
+        let registeredAtMs = Number.isFinite(firestoreRegisteredAt) ? firestoreRegisteredAt : 0;
+        if (!registeredAtMs) {
+            const userRecord = await admin.auth().getUser(uid);
+            registeredAtMs = userRecord.metadata.creationTime ? new Date(userRecord.metadata.creationTime).getTime() : 0;
+        }
+        const isTrialCourse = !!(trialLesson && isStarterTrialLesson(trialLesson) && registeredAtMs && ((now - registeredAtMs) < THIRTY_DAYS_MS));
         if (isTrialCourse) {
             return { authorized: true, accessMode: "trial_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course: trialLesson };
         }

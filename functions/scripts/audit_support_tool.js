@@ -34,14 +34,12 @@ function getLessonLookupKeys(lesson = {}) {
   };
 
   add(lesson.id);
+  add(lesson.docId);
   add(lesson.courseId);
   add(lesson.courseKey);
   add(lesson.entryUnitId);
   add(lesson.classroomUrl);
-  add(lesson.productId);
   add(lesson.sku);
-  if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);
-  if (Array.isArray(lesson.legacyProductIds)) lesson.legacyProductIds.forEach(add);
   if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
   if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
   return keys;
@@ -110,7 +108,7 @@ async function auditOrder(orderId) {
   for (const itemKey of Object.keys(data.items || {})) {
     const matchedLesson = resolveLessonForOrderItem(itemKey, lessons);
     if (matchedLesson) {
-      console.log(`  ✅ Item "${itemKey}" resolves to Course: "${matchedLesson.courseId || matchedLesson.id}"`);
+      console.log(`  ✅ Item "${itemKey}" resolves to Course: "${matchedLesson.docId || matchedLesson.courseId || matchedLesson.id}"`);
       console.log(`     Course Key: ${matchedLesson.courseKey || "N/A"}`);
       console.log(`     Physical: ${matchedLesson.isPhysical === true ? "YES" : "NO"}`);
       console.log(`     Course Units:`, JSON.stringify(matchedLesson.courseUnits || [], null, 2));

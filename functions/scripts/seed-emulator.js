@@ -654,7 +654,7 @@ const courses = [
   {
     id: 'esp32-c3',
     courseId: 'esp32-c3',
-    productId: 'esp32-c3',
+    docId: 'esp32-c3',
     courseKey: 'product-esp32-c3',
     title: 'ESP32-C3 開發板',
     titleEn: 'ESP32-C3 Board',
@@ -679,7 +679,7 @@ const courses = [
   {
     id: 'esp32-s3',
     courseId: 'esp32-s3',
-    productId: 'esp32-s3',
+    docId: 'esp32-s3',
     courseKey: 'product-esp32-s3',
     title: 'ESP32-S3 開發板',
     titleEn: 'ESP32-S3 Board',
@@ -762,8 +762,8 @@ async function seed() {
 
   // Seed default price books for all items
   for (const c of normalizedCourses) {
-    const productId = c.courseId || c.productId || c.id;
-    if (!productId) continue;
+    const docId = c.courseId || c.docId || c.id;
+    if (!docId) continue;
 
     let twPrice = 0;
     let usdPrice = 0;
@@ -777,10 +777,10 @@ async function seed() {
     } else if (cat === 'advanced') {
       twPrice = 1800;
       usdPrice = 60;
-    } else if (productId === 'esp32-c3') {
+    } else if (docId === 'esp32-c3') {
       twPrice = 1600;
       usdPrice = 60;
-    } else if (productId === 'esp32-s3') {
+    } else if (docId === 'esp32-s3') {
       twPrice = 3600;
       usdPrice = 130;
     }
@@ -791,13 +791,14 @@ async function seed() {
         .replace(/[^a-z0-9_-]/gi, '-');
     };
 
-    const twBookId = buildPriceBookId('default-twd', productId);
-    const usdBookId = buildPriceBookId('default-usd', productId);
+    const twBookId = buildPriceBookId('default-twd', docId);
+    const usdBookId = buildPriceBookId('default-usd', docId);
 
     await Promise.all([
       db.collection('dealer_price_books').doc(twBookId).set({
         distributorId: 'default-twd',
-        productId,
+        docId,
+        sourceDocId: docId,
         currency: 'TWD',
         salePrice: twPrice,
         isActive: true,
@@ -808,7 +809,8 @@ async function seed() {
       }),
       db.collection('dealer_price_books').doc(usdBookId).set({
         distributorId: 'default-usd',
-        productId,
+        docId,
+        sourceDocId: docId,
         currency: 'USD',
         salePrice: usdPrice,
         isActive: true,

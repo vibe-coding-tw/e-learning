@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
- * Backfill course pricing for metadata_lessons.
+ * Backfill dealer_price_books from metadata_lessons.
+ *
+ * This script no longer writes legacy price fields back to metadata_lessons.
+ * It only seeds or updates the default distributor price books that the
+ * runtime now treats as the source of truth.
  *
  * Supported course families:
  * - started  -> TWD 1200 / USD 40
@@ -28,6 +32,7 @@ function parseArgs(argv) {
     apply: false,
     dryRun: true,
     limit: 0,
+    overwrite: false,
   };
 
   for (const token of argv.slice(2)) {
@@ -41,6 +46,10 @@ function parseArgs(argv) {
       args.dryRun = true;
       continue;
     }
+    if (token === "--overwrite") {
+      args.overwrite = true;
+      continue;
+    }
     if (token.startsWith("--limit=")) {
       args.limit = Number(token.split("=")[1] || "0") || 0;
     }
@@ -49,131 +58,168 @@ function parseArgs(argv) {
   return args;
 }
 
-function normalizeLegacyPrice(value) {
-  const amount = Number(value || 0);
-  return Number.isFinite(amount) ? amount : 0;
+function normalizeText(value = "") {
+  return String(value || "").trim();
 }
 
-function deriveUsdFromTwd(twdAmount) {
-  const numeric = normalizeLegacyPrice(twdAmount);
-  if (numeric <= 0) return 0;
-  return Math.max(1, Math.round(numeric / 30));
+function normalizeAmount(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-function pricingByCategory(category, twAmount) {
-  const amount = normalizeLegacyPrice(twAmount);
-  const usdByCategory = {
-    started: 40,
-    basic: 50,
-    advanced: 60,
+function buildDocId(lesson = {}) {
+  return normalizeText(
+    lesson.id ||
+    lesson.courseId ||
+    lesson.courseKey ||
+    lesson.entryUnitId ||
+    lesson.sku ||
+    ""
+  );
+}
+
+function getDefaultPrice(category, currency = "TWD") {
+  const normalizedCategory = normalizeText(category).toLowerCase();
+  const isUsd = String(currency || "").toUpperCase() === "USD";
+  const table = {
+    started: { TWD: 1200, USD: 40 },
+    basic: { TWD: 1500, USD: 50 },
+    advanced: { TWD: 1800, USD: 60 },
   };
-  const usdAmount = usdByCategory[category] ?? deriveUsdFromTwd(amount);
+  const categoryPrice = table[normalizedCategory];
+  if (categoryPrice) {
+    return categoryPrice[isUsd ? "USD" : "TWD"];
+  }
+  return 0;
+}
+
+function buildPriceBookId(distributorId, docId) {
+  return normalizeText(`${distributorId}_${docId}`)
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/gi, "-");
+}
+
+function buildPriceBookPayload({ distributorId, docId, title, currency, salePrice }) {
   return {
-    pricing: {
-      tw: { amount, currency: "TWD" },
-      en: { amount: usdAmount, currency: "USD" },
-    },
-    prices: {
-      tw: amount,
-      en: usdAmount,
-    },
-    priceByLocale: {
-      "zh-TW": { amount, currency: "TWD" },
-      en: { amount: usdAmount, currency: "USD" },
-    },
-    priceByRegion: {
-      tw: { amount, currency: "TWD" },
-      en: { amount: usdAmount, currency: "USD" },
-    },
-    priceMap: {
-      tw: { amount, currency: "TWD" },
-      en: { amount: usdAmount, currency: "USD" },
-    },
-    price_twd: amount,
-    price_usd: usdAmount,
-    currency: "TWD",
+    distributorId,
+    docId,
+    sourceDocId: docId,
+    sourceDocTitle: title || docId,
+    currency,
+    salePrice: normalizeAmount(salePrice),
+    isActive: true,
+    version: "v1",
+    updatedBy: "backfill_course_pricing",
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
   };
 }
 
 function shouldBackfill(docData = {}) {
-  const category = String(docData.category || "").trim().toLowerCase();
+  const category = normalizeText(docData.category || "").toLowerCase();
   return category === "started" || category === "basic" || category === "advanced";
-}
-
-function buildPatch(docData = {}) {
-  const category = String(docData.category || "").trim().toLowerCase();
-  return {
-    price: normalizeLegacyPrice(docData.price),
-    ...pricingByCategory(category, docData.price),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    pricingVersion: docData.pricingVersion || "v1",
-  };
 }
 
 async function main() {
   const args = parseArgs(process.argv);
   const mode = args.apply ? "apply" : "dry-run";
-
   const snap = await db.collection("metadata_lessons").get();
   const docs = args.limit > 0 ? snap.docs.slice(0, args.limit) : snap.docs;
 
-  console.log(`[backfill_course_pricing] mode=${mode} docs=${docs.length}`);
+  console.log(`[backfill_course_pricing] mode=${mode} docs=${docs.length} overwrite=${args.overwrite ? "yes" : "no"}`);
 
+  let inspected = 0;
   let updated = 0;
   let skipped = 0;
+  let createdBooks = 0;
 
   for (const doc of docs) {
+    inspected += 1;
     const data = doc.data() || {};
     if (!shouldBackfill(data)) {
       skipped += 1;
       continue;
     }
 
-    const patch = buildPatch(data);
-    const current = {
-      price: data.price,
-      pricing: data.pricing,
-      prices: data.prices,
-      priceByLocale: data.priceByLocale,
-      priceByRegion: data.priceByRegion,
-      priceMap: data.priceMap,
-      price_twd: data.price_twd,
-      price_usd: data.price_usd,
-      currency: data.currency,
-    };
+    const docId = normalizeText(doc.id || data.id || data.docId);
+    const resolvedDocId = buildDocId({ ...data, id: docId });
+    const title = normalizeText(data.title || data.name || resolvedDocId);
+    const twPrice = getDefaultPrice(data.category, "TWD");
+    const usdPrice = getDefaultPrice(data.category, "USD");
 
-    const next = {
-      price: patch.price,
-      pricing: patch.pricing,
-      prices: patch.prices,
-      priceByLocale: patch.priceByLocale,
-      priceByRegion: patch.priceByRegion,
-      priceMap: patch.priceMap,
-      price_twd: patch.price_twd,
-      price_usd: patch.price_usd,
-      currency: patch.currency,
-    };
+    const items = [
+      {
+        distributorId: "default-twd",
+        currency: "TWD",
+        salePrice: twPrice,
+      },
+      {
+        distributorId: "default-usd",
+        currency: "USD",
+        salePrice: usdPrice,
+      },
+    ];
 
-    const changed = JSON.stringify(current) !== JSON.stringify(next);
-    if (!changed) {
-      skipped += 1;
-      continue;
-    }
+    for (const item of items) {
+      const priceBookId = buildPriceBookId(item.distributorId, resolvedDocId);
+      const ref = db.collection("dealer_price_books").doc(priceBookId);
+      const snap = await ref.get();
+      const exists = snap.exists;
+      const current = snap.data() || {};
 
-    console.log(
-      `[metadata_lessons] ${mode.toUpperCase()} docId=${doc.id} ` +
-      `category=${data.category || ""} price_twd=${patch.price_twd} price_usd=${patch.price_usd}`
-    );
+      if (exists && !args.overwrite) {
+        skipped += 1;
+        continue;
+      }
 
-    if (args.apply) {
-      await doc.ref.set(patch, { merge: true });
+        const payload = buildPriceBookPayload({
+          distributorId: item.distributorId,
+          docId: resolvedDocId,
+          title,
+          currency: item.currency,
+          salePrice: item.salePrice,
+        });
+
+        const changed = JSON.stringify({
+          distributorId: current.distributorId,
+          docId: current.docId,
+          sourceDocId: current.sourceDocId,
+          currency: current.currency,
+          salePrice: current.salePrice,
+          isActive: current.isActive,
+          version: current.version,
+        }) !== JSON.stringify({
+          distributorId: payload.distributorId,
+          docId: payload.docId,
+          sourceDocId: payload.sourceDocId,
+          currency: payload.currency,
+          salePrice: payload.salePrice,
+          isActive: payload.isActive,
+        version: payload.version,
+      });
+
+      if (!changed) {
+        skipped += 1;
+        continue;
+      }
+
+      console.log(
+        `[dealer_price_books] ${mode.toUpperCase()} docId=${priceBookId} ` +
+        `docId=${resolvedDocId} distributorId=${item.distributorId} currency=${item.currency} salePrice=${item.salePrice}`
+      );
+
+      if (args.apply) {
+        await ref.set({
+          ...payload,
+          createdAt: exists && current.createdAt ? current.createdAt : payload.createdAt,
+        }, { merge: true });
+      }
       updated += 1;
-    } else {
-      updated += 1;
+      createdBooks += exists ? 0 : 1;
     }
   }
 
-  console.log(`[summary] updated=${updated} skipped=${skipped} mode=${mode}`);
+  console.log(`[summary] inspected=${inspected} updated=${updated} createdBooks=${createdBooks} skipped=${skipped} mode=${mode}`);
 }
 
 main().catch((err) => {

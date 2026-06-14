@@ -79,14 +79,14 @@ function normalizeLoose(value = "") {
 function getPrimaryMetadataIdentity(lesson = {}) {
   const metadataType = String(lesson.metadataType || "").toLowerCase();
   if (lesson.isPhysical === true || metadataType === "product" || metadataType === "legacy_product") {
-    return String(lesson.productId || lesson.courseKey || lesson.courseId || lesson.id || "").trim();
+    return String(lesson.docId || lesson.courseKey || lesson.courseId || lesson.id || "").trim();
   }
   return String(
+    normalizeCanonicalCourseKey(lesson.docId) ||
     normalizeCanonicalCourseKey(lesson.courseKey) ||
     normalizeCanonicalCourseKey(lesson.contentRef) ||
     normalizeCanonicalCourseKey(lesson.courseId) ||
     normalizeCanonicalCourseKey(lesson.id) ||
-    lesson.productId ||
     ""
   ).trim();
 }
@@ -143,14 +143,12 @@ async function main() {
       if (!lessonAliasMap.has(key)) lessonAliasMap.set(key, canonicalKey);
     };
     add(lesson.id);
+    add(lesson.docId);
     add(lesson.courseId);
     add(lesson.courseKey);
     add(normalizeCanonicalCourseKey(lesson.courseKey));
     add(normalizeCanonicalCourseKey(lesson.contentRef));
     add(lesson.entryUnitId);
-    add(lesson.productId);
-    if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);
-    if (Array.isArray(lesson.legacyProductIds)) lesson.legacyProductIds.forEach(add);
     if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
     if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
   });

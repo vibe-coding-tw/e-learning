@@ -34,12 +34,12 @@
 | `category` | 是 | Firestore `metadata_lessons` | 課程分類，供 catalog 與路由使用 |
 | `course_units` | 是 | Firestore `metadata_lessons` | 外部課程單元檔案名稱清單，只表示課程結構 |
 | `metadataType` | 是 | Firestore `metadata_lessons` | `course` / `product` / `legacy_product` |
-| `productId` | 否 | Firestore `metadata_lessons` | 商品型 metadata 才需要 |
+| `docId` | 否 | Firestore `metadata_lessons` | 商品型 metadata 才需要；新流程請以 `docId` / Document ID 為主 |
 | `isPhysical` | 否 | Firestore `metadata_lessons` | 是否為實體商品 |
 | `hiddenFromCatalog` | 否 | Firestore `metadata_lessons` | 是否從前台列表隱藏 |
 | `isDeprecated` | 否 | Firestore `metadata_lessons` | 是否為廢止資料，保留歷史相容 |
 | `dealerPrice` | 否 | runtime join 後顯示 | 只作回傳顯示，不做主定價來源 |
-| `lessonId` | 視情況 | `dealer_price_books` | price book 對應 lesson 的 document ID |
+| `docId` | 視情況 | `dealer_price_books` | price book 對應 lesson 的 document ID |
 | `salePrice` | 視情況 | `dealer_price_books` | 正式售價 |
 | `promoPrice` | 視情況 | `dealer_price_books` | 促銷價 |
 | `currency` | 視情況 | `dealer_price_books` | 例如 `TWD`、`USD` |
@@ -51,6 +51,7 @@
 - `price`、`price_twd`、`price_usd`：只保留相容用途，不應作為新課程正式定價主來源。
 - `githubClassroomUrl`、`githubClassroomUrls`：只保留舊流程相容，不要作為新資料主要欄位。
 - `courseId`：只做顯示與歷史相容，不要作為新的主關聯鍵。
+- `legacy product ID`：只保留商品型相容；新資料請直接寫 `docId` / Document ID。
 
 ---
 

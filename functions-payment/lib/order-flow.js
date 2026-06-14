@@ -84,6 +84,33 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
         return { authorized: true, reason: "free-course", accessMode: "free" };
     }
 
+    const userRef = db.collection("users").doc(uid);
+    const userSnap = await userRef.get();
+    const userData = userSnap.exists ? (userSnap.data() || {}) : {};
+    const firestoreRegisteredAt = userData.createdAt?.toMillis
+        ? userData.createdAt.toMillis()
+        : (userData.createdAt?.seconds ? userData.createdAt.seconds * 1000 : (userData.createdAt ? new Date(userData.createdAt).getTime() : 0));
+    let registeredAtMs = Number.isFinite(firestoreRegisteredAt) ? firestoreRegisteredAt : 0;
+    if (!registeredAtMs) {
+        const userRecord = await admin.auth().getUser(uid);
+        registeredAtMs = userRecord.metadata.creationTime ? new Date(userRecord.metadata.creationTime).getTime() : 0;
+    }
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const lessonId = String(getCanonicalLessonIdentity(lesson) || lesson.courseKey || lesson.courseId || lesson.id || "").toLowerCase();
+    const category = String(lesson.category || "").toLowerCase();
+    const level = String(lesson.level || "").toLowerCase();
+    const isStarterLesson = !!(
+        lessonId.startsWith("car-starter-") ||
+        category === "start" ||
+        category === "started" ||
+        level === "starter" ||
+        level === "start" ||
+        level === "started"
+    );
+    if (isStarterLesson && registeredAtMs && (Date.now() - registeredAtMs) < THIRTY_DAYS_MS) {
+        return { authorized: true, reason: "trial_course", accessMode: "trial_course" };
+    }
+
     const userProfile = await loadUserProfile(uid);
     if (tutorMode && userProfile && isQualifiedTutorUser(userProfile)) {
         return { authorized: true, reason: "qualified-tutor", accessMode: "tutor" };

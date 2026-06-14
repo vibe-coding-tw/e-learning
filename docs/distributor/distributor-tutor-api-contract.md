@@ -29,7 +29,7 @@ Response:
   "items": [
     {
       "id": "pb-001",
-      "productId": "prod-001",
+      "docId": "prod-001",
       "salePrice": 12900,
       "promoPrice": 11900,
       "currency": "TWD",
@@ -50,7 +50,7 @@ Request:
 
 ```json
 {
-  "productId": "prod-001",
+  "docId": "prod-001",
   "salePrice": 12900,
   "promoPrice": 11900,
   "currency": "TWD",
@@ -78,7 +78,7 @@ Query:
 - `region`
 - `tutorId`
 - `promotionCode`
-- `productId`
+- `docId`
 - `customerId`
 
 Response:
@@ -107,7 +107,7 @@ Query:
 - `region`
 - `locale`
 - `customerId`
-- `productId`
+- `docId`
 
 Response:
 
@@ -151,7 +151,7 @@ Request:
 ```json
 {
   "customerId": "user-001",
-  "productId": "prod-001",
+  "docId": "prod-001",
   "region": "TW",
   "tutorId": "tutor-001",
   "locale": "zh-TW"

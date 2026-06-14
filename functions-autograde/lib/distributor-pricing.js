@@ -25,22 +25,22 @@ function isActiveDistributor(data = {}) {
     return normalizeStatus(data.status) === "ACTIVE";
 }
 
-function findLessonByProductId(lessons = [], productId = "") {
-    const normalized = normalizeText(productId).replace(/\.html$/i, "");
+function findLessonByDocumentId(lessons = [], docId = "") {
+    const normalized = normalizeText(docId).replace(/\.html$/i, "");
     if (!normalized) return null;
     return (Array.isArray(lessons) ? lessons : []).find((lesson) => 
-        normalizeText(lesson.productId).replace(/\.html$/i, "") === normalized || 
+        normalizeText(lesson.docId || lesson.id).replace(/\.html$/i, "") === normalized || 
         normalizeText(lesson.id) === normalized
     ) || null;
 }
 
-function normalizePriceBookDoc(doc = {}, { distributorId = "", productId = "" } = {}) {
+function normalizePriceBookDoc(doc = {}, { distributorId = "", docId = "" } = {}) {
     const salePrice = normalizeMoney(doc.salePrice);
     const promoPrice = doc.promoPrice == null ? null : normalizeMoney(doc.promoPrice);
     const currency = normalizeCurrency(doc.currency, "USD");
     return {
         distributorId: normalizeText(doc.distributorId || distributorId),
-        productId: normalizeText(doc.productId || productId),
+        docId: normalizeText(doc.docId || doc.sourceDocId || docId),
         currency,
         salePrice,
         promoPrice,
@@ -158,7 +158,7 @@ async function resolveDistributorForCheckout(db, {
     promotionCode = "",
     region = "",
     customerId = "",
-    productId = ""
+    docId = ""
 } = {}) {
     const explicitDistributorId = normalizeText(distributorId);
     if (explicitDistributorId) {
@@ -243,22 +243,22 @@ async function resolveDistributorForCheckout(db, {
 
 async function loadDistributorPriceBook(db, {
     distributorId = "",
-    productId = "",
+    docId = "",
     priceBookId = "",
     locale = "zh-TW"
 } = {}) {
     const normalizedDistributorId = normalizeText(distributorId);
-    const normalizedProductId = normalizeText(productId);
+    const normalizedDocId = normalizeText(docId);
     const normalizedPriceBookId = normalizeText(priceBookId);
-    if (!normalizedDistributorId || !normalizedProductId) {
+    if (!normalizedDistributorId || !normalizedDocId) {
         return null;
     }
 
     if (normalizedPriceBookId) {
         const doc = await db.collection("dealer_price_books").doc(normalizedPriceBookId).get();
         if (!doc.exists) return null;
-        const data = normalizePriceBookDoc(doc.data() || {}, { distributorId: normalizedDistributorId, productId: normalizedProductId });
-        if (data.distributorId !== normalizedDistributorId || data.productId !== normalizedProductId) {
+        const data = normalizePriceBookDoc(doc.data() || {}, { distributorId: normalizedDistributorId, docId: normalizedDocId });
+        if (data.distributorId !== normalizedDistributorId || data.docId !== normalizedDocId) {
             return null;
         }
         return { id: doc.id, ...data, source: "direct" };
@@ -266,12 +266,12 @@ async function loadDistributorPriceBook(db, {
 
     const querySnap = await db.collection("dealer_price_books")
         .where("distributorId", "==", normalizedDistributorId)
-        .where("productId", "==", normalizedProductId)
+        .where("docId", "==", normalizedDocId)
         .get();
 
     const books = [];
     querySnap.forEach((doc) => {
-        const data = normalizePriceBookDoc(doc.data() || {}, { distributorId: normalizedDistributorId, productId: normalizedProductId });
+        const data = normalizePriceBookDoc(doc.data() || {}, { distributorId: normalizedDistributorId, docId: normalizedDocId });
         if (data.isActive === false) return;
         const effectiveFromMs = data.effectiveFrom?.toMillis ? data.effectiveFrom.toMillis() : (data.effectiveFrom?.seconds ? data.effectiveFrom.seconds * 1000 : 0);
         const effectiveToMs = data.effectiveTo?.toMillis ? data.effectiveTo.toMillis() : (data.effectiveTo?.seconds ? data.effectiveTo.seconds * 1000 : 0);
@@ -306,16 +306,16 @@ async function resolveDistributorCheckoutQuote(db, {
     promotionCode = "",
     region = "",
     customerId = "",
-    productId = "",
+    docId = "",
     locale = "zh-TW",
     priceBookId = ""
 } = {}) {
-    const normalizedProductId = normalizeText(productId);
-    if (!normalizedProductId) {
+    const normalizedDocId = normalizeText(docId);
+    if (!normalizedDocId) {
         return {
             success: false,
-            state: "missing-product",
-            reason: "productId is required"
+            state: "missing-doc",
+            reason: "docId is required"
         };
     }
 
@@ -325,15 +325,15 @@ async function resolveDistributorCheckoutQuote(db, {
         promotionCode,
         region,
         customerId,
-        productId: normalizedProductId
+        docId: normalizedDocId
     });
 
-    const targetLesson = findLessonByProductId(lessons, normalizedProductId);
+    const targetLesson = findLessonByDocumentId(lessons, normalizedDocId);
     const legacyLessonPrice = targetLesson ? resolveLessonPrice(targetLesson, locale) : null;
     const priceBook = distributorResolution.distributorId
         ? await loadDistributorPriceBook(db, {
             distributorId: distributorResolution.distributorId,
-            productId: normalizedProductId,
+            docId: normalizedDocId,
             priceBookId,
             locale
         })
@@ -366,8 +366,7 @@ async function resolveDistributorCheckoutQuote(db, {
         distributorCandidates: distributorResolution.candidates || [],
         priceBook: priceBook || null,
         price: selectedPrice,
-        productId: normalizedProductId,
-        lessonId: targetLesson ? (targetLesson.courseId || targetLesson.courseKey || targetLesson.id || "") : "",
+        docId: targetLesson ? (targetLesson.docId || targetLesson.id || normalizedDocId) : normalizedDocId,
         fallbackSource: priceBook ? "dealer_price_books" : (legacyLessonPrice ? "metadata_lessons" : "none")
     };
 }
@@ -392,7 +391,7 @@ async function listDistributorPriceBooks(db, distributorId = "") {
 }
 
 module.exports = {
-    findLessonByProductId,
+    findLessonByDocumentId,
     listDistributorPriceBooks,
     loadDistributorPriceBook,
     normalizeMoney,

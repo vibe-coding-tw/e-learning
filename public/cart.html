@@ -305,9 +305,9 @@
             return map[key] || region;
         }
 
-        function removeFromCart(productId) {
+        function removeFromCart(docId) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            delete cart[productId];
+            delete cart[docId];
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
             renderCartItems();
         }
@@ -784,13 +784,13 @@
 
             for (const lesson of lessons) {
                 const courseId = normalizeId(lesson?.courseId || '');
-                const lessonId = normalizeId(lesson?.id || '');
+                const docId = normalizeId(lesson?.id || '');
                 const units = (Array.isArray(lesson?.courseUnits) ? lesson.courseUnits : []).map(u => normalizeId(u));
-                const hits = seeds.some(seed => seed === courseId || seed === lessonId || units.includes(seed));
+                const hits = seeds.some(seed => seed === courseId || seed === docId || units.includes(seed));
                 if (!hits) continue;
 
                 if (courseId) foundCourseIds.add(courseId);
-                if (lessonId) foundCourseIds.add(lessonId);
+                if (docId) foundCourseIds.add(docId);
                 units.forEach(u => u && foundUnits.add(u));
             }
 
@@ -819,11 +819,11 @@
             return false;
         }
 
-        function addCartItem(productId, productName, productPrice, isPhysical, options = {}) {
+        function addCartItem(docId, productName, productPrice, isPhysical, options = {}) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            if (cart[productId]) return false;
+            if (cart[docId]) return false;
 
-            cart[productId] = {
+            cart[docId] = {
                 name: productName,
                 price: Number(productPrice) || 0,
                 currency: options.currency || options.priceCurrency || '',
@@ -905,7 +905,7 @@
                         </div>
                         <div class="text-right shrink-0">
                              <p class="font-bold text-indigo-600">${priceText}</p>
-                             <button class="remove-cart-item-btn text-sm text-rose-500 hover:text-rose-600 mt-2" data-product-id="${id}">${removeLabel}</button>
+                             <button class="remove-cart-item-btn text-sm text-rose-500 hover:text-rose-600 mt-2" data-doc-id="${id}">${removeLabel}</button>
                         </div>
                     </div>
                 `;
@@ -956,7 +956,7 @@
 
             document.querySelectorAll('.remove-cart-item-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
-                    removeFromCart(event.currentTarget.dataset.productId);
+                    removeFromCart(event.currentTarget.dataset.docId);
                 });
             });
 
@@ -1510,10 +1510,10 @@
             let calculatedTotal = 0;
 
             for (const [itemId, item] of cartEntries) {
-                const lessonId = normalizeId(item.sourceUnitId || item.unitId || itemId);
-                if (!lessonId) {
+                const docId = normalizeId(item.sourceUnitId || item.unitId || itemId);
+                if (!docId) {
                     alert(isEn
-                        ? 'Unable to resolve lesson identifier for one of the cart items.'
+                        ? 'Unable to resolve document identifier for one of the cart items.'
                         : '購物車中有品項無法解析產品代號，請先整理購物車。');
                     checkoutBtn.disabled = false;
                     checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
@@ -1522,7 +1522,7 @@
 
                 const snapshotPrice = pricingApi.resolveCartPrice(item, checkoutLocale);
                 const quoteResponse = await resolveDistributorCheckoutQuote({
-                    lessonId,
+                    docId,
                     region: checkoutRegion,
                     locale: checkoutLocale,
                     tutorId: item.referredTutorEmail || '',
@@ -1600,7 +1600,7 @@
 
                 resolvedQuotes.push({
                     itemId,
-                    productId,
+                    docId,
                     distributorId: quoteData.distributorId || '',
                     priceBookId: quoteData.priceBookId || '',
                     pricingVersion: quotePrice.pricingVersion || quoteData.pricingVersion || '',

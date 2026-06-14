@@ -53,21 +53,20 @@ function normalizeMoney(value = 0) {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-function buildProductId(lesson = {}) {
+function buildDocId(lesson = {}) {
   return normalizeText(
     lesson.id ||
     lesson.courseId ||
     lesson.courseKey ||
     lesson.entryUnitId ||
-    lesson.productId ||
     lesson.sku ||
     ""
   );
 }
 
-function getHardcodedDefaultPrice(productId, currency = "TWD") {
+function getHardcodedDefaultPrice(docId, currency = "TWD") {
   const isUsd = currency === "USD";
-  const pid = String(productId || '').toLowerCase();
+  const pid = String(docId || '').toLowerCase();
   
   if (pid.startsWith('car-starter-') || pid.startsWith('start-')) {
     return isUsd ? 40 : 1200;
@@ -92,19 +91,18 @@ function buildSeedableProducts(lessons = [], currency = "TWD") {
 
   return (Array.isArray(lessons) ? lessons : [])
     .map((lesson) => {
-      const productId = buildProductId(lesson);
-      const salePrice = getHardcodedDefaultPrice(productId, normalizedCurrency);
+      const docId = buildDocId(lesson);
+      const salePrice = getHardcodedDefaultPrice(docId, normalizedCurrency);
       return {
-        lessonId: normalizeText(lesson.id),
-        productId: productId,
-        title: lesson.title || lesson.name || productId || "未命名商品",
+        docId,
+        title: lesson.title || lesson.name || docId || "未命名商品",
         isPhysical: lesson.isPhysical === true,
         currency: normalizedCurrency,
         salePrice: salePrice,
         pricingVersion: "v1",
       };
     })
-    .filter((item) => item.productId && Number.isFinite(item.salePrice) && item.salePrice >= 0);
+    .filter((item) => item.docId && Number.isFinite(item.salePrice) && item.salePrice >= 0);
 }
 
 function buildDistributorPayload(definition) {
@@ -121,8 +119,8 @@ function buildDistributorPayload(definition) {
   };
 }
 
-function buildPriceBookId(distributorId, productId) {
-  return normalizeText(`${distributorId}_${productId}`)
+function buildPriceBookId(distributorId, docId) {
+  return normalizeText(`${distributorId}_${docId}`)
     .toLowerCase()
     .replace(/[^a-z0-9_-]/gi, "-");
 }
@@ -179,7 +177,7 @@ async function main() {
     console.log(`[seed] distributor=${distributor.id} products=${products.length}`);
 
     for (const item of products) {
-      const priceBookId = buildPriceBookId(distributor.id, item.productId);
+      const priceBookId = buildPriceBookId(distributor.id, item.docId);
       const priceBookRef = db.collection("dealer_price_books").doc(priceBookId);
       const priceBookSnap = await priceBookRef.get();
       const priceBookExists = priceBookSnap.exists;
@@ -192,7 +190,8 @@ async function main() {
 
       const priceBookPayload = {
         distributorId: distributor.id,
-        productId: item.productId,
+        docId: item.docId,
+        sourceDocId: item.docId,
         currency: item.currency || distributor.defaultCurrency,
         salePrice: item.salePrice,
         effectiveFrom: priceBookData.effectiveFrom || admin.firestore.FieldValue.serverTimestamp(),
@@ -202,7 +201,7 @@ async function main() {
         ...(priceBookData.promoEffectiveTo != null && !args.overwrite ? { promoEffectiveTo: priceBookData.promoEffectiveTo } : {}),
         isActive: priceBookData.isActive !== false,
         version: normalizeText(priceBookData.version || item.pricingVersion || "v1") || "v1",
-        sourceLessonId: item.lessonId,
+        sourceDocId: item.docId,
         sourceLessonTitle: item.title,
         sourceIsPhysical: item.isPhysical === true,
         updatedBy: "seed_default_distributors_and_pricebooks",
@@ -215,7 +214,7 @@ async function main() {
       if (!args.apply) {
         console.log(`[dry-run][pricebook] ${priceBookId}`, {
           distributorId: priceBookPayload.distributorId,
-          productId: priceBookPayload.productId,
+          docId: priceBookPayload.docId,
           currency: priceBookPayload.currency,
           salePrice: priceBookPayload.salePrice,
           version: priceBookPayload.version,

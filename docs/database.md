@@ -117,7 +117,7 @@
 | `isPhysical` | boolean | 是否為實體商品。 |
 | `orderWeight` | number | 排序權重。 |
 | `metadataType` | string | 元資料類型：`course` / `product` / `legacy_product`。 |
-| `productId` | string | 商品識別碼（商品型 metadata 使用）。 |
+| `docId` | string | 商品型 metadata 的 canonical document ID。 |
 | `pricing` | map | 多地區定價主欄位。建議使用 `tw` / `en`，各值格式為 `{ amount, currency }`。 |
 | `priceByLocale` | map | 語系定價相容別名。僅供歷史資料或 migration 使用，不應作為新的定價依據。 |
 | `priceByRegion` | map | 區域定價相容別名。僅供歷史資料或 migration 使用，不應作為新的定價依據。 |
@@ -133,7 +133,7 @@
 
 - `metadata_lessons`、`dealer_price_books`、`orders` 與其他核心集合都必須以 Firestore document ID 作為唯一主鍵與主要關聯依據。
 - `metadata_lessons.id` / `metadata_lessons.docId` 必須對應 Firestore document ID，並視為 canonical lesson id；建立後不建議直接修改，若要換 ID 請複製成新課程再停用舊資料。
-- `courseId`、`courseKey`、`entryUnitId`、`contentRef`、`productId`、`sku` 等欄位只作為顯示、查詢輔助或 migration 相容資訊，不得再作為新的主關聯鍵。
+- `courseId`、`courseKey`、`entryUnitId`、`contentRef`、`legacy product ID`、`sku` 等欄位只作為顯示、查詢輔助或 migration 相容資訊，不得再作為新的主關聯鍵。
 - 任何跨集合 join 都應先嘗試以 document ID 關聯；只有在遷移期間才允許讀取歷史 alias 欄位，且必須是明確、窄化的 migration path。
 - 後續新增的 price book、授權、內容路由、作業綁定資料，都應先設計成可直接用 document ID 追蹤與對照。
 
@@ -148,14 +148,14 @@
 
 - `metadata_lessons.price` 已不再是主價格來源。
 - 前端與後端在需要課程價格時，應先查 `dealer_price_books`，再由 runtime join 把 `dealerPrice` / `dealerCurrency` 帶回 lesson。
-- `dealer_price_books` 必須保存對應 lesson 的 Firestore document ID，欄位建議為 `lessonId`，舊資料若暫時缺失可用 `sourceLessonId` 過渡。
+- `dealer_price_books` 必須保存對應 lesson 的 Firestore document ID，欄位建議為 `docId`，舊資料若暫時缺失可用 `sourceDocId` 過渡。
 - `dealer_price_books` 的價格規則為：
   - 先看是否在 `promoEffectiveFrom` / `promoEffectiveTo` 促銷期間內
   - 若在促銷期間，使用 `promoPrice`
   - 若不在促銷期間，使用 `salePrice`
   - `salePrice` / `promoPrice` 任一未填，視為 `0`
 - 沒有對應 `dealer_price_books` 的課程或產品，視為「未定價 / 不可販售」，不得因 `0` 而當作免費商品放行。
-- 歷史資料若尚未補齊 `lessonId` / `sourceLessonId`，請以離線 migration 腳本 [`functions/scripts/backfill_dealer_pricebook_legacy_keys.js`](../functions/scripts/backfill_dealer_pricebook_legacy_keys.js) 補齊，不得在 runtime 再新增對照表。
+- 歷史資料若尚未補齊 `docId` / `sourceDocId`，請以離線 migration 腳本 [`functions/scripts/backfill_dealer_pricebook_legacy_keys.js`](../functions/scripts/backfill_dealer_pricebook_legacy_keys.js) 補齊，不得在 runtime 再新增對照表。
 - 舊有 `price` / `price_twd` / `price_usd` 欄位只保留過渡相容用途，等資料遷移完成後可逐步清除。
 - 免費課程的判定也應以 dealer price 結果為準，而不是把 `metadata_lessons.price` 視為授權依據。
 >
@@ -185,7 +185,7 @@
 | `metadataType` | string | `course` / `product` / `legacy_product`。 |
 | `hiddenFromCatalog` | boolean | 是否從前台列表隱藏。 |
 | `isDeprecated` | boolean | 是否為已廢止舊資料（保留對帳/歷史用途）。 |
-| `productId` | string | 僅在商品型 metadata 或 price book 相關流程需要。 |
+| `docId` | string | 商品型 metadata 的 canonical document ID。 |
 
 ### `metadata_lessons` compat / derived 欄位
 
@@ -238,7 +238,7 @@
 
 執行期 canonical identity 規則：
 - 課程型 metadata：優先使用 Firestore document ID（`id` / `docId`）
-- 商品型 metadata（`metadataType=product|legacy_product` 或 `isPhysical=true`）：優先使用 `productId`
+- 商品型 metadata（`metadataType=product|legacy_product` 或 `isPhysical=true`）：優先使用 `docId` / document ID
 - `courseId` 僅保留作為頁面入口 / 歷史相容欄位，不再作為所有執行期判斷的唯一主鍵
 - `contentRef` / 頁面路由仍可保留 `tw-*` 檔名；若後續檔名規則完全標準化，才考慮改由 docId 推導並移除 `contentRef`
 
@@ -763,8 +763,8 @@ Canonical schema：
 2. **舊網址處理**：歷史連結若仍指向 master 頁面，需仰賴內容倉 alias 或外部內容同步結果；Cloud Functions 不再維護獨立的 redirect 表。
 3. **歷史訂單授權相容性**：遷移前成立之歷史訂單 `items` 曾使用 master 鍵值（例如 `start-01-master-web-app.html`），目前已完成 canonical 清理；現行後端只保留 canonical 比對邏輯，不再透過執行期 mapping 轉換。
 4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 historical master item key。歷史 `referral_links.unitId` 也已完成 canonical 清理，另 1 筆 malformed referral index 已刪除。`metadata_lessons.courseKey` 已收斂為 locale-neutral key（例如 `common-vscode-setup`、`car-starter-web-app`），而頁面路由與 `contentRef` 仍保留 `tw-*` 檔名以維持內容倉與舊網址相容。原先的一次性遷移腳本已退役並刪除，相關清理改由現行維運工具接手。
-5. **完全移除相容層之門檻**：若未來還需要重新引入任何 mapping 讀取，只能作為離線 migration 工具使用，不能回到 runtime。任何新流程都必須直接以 canonical `courseKey` / `productId` 為準。
-   - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `courseKey`，商品項目維持 `productId`。
+5. **完全移除相容層之門檻**：若未來還需要重新引入任何 mapping 讀取，只能作為離線 migration 工具使用，不能回到 runtime。任何新流程都必須直接以 canonical `courseKey` / `docId` 為準。
+   - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `courseKey`，商品項目維持 `docId` / document ID。
    - 經過至少一次完整生產環境 pilot validation，確認無任何歷史用戶存取異常。
 
 ### 18.3 Historical Migration Notes (歷史遷移備註)

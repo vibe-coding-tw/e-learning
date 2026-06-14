@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Backfill dealer_price_books with canonical lessonId / sourceLessonId.
+ * Clean legacy dealer_price_books identity fields and normalize canonical docId / sourceDocId.
  *
- * This is a migration tool only. It does not change pricing fields.
+ * This cleanup tool only touches identity fields. It does not change pricing fields.
  *
  * Usage:
  *   node functions/scripts/backfill_dealer_pricebook_legacy_keys.js --dry-run
@@ -73,11 +73,11 @@ function buildLessonAliases(lesson = {}) {
   };
 
   add(lesson.id);
+  add(lesson.docId);
   add(lesson.courseId);
   add(lesson.courseKey);
   add(lesson.entryUnitId);
   add(lesson.contentRef);
-  add(lesson.productId);
   add(lesson.sku);
   if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
   if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
@@ -89,9 +89,9 @@ function buildLessonIndex(lessons = []) {
   const byAlias = new Map();
 
   for (const lesson of lessons) {
-    const lessonId = normalizeText(lesson.id);
-    if (!lessonId) continue;
-    byId.set(lessonId, lesson);
+    const docId = normalizeText(lesson.id);
+    if (!docId) continue;
+    byId.set(docId, lesson);
 
     const aliases = buildLessonAliases(lesson);
     for (const alias of aliases) {
@@ -103,13 +103,10 @@ function buildLessonIndex(lessons = []) {
 }
 
 function resolveLessonFromPriceBook(priceBook = {}, lessonIndex) {
-  const directLessonId = normalizeText(priceBook.lessonId || priceBook.sourceLessonId);
-  const candidateProductId = normalizeText(priceBook.productId);
+  const directDocId = normalizeText(priceBook.docId || priceBook.sourceDocId || priceBook.productId);
   const candidates = [
-    directLessonId,
-    normalizeKey(directLessonId),
-    candidateProductId,
-    normalizeKey(candidateProductId),
+    directDocId,
+    normalizeKey(directDocId),
   ].filter(Boolean);
 
   for (const candidate of candidates) {
@@ -130,16 +127,20 @@ function buildPatch(priceBook = {}, lesson = null) {
   const canonicalLessonId = normalizeText(lesson.id);
   if (!canonicalLessonId) return null;
 
-  const currentLessonId = normalizeText(priceBook.lessonId);
-  const currentSourceLessonId = normalizeText(priceBook.sourceLessonId);
-  const sourceLessonId = currentSourceLessonId || currentLessonId || normalizeText(priceBook.productId) || canonicalLessonId;
+  const currentDocId = normalizeText(priceBook.docId);
+  const currentSourceDocId = normalizeText(priceBook.sourceDocId);
+  const legacyIdentity = normalizeText(priceBook.productId);
+  const sourceDocId = currentSourceDocId || currentDocId || legacyIdentity || canonicalLessonId;
 
   const patch = {};
-  if (currentLessonId !== canonicalLessonId) {
-    patch.lessonId = canonicalLessonId;
+  if (currentDocId !== canonicalLessonId) {
+    patch.docId = canonicalLessonId;
   }
-  if (!currentSourceLessonId) {
-    patch.sourceLessonId = sourceLessonId;
+  if (!currentSourceDocId) {
+    patch.sourceDocId = sourceDocId;
+  }
+  if (legacyIdentity) {
+    patch.productId = admin.firestore.FieldValue.delete();
   }
 
   return Object.keys(patch).length > 0 ? patch : null;
@@ -213,8 +214,9 @@ async function main() {
     updated += 1;
     console.log(
       `[dealer_price_books] ${mode.toUpperCase()} docId=${doc.id} ` +
-      `lessonId=${normalizeText(data.lessonId)} -> ${normalizeText(patch.lessonId || data.lessonId)} ` +
-      `sourceLessonId=${normalizeText(data.sourceLessonId)} -> ${normalizeText(patch.sourceLessonId || data.sourceLessonId)}`
+      `docId=${normalizeText(data.docId)} -> ${normalizeText(patch.docId || data.docId)} ` +
+      `sourceDocId=${normalizeText(data.sourceDocId)} -> ${normalizeText(patch.sourceDocId || data.sourceDocId)} ` +
+      `${data.productId ? "legacy identity field removed" : "no legacy identity field"}`
     );
 
     if (args.apply) {

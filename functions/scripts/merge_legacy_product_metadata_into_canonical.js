@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Merge legacy product metadata docs into canonical product docs.
+ * Merge legacy product metadata docs into canonical document docs.
  *
  * Goal:
  * - Reduce the active "product/spec" metadata set from 6 docs to 4 docs.
@@ -56,9 +56,9 @@ function mergeLegacyIntoCanonical(source = {}, target = {}, canonical = {}) {
     ...canonical
   };
 
-  merged.courseId = canonical.courseId || target.courseId || target.productId || target.id || source.productId || source.courseId || source.id || "";
-  merged.productId = canonical.productId || target.productId || target.courseKey || source.productId || source.courseId || "";
-  merged.courseKey = canonical.courseKey || target.courseKey || `product-${merged.productId || target.id || ""}`;
+  merged.docId = canonical.docId || target.docId || target.id || source.docId || source.courseId || source.id || "";
+  merged.courseId = merged.docId || canonical.courseId || target.courseId || source.courseId || source.id || "";
+  merged.courseKey = canonical.courseKey || target.courseKey || `doc-${merged.docId || target.id || ""}`;
   merged.metadataType = "product";
   merged.isPhysical = true;
   merged.isDeprecated = false;
@@ -68,27 +68,30 @@ function mergeLegacyIntoCanonical(source = {}, target = {}, canonical = {}) {
     source.aliases,
     target.aliases,
     canonical.aliases,
+    source.docId,
     source.courseId,
     source.courseKey,
-    source.productId,
+    target.docId,
     target.courseId,
     target.courseKey,
-    target.productId
+    canonical.docId
   );
-  merged.legacyProductIds = unionArrays(
-    source.legacyProductIds,
-    target.legacyProductIds,
+  merged.legacyDocIds = unionArrays(
+    source.legacyDocIds,
+    target.legacyDocIds,
+    canonical.legacyDocIds,
+    source.docId,
     source.courseId,
-    source.courseKey,
-    source.productId
+    source.courseKey
   );
-  merged.productIds = unionArrays(
-    source.productIds,
-    target.productIds,
-    merged.productId
+  merged.docIds = unionArrays(
+    source.docIds,
+    target.docIds,
+    canonical.docIds,
+    merged.docId
   );
   merged.learningPaths = unionArrays(source.learningPaths, target.learningPaths, canonical.learningPaths);
-  merged.normalizationNote = canonical.normalizationNote || target.normalizationNote || source.normalizationNote || "Consolidated legacy product metadata into canonical product doc.";
+  merged.normalizationNote = canonical.normalizationNote || target.normalizationNote || source.normalizationNote || "Consolidated legacy product metadata into canonical document doc.";
   merged.updatedAt = admin.firestore.FieldValue.serverTimestamp();
 
   return merged;
@@ -103,7 +106,7 @@ async function main() {
       targetDocId: "esp32-c3",
       canonical: {
         courseId: "esp32-c3",
-        productId: "esp32-c3",
+        docId: "esp32-c3",
         courseKey: "product-esp32-c3",
         normalizationNote: "Consolidated from legacy car intro product metadata."
       }
@@ -113,7 +116,7 @@ async function main() {
       targetDocId: "esp32-s3",
       canonical: {
         courseId: "esp32-s3",
-        productId: "esp32-s3",
+        docId: "esp32-s3",
         courseKey: "product-esp32-s3",
         normalizationNote: "Consolidated from legacy car advanced product metadata."
       }
@@ -162,26 +165,26 @@ async function main() {
       beforeTarget: {
         courseId: targetData.courseId || "",
         courseKey: targetData.courseKey || "",
-        productId: targetData.productId || "",
+        docId: targetData.docId || "",
         title: targetData.title || "",
         price: targetData.price || 0
       },
       source: {
         courseId: sourceData.courseId || "",
         courseKey: sourceData.courseKey || "",
-        productId: sourceData.productId || "",
+        docId: sourceData.docId || "",
         title: sourceData.title || "",
         price: sourceData.price || 0
       },
       nextTarget: {
         courseId: nextData.courseId || "",
         courseKey: nextData.courseKey || "",
-        productId: nextData.productId || "",
+        docId: nextData.docId || "",
         title: nextData.title || "",
         price: nextData.price || 0,
         aliases: nextData.aliases || [],
-        legacyProductIds: nextData.legacyProductIds || [],
-        productIds: nextData.productIds || []
+        legacyDocIds: nextData.legacyDocIds || [],
+        docIds: nextData.docIds || []
       }
     });
 

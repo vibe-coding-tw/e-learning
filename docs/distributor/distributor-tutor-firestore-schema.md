@@ -46,7 +46,7 @@
 | `createdAt` | timestamp | yes | Creation time |
 | `updatedAt` | timestamp | yes | Update time |
 
-### 2.3 `products/{productId}`
+### 2.3 `products/{docId}`
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
@@ -64,7 +64,7 @@
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `distributorId` | string | yes | Owner distributor |
-| `productId` | string | yes | Product reference |
+| `docId` | string | yes | Product reference / document ID |
 | `currency` | string | yes | Currency code |
 | `salePrice` | number | yes | Live sale price |
 | `promoPrice` | number | no | Campaign price |
@@ -165,7 +165,7 @@
 
 Common query:
 
-- `dealer_price_books where distributorId == X and productId == Y and isActive == true`
+- `dealer_price_books where distributorId == X and docId == Y and isActive == true`
 
 ### 3.2 Distributor lookup
 
@@ -187,7 +187,7 @@ Common query:
 
 Recommended composite indexes:
 
-1. `dealer_price_books(distributorId, productId, isActive, effectiveFrom)`
+1. `dealer_price_books(distributorId, docId, isActive, effectiveFrom)`
 2. `orders(distributorId, status, createdAt)`
 3. `orders(tutorId, status, createdAt)`
 4. `settlement_ledger(period, beneficiaryType, beneficiaryId)`

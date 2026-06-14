@@ -183,7 +183,7 @@ function getFilteredPriceBooks(items = []) {
             const haystack = [
                 book.id,
                 book.priceBookId,
-                book.productId,
+                book.docId,
                 book.distributorId,
                 book.version,
                 book.currency,
@@ -318,7 +318,7 @@ function renderPriceBooks(items = []) {
             >
                 <td class="px-4 py-4 align-top">
                     <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(id || '—')}</div>
-                    <div class="mt-1 font-bold text-slate-900">${escapeHtml(book.productId || '—')}</div>
+                    <div class="mt-1 font-bold text-slate-900">${escapeHtml(book.docId || '—')}</div>
                     <div class="mt-1 text-[11px] text-slate-400">更新：${escapeHtml(formatDateTime(book.updatedAt))}</div>
                 </td>
                 <td class="px-4 py-4 align-top">
@@ -351,7 +351,7 @@ function renderPriceBooks(items = []) {
         priceBooksSummary.textContent = `目前顯示 ${filteredItems.length} 筆價格表，點擊每一列即可開啟 modal 編輯。`;
     }
     const title = el('portal-pricebook-tabs-title');
-    if (title) title.textContent = `${selected?.productId || selected?.id || '尚未選擇價格表'}`;
+    if (title) title.textContent = `${selected?.docId || selected?.id || '尚未選擇價格表'}`;
 }
 
 function updatePriceBookFilterButtons() {
@@ -558,7 +558,7 @@ function renderPortalData() {
 
 function clearForm() {
     setFormValue('portal-pricebook-id', '');
-    setFormValue('portal-product-id', '');
+    setFormValue('portal-doc-id', '');
     setFormValue('portal-currency', 'TWD');
     setFormValue('portal-sale-price', '');
     setFormValue('portal-promo-price', '');
@@ -601,7 +601,7 @@ function formatDateForInput(dateVal) {
 function populateForm(book = {}) {
     setFormValue('portal-pricebook-id', book.id || '');
     setFormValue('portal-distributor-id-input', book.distributorId || state.distributorId || '');
-    setFormValue('portal-product-id', book.productId || '');
+    setFormValue('portal-doc-id', book.docId || '');
     setFormValue('portal-currency', book.currency || 'TWD');
     setFormValue('portal-sale-price', book.salePrice != null ? book.salePrice : '');
     setFormValue('portal-promo-price', book.promoPrice != null ? book.promoPrice : '');
@@ -612,7 +612,7 @@ function populateForm(book = {}) {
     setFormValue('portal-promo-effective-to', formatDateForInput(book.promoEffectiveTo));
     setFormValue('portal-active', book.isActive !== false);
     const stateEl = el('portal-form-state');
-    if (stateEl) stateEl.textContent = `編輯中：${book.id || book.productId || '未命名價格表'}`;
+    if (stateEl) stateEl.textContent = `編輯中：${book.id || book.docId || '未命名價格表'}`;
 }
 
 function renderDistributorContext() {
@@ -704,7 +704,7 @@ async function loadDistributorContext(distributorId = '') {
 async function saveForm() {
     const distributorId = getFormValue('portal-distributor-id-input') || state.selectedDistributorId || state.distributorId;
     const priceBookId = getFormValue('portal-pricebook-id');
-    const productId = getFormValue('portal-product-id');
+    const docId = getFormValue('portal-doc-id');
     const currency = getFormValue('portal-currency') || 'TWD';
     const salePrice = Number(getFormValue('portal-sale-price'));
     const promoRaw = getFormValue('portal-promo-price');
@@ -716,8 +716,8 @@ async function saveForm() {
     const promoEffectiveTo = getFormValue('portal-promo-effective-to');
     const isActive = !!el('portal-active')?.checked;
 
-    if (!distributorId || !productId) {
-        toast('請先輸入經銷商 ID 與產品 ID。', 'error');
+    if (!distributorId || !docId) {
+        toast('請先輸入經銷商 ID 與 Document ID。', 'error');
         return;
     }
     if (!Number.isFinite(salePrice) || salePrice < 0) {
@@ -749,7 +749,7 @@ async function saveForm() {
         const payload = {
             distributorId,
             priceBookId,
-            productId,
+            docId,
             currency,
             salePrice,
             ...(promoPrice != null ? { promoPrice } : {}),
@@ -764,14 +764,14 @@ async function saveForm() {
         if (!res?.data?.success) {
             throw new Error(res?.data?.message || '儲存失敗');
         }
-        toast(`已儲存經銷商價格表：${productId}`, 'success');
+        toast(`已儲存經銷商價格表：${docId}`, 'success');
         await loadPriceBooks();
         state.selectedPriceBookId = res.data.priceBookId || priceBookId || '';
         showPriceBookModal(true);
         populateForm({
             id: res.data.priceBookId || priceBookId || '',
             distributorId,
-            productId,
+            docId,
             currency,
             salePrice,
             promoPrice,
@@ -820,7 +820,7 @@ window.distributorPortalOpenPriceBookModal = function (priceBookId = '') {
         clearForm();
     }
     showPriceBookModal(true);
-    const input = el('portal-product-id');
+    const input = el('portal-doc-id');
     input?.focus?.();
 };
 window.distributorPortalClosePriceBookModal = function () {
@@ -836,9 +836,9 @@ window.distributorPortalPopulateById = function (priceBookId) {
     }
     state.selectedPriceBookId = normalizedId;
     populateForm(fallback);
-    setText('portal-form-state', window.t('status_loaded_pricebook', '已載入：{msg}').replace('{msg}', fallback.id || fallback.productId || '未命名價格表'));
+    setText('portal-form-state', window.t('status_loaded_pricebook', '已載入：{msg}').replace('{msg}', fallback.id || fallback.docId || '未命名價格表'));
     showPriceBookModal(true);
-    document.getElementById('portal-product-id')?.focus?.();
+    document.getElementById('portal-doc-id')?.focus?.();
 };
 
 function showFulfillmentModal(open = true) {

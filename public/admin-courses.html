@@ -665,13 +665,9 @@
                     <option value="legacy_product">legacy_product</option>
                   </select>
                 </div>
-                <div class="field">
-                  <label>productId</label>
-                  <input id="lesson-product-id" placeholder="預設可與 docId 相同" />
-                </div>
                 <div class="field readonly">
                   <label>Document ID / docId</label>
-                  <input id="lesson-id" placeholder="自動產生 UUID-like ID" readonly />
+                  <input id="doc-id" placeholder="自動產生 UUID-like ID" readonly />
                   <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
                 </div>
                 <div class="field">
@@ -770,11 +766,11 @@
                     </div>
                     <div class="field">
                       <label>priceBookId</label>
-                      <input id="price-book-id" placeholder="自動產生：distributorId_productId" />
+                      <input id="price-book-id" placeholder="自動產生：distributorId_docId" />
                     </div>
                     <div class="field">
-                      <label>productId</label>
-                      <input id="price-product-id" placeholder="預設跟 lesson 的 productId 一樣" />
+                      <label>docId</label>
+                      <input id="price-doc-id" placeholder="預設跟課程的 docId 一樣" />
                     </div>
                     <div class="field">
                       <label>currency</label>
@@ -1113,13 +1109,12 @@
     function currentLesson() {
       const found = state.lessons.find((lesson) => String(lesson.id || lesson.docId || "") === state.currentLessonId) || null;
       if (found) return found;
-      const draftId = normalizeText($("lesson-id")?.value || "");
+      const draftId = normalizeText($("doc-id")?.value || "");
       if (!draftId) return null;
       return {
         id: draftId,
         docId: draftId,
         courseKey: normalizeText($("lesson-course-key")?.value || draftId),
-        productId: normalizeText($("lesson-product-id")?.value || draftId)
       };
     }
 
@@ -1483,7 +1478,7 @@
 
     function fillLessonForm(lesson) {
       const target = lesson || {};
-      $("lesson-id").value = target.id || target.docId || generateLessonDocId();
+      $("doc-id").value = target.id || target.docId || generateLessonDocId();
       $("lesson-course-key").value = target.courseKey || "";
       $("lesson-title").value = target.title || "";
       $("lesson-summary").value = target.summary || target.tagText || "";
@@ -1499,7 +1494,6 @@
       $("lesson-level").value = target.level || "";
       $("lesson-category").value = target.category || "";
       $("lesson-metadata-type").value = target.metadataType || "course";
-      $("lesson-product-id").value = target.productId || target.id || "";
       $("lesson-order-weight").value = target.orderWeight ?? 0;
       $("lesson-is-physical").checked = target.isPhysical === true;
       $("lesson-hidden").checked = target.hiddenFromCatalog === true;
@@ -1510,7 +1504,7 @@
       state.selectedCourseUnitIndex = -1;
       renderLocaleEditor();
       syncModalHeader();
-      $("price-product-id").value = normalizeText(target.productId || target.id || "");
+      $("price-doc-id").value = normalizeText(target.id || target.docId || "");
       $("price-book-id").value = "";
       $("price-currency").value = target.currency || "";
       $("price-sale").value = "";
@@ -1534,7 +1528,7 @@
       const target = book || {};
       $("price-distributor-id").value = target.distributorId || "";
       $("price-book-id").value = target.id || "";
-      $("price-product-id").value = target.productId || target.lessonId || currentLesson()?.productId || currentLesson()?.id || "";
+      $("price-doc-id").value = target.docId || target.sourceDocId || currentLesson()?.id || currentLesson()?.docId || "";
       $("price-currency").value = target.currency || $("price-currency").value || "TWD";
       $("price-sale").value = target.salePrice ?? "";
       $("price-promo").value = target.promoPrice ?? "";
@@ -1550,10 +1544,9 @@
     }
 
     function serializeLessonForm() {
-      const docId = normalizeText($("lesson-id").value) || generateLessonDocId();
-      $("lesson-id").value = docId;
+      const docId = normalizeText($("doc-id").value) || generateLessonDocId();
+      $("doc-id").value = docId;
       const courseKey = normalizeText($("lesson-course-key").value) || docId;
-      const productId = normalizeText($("lesson-product-id").value) || docId;
       const title = normalizeText($("lesson-title").value);
       const summary = normalizeText($("lesson-summary").value);
       const description = normalizeText($("lesson-description").value);
@@ -1618,7 +1611,6 @@
         course_unit_titles,
         courseUnits: course_units,
         courseUnitTitles: course_unit_titles,
-        productId,
         orderWeight: Number($("lesson-order-weight").value || 0) || 0,
         isPhysical: $("lesson-is-physical").checked,
         hiddenFromCatalog: $("lesson-hidden").checked,
@@ -1671,10 +1663,9 @@
         return [];
       }
 
-      const productId = normalizeText($("price-product-id").value || lesson.productId || lesson.id || "");
+      const docId = normalizeText($("price-doc-id").value || lesson.id || lesson.docId || "");
       const response = await getLessonPriceBooks({
-        lessonId: lesson.id || lesson.docId || "",
-        productId,
+        docId: docId || lesson.id || lesson.docId || "",
         distributorId: ""
       });
       const books = Array.isArray(response?.data?.items)
@@ -1694,7 +1685,7 @@
             <td style="font-family:JetBrains Mono, monospace;font-size:12px;color:#334155;">${escapeHtml(book.id)}</td>
             <td>
               <div style="font-weight:800;color:#0f172a;">${escapeHtml(book.distributorId || "—")}</div>
-              <div class="pricebook-meta">${escapeHtml(book.productId || book.lessonId || "—")}${book.currency ? ` · ${escapeHtml(book.currency)}` : ""}</div>
+              <div class="pricebook-meta">${escapeHtml(book.docId || "—")}${book.currency ? ` · ${escapeHtml(book.currency)}` : ""}</div>
             </td>
             <td>
               <div style="font-weight:800;">${status}</div>
@@ -1790,7 +1781,6 @@
         docId: nextDocId,
         title: `${lesson.title || ""} (Copy)`,
         courseKey: `${lesson.courseKey || lesson.id || ""}-copy`,
-        productId: "",
         hiddenFromCatalog: true,
         isDeprecated: false
       });
@@ -1841,14 +1831,13 @@
     function buildPriceBookPayload(lesson) {
       const distributorId = normalizeText($("price-distributor-id").value);
       if (!distributorId) throw new Error("請輸入 distributorId");
-      const productId = normalizeText($("price-product-id").value || lesson.productId || lesson.id || "");
-      const priceBookId = normalizeText($("price-book-id").value) || `${distributorId}_${productId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
+      const docId = normalizeText($("price-doc-id").value || lesson.id || lesson.docId || "");
+      const priceBookId = normalizeText($("price-book-id").value) || `${distributorId}_${docId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
       return {
         id: priceBookId,
         distributorId,
-        productId,
-        lessonId: lesson.id || lesson.docId || "",
-        sourceLessonId: lesson.id || lesson.docId || "",
+        docId,
+        sourceDocId: docId,
         currency: normalizeText($("price-currency").value).toUpperCase() || "TWD",
         salePrice: Number($("price-sale").value || 0) || 0,
         promoPrice: $("price-promo").value === "" ? null : Number($("price-promo").value || 0),

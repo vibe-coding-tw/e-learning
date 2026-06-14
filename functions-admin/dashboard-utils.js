@@ -72,7 +72,7 @@ function getCanonicalLessonIdentity(lesson = {}) {
     const metadataType = String(lesson.metadataType || '').toLowerCase();
     if (lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product') {
         return String(
-            lesson.productId ||
+            lesson.docId ||
             lesson.courseKey ||
             lesson.courseId ||
             lesson.id ||
@@ -85,7 +85,7 @@ function getCanonicalLessonIdentity(lesson = {}) {
         normalizeCanonicalCourseKey(lesson.courseId) ||
         normalizeCanonicalCourseKey(lesson.entryUnitId) ||
         normalizeCanonicalCourseKey(lesson.id) ||
-        lesson.productId ||
+        lesson.docId ||
         ''
     ).trim();
 }
@@ -208,11 +208,9 @@ function getLessonLookupKeys(lesson = {}) {
     add(normalizeCanonicalCourseKey(lesson.contentRef));
     add(lesson.entryUnitId);
     add(lesson.classroomUrl);
-    add(lesson.productId);
+    add(lesson.docId);
     add(lesson.sku);
 
-    if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);
-    if (Array.isArray(lesson.legacyProductIds)) lesson.legacyProductIds.forEach(add);
     if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
     if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
 

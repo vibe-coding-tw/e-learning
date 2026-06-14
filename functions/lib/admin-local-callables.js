@@ -5,7 +5,6 @@ const { getContentRuntimeConfig } = require("./runtime-state");
 const {
     resolveDistributorCheckoutQuote,
     findLessonByDocumentId,
-    findLessonByProductId,
     normalizeRegionCode,
 } = require("./distributor-pricing");
 
@@ -185,11 +184,10 @@ async function loadDistributorCheckoutQuote(request = {}) {
 
     const payload = data || {};
     const lessons = await loadLessons(db);
-    const normalizedProductId = normalizeText(payload.productId || payload.courseId || payload.itemId || "");
+    const normalizedDocId = normalizeText(payload.docId || payload.courseId || payload.itemId || "");
     const matchedLesson =
-        findLessonByDocumentId(lessons, normalizedProductId) ||
-        findLessonByProductId(lessons, normalizedProductId) ||
-        findLessonByProductId(lessons, `${normalizedProductId}.html`);
+        findLessonByDocumentId(lessons, normalizedDocId) ||
+        findLessonByDocumentId(lessons, `${normalizedDocId}.html`);
 
     const quote = await resolveDistributorCheckoutQuote(db, {
         lessons,
@@ -198,7 +196,7 @@ async function loadDistributorCheckoutQuote(request = {}) {
         promotionCode: payload.promotionCode || payload.promoCode || "",
         region: payload.region || "",
         customerId: payload.customerId || auth.uid || "",
-        productId: matchedLesson?.id || matchedLesson?.courseId || normalizedProductId || "",
+        docId: matchedLesson?.id || matchedLesson?.courseId || normalizedDocId || "",
         locale: payload.locale || "en",
         priceBookId: payload.priceBookId || ""
     });

@@ -134,26 +134,11 @@ function resolveLessonPrice(lesson = {}, currencyHint = "") {
     const catalogHit = lookupCatalogPrice(catalog, normalizedCurrencyHint || currencyHint);
     if (catalogHit) return catalogHit;
 
-    const effectiveCurrencyHint = normalizedCurrencyHint || normalizeCurrency(currencyHint, "");
-
-    if (effectiveCurrencyHint === "USD" && lesson.price_usd != null) {
-        return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
-    }
-    if (effectiveCurrencyHint === "TWD" && lesson.price_twd != null) {
-        return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
-    }
-    if (lesson.price_usd != null) {
-        return { amount: normalizeAmount(lesson.price_usd), currency: "USD", source: "legacy:price_usd" };
-    }
-    if (lesson.price_twd != null) {
-        return { amount: normalizeAmount(lesson.price_twd), currency: "TWD", source: "legacy:price_twd" };
-    }
-
-    const fallbackCurrency = effectiveCurrencyHint || normalizeCurrency(lesson.currency, "");
+    const fallbackCurrency = normalizedCurrencyHint || normalizeCurrency(currencyHint || lesson.currency, "");
     return {
-        amount: normalizeAmount(lesson.price),
+        amount: Number.isFinite(Number(lesson.dealerPrice)) ? normalizeAmount(lesson.dealerPrice) : 0,
         currency: fallbackCurrency,
-        source: "legacy:price",
+        source: "dealer:lesson",
     };
 }
 

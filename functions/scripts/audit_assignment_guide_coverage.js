@@ -86,16 +86,14 @@ function getLessonLookupKeys(lesson = {}) {
   };
 
   add(lesson.id);
+  add(lesson.docId);
   add(lesson.courseId);
   add(lesson.courseKey);
   add(lesson.contentRef);
   addContentRefVariants(lesson.contentRef);
   add(lesson.entryUnitId);
   add(lesson.classroomUrl);
-  add(lesson.productId);
   add(lesson.sku);
-  if (Array.isArray(lesson.productIds)) lesson.productIds.forEach(add);
-  if (Array.isArray(lesson.legacyProductIds)) lesson.legacyProductIds.forEach(add);
   if (Array.isArray(lesson.aliases)) lesson.aliases.forEach(add);
   if (Array.isArray(lesson.courseUnits)) lesson.courseUnits.forEach(add);
   return keys;
@@ -120,9 +118,9 @@ function resolveLessonByFile(fileName, lessons = []) {
 
 function getActiveLessonIdentity(lesson = {}) {
   return String(
+    lesson.docId ||
     lesson.courseKey ||
     lesson.courseId ||
-    lesson.productId ||
     lesson.id ||
     ""
   ).trim();

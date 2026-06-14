@@ -368,7 +368,7 @@ async function loadLessonsWithOptionalDistributorOverride(distributorId = "") {
 
         if (priceBooks.length > 0) {
             lessons = lessons.map((lesson) => {
-                const matchingBooks = priceBooks.filter((book) => findLessonByDocumentId([lesson], book.docId || book.sourceDocId || book.lessonId || book.productId));
+                const matchingBooks = priceBooks.filter((book) => findLessonByDocumentId([lesson], book.docId || book.sourceDocId));
                 const activeBooks = matchingBooks.filter((book) => {
                     if (book.isActive === false) return false;
                     const effectiveFromMs = book.effectiveFrom?.toMillis ? book.effectiveFrom.toMillis() : (book.effectiveFrom?.seconds ? book.effectiveFrom.seconds * 1000 : 0);
@@ -847,7 +847,6 @@ function getSeedableDistributorProducts(lessons = [], distributorCurrency = "TWD
                 lesson.courseId ||
                 lesson.courseKey ||
                 lesson.entryUnitId ||
-                lesson.productId ||
                 lesson.sku ||
                 ""
             );
@@ -909,7 +908,7 @@ function normalizeLessonLocalePayload(localeData = {}) {
 
 function normalizeLessonMetadataPatch(payload = {}) {
     const docId = normalizeText(payload.docId || payload.id || "");
-    assertRequiredValue(docId, "missing-lesson-id");
+    assertRequiredValue(docId, "missing-doc-id");
 
     const hasOwn = (key) => Object.prototype.hasOwnProperty.call(payload, key);
     const patch = {
@@ -1234,11 +1233,11 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
     const payload = data || {};
 
     const distributorId = normalizeText(payload.distributorId || userData.distributorId || userData.commercial?.distributorId || "");
-    const lessonId = normalizeText(payload.lessonId || payload.docId || payload.productId || "");
+    const docId = normalizeText(payload.docId || payload.courseId || payload.itemId || "");
     const currency = normalizeText(payload.currency || "TWD").toUpperCase() || "TWD";
 
     assertRequiredValue(distributorId, "missing-distributor-id");
-    assertRequiredValue(lessonId, "missing-lesson-id");
+    assertRequiredValue(docId, "missing-doc-id");
     assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員編輯價格表");
 
     const salePrice = Number(payload.salePrice);
@@ -1266,7 +1265,7 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
         }
     }
     const isActive = payload.isActive !== false;
-    const priceBookId = normalizeText(payload.priceBookId || payload.id || `${distributorId}_${lessonId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-"));
+    const priceBookId = normalizeText(payload.priceBookId || payload.id || `${distributorId}_${docId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-"));
     const existingDoc = await db.collection("dealer_price_books").doc(priceBookId).get();
     const createdAt = existingDoc.exists && existingDoc.data()?.createdAt
         ? existingDoc.data().createdAt
@@ -1274,9 +1273,8 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
 
     await db.collection("dealer_price_books").doc(priceBookId).set({
         distributorId,
-        lessonId,
-        docId: lessonId,
-        sourceLessonId: lessonId,
+        docId,
+        sourceDocId: docId,
         currency,
         salePrice,
         ...(promoPrice != null ? { promoPrice } : {}),
@@ -1291,7 +1289,7 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
         createdAt
     }, { merge: true });
 
-    return { success: true, priceBookId, distributorId, lessonId };
+    return { success: true, priceBookId, distributorId, docId };
 });
 
 exports.adminGetLessonPriceBooks = onCall(async (request) => {
@@ -1302,12 +1300,12 @@ exports.adminGetLessonPriceBooks = onCall(async (request) => {
     assertAdminRole(role);
 
     const dbRef = admin.firestore();
-    const lessonId = normalizeText(data?.lessonId || data?.docId || data?.productId || "");
+    const docId = normalizeText(data?.docId || data?.courseId || data?.itemId || "");
     const distributorId = normalizeText(data?.distributorId || "");
 
     const targetKeys = new Set([
-        lessonId,
-        lessonId ? `${lessonId}.html` : "",
+        docId,
+        docId ? `${docId}.html` : "",
     ].filter(Boolean));
 
     const snap = await dbRef.collection("dealer_price_books").get();
@@ -1319,10 +1317,8 @@ exports.adminGetLessonPriceBooks = onCall(async (request) => {
         const bookKeys = [
             book.id,
             book.priceBookId,
-            book.lessonId,
-            book.sourceLessonId,
             book.docId,
-            book.productId
+            book.sourceDocId
         ].map((value) => normalizeText(value)).filter(Boolean);
 
         const matches = targetKeys.size === 0 || bookKeys.some((value) => targetKeys.has(value));
@@ -1331,14 +1327,14 @@ exports.adminGetLessonPriceBooks = onCall(async (request) => {
     });
 
     items.sort((a, b) => {
-        const aKey = `${normalizeText(a.distributorId)}::${normalizeText(a.lessonId || a.docId || a.productId)}::${normalizeText(a.id)}`;
-        const bKey = `${normalizeText(b.distributorId)}::${normalizeText(b.lessonId || b.docId || b.productId)}::${normalizeText(b.id)}`;
+        const aKey = `${normalizeText(a.distributorId)}::${normalizeText(a.docId || a.sourceDocId)}::${normalizeText(a.id)}`;
+        const bKey = `${normalizeText(b.distributorId)}::${normalizeText(b.docId || b.sourceDocId)}::${normalizeText(b.id)}`;
         return aKey.localeCompare(bKey);
     });
 
     return {
         success: true,
-        lessonId,
+        docId,
         distributorId,
         items
     };
@@ -1372,8 +1368,8 @@ exports.adminSeedDistributorPriceBooksFromLessons = onCall(async (request) => {
     for (const item of products) {
         const priceBookId = normalizeText(
             payload.priceBookPrefix
-                ? `${payload.priceBookPrefix}_${item.lessonId || item.productId}`
-                : `${distributorId}_${item.lessonId || item.productId}`
+                ? `${payload.priceBookPrefix}_${item.docId}`
+                : `${distributorId}_${item.docId}`
         ).toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
         const docRef = db.collection("dealer_price_books").doc(priceBookId);
         const existing = await docRef.get();
@@ -1385,9 +1381,8 @@ exports.adminSeedDistributorPriceBooksFromLessons = onCall(async (request) => {
 
         const existingData = existing.exists ? (existing.data() || {}) : {};
         await docRef.set({
-            lessonId: item.lessonId || item.productId,
-            docId: item.lessonId || item.productId,
-            sourceLessonId: item.lessonId || item.productId,
+            docId: item.docId,
+            sourceDocId: item.docId,
             distributorId,
             currency: item.currency || distributorCurrency,
             salePrice: item.salePrice,
@@ -1396,7 +1391,7 @@ exports.adminSeedDistributorPriceBooksFromLessons = onCall(async (request) => {
             ...(existingData.promoEffectiveTo != null && !overwrite ? { promoEffectiveTo: existingData.promoEffectiveTo } : {}),
             isActive: existingData.isActive !== false,
             version: normalizeText(existingData.version || item.pricingVersion || "v1") || "v1",
-            sourceLessonId: item.lessonId,
+            sourceDocId: item.docId,
             sourceLessonTitle: item.title,
             sourceIsPhysical: item.isPhysical === true,
             updatedBy: auth.uid,
@@ -1856,7 +1851,7 @@ exports.adminResolveDistributorCheckoutQuote = onCall(async (request) => {
         promotionCode: payload.promotionCode || payload.promoCode || "",
         region: payload.region || "",
         customerId: payload.customerId || auth.uid || "",
-        lessonId: payload.lessonId || payload.docId || payload.productId || payload.courseId || payload.itemId || "",
+        docId: payload.docId || payload.courseId || payload.itemId || "",
         locale: payload.locale || "en",
         priceBookId: payload.priceBookId || ""
     });

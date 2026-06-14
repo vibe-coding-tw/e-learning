@@ -105,7 +105,7 @@ Tutors are stored inside the `users` collection, with relevant details under `tu
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `id` | string | Product ID |
+| `id` | string | Product document ID |
 | `sku` | string | SKU |
 | `name` | string | Product name |
 | `isHardware` | boolean | Hardware flag |
@@ -121,7 +121,7 @@ One active price book per distributor per SKU is the default operating model.
 | :--- | :--- | :--- |
 | `id` | string | Price book document ID |
 | `distributorId` | string | Owning distributor |
-| `productId` | string | Product or SKU |
+| `docId` | string | Product or SKU / document ID |
 | `currency` | string | Currency code |
 | `salePrice` | number | Current sale price |
 | `promoPrice` | number | Active promo price |
@@ -244,7 +244,7 @@ Request query:
 - `region`
 - `tutorId`
 - `tutorEmail` (or legacy `promotionCode`)
-- `productId`
+- `docId`
 - `customerId`
 
 Resolution order:
@@ -262,7 +262,7 @@ Request query:
 - `region`
 - `locale`
 - `customerId`
-- `productId`
+- `docId`
 
 `PATCH /api/users/me/distributor-preference`
 

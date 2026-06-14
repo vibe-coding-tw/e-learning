@@ -17,6 +17,33 @@
         })();
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        (function () {
+            const normalize = (value = "") => String(value || "").trim().replace(/_/g, "-");
+            const detectLocale = () => {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const queryLang = normalize(params.get('lang') || params.get('locale') || '');
+                    if (queryLang.toLowerCase().startsWith('en')) return 'en';
+                    if (queryLang.toLowerCase().startsWith('zh')) return 'zh-TW';
+                } catch (_) {}
+
+                try {
+                    const stored = normalize(localStorage.getItem('vibe_user_locale'));
+                    if (stored.toLowerCase().startsWith('en')) return 'en';
+                    if (stored.toLowerCase().startsWith('zh')) return 'zh-TW';
+                } catch (_) {}
+
+                const navLang = normalize(navigator.language || navigator.languages?.[0] || '');
+                if (navLang.toLowerCase().startsWith('en')) return 'en';
+                return 'zh-TW';
+            };
+
+            window.__authLocale = detectLocale();
+            document.documentElement.lang = window.__authLocale === 'en' ? 'en' : 'zh-Hant';
+            document.title = window.__authLocale === 'en' ? 'Checking course access...' : '課程授權驗證中...';
+        })();
+    </script>
     <style>
         .loader {
             border: 4px solid #f3f3f3;
@@ -39,22 +66,22 @@
     </style>
 </head>
 
-<body class="bg-gray-50 h-screen flex flex-col items-center justify-center">
+<body class="bg-gray-50 h-screen flex flex-col items-center justify-center" style="visibility:hidden;">
 
     <div id="loading-ui" class="text-center">
         <div class="loader mx-auto mb-4"></div>
-        <h2 class="text-xl font-bold text-gray-700">正在驗證學員身份...</h2>
-        <p class="text-gray-500 mt-2">請稍候，我們正在為您開啟課程內容。</p>
+        <h2 id="loading-title" class="text-xl font-bold text-gray-700">正在驗證學員身份...</h2>
+        <p id="loading-desc" class="text-gray-500 mt-2">請稍候，我們正在為您開啟課程內容。</p>
     </div>
 
     <div id="error-ui" class="hidden text-center max-w-md p-6 bg-white rounded-lg shadow-lg">
         <div class="text-red-500 text-5xl mb-4">⚠️</div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">無法存取課程</h2>
+        <h2 id="error-title" class="text-2xl font-bold text-gray-800 mb-2">無法存取課程</h2>
         <p id="error-msg" class="text-gray-600 mb-6">您尚未購買此課程，或權限已過期。</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <button id="retry-login-btn"
                 class="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">重新登入</button>
-            <a href="index.html"
+            <a id="back-home-link" href="index.html"
                 class="bg-gray-100 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-200 transition">返回首頁</a>
         </div>
     </div>
@@ -73,6 +100,54 @@
         connectFirebaseEmulators({ auth, db, functions });
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
         const loginProvider = new GoogleAuthProvider();
+        const AUTH_COPY = {
+            en: {
+                title: 'Checking course access...',
+                loadingTitle: 'Verifying your access...',
+                loadingDesc: 'Please wait while we open the course content for you.',
+                errorTitle: 'Unable to access the course',
+                defaultError: 'You have not purchased this course yet, or your access has expired.',
+                retryLogin: 'Sign in again',
+                backHome: 'Back to Home',
+                googleLoginFailed: 'Google sign-in failed. Please return to the home page and try again.',
+                missingFilename: 'Error: unable to resolve file name (Filename missing)',
+                missingPath: 'Unable to resolve the course file path',
+                noAuthRecord: 'We could not find a purchase record. Please confirm you are signed in with the correct account.',
+                invalidCourseId: 'Course lookup failed. Please check the URL or contact support.',
+                paymentRequired: 'This course is not authorized yet. Please confirm payment or activation.',
+                authFailedPrefix: 'Authorization failed: ',
+                serverError: 'Server connection error. Please try again later.'
+            },
+            'zh-TW': {
+                title: '課程授權驗證中...',
+                loadingTitle: '正在驗證學員身份...',
+                loadingDesc: '請稍候，我們正在為您開啟課程內容。',
+                errorTitle: '無法存取課程',
+                defaultError: '您尚未購買此課程，或權限已過期。',
+                retryLogin: '重新登入',
+                backHome: '返回首頁',
+                googleLoginFailed: 'Google 登入失敗，請返回首頁後再試一次。',
+                missingFilename: '錯誤：無法解析檔案名稱 (Filename missing)',
+                missingPath: '無法解析課程檔案路徑',
+                noAuthRecord: '系統查無您的購買紀錄，請確認是否已登入正確帳號。',
+                invalidCourseId: '課程標識失敗，請確認網址是否正確或聯繫客服。',
+                paymentRequired: '此課程尚未授權或付款，請確認是否已完成購買。',
+                authFailedPrefix: '授權失敗：',
+                serverError: '伺服器連線錯誤，請稍後再試。'
+            }
+        };
+        const authLocale = window.__authLocale === 'en' ? 'en' : 'zh-TW';
+        const authT = (key) => (AUTH_COPY[authLocale] && AUTH_COPY[authLocale][key]) || AUTH_COPY.en[key] || AUTH_COPY['zh-TW'][key] || '';
+
+        document.title = authT('title');
+        document.getElementById('loading-title').textContent = authT('loadingTitle');
+        document.getElementById('loading-desc').textContent = authT('loadingDesc');
+        document.getElementById('error-title').textContent = authT('errorTitle');
+        document.getElementById('error-msg').textContent = authT('defaultError');
+        document.getElementById('retry-login-btn').textContent = authT('retryLogin');
+        document.getElementById('back-home-link').textContent = authT('backHome');
+        document.body.style.visibility = 'visible';
+
         document.getElementById('retry-login-btn').addEventListener('click', startGoogleLogin);
 
         async function startGoogleLogin() {
@@ -86,7 +161,7 @@
                     await signInWithRedirect(auth, loginProvider);
                 } catch (redirectError) {
                     console.error("[Auth] Google redirect login failed:", redirectError);
-                    showError("Google 登入失敗，請返回首頁後再試一次。");
+                    showError(authT('googleLoginFailed'));
                 }
             }
         }
@@ -166,8 +241,8 @@
                 }
 
                 if (!fileName) {
-                    alert("錯誤：無法解析檔案名稱 (Filename missing)");
-                    showError("無法解析課程檔案路徑");
+                    alert(authT('missingFilename'));
+                    showError(authT('missingPath'));
                     return;
                 }
 
@@ -207,20 +282,20 @@
                     window.location.replace(finalUrl);
                 } else {
                     const reason = result?.data?.reason || result?.data?.error || null;
-                    let message = "系統查無您的購買紀錄，請確認是否已登入正確帳號。";
+                    let message = authT('noAuthRecord');
                     if (reason === 'missing-context') {
-                        message = "課程標識失敗，請確認網址是否正確或聯繫客服。";
+                        message = authT('invalidCourseId');
                     } else if (reason === 'payment-required') {
-                        message = "此課程尚未授權或付款，請確認是否已完成購買。";
+                        message = authT('paymentRequired');
                     } else if (result?.data?.error) {
-                        message = `授權失敗：${result.data.error}`;
+                        message = `${authT('authFailedPrefix')}${result.data.error}`;
                     }
                     console.warn('[Auth] Authorization failed reason:', reason, result?.data, { courseId, fileName, price, currency, lang });
                     showError(message);
                 }
             } catch (error) {
                 console.error(error);
-                showError("伺服器連線錯誤，請稍後再試。");
+                showError(authT('serverError'));
             }
         }
 
