@@ -468,7 +468,15 @@ async function loadDashboard() {
                 Number(getLessonBusinessPrice(activeLesson, "en").amount || 0)
             )
             : null;
-        const isFreeCourseContext = !!(hasUnitContext && activeLesson && activeLesson.dealerPriceBookId && Number(activeLessonPrice) === 0);
+        const isStarterLesson = !!(activeLesson && (
+            String(activeLesson.courseId || activeLesson.courseKey || activeLesson.id || "").toLowerCase().startsWith("car-starter-") ||
+            String(activeLesson.category || "").toLowerCase() === "start" ||
+            String(activeLesson.category || "").toLowerCase() === "started" ||
+            String(activeLesson.level || "").toLowerCase() === "starter" ||
+            String(activeLesson.level || "").toLowerCase() === "start" ||
+            String(activeLesson.level || "").toLowerCase() === "started"
+        ));
+        const isFreeCourseContext = !!(hasUnitContext && activeLesson && isStarterLesson && Number(activeLessonPrice) === 0);
 
         if (!isAdmin && !isQualifiedTutor && !isPaidStudent && isFreeCourseContext) {
             console.log(`[Dashboard] Free course context detected for ${filterCourseId || filterUnitId}; allowing student dashboard access.`);
@@ -4297,7 +4305,7 @@ function buildDistributorPriceBookRow(book = {}) {
         window.__distributorPriceBookCache[id] = {
             id,
             distributorId: book.distributorId || '',
-            productId: book.productId || '',
+            docId: book.docId || '',
             currency: book.currency || 'TWD',
             salePrice: Number(book.salePrice || 0),
             promoPrice: book.promoPrice != null ? Number(book.promoPrice) : '',
@@ -4322,7 +4330,7 @@ function buildDistributorPriceBookRow(book = {}) {
                 <div class="mt-1 text-[11px] text-slate-400">更新：${escapeHtml(formatDistributorPriceBookDateTime(book.updatedAt))}</div>
             </td>
             <td class="py-4 px-4 align-top">
-                <div class="font-bold text-slate-900">${escapeHtml(book.productId || '—')}</div>
+                <div class="font-bold text-slate-900">${escapeHtml(book.docId || '—')}</div>
                 <div class="mt-1 text-[11px] text-slate-400">經銷商：${escapeHtml(book.distributorId || '—')}</div>
             </td>
             <td class="py-4 px-4 align-top">
@@ -4376,7 +4384,7 @@ function renderDistributorPriceBooksTable() {
 
 window.clearDistributorPriceBookForm = function() {
     setDistributorPriceBookFormValue('distributor-pricebook-id', '');
-    setDistributorPriceBookFormValue('distributor-pricebook-product-id', '');
+    setDistributorPriceBookFormValue('distributor-pricebook-doc-id', '');
     setDistributorPriceBookFormValue('distributor-pricebook-currency', 'TWD');
     setDistributorPriceBookFormValue('distributor-pricebook-sale-price', '');
     setDistributorPriceBookFormValue('distributor-pricebook-promo-price', '');
@@ -4392,7 +4400,7 @@ window.populateDistributorPriceBookForm = function(book = {}) {
     if (!book || typeof book !== 'object') return;
     setDistributorPriceBookFormValue('distributor-pricebook-id', book.id || '');
     setDistributorPriceBookFormValue('distributor-pricebook-distributor-id', book.distributorId || window.__selectedDistributorPricebookDistributorId || '');
-    setDistributorPriceBookFormValue('distributor-pricebook-product-id', book.productId || '');
+    setDistributorPriceBookFormValue('distributor-pricebook-doc-id', book.docId || '');
     setDistributorPriceBookFormValue('distributor-pricebook-currency', book.currency || 'TWD');
     setDistributorPriceBookFormValue('distributor-pricebook-sale-price', book.salePrice != null ? book.salePrice : '');
     setDistributorPriceBookFormValue('distributor-pricebook-promo-price', book.promoPrice != null ? book.promoPrice : '');
@@ -4402,7 +4410,7 @@ window.populateDistributorPriceBookForm = function(book = {}) {
     setDistributorPriceBookFormValue('distributor-pricebook-active', book.isActive !== false);
     const state = document.getElementById('distributor-pricebook-form-state');
     if (state) {
-        state.textContent = `編輯中：${book.id || book.productId || '未命名價格表'}`;
+        state.textContent = `編輯中：${book.id || book.docId || '未命名價格表'}`;
     }
 };
 
@@ -4448,7 +4456,7 @@ window.loadDistributorPriceBooks = async function() {
 window.saveDistributorPriceBookFromForm = async function() {
     const distributorId = getDistributorPriceBookFormValue('distributor-pricebook-distributor-id') || String(dashboardData?.myDistributorId || '').trim();
     const priceBookId = getDistributorPriceBookFormValue('distributor-pricebook-id');
-    const productId = getDistributorPriceBookFormValue('distributor-pricebook-product-id');
+    const docId = getDistributorPriceBookFormValue('distributor-pricebook-doc-id');
     const currency = getDistributorPriceBookFormValue('distributor-pricebook-currency') || 'TWD';
     const salePrice = Number(getDistributorPriceBookFormValue('distributor-pricebook-sale-price'));
     const promoPriceRaw = getDistributorPriceBookFormValue('distributor-pricebook-promo-price');
@@ -4458,8 +4466,8 @@ window.saveDistributorPriceBookFromForm = async function() {
     const effectiveTo = getDistributorPriceBookFormValue('distributor-pricebook-effective-to');
     const isActive = !!document.getElementById('distributor-pricebook-active')?.checked;
 
-    if (!distributorId || !productId) {
-        alert('請先輸入經銷商 ID 與產品 ID。');
+    if (!distributorId || !docId) {
+        alert('請先輸入經銷商 ID 與 Document ID。');
         return;
     }
     if (!Number.isFinite(salePrice) || salePrice < 0) {
@@ -4483,7 +4491,7 @@ window.saveDistributorPriceBookFromForm = async function() {
         const payload = {
             distributorId,
             priceBookId,
-            productId,
+            docId,
             currency,
             salePrice,
             ...(promoPrice != null ? { promoPrice } : {}),
@@ -4496,13 +4504,13 @@ window.saveDistributorPriceBookFromForm = async function() {
         if (!res?.data?.success) {
             throw new Error(res?.data?.message || '儲存失敗');
         }
-        notify(`已儲存經銷商價格表：${productId}`, 'success');
+        notify(`已儲存經銷商價格表：${docId}`, 'success');
         window.__selectedDistributorPricebookDistributorId = distributorId;
         await window.loadDistributorPriceBooks();
         window.populateDistributorPriceBookForm({
             id: res.data.priceBookId || priceBookId || '',
             distributorId,
-            productId,
+            docId,
             currency,
             salePrice,
             promoPrice,
@@ -6040,7 +6048,18 @@ window.isUserAuthorizedForUnit = window.isUserAuthorizedForUnit || function(file
             (l.courseId === canonicalUnitId) || 
             (Array.isArray(l.courseUnits) && l.courseUnits.includes(canonicalUnitId))
         );
-        return !!(lesson && lesson.dealerPriceBookId && Number(lesson.dealerPrice ?? 0) === 0);
+        if (!lesson) return false;
+        const lessonId = String(lesson.courseId || lesson.courseKey || lesson.id || "").toLowerCase();
+        const category = String(lesson.category || "").toLowerCase();
+        const level = String(lesson.level || "").toLowerCase();
+        return !!(
+            lessonId.startsWith("car-starter-") ||
+            category === "start" ||
+            category === "started" ||
+            level === "starter" ||
+            level === "start" ||
+            level === "started"
+        );
     };
     const isFreeUnit = getIsFreeUnit(fileName);
     

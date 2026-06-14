@@ -916,7 +916,7 @@ async function initLocalLearningPath() {
     document.title = categoryLabel(pathKey, {});
     const payload = await loadLessonsFromFirestore();
     const lessons = Array.isArray(payload?.lessons) ? payload.lessons : [];
-    const categoryLabelsMap = normalizeCategoryLabelsMap(payload?.categoryLabels || {}, uiLocale);
+    const categoryLabelsMap = payload?.categoryLabels || {};
     renderLessons(lessons, pathKey, categoryLabelsMap);
   } catch (error) {
     console.error("[learning-path-local] failed to render lessons from Firestore", error);

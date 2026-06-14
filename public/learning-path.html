@@ -22,7 +22,7 @@
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
   <script type="module" src="./js/nav-component.148940692df3.js"></script>
-  <script src="./js/dashboard-lookup-utils.398a597cda03.js"></script>
+  <script src="./js/dashboard-lookup-utils.371b7a3ab8a2.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
   <script src="./js/course-shared.3494a84f1b6d.js"></script>
   <script src="./js/pricing-utils.909971c38740.js"></script>
@@ -1173,7 +1173,7 @@
       const result = await getLessonsFunc({ distributorId });
       if (requestId !== currentLessonsRequestId) return null;
       currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
-      categoryLabelsMap = normalizeCategoryLabelsMap(result?.data?.categoryLabels || {}, detectUiLocale());
+      categoryLabelsMap = result?.data?.categoryLabels || {};
       renderLessons(currentLessons, currentPathKey);
       return currentLessons;
     }
