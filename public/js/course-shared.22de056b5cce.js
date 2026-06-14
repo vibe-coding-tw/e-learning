@@ -95,6 +95,11 @@ function ensureCourseTopNavShell(file = '', metadataFamily = '') {
     let topNav = document.querySelector('.ms-topnav');
     if (topNav) return topNav;
 
+    const isEn = (() => {
+        const params = new URLSearchParams(window.location.search);
+        const queryLang = params.get('lang') || params.get('locale') || '';
+        return queryLang.trim().toLowerCase().startsWith('en') || String(document.documentElement?.lang || '').trim().toLowerCase().startsWith('en') || String(navigator.language || '').trim().toLowerCase().startsWith('en');
+    })();
     const normalizedFile = normalizeLooseKey(file);
     const family = metadataFamily || getCourseFamilyForCoursePage(normalizedFile);
     const seemsCourseFile = /^(?:start-\d{2}-unit-|basic-\d{2}-unit-|(?:adv|advanced)-\d{2}-unit-|prepare-\d{2}-unit-|(?:tw|en|common|car-starter|car-basic|car-advanced)-)/i.test(normalizedFile);
@@ -105,19 +110,19 @@ function ensureCourseTopNavShell(file = '', metadataFamily = '') {
     const isAdvanced = family === 'advanced' || normalizedFile.startsWith('adv-') || normalizedFile.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(normalizedFile);
     const isPrepare = family === 'prepare' || normalizedFile.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(normalizedFile);
 
-    let navLabelText = '課程';
+    let navLabelText = isEn ? 'Course' : '課程';
     let targetHref = canonicalLearningPathHref('common');
     if (isStarter) {
-        navLabelText = '入門課程';
+        navLabelText = isEn ? 'Starter Unit' : '入門課程';
         targetHref = canonicalLearningPathHref('car-starter');
     } else if (isBasic) {
-        navLabelText = '基礎課程';
+        navLabelText = isEn ? 'Basic Unit' : '基礎課程';
         targetHref = canonicalLearningPathHref('car-basic');
     } else if (isAdvanced) {
-        navLabelText = '進階課程';
+        navLabelText = isEn ? 'Advanced Unit' : '進階課程';
         targetHref = canonicalLearningPathHref('car-advanced');
     } else if (isPrepare) {
-        navLabelText = '課前準備';
+        navLabelText = isEn ? 'Preparation' : '課前準備';
         targetHref = canonicalLearningPathHref('common');
     }
 
@@ -859,7 +864,7 @@ function normalizeCourseBreadcrumbs() {
 
         let bcModuleLink = document.getElementById('bc-module-link');
         if (!bcModuleLink) {
-            breadcrumb.innerHTML = '<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">課程總覽</span>';
+            breadcrumb.innerHTML = `<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">${isEn ? 'Course Overview' : '課程總覽'}</span>`;
             bcModuleLink = document.getElementById('bc-module-link');
         }
 
@@ -867,10 +872,15 @@ function normalizeCourseBreadcrumbs() {
         if (moduleTitleEl && bcModuleLink) {
             bcModuleLink.textContent = moduleTitleEl.textContent.trim();
         } else if (bcModuleLink) {
-            if (isStarter) bcModuleLink.textContent = '入門課程';
-            else if (isBasic) bcModuleLink.textContent = '基礎課程';
-            else if (isAdvanced) bcModuleLink.textContent = '進階課程';
-            else if (isPrepare) bcModuleLink.textContent = '課前準備';
+            const isEn = (() => {
+                const params = new URLSearchParams(window.location.search);
+                const queryLang = params.get('lang') || params.get('locale') || '';
+                return queryLang.trim().toLowerCase().startsWith('en') || String(document.documentElement?.lang || '').trim().toLowerCase().startsWith('en') || String(navigator.language || '').trim().toLowerCase().startsWith('en');
+            })();
+            if (isStarter) bcModuleLink.textContent = isEn ? 'Starter Unit' : '入門課程';
+            else if (isBasic) bcModuleLink.textContent = isEn ? 'Basic Unit' : '基礎課程';
+            else if (isAdvanced) bcModuleLink.textContent = isEn ? 'Advanced Unit' : '進階課程';
+            else if (isPrepare) bcModuleLink.textContent = isEn ? 'Preparation' : '課前準備';
         }
     } catch (e) {
         console.warn('[CourseShared] normalizeCourseBreadcrumbs failed:', e);
@@ -961,7 +971,7 @@ function upgradeLegacyStartUnitToMsLayout() {
         topNav.innerHTML = `
             <a href="${canonicalLearningPathHref('car-starter')}" target="_top" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
             <div class="divider"></div>
-            <a href="${canonicalLearningPathHref('car-starter')}" target="_top" class="nav-label nav-label-link">入門課程</a>
+            <a href="${canonicalLearningPathHref('car-starter')}" target="_top" class="nav-label nav-label-link">${isEn ? 'Starter Unit' : '入門課程'}</a>
         `;
 
         const layout = document.createElement('div');
@@ -988,8 +998,8 @@ function upgradeLegacyStartUnitToMsLayout() {
         content.innerHTML = `
             <div class="ms-breadcrumb">
                 <a href="#">Vibe Coding</a><span>›</span>
-                <a href="#">入門課程</a><span>›</span>
-                <span id="bc-current">課程總覽</span>
+                <a href="#">${isEn ? 'Starter Unit' : '入門課程'}</a><span>›</span>
+                <span id="bc-current">${isEn ? 'Course Overview' : '課程總覽'}</span>
             </div>
         `;
 
@@ -1101,7 +1111,7 @@ function upgradeLegacyStartUnitToMsLayout() {
             });
 
             const bc = document.getElementById('bc-current');
-            if (bc) bc.textContent = unitNo === 0 ? '課程總覽' : (unitTitles[unitNo - 1] || '單元');
+            if (bc) bc.textContent = unitNo === 0 ? (isEn ? 'Course Overview' : '課程總覽') : (unitTitles[unitNo - 1] || (isEn ? 'Unit' : '單元'));
             refreshStartUnitUiState();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -3452,7 +3462,8 @@ function normalizeStartButtonText() {
         const buttons = document.querySelectorAll('button');
         buttons.forEach(btn => {
             const onclickAttr = btn.getAttribute('onclick') || '';
-            if (onclickAttr.includes('goToUnit(1)')) {
+            // Only convert the start button that goes to unit 1, not the back buttons that return to unit 1.
+            if (onclickAttr.includes('goToUnit(1)') && !btn.classList.contains('nav-btn-prev')) {
                 if (isEn) {
                     btn.innerHTML = 'Start Unit &nbsp;›';
                 } else {
