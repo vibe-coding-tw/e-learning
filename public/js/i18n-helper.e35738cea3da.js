@@ -124,14 +124,6 @@
         } catch (_) {}
 
         try {
-            const stored = localStorage.getItem('vibe_user_locale');
-            if (stored) {
-                const clean = normalizeLocaleCode(stored);
-                if (clean) return clean;
-            }
-        } catch (_) {}
-
-        try {
             const params = new URLSearchParams(window.location.search);
             const queryLang = params.get('lang') || params.get('locale');
             if (queryLang) {
@@ -140,7 +132,20 @@
             }
         } catch (_) {}
 
+        try {
+            const stored = localStorage.getItem('vibe_user_locale');
+            if (stored) {
+                const clean = normalizeLocaleCode(stored);
+                if (clean) return clean;
+            }
+        } catch (_) {}
+
         const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
+        if (htmlLang) {
+            const cleanHtml = normalizeLocaleCode(htmlLang);
+            if (cleanHtml) return cleanHtml;
+        }
+
         const navLang = String(navigator.language || "").toLowerCase();
         const raw = htmlLang || navLang;
         if (raw.startsWith("zh")) return "zh-TW";

@@ -234,15 +234,6 @@ function detectUiLocale() {
     } catch (_) {}
 
     try {
-        const stored = localStorage.getItem('vibe_user_locale');
-        if (stored) {
-            const clean = String(stored).trim().toLowerCase();
-            if (clean.startsWith('zh')) return 'zh-TW';
-            if (clean.startsWith('en')) return 'en';
-        }
-    } catch (_) {}
-
-    try {
         const params = new URLSearchParams(window.location.search);
         const queryLang = params.get('lang') || params.get('locale');
         if (queryLang) {
@@ -252,9 +243,21 @@ function detectUiLocale() {
         }
     } catch (_) {}
 
+    try {
+        const stored = localStorage.getItem('vibe_user_locale');
+        if (stored) {
+            const clean = String(stored).trim().toLowerCase();
+            if (clean.startsWith('zh')) return 'zh-TW';
+            if (clean.startsWith('en')) return 'en';
+        }
+    } catch (_) {}
+
     const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
+    if (htmlLang.startsWith("zh")) return "zh-TW";
+    if (htmlLang.startsWith("en")) return "en";
+
     const navLang = String(navigator.language || "").toLowerCase();
-    const raw = htmlLang || navLang;
+    const raw = navLang;
     if (raw.startsWith("zh")) return "zh-TW";
     return "en";
 }

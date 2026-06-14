@@ -95,11 +95,8 @@ function ensureCourseTopNavShell(file = '', metadataFamily = '') {
     let topNav = document.querySelector('.ms-topnav');
     if (topNav) return topNav;
 
-    const isEn = (() => {
-        const params = new URLSearchParams(window.location.search);
-        const queryLang = params.get('lang') || params.get('locale') || '';
-        return queryLang.trim().toLowerCase().startsWith('en') || String(document.documentElement?.lang || '').trim().toLowerCase().startsWith('en') || String(navigator.language || '').trim().toLowerCase().startsWith('en');
-    })();
+    const activeLocale = getActiveCourseLocale();
+    const isEn = isEnLikeCourseLocale(activeLocale) || String(file || '').toLowerCase().startsWith('en-');
     const normalizedFile = normalizeLooseKey(file);
     const family = metadataFamily || getCourseFamilyForCoursePage(normalizedFile);
     const seemsCourseFile = /^(?:start-\d{2}-unit-|basic-\d{2}-unit-|(?:adv|advanced)-\d{2}-unit-|prepare-\d{2}-unit-|(?:tw|en|common|car-starter|car-basic|car-advanced)-)/i.test(normalizedFile);
@@ -154,11 +151,8 @@ function ensureCourseBreadcrumbShell(file = '', metadataFamily = '') {
     const seemsCourseFile = /^(?:start-\d{2}-unit-|basic-\d{2}-unit-|(?:adv|advanced)-\d{2}-unit-|prepare-\d{2}-unit-|(?:tw|en|common|car-starter|car-basic|car-advanced)-)/i.test(normalizedFile);
     if (!path.startsWith('/courses/') && !seemsCourseFile && !family) return null;
 
-    const isEn = (() => {
-        const params = new URLSearchParams(window.location.search);
-        const queryLang = params.get('lang') || params.get('locale') || '';
-        return queryLang.trim().toLowerCase().startsWith('en') || normalizedFile.startsWith('en-');
-    })();
+    const activeLocale = getActiveCourseLocale();
+    const isEn = isEnLikeCourseLocale(activeLocale) || normalizedFile.startsWith('en-');
     const overviewText = isEn ? 'Course Overview' : '課程總覽';
 
     breadcrumb = document.createElement('div');
@@ -486,23 +480,18 @@ async function ensureDynamicUnitTabsFromFirestore() {
         if (!Array.isArray(globalLessonsData) || globalLessonsData.length === 0) return;
 
         const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(fileName));
-        const matchedCourse = globalLessonsData.find((course) => {
-            const units = Array.isArray(course?.courseUnits) ? course.courseUnits : [];
-            return units
-                .map(normalizeUnitFilenameForRoute)
-                .map(normalizeLooseKey)
-                .includes(targetKey);
-        });
+        const matchedCourse = findCourseForCoursePage(fileName);
         if (!matchedCourse) return;
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
-        const isEn = queryLang.trim().toLowerCase().startsWith('en') || fileName.startsWith('en-');
-        syncCourseTopNavName(document.querySelector('.ms-topnav'), matchedCourse, isEn ? 'en' : 'zh-TW');
+        const activeLocale = getActiveCourseLocale();
+        syncCourseTopNavName(document.querySelector('.ms-topnav'), matchedCourse, activeLocale);
 
         const units = (Array.isArray(matchedCourse.courseUnits) ? matchedCourse.courseUnits : [])
             .map(normalizeUnitFilenameForRoute)
             .filter(Boolean);
+        const hasUnit = units.some(unitFile => normalizeLooseKey(unitFile) === targetKey);
+        if (!hasUnit) return; // Do not render tabs on overview pages
+
         if (units.length < 2) return;
 
         const existingTabs = document.getElementById('course-tabs-container');
@@ -627,11 +616,13 @@ function getActiveCourseLocale() {
         if (queryLocale) return queryLocale;
     } catch (_) {}
     try {
+        const htmlLang = String(document.documentElement?.lang || '').trim();
+        if (htmlLang) return htmlLang;
+    } catch (_) {}
+    try {
         const stored = String(localStorage.getItem('vibe_user_locale') || '').trim();
         if (stored) return stored;
     } catch (_) {}
-    const htmlLang = String(document.documentElement?.lang || '').trim();
-    if (htmlLang) return htmlLang;
     const navLang = String(navigator.language || '').trim();
     if (navLang) return navLang;
     return getCourseRuntimeConfig().defaultLocale || 'zh-TW';
@@ -911,6 +902,9 @@ function normalizeCourseBreadcrumbs() {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
         if (!file.endsWith('.html')) return;
 
+        const activeLocale = getActiveCourseLocale();
+        const isEn = isEnLikeCourseLocale(activeLocale) || file.startsWith('en-');
+
         const metadataFamily = getCourseFamilyForCoursePage(file);
         const isStarter = metadataFamily ? metadataFamily === 'starter' : (file.startsWith('start-') || /^(?:tw|en)-car-starter-/i.test(file));
         const isBasic = metadataFamily ? metadataFamily === 'basic' : (file.startsWith('basic-') || /^(?:tw|en)-car-basic-/i.test(file));
@@ -931,11 +925,6 @@ function normalizeCourseBreadcrumbs() {
         if (moduleTitleEl && bcModuleLink) {
             bcModuleLink.textContent = moduleTitleEl.textContent.trim();
         } else if (bcModuleLink) {
-            const isEn = (() => {
-                const params = new URLSearchParams(window.location.search);
-                const queryLang = params.get('lang') || params.get('locale') || '';
-                return queryLang.trim().toLowerCase().startsWith('en') || String(document.documentElement?.lang || '').trim().toLowerCase().startsWith('en') || String(navigator.language || '').trim().toLowerCase().startsWith('en');
-            })();
             if (isStarter) bcModuleLink.textContent = isEn ? 'Starter Course' : '入門課程';
             else if (isBasic) bcModuleLink.textContent = isEn ? 'Basic Course' : '基礎課程';
             else if (isAdvanced) bcModuleLink.textContent = isEn ? 'Advanced Course' : '進階課程';
@@ -3517,9 +3506,8 @@ function cleanUpCourseTitles() {
 function normalizeStartButtonText() {
     try {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
-        const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
+        const activeLocale = getActiveCourseLocale();
+        const isEn = isEnLikeCourseLocale(activeLocale) || file.startsWith('en-');
 
         const buttons = document.querySelectorAll('button');
         buttons.forEach(btn => {
@@ -3765,9 +3753,8 @@ window.retryNativeAssignmentCreation = async function() {
 function normalizeTerminology() {
     try {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryLang = urlParams.get('lang') || urlParams.get('locale') || '';
-        const isEn = queryLang.trim().toLowerCase().startsWith('en') || file.startsWith('en-');
+        const activeLocale = getActiveCourseLocale();
+        const isEn = isEnLikeCourseLocale(activeLocale) || file.startsWith('en-');
         
         console.log(`[CourseShared] Normalizing terminology (isEn=${isEn})`);
 
