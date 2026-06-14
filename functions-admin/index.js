@@ -30,7 +30,7 @@ function bindLazyExports(modulePath, exportNames) {
 const { buildI18nFilenameCandidates, unitIdsMatch, normalizeLegacyId } = require("./lib/id-utils");
 const { getContentRuntimeConfig } = require("./lib/runtime-state");
 const {
-    findLessonByProductId,
+    findLessonByDocumentId,
     resolvePriceBookAmount,
     resolveLessonPrice,
     loadDistributorPriceBook,
@@ -41,7 +41,7 @@ const {
     resolveDistributorCheckoutQuote,
     resolveDistributorForCheckout
 } = bindLazyExports("./lib/distributor-pricing", [
-    "findLessonByProductId",
+    "findLessonByDocumentId",
     "resolvePriceBookAmount",
     "resolveLessonPrice",
     "loadDistributorPriceBook",
@@ -368,7 +368,7 @@ async function loadLessonsWithOptionalDistributorOverride(distributorId = "") {
 
         if (priceBooks.length > 0) {
             lessons = lessons.map((lesson) => {
-                const matchingBooks = priceBooks.filter((book) => findLessonByProductId([lesson], book.productId));
+                const matchingBooks = priceBooks.filter((book) => findLessonByDocumentId([lesson], book.docId || book.sourceDocId || book.lessonId || book.productId));
                 const activeBooks = matchingBooks.filter((book) => {
                     if (book.isActive === false) return false;
                     const effectiveFromMs = book.effectiveFrom?.toMillis ? book.effectiveFrom.toMillis() : (book.effectiveFrom?.seconds ? book.effectiveFrom.seconds * 1000 : 0);
@@ -389,24 +389,11 @@ async function loadLessonsWithOptionalDistributorOverride(distributorId = "") {
                 const chosenBook = activeBooks[0];
                 const resolvedAmount = resolvePriceBookAmount(chosenBook);
                 const cloned = { ...lesson };
-
-                if (resolvedAmount.currency === "USD") {
-                    cloned.price_usd = resolvedAmount.amount;
-                    cloned.price_twd = null;
-                } else if (resolvedAmount.currency === "TWD") {
-                    cloned.price_twd = resolvedAmount.amount;
-                    cloned.price_usd = null;
-                } else {
-                    cloned.price_usd = null;
-                    cloned.price_twd = null;
-                }
-
-                cloned.price = resolvedAmount.amount;
                 cloned.currency = resolvedAmount.currency;
                 cloned.dealerPrice = resolvedAmount.amount;
                 cloned.dealerCurrency = resolvedAmount.currency;
                 cloned.dealerPriceBookId = chosenBook.id || null;
-                cloned.dealerPriceBookLessonId = chosenBook.lessonId || chosenBook.sourceLessonId || null;
+                cloned.dealerPriceBookDocId = chosenBook.docId || chosenBook.sourceDocId || null;
                 cloned.priceBookSource = `dealer_price_books:${chosenBook.id}`;
                 cloned.isPromoActive = resolvedAmount.isPromoActive;
                 return cloned;
@@ -855,7 +842,7 @@ function getSeedableDistributorProducts(lessons = [], distributorCurrency = "TWD
         ))
         .map((lesson) => {
             const resolvedPrice = resolveLessonPrice(lesson, normalizedCurrency);
-            const productId = normalizeText(
+            const docId = normalizeText(
                 lesson.id ||
                 lesson.courseId ||
                 lesson.courseKey ||
@@ -865,16 +852,15 @@ function getSeedableDistributorProducts(lessons = [], distributorCurrency = "TWD
                 ""
             );
             return {
-                lessonId: lesson.id || "",
-                productId,
-                title: lesson.title || lesson.name || productId || "未命名商品",
+                docId: docId || "",
+                title: lesson.title || lesson.name || lesson.id || "未命名商品",
                 isPhysical: lesson.isPhysical === true,
                 currency: resolvedPrice.currency || normalizedCurrency,
                 salePrice: Number(resolvedPrice.amount || 0),
                 pricingVersion: lesson.pricingVersion || lesson.pricingSource || "legacy"
             };
         })
-        .filter((item) => item.productId && Number.isFinite(item.salePrice) && item.salePrice >= 0);
+        .filter((item) => item.docId && Number.isFinite(item.salePrice) && item.salePrice >= 0);
 }
 
 async function getLessonsForAdmin(distributorId = "") {
@@ -956,7 +942,6 @@ function normalizeLessonMetadataPatch(payload = {}) {
     if (hasOwn("level")) patch.level = normalizeText(payload.level || "");
     if (hasOwn("category")) patch.category = normalizeText(payload.category || "");
     if (hasOwn("metadataType")) patch.metadataType = normalizeText(payload.metadataType || "course") || "course";
-    if (hasOwn("productId")) patch.productId = normalizeText(payload.productId || docId);
     if (hasOwn("orderWeight")) patch.orderWeight = Number(payload.orderWeight || 0) || 0;
     if (hasOwn("isPhysical")) patch.isPhysical = payload.isPhysical === true;
     if (hasOwn("hiddenFromCatalog")) patch.hiddenFromCatalog = payload.hiddenFromCatalog === true;
@@ -1178,22 +1163,21 @@ exports.adminUpsertLessonPricing = onCall(async (request) => {
 
     const tw = normalizePriceEntry(pricing.tw, "TWD");
     const en = normalizePriceEntry(pricing.en, "USD");
-    const buildPriceBookId = (distributorId, productId) => `${distributorId}_${productId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
+    const buildPriceBookId = (distributorId, docId) => `${distributorId}_${docId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
     const twPriceBookId = buildPriceBookId("default-twd", cleanProductId);
     const enPriceBookId = buildPriceBookId("default-usd", cleanProductId);
     const twRef = db.collection("dealer_price_books").doc(twPriceBookId);
     const enRef = db.collection("dealer_price_books").doc(enPriceBookId);
     const [twSnap, enSnap] = await Promise.all([twRef.get(), enRef.get()]);
-    const lessonId = targetDoc.id;
+    const docId = targetDoc.id;
     const twCreatedAt = twSnap.exists && twSnap.data()?.createdAt ? twSnap.data().createdAt : admin.firestore.FieldValue.serverTimestamp();
     const enCreatedAt = enSnap.exists && enSnap.data()?.createdAt ? enSnap.data().createdAt : admin.firestore.FieldValue.serverTimestamp();
 
     await Promise.all([
         twRef.set({
-            lessonId,
-            sourceLessonId: lessonId,
+            docId,
+            sourceDocId: docId,
             distributorId: "default-twd",
-            productId: cleanProductId,
             currency: "TWD",
             salePrice: tw.amount,
             isActive: true,
@@ -1203,10 +1187,9 @@ exports.adminUpsertLessonPricing = onCall(async (request) => {
             createdAt: twCreatedAt
         }, { merge: true }),
         enRef.set({
-            lessonId,
-            sourceLessonId: lessonId,
+            docId,
+            sourceDocId: docId,
             distributorId: "default-usd",
-            productId: cleanProductId,
             currency: "USD",
             salePrice: en.amount,
             isActive: true,
@@ -1217,7 +1200,7 @@ exports.adminUpsertLessonPricing = onCall(async (request) => {
         }, { merge: true })
     ]);
 
-    console.log(`[adminUpsertLessonPricing] Updated default price books for productId=${cleanProductId} by uid=${auth.uid}`);
+    console.log(`[adminUpsertLessonPricing] Updated default price books for docId=${cleanProductId} by uid=${auth.uid}`);
     return {
         success: true,
         courseId: cleanProductId,
@@ -1251,11 +1234,11 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
     const payload = data || {};
 
     const distributorId = normalizeText(payload.distributorId || userData.distributorId || userData.commercial?.distributorId || "");
-    const productId = normalizeText(payload.productId || "");
+    const lessonId = normalizeText(payload.lessonId || payload.docId || payload.productId || "");
     const currency = normalizeText(payload.currency || "TWD").toUpperCase() || "TWD";
 
     assertRequiredValue(distributorId, "missing-distributor-id");
-    assertRequiredValue(productId, "missing-product-id");
+    assertRequiredValue(lessonId, "missing-lesson-id");
     assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員編輯價格表");
 
     const salePrice = Number(payload.salePrice);
@@ -1283,7 +1266,7 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
         }
     }
     const isActive = payload.isActive !== false;
-    const priceBookId = normalizeText(payload.priceBookId || payload.id || `${distributorId}_${productId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-"));
+    const priceBookId = normalizeText(payload.priceBookId || payload.id || `${distributorId}_${lessonId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-"));
     const existingDoc = await db.collection("dealer_price_books").doc(priceBookId).get();
     const createdAt = existingDoc.exists && existingDoc.data()?.createdAt
         ? existingDoc.data().createdAt
@@ -1291,7 +1274,9 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
 
     await db.collection("dealer_price_books").doc(priceBookId).set({
         distributorId,
-        productId,
+        lessonId,
+        docId: lessonId,
+        sourceLessonId: lessonId,
         currency,
         salePrice,
         ...(promoPrice != null ? { promoPrice } : {}),
@@ -1306,7 +1291,7 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
         createdAt
     }, { merge: true });
 
-    return { success: true, priceBookId, distributorId, productId };
+    return { success: true, priceBookId, distributorId, lessonId };
 });
 
 exports.adminGetLessonPriceBooks = onCall(async (request) => {
@@ -1317,15 +1302,12 @@ exports.adminGetLessonPriceBooks = onCall(async (request) => {
     assertAdminRole(role);
 
     const dbRef = admin.firestore();
-    const lessonId = normalizeText(data?.lessonId || data?.docId || "");
-    const productId = normalizeText(data?.productId || "");
+    const lessonId = normalizeText(data?.lessonId || data?.docId || data?.productId || "");
     const distributorId = normalizeText(data?.distributorId || "");
 
     const targetKeys = new Set([
         lessonId,
-        productId,
         lessonId ? `${lessonId}.html` : "",
-        productId ? `${productId}.html` : ""
     ].filter(Boolean));
 
     const snap = await dbRef.collection("dealer_price_books").get();
@@ -1339,6 +1321,7 @@ exports.adminGetLessonPriceBooks = onCall(async (request) => {
             book.priceBookId,
             book.lessonId,
             book.sourceLessonId,
+            book.docId,
             book.productId
         ].map((value) => normalizeText(value)).filter(Boolean);
 
@@ -1348,15 +1331,14 @@ exports.adminGetLessonPriceBooks = onCall(async (request) => {
     });
 
     items.sort((a, b) => {
-        const aKey = `${normalizeText(a.distributorId)}::${normalizeText(a.productId)}::${normalizeText(a.id)}`;
-        const bKey = `${normalizeText(b.distributorId)}::${normalizeText(b.productId)}::${normalizeText(b.id)}`;
+        const aKey = `${normalizeText(a.distributorId)}::${normalizeText(a.lessonId || a.docId || a.productId)}::${normalizeText(a.id)}`;
+        const bKey = `${normalizeText(b.distributorId)}::${normalizeText(b.lessonId || b.docId || b.productId)}::${normalizeText(b.id)}`;
         return aKey.localeCompare(bKey);
     });
 
     return {
         success: true,
         lessonId,
-        productId,
         distributorId,
         items
     };
@@ -1390,8 +1372,8 @@ exports.adminSeedDistributorPriceBooksFromLessons = onCall(async (request) => {
     for (const item of products) {
         const priceBookId = normalizeText(
             payload.priceBookPrefix
-                ? `${payload.priceBookPrefix}_${item.productId}`
-                : `${distributorId}_${item.productId}`
+                ? `${payload.priceBookPrefix}_${item.lessonId || item.productId}`
+                : `${distributorId}_${item.lessonId || item.productId}`
         ).toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
         const docRef = db.collection("dealer_price_books").doc(priceBookId);
         const existing = await docRef.get();
@@ -1404,9 +1386,9 @@ exports.adminSeedDistributorPriceBooksFromLessons = onCall(async (request) => {
         const existingData = existing.exists ? (existing.data() || {}) : {};
         await docRef.set({
             lessonId: item.lessonId || item.productId,
+            docId: item.lessonId || item.productId,
             sourceLessonId: item.lessonId || item.productId,
             distributorId,
-            productId: item.productId,
             currency: item.currency || distributorCurrency,
             salePrice: item.salePrice,
             ...(existingData.promoPrice != null && !overwrite ? { promoPrice: existingData.promoPrice } : {}),
@@ -1874,7 +1856,7 @@ exports.adminResolveDistributorCheckoutQuote = onCall(async (request) => {
         promotionCode: payload.promotionCode || payload.promoCode || "",
         region: payload.region || "",
         customerId: payload.customerId || auth.uid || "",
-        productId: payload.productId || payload.courseId || payload.itemId || "",
+        lessonId: payload.lessonId || payload.docId || payload.productId || payload.courseId || payload.itemId || "",
         locale: payload.locale || "en",
         priceBookId: payload.priceBookId || ""
     });
@@ -3322,7 +3304,7 @@ function normalizeLearningPathCategoryLabelEntry(value = {}) {
         const text = String(value || "").trim();
         return {
             "zh-TW": text,
-            en: text,
+            en: "",
         };
     }
 
@@ -3351,8 +3333,8 @@ function normalizeLearningPathCategoryLabelEntry(value = {}) {
     ).trim();
 
     return {
-        "zh-TW": zh || en,
-        en: en || zh,
+        "zh-TW": zh,
+        en: en,
     };
 }
 
@@ -3387,22 +3369,24 @@ function normalizeLearningPathCategoryLabels(sourceMap = {}) {
         const normalizedEntry = normalizeLearningPathCategoryLabelEntry(rawValue);
 
         if (localeHint === "zh-TW") {
-            entry["zh-TW"] = entry["zh-TW"] || String(rawValue || "").trim() || normalizedEntry["zh-TW"] || normalizedEntry.en || "";
-            if (!entry.en) entry.en = normalizedEntry.en || normalizedEntry["zh-TW"] || String(rawValue || "").trim() || "";
+            entry["zh-TW"] = entry["zh-TW"] || String(rawValue || "").trim() || normalizedEntry["zh-TW"] || "";
             return;
         }
 
         if (localeHint === "en") {
-            entry.en = entry.en || String(rawValue || "").trim() || normalizedEntry.en || normalizedEntry["zh-TW"] || "";
-            if (!entry["zh-TW"]) entry["zh-TW"] = normalizedEntry["zh-TW"] || normalizedEntry.en || String(rawValue || "").trim() || "";
+            entry.en = entry.en || String(rawValue || "").trim() || normalizedEntry.en || "";
             return;
         }
 
         if (typeof rawValue === "string") {
             const text = String(rawValue || "").trim();
             if (!text) return;
-            entry["zh-TW"] = entry["zh-TW"] || text;
-            entry.en = entry.en || text;
+            const lowerKey = String(rawKey || "").trim().toLowerCase();
+            if (lowerKey.startsWith("en-") || lowerKey.startsWith("en_")) {
+                entry.en = entry.en || text;
+            } else {
+                entry["zh-TW"] = entry["zh-TW"] || text;
+            }
             return;
         }
 
@@ -3422,13 +3406,21 @@ function normalizeLearningPathCategoryLabels(sourceMap = {}) {
             continue;
         }
 
-        assignLabel(key, value, "");
+        let localeHint = "";
+        const lowerKey = String(key || "").trim().toLowerCase();
+        if (lowerKey.startsWith("en-") || lowerKey.startsWith("en_")) {
+            localeHint = "en";
+        } else if (lowerKey.startsWith("tw-") || lowerKey.startsWith("tw_") || lowerKey.startsWith("zh-") || lowerKey.startsWith("zh_")) {
+            localeHint = "zh-TW";
+        }
+
+        assignLabel(key, value, localeHint);
     }
 
     for (const [key, value] of Object.entries(normalized)) {
         normalized[key] = {
-            "zh-TW": String(value["zh-TW"] || value.en || "").trim(),
-            en: String(value.en || value["zh-TW"] || "").trim(),
+            "zh-TW": String(value["zh-TW"] || "").trim(),
+            en: String(value.en || "").trim(),
         };
     }
 
@@ -4157,16 +4149,23 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
         }
 
         const now = Date.now();
-        const userRecord = await admin.auth().getUser(uid);
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const trialLesson = course || lessonByCourseRef || freeCourseContext || null;
+        const firestoreRegisteredAt = userData.createdAt?.toMillis
+            ? userData.createdAt.toMillis()
+            : (userData.createdAt?.seconds ? userData.createdAt.seconds * 1000 : (userData.createdAt ? new Date(userData.createdAt).getTime() : 0));
+        let registeredAtMs = Number.isFinite(firestoreRegisteredAt) ? firestoreRegisteredAt : 0;
+        if (!registeredAtMs) {
+            const userRecord = await admin.auth().getUser(uid);
+            registeredAtMs = userRecord.metadata.creationTime ? new Date(userRecord.metadata.creationTime).getTime() : 0;
+        }
         const isTrialCourse = !!(trialLesson && (
             trialLesson.category === "start" ||
             trialLesson.category === "started" ||
             trialLesson.level === "starter" ||
             trialLesson.level === "start" ||
             trialLesson.level === "started"
-        ) && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
+        ) && registeredAtMs && ((now - registeredAtMs) < THIRTY_DAYS_MS));
         if (isTrialCourse) {
             return { authorized: true, accessMode: "trial_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course: trialLesson };
         }

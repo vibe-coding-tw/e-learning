@@ -41,7 +41,7 @@ async function startGoogleLogin() {
         }
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v6";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v7";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
@@ -153,10 +153,10 @@ function canonicalLearningPathHref(pathKey = "") {
 
 function getDefaultLearningPaths(uiLocale = "zh-TW", categoryLabels = {}) {
     return [
-        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: categoryLabels.common?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || categoryLabelFromParts("common", uiLocale) },
-        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: categoryLabels["car-starter"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || categoryLabelFromParts("car-starter", uiLocale) },
-        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: categoryLabels["car-basic"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || categoryLabelFromParts("car-basic", uiLocale) },
-        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: categoryLabels["car-advanced"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || categoryLabelFromParts("car-advanced", uiLocale) }
+        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: categoryLabels.common?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("common", uiLocale) },
+        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: categoryLabels["car-starter"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("car-starter", uiLocale) },
+        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: categoryLabels["car-basic"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("car-basic", uiLocale) },
+        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: categoryLabels["car-advanced"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("car-advanced", uiLocale) }
     ];
 }
 
@@ -382,8 +382,8 @@ function normalizeCategoryLabelEntry(value = "") {
     const fallback = String(value.label || value.name || "").trim();
 
     return {
-        "zh-TW": zh || fallback || en,
-        en: en || fallback || zh,
+        "zh-TW": zh || fallback,
+        en: en || fallback,
     };
 }
 
@@ -484,13 +484,13 @@ const CATEGORY_TRANSLATIONS = {
     },
     "en": {
         "tw-common": "Preparation",
-        "tw-car-starter": "Starter Unit",
-        "tw-car-basic": "Basic Unit",
-        "tw-car-advanced": "Advanced Unit",
+        "tw-car-starter": "Starter Course",
+        "tw-car-basic": "Basic Course",
+        "tw-car-advanced": "Advanced Course",
         "en-common": "Preparation",
-        "en-car-starter": "Starter Unit",
-        "en-car-basic": "Basic Unit",
-        "en-car-advanced": "Advanced Unit"
+        "en-car-starter": "Starter Course",
+        "en-car-basic": "Basic Course",
+        "en-car-advanced": "Advanced Course"
     }
 };
 
@@ -582,7 +582,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
             href: getCategoryHref(key),
             label:
                 categoryLabels[normalizeCanonicalLearningPathKey(key)]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] ||
-                categoryLabelFromParts(key, uiLocale),
+                getCategoryLabel(key, uiLocale),
             icon: key.includes("advanced") ? "fa-microchip" :
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"

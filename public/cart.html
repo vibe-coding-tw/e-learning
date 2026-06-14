@@ -31,7 +31,7 @@
 
 <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.82e9ed84faa9.js"></script>
+    <script type="module" src="./js/nav-component.148940692df3.js"></script>
     
 
     <main class="flex-grow pt-32 pb-20 hero-gradient">
@@ -1510,10 +1510,10 @@
             let calculatedTotal = 0;
 
             for (const [itemId, item] of cartEntries) {
-                const productId = normalizeId(item.sourceUnitId || item.unitId || itemId);
-                if (!productId) {
+                const lessonId = normalizeId(item.sourceUnitId || item.unitId || itemId);
+                if (!lessonId) {
                     alert(isEn
-                        ? 'Unable to resolve product identifier for one of the cart items.'
+                        ? 'Unable to resolve lesson identifier for one of the cart items.'
                         : '購物車中有品項無法解析產品代號，請先整理購物車。');
                     checkoutBtn.disabled = false;
                     checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
@@ -1522,7 +1522,7 @@
 
                 const snapshotPrice = pricingApi.resolveCartPrice(item, checkoutLocale);
                 const quoteResponse = await resolveDistributorCheckoutQuote({
-                    productId,
+                    lessonId,
                     region: checkoutRegion,
                     locale: checkoutLocale,
                     tutorId: item.referredTutorEmail || '',
