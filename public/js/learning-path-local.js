@@ -15,10 +15,28 @@ function detectUiLocale() {
     }
   } catch (_) {}
 
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const queryLang = params.get("lang") || params.get("locale");
+    if (queryLang) {
+      const clean = normalizeLocaleCode(queryLang);
+      if (clean) return clean;
+    }
+  } catch (_) {}
+
+  try {
+    const stored = localStorage.getItem("vibe_user_locale");
+    if (stored) {
+      const clean = normalizeLocaleCode(stored);
+      if (clean) return clean;
+    }
+  } catch (_) {}
+
   const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
   const navLang = String(navigator.language || "").toLowerCase();
   const raw = htmlLang || navLang;
   if (raw.startsWith("zh")) return "zh-TW";
+  if (raw) return normalizeLocaleCode(raw);
   return "en";
 }
 
@@ -361,16 +379,10 @@ function resolveLessonLabel(lesson = {}, uiLocale = "zh-TW") {
 function resolveLessonCardTitle(lesson = {}, uiLocale = "zh-TW") {
   const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
   if (isEn) {
-    return String(
-      lesson.titleEn
-      || inferEnglishTitle(lesson)
-      || lesson.courseId
-      || lesson.courseKey
-      || ""
-    ).trim();
+    return String(lesson.titleEn || inferEnglishTitle(lesson) || "").trim();
   }
   const resolved = window.__vibeResolveLocalizedFieldValue
-    ? window.__vibeResolveLocalizedFieldValue(lesson, "title", uiLocale, lesson.title || "")
+    ? window.__vibeResolveLocalizedFieldValue(lesson, "title", uiLocale, lesson.title || lesson.titleEn || "")
     : lesson.title;
   return String(resolved || lesson.title || "").trim();
 }
@@ -438,7 +450,7 @@ function pickCategoryLabelFromLesson(lesson = {}, uiLocale = "zh-TW") {
 }
 
 function normalizeCategoryLabelEntry(entry = {}, uiLocale = "zh-TW") {
-  if (typeof entry === "string") return entry.trim();
+  if (typeof entry === "string") return String(uiLocale || "").toLowerCase().startsWith("en") ? "" : entry.trim();
   if (!entry || typeof entry !== "object" || Array.isArray(entry)) return "";
   const locale = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
   return String(
@@ -494,14 +506,9 @@ function categoryLabel(path = "", categoryLabelsMap = {}) {
   const uiLocale = detectUiLocale();
   const canonical = normalizeCanonicalLearningPathKey(path);
   const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap, uiLocale);
-  const dict = uiLocale.startsWith("en")
-    ? { common: "Preparation", "car-starter": "Starter Course", "car-basic": "Basic Course", "car-advanced": "Advanced Course" }
-    : { common: "課前準備", "car-starter": "入門課程", "car-basic": "基礎課程", "car-advanced": "進階課程" };
-  const localizedLegacy = legacyPathKeyFromCanonical(canonical || path, uiLocale);
-  if (dict && dict[localizedLegacy]) return dict[localizedLegacy];
-  if (dict && dict[canonical]) return dict[canonical];
-  if (dict && dict[path]) return dict[path];
-  return normalizedMap[canonical || path] || titleizeCategoryKey(canonical || path);
+  const localizedLabel = normalizedMap[canonical || path];
+  if (localizedLabel) return localizedLabel;
+  return titleizeCategoryKey(canonical || path);
 }
 
 function toList(value) {
@@ -672,7 +679,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
   const uiLocale = detectUiLocale();
   const container = document.getElementById("lesson-container");
   const title = document.getElementById("page-title");
-  const pageTitleText = window.t ? window.t("lp_title", uiLocale.startsWith("en") ? "Learning Path" : "學習路徑") : (uiLocale.startsWith("en") ? "Learning Path" : "學習路徑");
+  const pageTitleText = categoryLabel(pathKey, categoryLabelsMap);
   const t = uiLocale.startsWith("en")
     ? {
         hardwareHeader: "Hardware Kits",
@@ -798,7 +805,9 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const priceCurrency = String(priceEntry.currency || "");
     const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
     const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-    const displayKey = String(lesson.courseKey || lesson.courseId || "");
+    const displayKey = isEn
+      ? String(lesson.courseKey || lesson.courseId || "")
+      : String(resolveLessonLabel(lesson, uiLocale) || categoryLabel(pathKey, categoryLabelsMap) || "");
     const hardwareId = String(lesson.courseId || "").toLowerCase();
     const imageUrl = pickImage(lesson);
     const summary = isEn
@@ -890,9 +899,9 @@ async function loadLessonsFromFirestore() {
   }
 
   const payload = await fetchLessons();
-  if (Array.isArray(payload?.lessons)) return payload.lessons;
-  if (Array.isArray(payload)) return payload;
-  return [];
+  if (Array.isArray(payload?.lessons)) return payload;
+  if (Array.isArray(payload)) return { lessons: payload, categoryLabels: {} };
+  return { lessons: [], categoryLabels: {} };
 }
 
 async function initLocalLearningPath() {
@@ -901,13 +910,13 @@ async function initLocalLearningPath() {
 
   try {
     const uiLocale = detectUiLocale();
-    const titleText = uiLocale.startsWith("en") ? "Learning Path" : "學習路徑";
-    document.title = titleText;
-
     const params = new URLSearchParams(location.search);
-  const pathKey = normalizeCanonicalLearningPathKey(params.get("path") || "common") || "common";
-    const lessons = await loadLessonsFromFirestore();
-    const categoryLabelsMap = deriveCategoryLabels(lessons, {}, uiLocale);
+    const pathKey = normalizeCanonicalLearningPathKey(params.get("path") || "common") || "common";
+    document.documentElement.lang = uiLocale.startsWith("en") ? "en" : "zh-Hant";
+    document.title = categoryLabel(pathKey, {});
+    const payload = await loadLessonsFromFirestore();
+    const lessons = Array.isArray(payload?.lessons) ? payload.lessons : [];
+    const categoryLabelsMap = normalizeCategoryLabelsMap(payload?.categoryLabels || {}, uiLocale);
     renderLessons(lessons, pathKey, categoryLabelsMap);
   } catch (error) {
     console.error("[learning-path-local] failed to render lessons from Firestore", error);

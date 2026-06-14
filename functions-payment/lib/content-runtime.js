@@ -172,13 +172,28 @@ function resolvePreferredLocales(runtimeConfig = null, req = null) {
     const queryLocale = normalizeLocale(req?.query?.lang || req?.query?.locale || "");
     const header = String(req?.headers?.["accept-language"] || "");
     const headerPrimary = normalizeLocale(header.split(",")[0] || "");
+    
     const chain = [];
     if (queryLocale) chain.push(queryLocale);
     if (headerPrimary && !chain.includes(headerPrimary)) chain.push(headerPrimary);
-    const defaultLocale = normalizeLocale(runtimeConfig?.defaultLocale || "zh-TW") || "zh-TW";
-    if (!chain.includes(defaultLocale)) chain.push(defaultLocale);
-    if (!chain.includes("zh-TW")) chain.push("zh-TW");
-    if (!chain.includes("en")) chain.push("en");
+
+    const primaryLang = chain[0] || "";
+    const isPrimaryZh = primaryLang.toLowerCase().startsWith("zh");
+
+    // Order backup locales based on the primary requested language
+    const fallbacks = isPrimaryZh ? ["zh-TW", "en"] : ["en", "zh-TW"];
+    
+    const defaultLocale = normalizeLocale(runtimeConfig?.defaultLocale || "");
+    if (defaultLocale && !fallbacks.includes(defaultLocale)) {
+        fallbacks.unshift(defaultLocale);
+    }
+
+    for (const locale of fallbacks) {
+        if (!chain.includes(locale)) {
+            chain.push(locale);
+        }
+    }
+
     return chain;
 }
 

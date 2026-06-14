@@ -75,12 +75,15 @@
             : {};
         const candidates = resolveLocaleCandidates(locale);
         const normalizedField = String(field || "").trim();
+        const isEn = String(locale || "").toLowerCase().startsWith("en");
         const legacyFields = {
-            title: ["titleEn", "title"],
-            summary: ["summaryEn", "summary", "descriptionEn", "description", "tagText"],
-            description: ["descriptionEn", "description"],
-            lessonLabel: ["lessonLabelEn", "lessonLabel", "tagText"],
-            coreContent: ["coreContentEn", "coreContent"]
+            title: isEn ? ["titleEn", "title"] : ["title", "titleEn"],
+            summary: isEn
+                ? ["summaryEn", "descriptionEn", "summary", "description", "tagText"]
+                : ["summary", "description", "tagText", "summaryEn", "descriptionEn"],
+            description: isEn ? ["descriptionEn", "description"] : ["description", "descriptionEn"],
+            lessonLabel: isEn ? ["lessonLabelEn", "lessonLabel", "tagText"] : ["lessonLabel", "tagText", "lessonLabelEn"],
+            coreContent: isEn ? ["coreContentEn", "coreContent"] : ["coreContent", "coreContentEn"]
         }[normalizedField] || [normalizedField];
 
         for (const candidate of candidates) {

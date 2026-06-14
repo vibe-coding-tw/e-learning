@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,14 +17,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="./style.1b939bdb0a17.css">
-  <script src="./js/i18n-helper.df9f296caa52.js"></script>
+  <script src="./js/i18n-helper.4360d8668d09.js"></script>
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.2aecec29b42b.js"></script>
+  <script type="module" src="./js/nav-component.82e9ed84faa9.js"></script>
   <script src="./js/dashboard-lookup-utils.398a597cda03.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
-  <script src="./js/course-shared.352df09da4a1.js"></script>
+  <script src="./js/course-shared.22de056b5cce.js"></script>
   <script src="./js/pricing-utils.909971c38740.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
@@ -498,16 +498,10 @@
     function resolveLessonCardTitle(lesson = {}, uiLocale = "zh-TW") {
       const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
       if (isEn) {
-        return String(
-          lesson.titleEn
-          || inferEnglishTitle(lesson)
-          || lesson.courseId
-          || lesson.courseKey
-          || ""
-        ).trim();
+        return String(lesson.titleEn || inferEnglishTitle(lesson) || "").trim();
       }
       const resolved = window.__vibeResolveLocalizedFieldValue
-        ? window.__vibeResolveLocalizedFieldValue(lesson, "title", uiLocale, lesson.title || "")
+        ? window.__vibeResolveLocalizedFieldValue(lesson, "title", uiLocale, lesson.title || lesson.titleEn || "")
         : lesson.title;
       return String(resolved || lesson.title || "").trim();
     }
@@ -565,7 +559,7 @@
     }
 
     function normalizeCategoryLabelEntry(entry = {}, uiLocale = "zh-TW") {
-      if (typeof entry === "string") return entry.trim();
+      if (typeof entry === "string") return String(uiLocale || "").toLowerCase().startsWith("en") ? "" : entry.trim();
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) return "";
       const locale = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
       return String(
@@ -619,19 +613,10 @@
     function categoryLabel(path = "") {
       const uiLocale = detectUiLocale();
       const canonical = normalizeCanonicalLearningPathKey(path);
-      const localizedLegacy = legacyPathKeyFromCanonical(canonical || path, uiLocale);
       const labelMap = normalizeCategoryLabelsMap(categoryLabelsMap, uiLocale);
-
-      let val = window.t('lp_' + localizedLegacy);
-      if (val !== 'lp_' + localizedLegacy) return val;
-
-      val = window.t('lp_' + canonical);
-      if (val !== 'lp_' + canonical) return val;
-
-      val = window.t('lp_' + path);
-      if (val !== 'lp_' + path) return val;
-
-      return labelMap[canonical || path] || titleizeCategoryKey(canonical || path);
+      const localizedLabel = labelMap[canonical || path];
+      if (localizedLabel) return localizedLabel;
+      return titleizeCategoryKey(canonical || path);
     }
     function resolveUnitFile(lesson = {}) {
       const pickFile = (value = "") => String(value || "").split("/").pop().split("?")[0];
@@ -954,7 +939,7 @@
         freeLabel: window.t('lp_freeLabel', uiLocale.startsWith('en') ? 'Free' : '免費'),
         loadingText: window.t('lp_loadingText', uiLocale.startsWith('en') ? 'Loading...' : '載入中...')
       };
-      const pageTitleText = window.t('lp_title', uiLocale.startsWith('en') ? 'Learning Path' : '學習路徑');
+      const pageTitleText = categoryLabel(pathKey);
 
       const shouldHideCourse = (lesson = {}) => {
         return lesson.hiddenFromCatalog === true;
@@ -1069,7 +1054,9 @@
         const priceCurrency = String(priceEntry.currency || "");
         const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
         const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-        const displayKey = String(lesson.courseKey || lesson.courseId || "");
+        const displayKey = isEn
+          ? String(lesson.courseKey || lesson.courseId || "")
+          : String(resolveLessonLabel(lesson, uiLocale) || categoryLabel(pathKey) || "");
         const hardwareId = String(lesson.courseId || "").toLowerCase();
         const imageUrl = pickImage(lesson);
         const summary = isEn
@@ -1186,16 +1173,16 @@
       const result = await getLessonsFunc({ distributorId });
       if (requestId !== currentLessonsRequestId) return null;
       currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
-      categoryLabelsMap = deriveCategoryLabels(currentLessons, result?.data?.categoryLabels || {}, detectUiLocale());
+      categoryLabelsMap = normalizeCategoryLabelsMap(result?.data?.categoryLabels || {}, detectUiLocale());
       renderLessons(currentLessons, currentPathKey);
       return currentLessons;
     }
 
     async function init() {
       const uiLocale = detectUiLocale();
-      document.title = window.t('lp_title', uiLocale.startsWith('en') ? 'Learning Path' : '學習路徑');
-
+      document.documentElement.lang = uiLocale.startsWith("en") ? "en" : "zh-Hant";
       currentPathKey = normalizeCanonicalLearningPathKey(new URLSearchParams(location.search).get("path") || "common") || "common";
+      document.title = categoryLabel(currentPathKey);
       window.updateAuthUI = async function () {
         const cards = document.querySelectorAll(".lesson-card");
         const user = auth.currentUser;

@@ -41,7 +41,7 @@ async function startGoogleLogin() {
         }
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v5";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v6";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
@@ -151,12 +151,12 @@ function canonicalLearningPathHref(pathKey = "") {
     return `learning-path.html?path=${encodeURIComponent(canonical)}`;
 }
 
-function getDefaultLearningPaths(uiLocale = "zh-TW") {
+function getDefaultLearningPaths(uiLocale = "zh-TW", categoryLabels = {}) {
     return [
-        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: getCategoryLabel("common", uiLocale) },
-        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: getCategoryLabel("car-starter", uiLocale) },
-        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: getCategoryLabel("car-basic", uiLocale) },
-        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: getCategoryLabel("car-advanced", uiLocale) }
+        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: categoryLabels.common?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || categoryLabelFromParts("common", uiLocale) },
+        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: categoryLabels["car-starter"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || categoryLabelFromParts("car-starter", uiLocale) },
+        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: categoryLabels["car-basic"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || categoryLabelFromParts("car-basic", uiLocale) },
+        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: categoryLabels["car-advanced"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || categoryLabelFromParts("car-advanced", uiLocale) }
     ];
 }
 
@@ -372,7 +372,7 @@ function normalizeCategoryLabelEntry(value = "") {
     if (typeof value === "string") {
         return {
             "zh-TW": value.trim(),
-            en: value.trim(),
+            en: "",
         };
     }
     if (!value || typeof value !== "object") return {};
@@ -435,13 +435,6 @@ function pickLessonCategoryLabel(lesson = {}, uiLocale = "zh-TW") {
             nav?.labelEn
         );
     }
-    candidates.push(
-        lesson?.learningPathLabel,
-        lesson?.categoryLabel,
-        lesson?.navLabel,
-        lp?.label,
-        nav?.label
-    );
 
     const hit = candidates.find((v) => typeof v === "string" && v.trim());
     return hit ? hit.trim() : "";
@@ -568,7 +561,6 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         const lessons = allLessons.filter(isCatalogCourseLesson);
         const categoryLabels = normalizeCategoryLabelsMap(res?.data?.categoryLabels || {});
         const keys = new Set();
-        const labels = new Map();
         lessons.forEach((lesson) => {
             let key = resolveCategoryFromLesson(lesson);
             if (!key) {
@@ -582,30 +574,20 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
                 key = resolveCategoryFromFilename(filename);
             }
             if (key) {
-                // 不論語系，一律保留 canonical 路徑 key
-                // 英文版的 label 由 getCategoryLabel/CATEGORY_TRANSLATIONS 決定，不透過 key 前綴
                 keys.add(key);
-                if (!labels.has(key)) {
-                    const label = pickLessonCategoryLabel(lesson, uiLocale);
-                    if (label) labels.set(key, label);
-                }
             }
         });
         const dynamic = sortCategoryKeys(Array.from(keys), uiLocale).map((key) => ({
             key,
             href: getCategoryHref(key),
-            // 優先使用 Firestore 設定的 categoryLabels，再回退到課程標籤與內建字典
             label:
-                labels.get(key) ||
                 categoryLabels[normalizeCanonicalLearningPathKey(key)]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] ||
-                categoryLabels[normalizeCanonicalLearningPathKey(key)]?.en ||
-                categoryLabels[normalizeCanonicalLearningPathKey(key)]?.["zh-TW"] ||
-                getCategoryLabel(key, uiLocale),
+                categoryLabelFromParts(key, uiLocale),
             icon: key.includes("advanced") ? "fa-microchip" :
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"
         }));
-        const finalPaths = dynamic.length ? dynamic : getDefaultLearningPaths(uiLocale);
+        const finalPaths = dynamic.length ? dynamic : getDefaultLearningPaths(uiLocale, categoryLabels);
         window.__vibeLearningPathDebug = {
             locale: uiLocale,
             lessonsCount: lessons.length,
@@ -619,7 +601,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         return finalPaths;
     } catch (e) {
         console.warn("[NavComp] loadLearningPathsDynamic failed:", e);
-        const fallbackPaths = getDefaultLearningPaths(uiLocale);
+        const fallbackPaths = getDefaultLearningPaths(uiLocale, {});
         window.__vibeLearningPathDebug = {
             locale: uiLocale,
             lessonsCount: 0,
