@@ -31,7 +31,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden flex flex-col min-h-screen" data-i18n-doc-title="doc_title_index">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.4e2d19c8a0b8.js"></script>
+    <script type="module" src="./js/nav-component.cfb2f6fa4370.js"></script>
     
 
     <header class="relative pt-28 pb-20 hero-gradient overflow-hidden">
@@ -290,20 +290,56 @@
             return candidates.find((value) => typeof value === "string" && value.trim())?.trim() || "";
         }
 
+        function extractCategoryLabelText(value = "", locale = "zh-TW") {
+            const normalizedLocale = String(locale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
+            const visited = new Set();
+            const queue = [value];
+            const preferredKeys = normalizedLocale === "en"
+                ? ["en", "en-US", "en-GB", "labelEn", "enLabel", "titleEn", "nameEn", "textEn", "valueEn", "zh-TW", "zhTW", "zh", "tw", "label", "title", "name", "text", "value"]
+                : ["zh-TW", "zhTW", "zh", "tw", "labelZh", "twLabel", "titleZh", "nameZh", "textZh", "valueZh", "en", "en-US", "en-GB", "label", "title", "name", "text", "value"];
+
+            while (queue.length) {
+                const current = queue.shift();
+                if (current == null) continue;
+                if (typeof current === "string" || typeof current === "number" || typeof current === "boolean") {
+                    const text = String(current).trim();
+                    if (text) return text;
+                    continue;
+                }
+                if (Array.isArray(current)) {
+                    current.forEach((item) => queue.push(item));
+                    continue;
+                }
+                if (typeof current !== "object") continue;
+                if (visited.has(current)) continue;
+                visited.add(current);
+
+                for (const key of preferredKeys) {
+                    if (Object.prototype.hasOwnProperty.call(current, key)) {
+                        queue.push(current[key]);
+                    }
+                }
+                for (const nested of Object.values(current)) {
+                    queue.push(nested);
+                }
+            }
+
+            return "";
+        }
+
         function normalizeCategoryLabelEntry(entry = {}, locale = "zh-TW") {
-            if (typeof entry === "string") return entry.trim();
-            if (!entry || typeof entry !== "object" || Array.isArray(entry)) return "";
-            const isEn = String(locale || "").toLowerCase().startsWith("en");
-            return String(
-                (isEn ? entry.en : entry["zh-TW"])
-                || entry["zh-TW"]
-                || entry.zhTW
-                || entry.zh
-                || entry.en
-                || entry.label
-                || entry.title
-                || ""
-            ).trim();
+            if (typeof entry === "string") {
+                const text = entry.trim();
+                return text ? { "zh-TW": text, en: text } : {};
+            }
+            if (!entry || typeof entry !== "object" || Array.isArray(entry)) return {};
+            const zh = extractCategoryLabelText(entry, "zh-TW");
+            const en = extractCategoryLabelText(entry, "en");
+            const fallback = extractCategoryLabelText(entry, locale);
+            return {
+                "zh-TW": zh || en || fallback,
+                en: en || zh || fallback,
+            };
         }
 
         function normalizeCategoryLabelsMap(sourceMap = {}, locale = "zh-TW") {
@@ -417,7 +453,8 @@
                     const titleEl = card.querySelector("[data-course-title]");
                     const summaryEl = card.querySelector("[data-course-summary]");
                     const canonicalSlot = normalizeCanonicalLearningPathKey(slot);
-                    const label = categoryLabels[canonicalSlot]
+                    const labelObj = categoryLabels[canonicalSlot];
+                    const label = (labelObj ? (typeof labelObj === "string" ? labelObj : (uiLocale.startsWith("en") ? labelObj.en : labelObj["zh-TW"])) : "")
                         || pickLessonLabel(lesson, uiLocale)
                         || (titleEl?.textContent || "");
                     const title = label || pickLessonTitle(lesson, uiLocale);

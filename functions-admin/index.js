@@ -3364,12 +3364,14 @@ function normalizeLearningPathCategoryLabels(sourceMap = {}) {
         const normalizedEntry = normalizeLearningPathCategoryLabelEntry(rawValue);
 
         if (localeHint === "zh-TW") {
-            entry["zh-TW"] = entry["zh-TW"] || String(rawValue || "").trim() || normalizedEntry["zh-TW"] || "";
+            const val = (typeof rawValue === "string" ? rawValue : normalizedEntry["zh-TW"]) || "";
+            entry["zh-TW"] = entry["zh-TW"] || val.trim();
             return;
         }
 
         if (localeHint === "en") {
-            entry.en = entry.en || String(rawValue || "").trim() || normalizedEntry.en || "";
+            const val = (typeof rawValue === "string" ? rawValue : normalizedEntry.en) || "";
+            entry.en = entry.en || val.trim();
             return;
         }
 

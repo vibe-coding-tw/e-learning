@@ -41,7 +41,7 @@ async function startGoogleLogin() {
         }
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v8";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v9";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
@@ -151,12 +151,17 @@ function canonicalLearningPathHref(pathKey = "") {
     return `learning-path.html?path=${encodeURIComponent(canonical)}`;
 }
 
+function resolveMenuLabel(value = "", fallback = "") {
+    const text = extractCategoryLabelText(value, "zh-TW") || extractCategoryLabelText(value, "en");
+    return String(text || fallback || "").trim();
+}
+
 function getDefaultLearningPaths(uiLocale = "zh-TW", categoryLabels = {}) {
     return [
-        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: categoryLabels.common?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("common", uiLocale) },
-        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: categoryLabels["car-starter"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("car-starter", uiLocale) },
-        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: categoryLabels["car-basic"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("car-basic", uiLocale) },
-        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: categoryLabels["car-advanced"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("car-advanced", uiLocale) }
+        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: resolveMenuLabel(categoryLabels.common, getCategoryLabel("common", uiLocale)) },
+        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: resolveMenuLabel(categoryLabels["car-starter"], getCategoryLabel("car-starter", uiLocale)) },
+        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: resolveMenuLabel(categoryLabels["car-basic"], getCategoryLabel("car-basic", uiLocale)) },
+        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: resolveMenuLabel(categoryLabels["car-advanced"], getCategoryLabel("car-advanced", uiLocale)) }
     ];
 }
 
@@ -401,22 +406,60 @@ function getCategoryHref(categoryKey = "") {
     return canonicalLearningPathHref(canonical || categoryKey || "common");
 }
 
-function normalizeCategoryLabelEntry(value = "") {
+function extractCategoryLabelText(value = "", locale = "zh-TW") {
+    const normalizedLocale = String(locale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
+    const visited = new Set();
+    const queue = [value];
+    const preferredKeys = normalizedLocale === "en"
+        ? ["en", "en-US", "en-GB", "labelEn", "enLabel", "titleEn", "nameEn", "textEn", "valueEn", "zh-TW", "zhTW", "zh", "tw", "label", "title", "name", "text", "value"]
+        : ["zh-TW", "zhTW", "zh", "tw", "labelZh", "twLabel", "titleZh", "nameZh", "textZh", "valueZh", "en", "en-US", "en-GB", "label", "title", "name", "text", "value"];
+
+    while (queue.length) {
+        const current = queue.shift();
+        if (current == null) continue;
+        if (typeof current === "string" || typeof current === "number" || typeof current === "boolean") {
+            const text = String(current).trim();
+            if (text) return text;
+            continue;
+        }
+        if (Array.isArray(current)) {
+            current.forEach((item) => queue.push(item));
+            continue;
+        }
+        if (typeof current !== "object") continue;
+        if (visited.has(current)) continue;
+        visited.add(current);
+
+        for (const key of preferredKeys) {
+            if (Object.prototype.hasOwnProperty.call(current, key)) {
+                queue.push(current[key]);
+            }
+        }
+        for (const nested of Object.values(current)) {
+            queue.push(nested);
+        }
+    }
+
+    return "";
+}
+
+function normalizeCategoryLabelEntry(value = "", locale = "zh-TW") {
     if (typeof value === "string") {
+        const text = value.trim();
         return {
-            "zh-TW": value.trim(),
-            en: "",
+            "zh-TW": text,
+            en: text,
         };
     }
     if (!value || typeof value !== "object") return {};
 
-    const zh = String(value["zh-TW"] || value.zhTW || value.zh || value.tw || value.labelZh || value.twLabel || "").trim();
-    const en = String(value.en || value["en-US"] || value.labelEn || value.enLabel || "").trim();
-    const fallback = String(value.label || value.name || "").trim();
+    const zh = extractCategoryLabelText(value, "zh-TW");
+    const en = extractCategoryLabelText(value, "en");
+    const fallback = extractCategoryLabelText(value, locale);
 
     return {
-        "zh-TW": zh || fallback,
-        en: en || fallback,
+        "zh-TW": zh || en || fallback,
+        en: en || zh || fallback,
     };
 }
 
@@ -573,13 +616,13 @@ function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS,
 
     desktop.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${item.label || getCategoryLabel(item.key, locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale))}
         </a>
     `).join("");
 
     mobile.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${item.label || getCategoryLabel(item.key, locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale))}
         </a>
     `).join("");
 }
@@ -616,9 +659,10 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         const dynamic = sortCategoryKeys(Array.from(keys), uiLocale).map((key) => ({
             key,
             href: getCategoryHref(key),
-            label:
-                categoryLabels[normalizeCanonicalLearningPathKey(key)]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] ||
-                getCategoryLabel(key, uiLocale),
+            label: resolveMenuLabel(
+                categoryLabels[normalizeCanonicalLearningPathKey(key)],
+                getCategoryLabel(key, uiLocale)
+            ),
             icon: key.includes("advanced") ? "fa-microchip" :
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"

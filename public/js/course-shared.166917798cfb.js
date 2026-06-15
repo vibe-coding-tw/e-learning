@@ -86,12 +86,49 @@ function getLearningPathCategoryKeyForFamily(family = '') {
     return 'common';
 }
 
+function extractLearningPathLabelText(value = "", locale = "zh-TW") {
+    const normalizedLocale = String(locale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
+    const visited = new Set();
+    const queue = [value];
+    const preferredKeys = normalizedLocale === "en"
+        ? ["en", "en-US", "en-GB", "labelEn", "enLabel", "titleEn", "nameEn", "textEn", "valueEn", "zh-TW", "zhTW", "zh", "tw", "label", "title", "name", "text", "value"]
+        : ["zh-TW", "zhTW", "zh", "tw", "labelZh", "twLabel", "titleZh", "nameZh", "textZh", "valueZh", "en", "en-US", "en-GB", "label", "title", "name", "text", "value"];
+
+    while (queue.length) {
+        const current = queue.shift();
+        if (current == null) continue;
+        if (typeof current === "string" || typeof current === "number" || typeof current === "boolean") {
+            const text = String(current).trim();
+            if (text) return text;
+            continue;
+        }
+        if (Array.isArray(current)) {
+            current.forEach((item) => queue.push(item));
+            continue;
+        }
+        if (typeof current !== "object") continue;
+        if (visited.has(current)) continue;
+        visited.add(current);
+
+        for (const key of preferredKeys) {
+            if (Object.prototype.hasOwnProperty.call(current, key)) {
+                queue.push(current[key]);
+            }
+        }
+        for (const nested of Object.values(current)) {
+            queue.push(nested);
+        }
+    }
+
+    return "";
+}
+
 function getLearningPathLabelFromSettings(family = '', locale = 'zh-TW') {
     const labels = window.__vibeLearningPathCategoryLabels || {};
     const key = getLearningPathCategoryKeyForFamily(family);
     const localeKey = isEnLikeCourseLocale(locale) ? 'en' : 'zh-TW';
     const entry = labels[key] || {};
-    return String(entry[localeKey] || entry['zh-TW'] || entry.en || '').trim();
+    return extractLearningPathLabelText(entry[localeKey] || entry['zh-TW'] || entry.en || entry, localeKey);
 }
 function canonicalLearningPathHref(pathKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);

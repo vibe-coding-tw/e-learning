@@ -462,20 +462,56 @@ function pickCategoryLabelFromLesson(lesson = {}, uiLocale = "zh-TW") {
   return hit ? hit.trim() : "";
 }
 
+function extractCategoryLabelText(value = "", uiLocale = "zh-TW") {
+  const normalizedLocale = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
+  const visited = new Set();
+  const queue = [value];
+  const preferredKeys = normalizedLocale === "en"
+    ? ["en", "en-US", "en-GB", "labelEn", "enLabel", "titleEn", "nameEn", "textEn", "valueEn", "zh-TW", "zhTW", "zh", "tw", "label", "title", "name", "text", "value"]
+    : ["zh-TW", "zhTW", "zh", "tw", "labelZh", "twLabel", "titleZh", "nameZh", "textZh", "valueZh", "en", "en-US", "en-GB", "label", "title", "name", "text", "value"];
+
+  while (queue.length) {
+    const current = queue.shift();
+    if (current == null) continue;
+    if (typeof current === "string" || typeof current === "number" || typeof current === "boolean") {
+      const text = String(current).trim();
+      if (text) return text;
+      continue;
+    }
+    if (Array.isArray(current)) {
+      current.forEach((item) => queue.push(item));
+      continue;
+    }
+    if (typeof current !== "object") continue;
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    for (const key of preferredKeys) {
+      if (Object.prototype.hasOwnProperty.call(current, key)) {
+        queue.push(current[key]);
+      }
+    }
+    for (const nested of Object.values(current)) {
+      queue.push(nested);
+    }
+  }
+
+  return "";
+}
+
 function normalizeCategoryLabelEntry(entry = {}, uiLocale = "zh-TW") {
-  if (typeof entry === "string") return entry.trim();
-  if (!entry || typeof entry !== "object" || Array.isArray(entry)) return "";
-  const locale = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
-  return String(
-    entry[locale]
-    || entry["zh-TW"]
-    || entry.zhTW
-    || entry.zh
-    || entry.en
-    || entry.label
-    || entry.title
-    || ""
-  ).trim();
+  if (typeof entry === "string") {
+    const text = entry.trim();
+    return text ? { "zh-TW": text, en: text } : {};
+  }
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) return {};
+  const zh = extractCategoryLabelText(entry, "zh-TW");
+  const en = extractCategoryLabelText(entry, "en");
+  const fallback = extractCategoryLabelText(entry, uiLocale);
+  return {
+    "zh-TW": zh || en || fallback,
+    en: en || zh || fallback,
+  };
 }
 
 function normalizeCategoryLabelsMap(sourceMap = {}, uiLocale = "zh-TW") {
@@ -536,7 +572,11 @@ function categoryLabel(path = "", categoryLabelsMap = {}) {
   const canonical = normalizeCanonicalLearningPathKey(path);
   const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap, uiLocale);
   const localizedLabel = normalizedMap[canonical || path];
-  if (localizedLabel) return localizedLabel;
+  if (localizedLabel) {
+    if (typeof localizedLabel === "string") return localizedLabel;
+    const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
+    return localizedLabel[isEn ? "en" : "zh-TW"] || localizedLabel["zh-TW"] || localizedLabel.en || "";
+  }
   return titleizeCategoryKey(canonical || path);
 }
 
