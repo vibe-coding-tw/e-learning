@@ -667,15 +667,15 @@ const courses = [
     imageUrl: 'https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3',
     coreContent: [
       '重量約 280 克，掌上型輕量化雙輪差速智慧無人車平台',
-      '搭載 ESP32-WROOM-32E (240MHz 雙核心) 主控晶片',
-      '整合雙馬達驅動晶片與雙路紅外線循跡避障感測陣列',
-      '支援 Web BLE 非同步低功耗藍牙通訊，無縫整合網頁遙控介面'
+      '搭載 ESP32-C3 RISC-V 主控板，支援 Wi-Fi/BLE 無線連線',
+      '整合 DRV8833 雙通道馬達驅動晶片，具備精細的 PWM 調速控制',
+      '支援 Vibe Coding OTA 即時控制協議 C++/Python 程式語法'
     ],
     coreContentEn: [
       'Approx. 280g, palm-sized lightweight differential drive smart robot car platform',
-      'Powered by ESP32-WROOM-32E (240MHz dual-core) main controller',
-      'Integrated dual motor driver and dual-channel IR tracking/avoidance sensor array',
-      'Supports Web BLE asynchronous low-power Bluetooth communication and web remote control'
+      'Equipped with ESP32-C3 RISC-V MCU, supporting Wi-Fi/BLE',
+      'Integrated DRV8833 dual-channel motor driver for precise PWM speed control',
+      'Supports Vibe Coding OTA real-time control protocol, C++, and Python'
     ],
     orderWeight: 503,
     isPhysical: true,
