@@ -41,7 +41,7 @@ async function startGoogleLogin() {
         }
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v7";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v8";
 const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
 
 const DEFAULT_LEARNING_PATHS = [
@@ -158,6 +158,23 @@ function getDefaultLearningPaths(uiLocale = "zh-TW", categoryLabels = {}) {
         { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: categoryLabels["car-basic"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("car-basic", uiLocale) },
         { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: categoryLabels["car-advanced"]?.[isZhLocale(uiLocale) ? "zh-TW" : "en"] || getCategoryLabel("car-advanced", uiLocale) }
     ];
+}
+
+function getLearningPathCacheKey(uiLocale = "zh-TW", version = "") {
+    return `${LEARNING_PATH_CACHE_KEY}_${uiLocale}_${String(version || "default").trim() || "default"}`;
+}
+
+async function loadLearningPathSettings(uiLocale = "zh-TW") {
+    try {
+        const snap = await getDoc(doc(db, "metadata_settings", "learning_paths"));
+        const data = snap.exists() ? (snap.data() || {}) : {};
+        const categoryLabels = normalizeCategoryLabelsMap(data.categoryLabels || {}, uiLocale);
+        const version = data.schemaVersion || data.updatedAt?.toMillis?.() || data.updatedAt?.seconds || "";
+        return { categoryLabels, version };
+    } catch (error) {
+        console.warn("[NavComp] Failed to load metadata_settings/learning_paths:", error);
+        return { categoryLabels: {}, version: "" };
+    }
 }
 
 const LOCALIZED_SITE_PAGES = {
@@ -358,12 +375,25 @@ function normalizeTrack(raw = "") {
     return v;
 }
 
+function normalizeCategoryKey(raw = "") {
+    const v = String(raw || "").trim().toLowerCase();
+    if (!v) return "";
+    if (v === "common") return "common";
+    if (/^(?:tw|en)-common$/i.test(v)) return "common";
+    if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+    if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
+    return "";
+}
+
 function resolveCategoryFromLesson(lesson = {}) {
+    const category = normalizeCategoryKey(lesson.category || lesson.track || "");
+    if (category) return category;
     const level = normalizeLevel(lesson.level || "");
     const track = normalizeTrack(lesson.track || "");
-    if (level === "common") return "common";
-    if (track && track !== "common") return `${track}-${level}`;
-    return `car-${level}`;
+    if (level === "common" || track === "common" || track === "prepare") return "common";
+    if (track === "car" && level && level !== "common") return `car-${level}`;
+    if (/^(starter|basic|advanced)$/i.test(track)) return `car-${track}`;
+    return level && level !== "common" ? `car-${level}` : "common";
 }
 
 function getCategoryHref(categoryKey = "") {
@@ -508,9 +538,9 @@ function getCategoryLabel(key, uiLocale) {
     return categoryLabelFromParts(canonical || key, uiLocale);
 }
 
-function getLearningPathsFromCache(uiLocale) {
+function getLearningPathsFromCache(uiLocale, version = "") {
     try {
-        const key = `${LEARNING_PATH_CACHE_KEY}_${uiLocale}`;
+        const key = getLearningPathCacheKey(uiLocale, version);
         const raw = localStorage.getItem(key);
         if (!raw) return null;
         const data = JSON.parse(raw);
@@ -522,9 +552,9 @@ function getLearningPathsFromCache(uiLocale) {
     }
 }
 
-function setLearningPathsCache(paths = [], uiLocale) {
+function setLearningPathsCache(paths = [], uiLocale, version = "") {
     try {
-        const key = `${LEARNING_PATH_CACHE_KEY}_${uiLocale}`;
+        const key = getLearningPathCacheKey(uiLocale, version);
         localStorage.setItem(key, JSON.stringify({
             updatedAt: Date.now(),
             paths
@@ -555,14 +585,17 @@ function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS,
 }
 
 async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
-    const cached = getLearningPathsFromCache(uiLocale);
+    const settings = await loadLearningPathSettings(uiLocale);
+    const cached = getLearningPathsFromCache(uiLocale, settings.version);
     if (cached?.length) return cached;
     try {
         const getLessons = httpsCallable(functions, "getLessonsMetadata");
         const res = await getLessons({});
         const allLessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
         const lessons = allLessons.filter(isCatalogCourseLesson);
-        const categoryLabels = normalizeCategoryLabelsMap(res?.data?.categoryLabels || {});
+        const categoryLabels = settings.categoryLabels && Object.keys(settings.categoryLabels).length
+            ? settings.categoryLabels
+            : normalizeCategoryLabelsMap(res?.data?.categoryLabels || {});
         const keys = new Set();
         lessons.forEach((lesson) => {
             let key = resolveCategoryFromLesson(lesson);
@@ -597,10 +630,10 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
             sourceLessonsCount: allLessons.length,
             categories: finalPaths.map((x) => x.key),
             generatedAt: new Date().toISOString(),
-            source: dynamic.length ? "firestore-metadata_lessons" : "fallback-default"
+            source: dynamic.length ? "metadata_settings/learning_paths + metadata_lessons" : "fallback-default"
         };
         console.info("[NavComp] learning paths generated:", window.__vibeLearningPathDebug);
-        setLearningPathsCache(finalPaths, uiLocale);
+        setLearningPathsCache(finalPaths, uiLocale, settings.version);
         return finalPaths;
     } catch (e) {
         console.warn("[NavComp] loadLearningPathsDynamic failed:", e);

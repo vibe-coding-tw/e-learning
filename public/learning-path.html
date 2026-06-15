@@ -21,10 +21,10 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.9daa69db70ea.js"></script>
+  <script type="module" src="./js/nav-component.4e2d19c8a0b8.js"></script>
   <script src="./js/dashboard-lookup-utils.d70c831244bb.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
-  <script src="./js/course-shared.9e0132202f1a.js"></script>
+  <script src="./js/course-shared.c5ea8dc68e02.js"></script>
   <script src="./js/pricing-utils.909971c38740.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
@@ -72,6 +72,17 @@
       if (!normalized) return;
       localStorage.setItem('vibe_user_preferred_distributor', normalized);
       localStorage.setItem('preferredDistributorId', normalized);
+    }
+
+    async function loadLearningPathCategoryLabels() {
+      try {
+        const snap = await getDoc(doc(db, "metadata_settings", "learning_paths"));
+        const data = snap.exists() ? (snap.data() || {}) : {};
+        return normalizeCategoryLabelsMap(data.categoryLabels || {}, detectUiLocale());
+      } catch (error) {
+        console.warn('[learning-path] Failed to load metadata_settings/learning_paths:', error);
+        return {};
+      }
     }
 
     function getScopedTutorModeForUid(uid = "") {
@@ -145,6 +156,15 @@
     function normalizeTrack(raw = "") {
       const v = String(raw || "").trim().toLowerCase();
       return v || "common";
+    }
+    function normalizeCategoryKey(raw = "") {
+      const v = String(raw || "").trim().toLowerCase();
+      if (!v) return "";
+      if (v === "common") return "common";
+      if (/^(?:tw|en)-common$/i.test(v)) return "common";
+      if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+      if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
+      return "";
     }
     function normalizeCanonicalLearningPathKey(value = "") {
       const fromUtils = typeof normalizeCanonicalLearningPathKeyFromUtils === "function"
@@ -516,11 +536,14 @@
       return String(resolved || lesson.summary || lesson.description || lesson.tagText || "").trim();
     }
     function categoryFromLesson(lesson = {}) {
-      const level = normalizeLevel(lesson.level || lesson.category || "");
+      const category = normalizeCategoryKey(lesson.category || lesson.track || "");
+      if (category) return category;
+      const level = normalizeLevel(lesson.level || "");
       const track = normalizeTrack(lesson.track || "");
-      if (level === "common") return "common";
-      if (track && track !== "common") return `${track}-${level}`;
-      return `car-${level}`;
+      if (level === "common" || track === "common" || track === "prepare") return "common";
+      if (track === "car" && level && level !== "common") return `car-${level}`;
+      if (/^(starter|basic|advanced)$/i.test(track)) return `car-${track}`;
+      return level && level !== "common" ? `car-${level}` : "common";
     }
     let categoryLabelsMap = {};
     function titleizeCategoryKey(path = "") {
@@ -1185,7 +1208,7 @@
       const result = await getLessonsFunc({ distributorId });
       if (requestId !== currentLessonsRequestId) return null;
       currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
-      categoryLabelsMap = result?.data?.categoryLabels || {};
+      categoryLabelsMap = await loadLearningPathCategoryLabels();
       renderLessons(currentLessons, currentPathKey);
       return currentLessons;
     }

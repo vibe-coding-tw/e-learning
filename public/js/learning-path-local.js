@@ -102,6 +102,16 @@ function normalizeTrack(raw = "") {
   return v || "common";
 }
 
+function normalizeCategoryKey(raw = "") {
+  const v = String(raw || "").trim().toLowerCase();
+  if (!v) return "";
+  if (v === "common") return "common";
+  if (/^(?:tw|en)-common$/i.test(v)) return "common";
+  if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+  if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
+  return "";
+}
+
 function translateLessonLabel(label = "", uiLocale = "zh-TW") {
   const raw = String(label || "").trim();
   if (!raw) return "";
@@ -410,11 +420,14 @@ function normalizeCanonicalCourseKey(value = "") {
 }
 
 function categoryFromLesson(lesson = {}) {
-  const level = normalizeLevel(lesson.level || lesson.category || "");
+  const category = normalizeCategoryKey(lesson.category || lesson.track || "");
+  if (category) return category;
+  const level = normalizeLevel(lesson.level || "");
   const track = normalizeTrack(lesson.track || "");
-  if (level === "common") return "common";
-  if (track && track !== "common") return `${track}-${level}`;
-  return `car-${level}`;
+  if (level === "common" || track === "common" || track === "prepare") return "common";
+  if (track === "car" && level && level !== "common") return `car-${level}`;
+  if (/^(starter|basic|advanced)$/i.test(track)) return `car-${track}`;
+  return level && level !== "common" ? `car-${level}` : "common";
 }
 
 function titleizeCategoryKey(path = "") {

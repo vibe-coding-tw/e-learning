@@ -655,7 +655,7 @@
                 </div>
                 <div class="field">
                   <label>category</label>
-                  <input id="lesson-category" placeholder="prepare / start / basic / advanced" />
+                  <input id="lesson-category" placeholder="common / car-starter / car-basic / car-advanced" />
                 </div>
                 <div class="field">
                   <label>metadataType</label>
@@ -970,6 +970,46 @@
         .split(/\r?\n|,/g)
         .map((item) => normalizeText(item))
         .filter(Boolean);
+    }
+
+    function normalizeLevel(value = "") {
+      const v = normalizeText(value).toLowerCase();
+      if (!v) return "common";
+      if (v === "start" || v === "started") return "starter";
+      if (v === "prepare") return "common";
+      return v;
+    }
+
+    function normalizeTrack(value = "") {
+      const v = normalizeText(value).toLowerCase();
+      if (!v) return "common";
+      return v;
+    }
+
+    function normalizeCategoryKey(value = "") {
+      const v = normalizeText(value).toLowerCase();
+      if (!v) return "";
+      if (v === "common") return "common";
+      if (/^(?:tw|en)-common$/i.test(v)) return "common";
+      if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+      if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
+      return "";
+    }
+
+    function inferCategoryKey(track = "", level = "") {
+      const normalizedTrack = normalizeTrack(track);
+      const normalizedLevel = normalizeLevel(level);
+      if (normalizedLevel === "common" || normalizedTrack === "common" || normalizedTrack === "prepare") return "common";
+      if (normalizedTrack === "car" && normalizedLevel !== "common") return `car-${normalizedLevel}`;
+      if (/^(starter|basic|advanced)$/i.test(normalizedTrack)) return `car-${normalizedTrack}`;
+      return normalizedLevel !== "common" ? `car-${normalizedLevel}` : "common";
+    }
+
+    function inferTrackFromCategory(category = "") {
+      const normalizedCategory = normalizeCategoryKey(category);
+      if (normalizedCategory === "common") return "common";
+      if (/^car-(starter|basic|advanced)$/i.test(normalizedCategory)) return "car";
+      return normalizeTrack(category);
     }
 
     function parseJsonLoose(text, fallback) {
@@ -1490,9 +1530,9 @@
       $("lesson-course-units").value = units.join("\n");
       $("lesson-course-unit-titles").value = unitTitles.join("\n");
       renderCourseUnitsEditor();
-      $("lesson-track").value = target.track || "";
+      $("lesson-track").value = inferTrackFromCategory(target.category || target.track || "") || target.track || "";
       $("lesson-level").value = target.level || "";
-      $("lesson-category").value = target.category || "";
+      $("lesson-category").value = normalizeCategoryKey(target.category || target.track || "") || inferCategoryKey(target.track || "", target.level || "");
       $("lesson-metadata-type").value = target.metadataType || "course";
       $("lesson-order-weight").value = target.orderWeight ?? 0;
       $("lesson-is-physical").checked = target.isPhysical === true;
@@ -1550,6 +1590,11 @@
       const title = normalizeText($("lesson-title").value);
       const summary = normalizeText($("lesson-summary").value);
       const description = normalizeText($("lesson-description").value);
+      const trackInput = normalizeText($("lesson-track").value);
+      const levelInput = normalizeLevel($("lesson-level").value);
+      const categoryInput = normalizeText($("lesson-category").value);
+      const category = normalizeCategoryKey(categoryInput) || inferCategoryKey(trackInput, levelInput);
+      const track = inferTrackFromCategory(category) || normalizeTrack(trackInput);
 
       // 強制同步主檔內容至 state 的 zh-TW 語系中
       if (!state.locales["zh-TW"]) {
@@ -1603,9 +1648,9 @@
         descriptionEn: primaryLocale.description || "",
         coreContentEn: primaryLocale.coreContent || [],
         i18n,
-        track: normalizeText($("lesson-track").value),
-        level: normalizeText($("lesson-level").value),
-        category: normalizeText($("lesson-category").value),
+        track,
+        level: levelInput,
+        category,
         metadataType: normalizeText($("lesson-metadata-type").value) || "course",
         course_units,
         course_unit_titles,

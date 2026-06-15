@@ -78,6 +78,21 @@ function getCourseFamilyForCoursePage(file = '') {
 
     return '';
 }
+
+function getLearningPathCategoryKeyForFamily(family = '') {
+    if (family === 'starter') return 'car-starter';
+    if (family === 'basic') return 'car-basic';
+    if (family === 'advanced') return 'car-advanced';
+    return 'common';
+}
+
+function getLearningPathLabelFromSettings(family = '', locale = 'zh-TW') {
+    const labels = window.__vibeLearningPathCategoryLabels || {};
+    const key = getLearningPathCategoryKeyForFamily(family);
+    const localeKey = isEnLikeCourseLocale(locale) ? 'en' : 'zh-TW';
+    const entry = labels[key] || {};
+    return String(entry[localeKey] || entry['zh-TW'] || entry.en || '').trim();
+}
 function canonicalLearningPathHref(pathKey = "") {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);
     return `/learning-path.html?path=${encodeURIComponent(canonical || 'common')}`;
@@ -107,19 +122,19 @@ function ensureCourseTopNavShell(file = '', metadataFamily = '') {
     const isAdvanced = family === 'advanced' || normalizedFile.startsWith('adv-') || normalizedFile.startsWith('advanced-') || /^(?:tw|en|car-advanced)-/i.test(normalizedFile);
     const isPrepare = family === 'prepare' || normalizedFile.startsWith('prepare-') || /^(?:tw|en|common)-/i.test(normalizedFile);
 
-    let navLabelText = isEn ? 'Course' : '課程';
+    let navLabelText = getLearningPathLabelFromSettings(family, activeLocale) || (isEn ? 'Course' : '課程');
     let targetHref = canonicalLearningPathHref('common');
     if (isStarter) {
-        navLabelText = isEn ? 'Starter Course' : '入門課程';
+        navLabelText = getLearningPathLabelFromSettings('starter', activeLocale) || (isEn ? 'Starter Course' : '入門課程');
         targetHref = canonicalLearningPathHref('car-starter');
     } else if (isBasic) {
-        navLabelText = isEn ? 'Basic Course' : '基礎課程';
+        navLabelText = getLearningPathLabelFromSettings('basic', activeLocale) || (isEn ? 'Basic Course' : '基礎課程');
         targetHref = canonicalLearningPathHref('car-basic');
     } else if (isAdvanced) {
-        navLabelText = isEn ? 'Advanced Course' : '進階課程';
+        navLabelText = getLearningPathLabelFromSettings('advanced', activeLocale) || (isEn ? 'Advanced Course' : '進階課程');
         targetHref = canonicalLearningPathHref('car-advanced');
     } else if (isPrepare) {
-        navLabelText = isEn ? 'Preparation' : '課前準備';
+        navLabelText = getLearningPathLabelFromSettings('prepare', activeLocale) || (isEn ? 'Preparation' : '課前準備');
         targetHref = canonicalLearningPathHref('common');
     }
 
@@ -2195,7 +2210,7 @@ async function initFirebaseFeatures() {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js");
     const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js");
     const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js");
-    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js");
+    const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js");
     const { firebaseConfig, connectFirebaseEmulators } = await import("./firebase-local.js?v=3");
 
         const app = initializeApp(firebaseConfig);
@@ -2208,6 +2223,35 @@ async function initFirebaseFeatures() {
         window.vibeApp = app;
         window.getFunctions = getFunctions;
         window.httpsCallable = httpsCallable;
+
+        window.__vibeLearningPathCategoryLabelsPromise = (async () => {
+            try {
+                const snap = await getDoc(doc(db, "metadata_settings", "learning_paths"));
+                const data = snap.exists() ? (snap.data() || {}) : {};
+                window.__vibeLearningPathCategoryLabels = data.categoryLabels && typeof data.categoryLabels === "object"
+                    ? data.categoryLabels
+                    : {};
+                return window.__vibeLearningPathCategoryLabels;
+            } catch (error) {
+                console.warn("[CourseShared] Failed to load metadata_settings/learning_paths:", error);
+                window.__vibeLearningPathCategoryLabels = window.__vibeLearningPathCategoryLabels || {};
+                return window.__vibeLearningPathCategoryLabels;
+            }
+        })();
+        window.__vibeLearningPathCategoryLabelsPromise.then(() => {
+            const topNav = document.querySelector('.ms-topnav');
+            if (!topNav) return;
+            const navLabel = topNav.querySelector('.nav-label');
+            if (!navLabel) return;
+            const currentFile = normalizeLooseKey(window.location.pathname.split('/').pop() || '');
+            const family = getCourseFamilyForCoursePage(currentFile);
+            const locale = getActiveCourseLocale();
+            const labels = window.__vibeLearningPathCategoryLabels || {};
+            const labelKey = getLearningPathCategoryKeyForFamily(family);
+            const entry = labels[labelKey] || {};
+            const resolved = String(entry[isEnLikeCourseLocale(locale) ? 'en' : 'zh-TW'] || entry['zh-TW'] || entry.en || navLabel.textContent || '').trim();
+            if (resolved) navLabel.textContent = resolved;
+        });
 
         const logActivityFn = httpsCallable(functions, 'logActivity');
         const submitAssignmentFn = httpsCallable(functions, 'submitAssignment');

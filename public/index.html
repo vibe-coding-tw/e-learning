@@ -31,7 +31,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden flex flex-col min-h-screen" data-i18n-doc-title="doc_title_index">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.9daa69db70ea.js"></script>
+    <script type="module" src="./js/nav-component.4e2d19c8a0b8.js"></script>
     
 
     <header class="relative pt-28 pb-20 hero-gradient overflow-hidden">
@@ -251,12 +251,26 @@
             return v;
         }
 
+        function normalizeCategoryKey(raw = "") {
+            const v = String(raw || "").trim().toLowerCase();
+            if (!v) return "";
+            if (v === "common") return "common";
+            if (/^(?:tw|en)-common$/i.test(v)) return "common";
+            if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+            if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
+            return "";
+        }
+
         function categoryFromLesson(lesson = {}) {
-            const level = normalizeLevel(lesson.level || lesson.category || "");
+            const category = normalizeCategoryKey(lesson.category || lesson.track || "");
+            if (category) return category;
+
+            const level = normalizeLevel(lesson.level || "");
             const track = normalizeTrack(lesson.track || "");
-            if (level === "common") return "common";
-            if (track && track !== "common") return `${track}-${level}`;
-            return `car-${level}`;
+            if (level === "common" || track === "common" || track === "prepare") return "common";
+            if (track === "car" && level && level !== "common") return `car-${level}`;
+            if (/^(starter|basic|advanced)$/i.test(track)) return `car-${track}`;
+            return level && level !== "common" ? `car-${level}` : "common";
         }
 
         function isCatalogLesson(lesson = {}) {
@@ -365,6 +379,18 @@
             return bucket[0] || null;
         }
 
+        async function loadLearningPathCategoryLabels(uiLocale = "zh-TW") {
+            try {
+                const snap = await getDoc(doc(db, "metadata_settings", "learning_paths"));
+                const data = snap.exists() ? (snap.data() || {}) : {};
+                const categoryLabels = normalizeCategoryLabelsMap(data.categoryLabels || {}, uiLocale);
+                return categoryLabels;
+            } catch (error) {
+                console.warn("[index] Failed to load metadata_settings/learning_paths:", error);
+                return {};
+            }
+        }
+
         function applyCardVisual(card, lesson, slot) {
             const visual = card.querySelector("[data-course-visual]");
             if (!visual) return;
@@ -384,7 +410,7 @@
             try {
                 const res = await getLessonsMetadata({});
                 const lessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
-                const categoryLabels = normalizeCategoryLabelsMap(res?.data?.categoryLabels || {}, uiLocale);
+                const categoryLabels = await loadLearningPathCategoryLabels(uiLocale);
                 for (const card of cards) {
                     const slot = card.dataset.courseSlot || "";
                     const lesson = pickFeaturedLesson(lessons, slot);
