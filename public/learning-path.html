@@ -21,7 +21,7 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.143f0c9d3667.js"></script>
+  <script type="module" src="./js/nav-component.cfb2f6fa4370.js"></script>
   <script src="./js/dashboard-lookup-utils.d70c831244bb.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
   <script src="./js/course-shared.166917798cfb.js"></script>
@@ -1248,7 +1248,7 @@
       const result = await getLessonsFunc({ distributorId });
       if (requestId !== currentLessonsRequestId) return null;
       currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
-      categoryLabelsMap = result?.data?.categoryLabels || await loadLearningPathCategoryLabels();
+      categoryLabelsMap = await loadLearningPathCategoryLabels();
       renderLessons(currentLessons, currentPathKey);
       return currentLessons;
     }

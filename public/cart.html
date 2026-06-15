@@ -31,7 +31,7 @@
 
 <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.143f0c9d3667.js"></script>
+    <script type="module" src="./js/nav-component.4e2d19c8a0b8.js"></script>
     
 
     <main class="flex-grow pt-32 pb-20 hero-gradient">
@@ -387,29 +387,6 @@
             ).trim();
         }
 
-        function hasSavedRoutingPreference(snapshot = {}) {
-            const userPreference = snapshot.userPreference || {};
-            const backendSaved = !!userPreference.bindingUpdatedAt;
-            const localSaved = String(localStorage.getItem('vibe_user_routing_preference_saved') || '').trim() === '1';
-            return backendSaved || localSaved;
-        }
-
-        function setSavedRoutingPreferenceFlag(saved = true) {
-            try {
-                if (saved) {
-                    localStorage.setItem('vibe_user_routing_preference_saved', '1');
-                } else {
-                    localStorage.removeItem('vibe_user_routing_preference_saved');
-                }
-            } catch (_) {}
-        }
-
-        function updateRoutingPreferenceVisibility(snapshot = {}) {
-            if (!routingPreferenceSection) return;
-            const shouldHide = hasSavedRoutingPreference(snapshot);
-            routingPreferenceSection.classList.toggle('hidden', shouldHide);
-        }
-
         function setRoutingPreferenceLocal(region = '', distributorId = '', options = {}) {
             const normalizedRegion = normalizeRegionCode(region);
             const normalizedDistributorId = String(distributorId || '').trim();
@@ -522,7 +499,6 @@
 
         function renderDistributorOptions(snapshot = {}) {
             if (!preferredRegionSelect || !preferredDistributorSelect) return;
-            updateRoutingPreferenceVisibility(snapshot);
             let regions = Array.isArray(snapshot.regions) ? snapshot.regions : [];
             let distributors = Array.isArray(snapshot.eligibleDistributors) ? snapshot.eligibleDistributors : [];
             const recommendation = snapshot.recommendation || {};
@@ -590,6 +566,7 @@
         }
 
         async function loadRoutingOptions(region = '') {
+            if (routingPreferenceSection) routingPreferenceSection.classList.remove('hidden');
             try {
                 const res = await getDistributorRoutingOptions({ region: region || getPreferredRegion() || '' });
                 const snapshot = res?.data || res || {};
@@ -611,7 +588,6 @@
                         : window.t('routing_prompt_select', '請先選擇地區與經銷商。'))
                     : window.t('routing_guest_loaded', '訪客模式：已載入預設地區設定。');
                 setRoutingStatus(statusMsg, 'info');
-                updateRoutingPreferenceVisibility(snapshot);
             } catch (error) {
                 console.warn('Failed to load distributor routing options:', error);
                 
@@ -639,7 +615,6 @@
                 };
                 renderDistributorOptions(fallbackSnapshot);
                 updateRoutingSummary(fallbackSnapshot);
-                updateRoutingPreferenceVisibility(fallbackSnapshot);
                 
                 setRoutingPreferenceLocal(targetRegion, fallbackSnapshot.userPreference.preferredDistributorId, { source: 'auto' });
                 setRoutingStatus(window.t('routing_load_failed_fallback', '無法載入推薦清單，已載入預設地區設定。'), 'error');
@@ -660,7 +635,6 @@
             }
             if (!auth.currentUser) {
                 setRoutingPreferenceLocal(preferredRegion, preferredDistributorId, { source: 'manual' });
-                setSavedRoutingPreferenceFlag(true);
                 setRoutingStatus(window.t('routing_save_local_success', '偏好已儲存（僅限本機）。'), 'success');
                 updateRoutingSummary({
                     region: preferredRegion,
@@ -686,7 +660,6 @@
                 });
                 const result = res?.data || res || {};
                 setRoutingPreferenceLocal(result.preferredRegion || preferredRegion, result.preferredDistributorId || preferredDistributorId, { source: 'manual' });
-                setSavedRoutingPreferenceFlag(true);
                 setRoutingStatus(window.t('routing_save_success', '偏好已儲存。'), 'success');
                 updateRoutingSummary({
                     region: result.preferredRegion || preferredRegion,
@@ -705,7 +678,6 @@
             } catch (error) {
                 console.warn('Failed to save routing preference to backend:', error);
                 setRoutingPreferenceLocal(preferredRegion, preferredDistributorId, { source: 'manual' });
-                setSavedRoutingPreferenceFlag(true);
                 setRoutingStatus(window.t('routing_save_local_success', '偏好已儲存（僅限本機）。'), 'success');
                 updateRoutingSummary({
                     region: preferredRegion,
@@ -1355,7 +1327,6 @@
 
         if (preferredRegionSelect) {
             preferredRegionSelect.addEventListener('change', async () => {
-                setSavedRoutingPreferenceFlag(false);
                 setRoutingPreferenceLocal(preferredRegionSelect.value, '', { source: 'manual' });
                 if (preferredDistributorSelect) preferredDistributorSelect.value = '';
                 await loadRoutingOptions(preferredRegionSelect.value);
@@ -1377,7 +1348,6 @@
 
         if (preferredDistributorSelect) {
             preferredDistributorSelect.addEventListener('change', () => {
-                setSavedRoutingPreferenceFlag(false);
                 setRoutingPreferenceLocal(preferredRegionSelect?.value || '', preferredDistributorSelect.value || '', { source: 'manual' });
                 setRoutingStatus(preferredDistributorSelect.value
                     ? window.t('routing_selected_unsaved', '已選擇經銷商，尚未儲存到帳號。')
@@ -1399,7 +1369,6 @@
 
         if (shippingCountrySelect) {
             shippingCountrySelect.addEventListener('change', async () => {
-                setSavedRoutingPreferenceFlag(false);
                 const suggestedRegion = syncRegionFromShippingCountry();
                 if (suggestedRegion) {
                     await loadRoutingOptions(suggestedRegion);
@@ -1430,7 +1399,6 @@
 
         hydrateCartFromInviteLink();
         bootstrapRoutingDefaults();
-        updateRoutingPreferenceVisibility();
         loadRoutingOptions().catch((error) => {
             console.warn('Initial routing bootstrap failed:', error);
         });

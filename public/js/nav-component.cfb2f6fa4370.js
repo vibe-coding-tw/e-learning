@@ -151,17 +151,17 @@ function canonicalLearningPathHref(pathKey = "") {
     return `learning-path.html?path=${encodeURIComponent(canonical)}`;
 }
 
-function resolveMenuLabel(value = "", fallback = "", uiLocale = "zh-TW") {
-    const text = extractCategoryLabelText(value, uiLocale) || extractCategoryLabelText(value, "en") || extractCategoryLabelText(value, "zh-TW");
+function resolveMenuLabel(value = "", fallback = "") {
+    const text = extractCategoryLabelText(value, "zh-TW") || extractCategoryLabelText(value, "en");
     return String(text || fallback || "").trim();
 }
 
 function getDefaultLearningPaths(uiLocale = "zh-TW", categoryLabels = {}) {
     return [
-        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: resolveMenuLabel(categoryLabels.common, getCategoryLabel("common", uiLocale), uiLocale) },
-        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: resolveMenuLabel(categoryLabels["car-starter"], getCategoryLabel("car-starter", uiLocale), uiLocale) },
-        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: resolveMenuLabel(categoryLabels["car-basic"], getCategoryLabel("car-basic", uiLocale), uiLocale) },
-        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: resolveMenuLabel(categoryLabels["car-advanced"], getCategoryLabel("car-advanced", uiLocale), uiLocale) }
+        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: resolveMenuLabel(categoryLabels.common, getCategoryLabel("common", uiLocale)) },
+        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: resolveMenuLabel(categoryLabels["car-starter"], getCategoryLabel("car-starter", uiLocale)) },
+        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: resolveMenuLabel(categoryLabels["car-basic"], getCategoryLabel("car-basic", uiLocale)) },
+        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: resolveMenuLabel(categoryLabels["car-advanced"], getCategoryLabel("car-advanced", uiLocale)) }
     ];
 }
 
@@ -283,8 +283,6 @@ function detectUiLocale() {
     if (raw.startsWith("zh")) return "zh-TW";
     return "en";
 }
-
-window.detectUiLocale = detectUiLocale;
 
 window.__vibeSwitchLocale = async function (locale) {
     const normalizedLocale = normalizeRuntimeLocaleCode(locale) || "en";
@@ -618,13 +616,13 @@ function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS,
 
     desktop.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale), locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale))}
         </a>
     `).join("");
 
     mobile.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale), locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale))}
         </a>
     `).join("");
 }
@@ -663,8 +661,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
             href: getCategoryHref(key),
             label: resolveMenuLabel(
                 categoryLabels[normalizeCanonicalLearningPathKey(key)],
-                getCategoryLabel(key, uiLocale),
-                uiLocale
+                getCategoryLabel(key, uiLocale)
             ),
             icon: key.includes("advanced") ? "fa-microchip" :
                 key.includes("basic") ? "fa-code" :
