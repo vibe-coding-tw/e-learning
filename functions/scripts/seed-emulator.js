@@ -117,8 +117,6 @@ function withEntryMetadata(course) {
     return {
       ...course,
       courseId: course.courseId || '',
-      courseKey: course.courseKey || '',
-      track: course.track || 'common',
       level: course.level || 'common',
       entryUnitId: '',
       contentRef: '',
@@ -139,8 +137,6 @@ function withEntryMetadata(course) {
     ...course,
     id: canonicalCourseId || course.id || '',
     courseId: canonicalCourseId,
-    courseKey: normalizedCourseKey,
-    track: course.track || (normalizedCourseKey.startsWith('car-') ? 'car' : 'common'),
     level: course.level || (
       normalizedCourseKey.startsWith('car-starter-') ? 'starter' :
       normalizedCourseKey.startsWith('car-basic-') ? 'basic' :
@@ -148,7 +144,7 @@ function withEntryMetadata(course) {
       'common'
     ),
     entryUnitId: resolvedEntryUnitId,
-    courseUnits: normalizedCourseUnits.length > 0 ? normalizedCourseUnits : course.courseUnits,
+    courseUnits: normalizedCourseUnits.length > 0 ? normalizedCourseUnits : (course.courseUnits || []),
     contentRef: course.contentRef || buildContentRef(resolvedEntryUnitId),
     classroomUrl: resolvedEntryUnitId ? `/courses/${resolvedEntryUnitId}` : '',
   };
@@ -656,20 +652,31 @@ const courses = [
     courseId: 'esp32-c3',
     docId: 'esp32-c3',
     courseKey: 'product-esp32-c3',
-    title: 'ESP32-C3 開發板',
-    titleEn: 'ESP32-C3 Board',
-    summary: '適合課前準備與無人車入門實作。',
-    summaryEn: 'Suitable for preparation and starter car exercises.',
+    title: '程式載體車子平台 (入門款)',
+    titleEn: 'Programmable Car Platform (Starter)',
+    summary: '適合課前準備與無人車入門實作的智慧雙輪差速智慧無人車平台。',
+    summaryEn: 'Suitable for preparation and starter car exercises, featuring a palm-sized lightweight differential drive smart robot car platform.',
     lessonLabel: '硬體卡 01',
     lessonLabelEn: 'Hardware Card 01',
-    icon: '🔌',
+    icon: '🚗',
     tagText: '硬體',
     duration: '硬體',
     price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
-    coreContent: ['ESP32-C3 開發板', 'USB-C 連線', 'WiFi 與藍牙基本支援'],
-    coreContentEn: ['ESP32-C3 board', 'USB-C connection', 'Basic WiFi and Bluetooth support'],
+    imageUrl: 'https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3',
+    coreContent: [
+      '重量約 280 克，掌上型輕量化雙輪差速智慧無人車平台',
+      '搭載 ESP32-WROOM-32E (240MHz 雙核心) 主控晶片',
+      '整合雙馬達驅動晶片與雙路紅外線循跡避障感測陣列',
+      '支援 Web BLE 非同步低功耗藍牙通訊，無縫整合網頁遙控介面'
+    ],
+    coreContentEn: [
+      'Approx. 280g, palm-sized lightweight differential drive smart robot car platform',
+      'Powered by ESP32-WROOM-32E (240MHz dual-core) main controller',
+      'Integrated dual motor driver and dual-channel IR tracking/avoidance sensor array',
+      'Supports Web BLE asynchronous low-power Bluetooth communication and web remote control'
+    ],
     orderWeight: 503,
     isPhysical: true,
     metadataType: 'product',
@@ -681,21 +688,104 @@ const courses = [
     courseId: 'esp32-s3',
     docId: 'esp32-s3',
     courseKey: 'product-esp32-s3',
-    title: 'ESP32-S3 開發板',
-    titleEn: 'ESP32-S3 Board',
-    summary: '適合進階無人車與影像應用實作。',
-    summaryEn: 'Suitable for advanced car and vision projects.',
+    title: '程式載體車子平台 (進階款)',
+    titleEn: 'Programmable Car Platform (Advanced)',
+    summary: '配備避震獨立懸吊、高精度光電編碼器與攝影機的進階無人車平台。',
+    summaryEn: 'Equipped with independent suspension, high-precision photoelectric encoders, and camera for advanced robotics projects.',
     lessonLabel: '硬體卡 02',
     lessonLabelEn: 'Hardware Card 02',
-    icon: '🧠',
+    icon: '🏎️',
     tagText: '硬體',
     duration: '硬體',
     price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
-    coreContent: ['ESP32-S3 開發板', '更高效能的運算與影像支援', '適合進階專題'],
-    coreContentEn: ['ESP32-S3 board', 'Higher-performance computing and vision support', 'Great for advanced projects'],
+    imageUrl: 'https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445',
+    coreContent: [
+      '重量約 450 克，雙橫臂式獨立避震懸吊系統與高強度金屬車體',
+      '搭載 ESP32-S3-WROOM-1 (240MHz 雙核 + AI 向量指令) 及 OV2640 攝影機',
+      '配備雙路高精度光電正交編碼器與六軸 MPU6050 姿態感測器',
+      '支援低延遲 MJPEG Wi-Fi 影像串流與網頁端電腦視覺/邊緣 AI 辨識'
+    ],
+    coreContentEn: [
+      'Approx. 450g, double-wishbone independent suspension and high-strength metal chassis',
+      'Powered by ESP32-S3-WROOM-1 (240MHz dual-core + AI vector instructions) and OV2640 camera',
+      'Equipped with dual high-precision photoelectric encoders and 6-axis MPU6050 IMU',
+      'Supports low-latency MJPEG Wi-Fi video streaming and web-based Computer Vision / Edge AI'
+    ],
     orderWeight: 504,
+    isPhysical: true,
+    metadataType: 'product',
+    hiddenFromCatalog: false,
+    isDeprecated: false,
+  },
+  {
+    id: 'crazyflie',
+    courseId: 'crazyflie',
+    docId: 'crazyflie',
+    courseKey: 'product-crazyflie',
+    title: 'Crazyflie 2.1+ 微型無人機開發平台',
+    titleEn: 'Crazyflie 2.1+ Micro Drone Development Platform',
+    summary: '僅重 29 克的開源微型四軸無人機，具備極高的機動性與強大的 Deck 擴充生態系。',
+    summaryEn: 'Open-source micro quadcopter weighing only 29g, featuring high maneuverability and a powerful Deck expansion ecosystem.',
+    lessonLabel: '硬體卡 03',
+    lessonLabelEn: 'Hardware Card 03',
+    icon: '🛸',
+    tagText: '硬體',
+    duration: '硬體',
+    price: 0,
+    category: 'prepare',
+    learningPaths: ['tw-common', 'en-common'],
+    imageUrl: 'assets/crazyflie.png',
+    coreContent: [
+      '重量僅 29 克，手掌大小的高機動性四軸無人機',
+      'STM32F405 (168MHz M4) + nRF51822 協同處理器架構',
+      '內建 BMI088 六軸 IMU 慣性感測器與 BMP388 氣壓計',
+      '強大 Deck 擴充生態系，支援定位/避障/AI 模組免焊接即插即用'
+    ],
+    coreContentEn: [
+      'Weighs only 29g, palm-sized highly maneuverable quadcopter',
+      'STM32F405 (168MHz M4) + nRF51822 coprocessor architecture',
+      'Built-in BMI088 6-axis IMU inertial sensor and BMP388 barometer',
+      'Powerful Deck expansion ecosystem, supporting plug-and-play positioning/obstacle avoidance/AI decks without soldering'
+    ],
+    orderWeight: 505,
+    isPhysical: true,
+    metadataType: 'product',
+    hiddenFromCatalog: false,
+    isDeprecated: false,
+  },
+  {
+    id: 'px4-x500-v2',
+    courseId: 'px4-x500-v2',
+    docId: 'px4-x500-v2',
+    courseKey: 'product-px4-x500-v2',
+    title: 'PX4 Development Kit - X500 V2',
+    titleEn: 'PX4 Development Kit - X500 V2',
+    summary: '整合 Pixhawk 6C 飛控、Holybro X500 V2 機架與 M9N GPS 的完整 PX4 無人機開發套件。',
+    summaryEn: 'A complete PX4 drone development kit integrating Pixhawk 6C flight controller, Holybro X500 V2 frame, and M9N GPS.',
+    lessonLabel: '硬體卡 04',
+    lessonLabelEn: 'Hardware Card 04',
+    icon: '🚁',
+    tagText: '硬體',
+    duration: '硬體',
+    price: 0,
+    category: 'prepare',
+    learningPaths: ['tw-common', 'en-common'],
+    imageUrl: 'assets/px4_x500_v2.png',
+    coreContent: [
+      '搭載 Pixhawk 6C 飛控 (STM32H753 480MHz) + IMU 三冗餘設計',
+      'Holybro X500 V2 碳纖維機架，軸距 500mm，可負載 1kg+',
+      '整合 Holybro M9N GPS + 電羅盤，支援 RTK 精準定位擴充',
+      '相容 ROS 2、MAVSDK 與 QGroundControl 全開源生態系'
+    ],
+    coreContentEn: [
+      'Pixhawk 6C flight controller (STM32H753 480MHz) with triple-redundant IMU',
+      'Holybro X500 V2 carbon fiber frame, 500mm wheelbase, 1kg+ payload capacity',
+      'Integrated Holybro M9N GPS + compass, expandable to RTK precision positioning',
+      'Compatible with ROS 2, MAVSDK, and QGroundControl open-source ecosystem'
+    ],
+    orderWeight: 506,
     isPhysical: true,
     metadataType: 'product',
     hiddenFromCatalog: false,
@@ -778,11 +868,17 @@ async function seed() {
       twPrice = 1800;
       usdPrice = 60;
     } else if (docId === 'esp32-c3') {
-      twPrice = 1600;
-      usdPrice = 60;
+      twPrice = 2070;
+      usdPrice = 69;
     } else if (docId === 'esp32-s3') {
-      twPrice = 3600;
-      usdPrice = 130;
+      twPrice = 4170;
+      usdPrice = 139;
+    } else if (docId === 'crazyflie') {
+      twPrice = 7200;
+      usdPrice = 240;
+    } else if (docId === 'px4-x500-v2') {
+      twPrice = 23700;
+      usdPrice = 789;
     }
 
     const buildPriceBookId = (distributorId, prodId) => {
