@@ -567,14 +567,33 @@ function deriveCategoryLabels(lessons = [], existingMap = {}, uiLocale = "zh-TW"
   return derived;
 }
 
+const LOCAL_CATEGORY_TRANSLATIONS = {
+  "zh-TW": {
+    "common": "課前準備",
+    "car-starter": "入門課程",
+    "car-basic": "基礎課程",
+    "car-advanced": "進階課程"
+  },
+  "en": {
+    "common": "Preparation",
+    "car-starter": "Starter Course",
+    "car-basic": "Basic Course",
+    "car-advanced": "Advanced Course"
+  }
+};
+
 function categoryLabel(path = "", categoryLabelsMap = {}) {
   const uiLocale = detectUiLocale();
   const canonical = normalizeCanonicalLearningPathKey(path);
+  const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
+  const dictKey = isEn ? "en" : "zh-TW";
+  if (LOCAL_CATEGORY_TRANSLATIONS[dictKey] && LOCAL_CATEGORY_TRANSLATIONS[dictKey][canonical]) {
+    return LOCAL_CATEGORY_TRANSLATIONS[dictKey][canonical];
+  }
   const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap, uiLocale);
   const localizedLabel = normalizedMap[canonical || path];
   if (localizedLabel) {
     if (typeof localizedLabel === "string") return localizedLabel;
-    const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
     return localizedLabel[isEn ? "en" : "zh-TW"] || localizedLabel["zh-TW"] || localizedLabel.en || "";
   }
   return titleizeCategoryKey(canonical || path);
@@ -810,6 +829,8 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const entryUrl = resolveEntryUrl(lesson);
     const unitFile = resolveUnitFile(lesson);
     const displayKey = categoryLabel(pathKey, categoryLabelsMap);
+    const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
+    const displayTitle = resolveLessonCardTitle(lesson, uiLocale);
     const contentList = translateBulletList(toList(window.__vibeResolveLocalizedFieldValue
       ? window.__vibeResolveLocalizedFieldValue(lesson, "coreContent", uiLocale, isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])
       : (isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])).slice(0, 4), uiLocale).filter(Boolean);
@@ -854,10 +875,12 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
           <strong class="text-slate-900 block mb-1">${t.coreContentLabel}</strong>
           ${listHtml}
         </div>
+        ${hasPriceData ? `
         <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-          <span class="text-2xl font-bold text-blue-600">${!hasPriceData ? (uiLocale.startsWith('en') ? 'Not for sale' : '未定價') : (price === 0 ? t.freeLabel : formatPrice(priceEntry, uiLocale))}</span>
+          <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : formatPrice(priceEntry, uiLocale)}</span>
         </div>
         ${entryUrl ? `<div class="mt-3"><a href="${entryUrl}" class="block w-full py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium text-center transition">查看內容</a></div>` : ""}
+        ` : ""}
       </div>
     `;
   }).join("");
@@ -906,10 +929,12 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
         <h3 class="text-xl font-bold text-slate-800 mb-2">${displayTitle}</h3>
         ${imageHtml}
         <div class="text-sm text-slate-700 mb-4">${listHtml}</div>
+        ${hasPriceData ? `
         <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-          <span class="text-2xl font-bold text-blue-600">${!hasPriceData ? (uiLocale.startsWith('en') ? 'Not for sale' : '未定價') : (price === 0 ? t.freeLabel : formatPrice(priceEntry, uiLocale))}</span>
+          <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : formatPrice(priceEntry, uiLocale)}</span>
         </div>
         ${entryUrl ? `<div class="mt-3"><a href="${entryUrl}" class="block w-full py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium text-center transition">查看內容</a></div>` : ""}
+        ` : ""}
       </div>
     `;
   }).join("");

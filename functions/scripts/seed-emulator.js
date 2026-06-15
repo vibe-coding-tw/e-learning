@@ -623,7 +623,7 @@ const courses = [
     price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
-    orderWeight: 501,
+    orderWeight: 507,
     isPhysical: false,
   },
   {
@@ -644,7 +644,7 @@ const courses = [
     price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
-    orderWeight: 502,
+    orderWeight: 508,
     isPhysical: false,
   },
   {
