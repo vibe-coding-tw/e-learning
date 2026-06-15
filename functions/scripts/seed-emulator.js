@@ -850,10 +850,12 @@ async function seed() {
     console.log(`  🏢 Distributor Seeded: ${dist.id}`);
   }
 
-  // Seed default price books for all items
   for (const c of normalizedCourses) {
     const docId = c.courseId || c.docId || c.id;
     if (!docId) continue;
+    if (docId === 'crazyflie' || docId === 'crazyflie-2-1-plus') {
+      continue;
+    }
 
     let twPrice = 0;
     let usdPrice = 0;
@@ -873,9 +875,6 @@ async function seed() {
     } else if (docId === 'esp32-s3') {
       twPrice = 4170;
       usdPrice = 139;
-    } else if (docId === 'crazyflie') {
-      twPrice = 7200;
-      usdPrice = 240;
     } else if (docId === 'px4-x500-v2') {
       twPrice = 23700;
       usdPrice = 789;

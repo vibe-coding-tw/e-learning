@@ -78,10 +78,13 @@ function getHardcodedDefaultPrice(docId, currency = "TWD") {
     return isUsd ? 60 : 1800;
   }
   if (pid === 'esp32-c3') {
-    return isUsd ? 60 : 1600;
+    return isUsd ? 69 : 2070;
   }
   if (pid === 'esp32-s3') {
-    return isUsd ? 130 : 3600;
+    return isUsd ? 139 : 4170;
+  }
+  if (pid === 'crazyflie' || pid === 'crazyflie-2-1-plus') {
+    return -1;
   }
   return 0;
 }
