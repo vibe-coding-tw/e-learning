@@ -984,11 +984,9 @@
 
     const getLessonsMetadata = httpsCallable(functions, "getLessonsMetadata");
     const getDistributorPortalData = httpsCallable(functions, "getDistributorPortalData");
-    const getSystemConfig = httpsCallable(functions, "getSystemConfig");
     const upsertLessonMetadata = httpsCallable(functions, "upsertLessonMetadata");
     const getLessonPriceBooks = httpsCallable(functions, "getLessonPriceBooks");
     const upsertDistributorPriceBook = httpsCallable(functions, "upsertDistributorPriceBook");
-    const updateSystemConfig = httpsCallable(functions, "updateSystemConfig");
 
     const state = {
       lessons: [],
@@ -999,12 +997,6 @@
       currentPriceBooks: [],
       locales: {},
       courseUnitTitles: [],
-      systemConfig: {
-        defaultLocale: "en",
-        supportedLocales: [],
-        localeLabels: {},
-        localeFallbackMap: {}
-      },
       activeLocale: "en",
       selectedCourseUnitIndex: -1,
       isReady: false
@@ -1072,24 +1064,6 @@
       return normalizeTrack(category);
     }
 
-    function parseJsonLoose(text, fallback) {
-      const raw = normalizeText(text || "");
-      if (!raw) return fallback;
-      try {
-        return JSON.parse(raw);
-      } catch (err) {
-        throw new Error(`JSON 解析失敗：${err.message}`);
-      }
-    }
-
-    function toPrettyJson(value) {
-      try {
-        return JSON.stringify(value ?? {}, null, 2);
-      } catch (_) {
-        return "{}";
-      }
-    }
-
     function getCourseUnitValues() {
       return normalizeList($("lesson-course-units")?.value || "");
     }
@@ -1120,20 +1094,6 @@
       const nextTitles = units.map((unitId, index) => normalizeText(titles[index] || unitId));
       state.courseUnitTitles = nextTitles;
       return { units, titles: nextTitles };
-    }
-
-    function renderSystemConfigEditor() {
-      if (!$("default-locale")) return;
-      $("default-locale").value = normalizeText(state.systemConfig.defaultLocale || "en");
-      $("supported-locales").value = Array.isArray(state.systemConfig.supportedLocales)
-        ? state.systemConfig.supportedLocales.join("\n")
-        : "";
-      $("locale-labels").value = toPrettyJson(state.systemConfig.localeLabels || {});
-      $("locale-fallback-map").value = toPrettyJson(state.systemConfig.localeFallbackMap || {});
-      $("content-version").value = normalizeText(state.systemConfig.contentVersion || "");
-      $("default-region").value = normalizeText(state.systemConfig.defaultRegion || "US");
-      $("default-distributor-id").value = normalizeText(state.systemConfig.defaultDistributorId || "default-usd");
-      $("system-config-status").textContent = "已載入";
     }
 
     function renderCourseUnitsEditor() {
@@ -1767,26 +1727,6 @@
       }
     }
 
-    async function loadSystemConfig() {
-      try {
-        const response = await getSystemConfig({});
-        const data = response?.data || {};
-        state.systemConfig = {
-          contentVersion: data.contentVersion || "",
-          defaultLocale: data.defaultLocale || "en",
-          defaultRegion: data.defaultRegion || "US",
-          defaultDistributorId: data.defaultDistributorId || "default-usd",
-          supportedLocales: Array.isArray(data.supportedLocales) ? data.supportedLocales : [],
-          localeLabels: data.localeLabels && typeof data.localeLabels === "object" && !Array.isArray(data.localeLabels) ? data.localeLabels : {},
-          localeFallbackMap: data.localeFallbackMap && typeof data.localeFallbackMap === "object" && !Array.isArray(data.localeFallbackMap) ? data.localeFallbackMap : {}
-        };
-        renderSystemConfigEditor();
-      } catch (err) {
-        console.error("[admin-courses] loadSystemConfig failed:", err);
-        $("system-config-status").textContent = `載入失敗：${err?.message || err}`;
-      }
-    }
-
     async function loadPriceBooksForLesson(lesson = currentLesson()) {
       const body = $("pricebook-table");
       if (!lesson) {
@@ -2018,31 +1958,6 @@
       } catch (err) {
         console.error("[admin-courses] loadSelectedLessonPriceBooks failed:", err);
         alert(`載入價格表失敗：${err.message}`);
-      }
-    };
-
-    window.saveSystemConfig = async function() {
-      try {
-        const supportedLocales = normalizeList($("supported-locales")?.value || "");
-        const localeLabels = parseJsonLoose($("locale-labels")?.value || "{}", {});
-        const localeFallbackMap = parseJsonLoose($("locale-fallback-map")?.value || "{}", {});
-        const payload = {
-          defaultLocale: normalizeText($("default-locale")?.value || "") || "en",
-          defaultRegion: normalizeText($("default-region")?.value || "") || "US",
-          defaultDistributorId: normalizeText($("default-distributor-id")?.value || "") || "default-usd",
-          contentVersion: normalizeText($("content-version")?.value || ""),
-          supportedLocales,
-          localeLabels,
-          localeFallbackMap
-        };
-        if (!payload.contentVersion) delete payload.contentVersion;
-        await updateSystemConfig(payload);
-        state.systemConfig = { ...state.systemConfig, ...payload };
-        renderSystemConfigEditor();
-        setLog("已儲存站台 locale 設定。");
-      } catch (err) {
-        console.error("[admin-courses] saveSystemConfig failed:", err);
-        alert(`儲存站台設定失敗：${err.message}`);
       }
     };
 
