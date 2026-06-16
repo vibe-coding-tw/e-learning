@@ -13,6 +13,8 @@ const db = getFirestore(app);
 const functions = getFunctions(app, 'asia-east1');
 connectFirebaseEmulators({ auth, db, functions });
 const vibeFetchLessons = httpsCallable(functions, 'getLessonsMetadata');
+const getSystemConfig = httpsCallable(functions, 'getSystemConfig');
+const updateSystemConfigCallable = httpsCallable(functions, 'updateSystemConfig');
 const PUBLIC_SITE_URL = 'https://vibe-coding.tw';
 const {
     normalizeDashboardLooseKey,
@@ -185,6 +187,169 @@ function normalizeGuideHeadingStyles(rootEl) {
         }
     });
 }
+
+function normalizeMultilineList(value = "") {
+    return String(value || "")
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
+function parseJsonLoose(value = "{}", fallback = {}) {
+    const raw = String(value || "").trim();
+    if (!raw) return fallback;
+    try {
+        return JSON.parse(raw);
+    } catch (err) {
+        throw new Error(`JSON 解析失敗：${err.message}`);
+    }
+}
+
+function toPrettyJson(value = {}) {
+    try {
+        return JSON.stringify(value ?? {}, null, 2);
+    } catch (_) {
+        return "{}";
+    }
+}
+
+function setDashboardLog(message = "", { replace = false } = {}) {
+    const host = document.getElementById('dashboard-log');
+    if (!host) return;
+    if (!Array.isArray(window.__dashboardLogLines) || replace) {
+        window.__dashboardLogLines = [];
+    }
+    const text = String(message || '').trim();
+    if (text) {
+        const stamp = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+        window.__dashboardLogLines.push(`[${stamp}] ${text}`);
+    }
+    window.__dashboardLogLines = window.__dashboardLogLines.slice(-20);
+    host.textContent = window.__dashboardLogLines.length
+        ? window.__dashboardLogLines.join('\n')
+        : '等待載入系統訊息。';
+}
+
+function applyDashboardSystemConfigToUI(config = {}) {
+    const defaultLocaleEl = document.getElementById('sys-default-locale-select');
+    const defaultRegionEl = document.getElementById('sys-default-region-input');
+    const defaultDistributorEl = document.getElementById('sys-default-distributor-input');
+    const contentVersionEl = document.getElementById('sys-content-version-input');
+    const supportedLocalesEl = document.getElementById('sys-supported-locales-input');
+    const localeLabelsEl = document.getElementById('sys-locale-labels-input');
+    const localeFallbackMapEl = document.getElementById('sys-locale-fallback-map-input');
+    const versionDisplay = document.getElementById('current-content-version-display');
+    const localeStatus = document.getElementById('dashboard-locale-status');
+    const defaultLocale = String(config.defaultLocale || 'en').trim() || 'en';
+
+    if (defaultLocaleEl) defaultLocaleEl.value = defaultLocale;
+    if (defaultRegionEl) defaultRegionEl.value = String(config.defaultRegion || 'US').trim() || 'US';
+    if (defaultDistributorEl) defaultDistributorEl.value = String(config.defaultDistributorId || 'default-usd').trim() || 'default-usd';
+    if (contentVersionEl && !contentVersionEl.value && config.contentVersion) {
+        contentVersionEl.value = String(config.contentVersion || '');
+    }
+    if (supportedLocalesEl) supportedLocalesEl.value = Array.isArray(config.supportedLocales) ? config.supportedLocales.join('\n') : '';
+    if (localeLabelsEl) localeLabelsEl.value = toPrettyJson(config.localeLabels || {});
+    if (localeFallbackMapEl) localeFallbackMapEl.value = toPrettyJson(config.localeFallbackMap || {});
+    if (versionDisplay) {
+        versionDisplay.textContent = `當前鎖定版本 (Current Locked Hash): ${config.contentVersion || '未設定 (None)'}`;
+    }
+    if (localeStatus) {
+        localeStatus.textContent = `已載入 · ${defaultLocale}`;
+    }
+}
+
+async function loadDashboardSystemConfig() {
+    try {
+        const response = await getSystemConfig({});
+        const data = response?.data || {};
+        dashboardData = dashboardData || {};
+        dashboardData.systemConfig = {
+            contentVersion: data.contentVersion || dashboardData.contentVersion || '',
+            defaultLocale: data.defaultLocale || 'en',
+            defaultRegion: data.defaultRegion || 'US',
+            defaultDistributorId: data.defaultDistributorId || 'default-usd',
+            supportedLocales: Array.isArray(data.supportedLocales) ? data.supportedLocales : [],
+            localeLabels: data.localeLabels && typeof data.localeLabels === 'object' && !Array.isArray(data.localeLabels) ? data.localeLabels : {},
+            localeFallbackMap: data.localeFallbackMap && typeof data.localeFallbackMap === 'object' && !Array.isArray(data.localeFallbackMap) ? data.localeFallbackMap : {}
+        };
+        applyDashboardSystemConfigToUI(dashboardData.systemConfig);
+        setDashboardLog('已載入站台 locale 設定。', { replace: true });
+    } catch (err) {
+        console.error('[dashboard] loadDashboardSystemConfig failed:', err);
+        setDashboardLog(`站台 locale 設定載入失敗：${err?.message || err}`, { replace: true });
+    }
+}
+
+window.updateSystemDefaults = async function() {
+    const payload = {
+        defaultLocale: document.getElementById('sys-default-locale-select')?.value || 'en',
+        defaultRegion: document.getElementById('sys-default-region-input')?.value || 'US',
+        defaultDistributorId: document.getElementById('sys-default-distributor-input')?.value || 'default-usd'
+    };
+
+    const btn = document.getElementById('btn-save-system-defaults');
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+    }
+
+    try {
+        const res = await updateSystemConfigCallable(payload);
+        if (res?.data?.success) {
+            setDashboardLog('已儲存系統預設值。');
+            await loadDashboardSystemConfig();
+            notify('系統預設值已更新', 'success');
+        } else {
+            throw new Error('更新失敗');
+        }
+    } catch (err) {
+        console.error('updateSystemDefaults error:', err);
+        notify(`儲存系統預設值失敗：${err.message}`, 'error');
+        setDashboardLog(`系統預設值儲存失敗：${err?.message || err}`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+};
+
+window.saveDashboardLocaleSettings = async function() {
+    const payload = {
+        supportedLocales: normalizeMultilineList(document.getElementById('sys-supported-locales-input')?.value || ''),
+        localeLabels: parseJsonLoose(document.getElementById('sys-locale-labels-input')?.value || '{}', {}),
+        localeFallbackMap: parseJsonLoose(document.getElementById('sys-locale-fallback-map-input')?.value || '{}', {})
+    };
+
+    const btn = document.getElementById('btn-save-locale-settings');
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+    }
+
+    try {
+        const res = await updateSystemConfigCallable(payload);
+        if (res?.data?.success) {
+            setDashboardLog('已儲存站台 locale 設定。');
+            await loadDashboardSystemConfig();
+            notify('站台 locale 設定已更新', 'success');
+        } else {
+            throw new Error('更新失敗');
+        }
+    } catch (err) {
+        console.error('saveDashboardLocaleSettings error:', err);
+        notify(`儲存 locale 設定失敗：${err.message}`, 'error');
+        setDashboardLog(`locale 設定儲存失敗：${err?.message || err}`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+};
 
 // DOM Elements
 const loadingState = document.getElementById('loading-state');
@@ -5855,16 +6020,16 @@ async function renderBusinessTab() {
     const systemSettingsContainer = document.getElementById('system-settings-container');
     if (systemSettingsContainer) {
         systemSettingsContainer.classList.remove('hidden');
-        
-        // Show current contentVersion
-        const versionDisplay = document.getElementById('current-content-version-display');
-        const versionInput = document.getElementById('sys-content-version-input');
-        if (versionDisplay) {
-            versionDisplay.textContent = `當前鎖定版本 (Current Locked Hash): ${dashboardData.contentVersion || '未設定 (None)'}`;
-        }
-        if (versionInput && !versionInput.value && dashboardData.contentVersion) {
-            versionInput.value = dashboardData.contentVersion;
-        }
+        applyDashboardSystemConfigToUI({
+            contentVersion: dashboardData?.contentVersion || dashboardData?.systemConfig?.contentVersion || '',
+            defaultLocale: dashboardData?.systemConfig?.defaultLocale || 'en',
+            defaultRegion: dashboardData?.systemConfig?.defaultRegion || 'US',
+            defaultDistributorId: dashboardData?.systemConfig?.defaultDistributorId || 'default-usd',
+            supportedLocales: dashboardData?.systemConfig?.supportedLocales || [],
+            localeLabels: dashboardData?.systemConfig?.localeLabels || {},
+            localeFallbackMap: dashboardData?.systemConfig?.localeFallbackMap || {}
+        });
+        loadDashboardSystemConfig();
     }
 
     // Show relationships settings block for admins
@@ -5895,10 +6060,10 @@ window.updateSystemContentVersion = async function() {
     }
 
     try {
-        const updateSystemConfigFn = firebase.functions().httpsCallable('updateSystemConfig');
-        const res = await updateSystemConfigFn({ contentVersion });
+        const res = await updateSystemConfigCallable({ contentVersion });
         if (res.data && res.data.success) {
             alert("成功儲存並鎖定版本！快取已同步清空。");
+            setDashboardLog(`已更新內容版本：${contentVersion}`);
             // Reload dashboard data to get the updated contentVersion
             await loadDashboard();
         } else {
@@ -5907,6 +6072,7 @@ window.updateSystemContentVersion = async function() {
     } catch (err) {
         console.error("updateSystemContentVersion error:", err);
         alert(`錯誤: ${err.message}`);
+        setDashboardLog(`更新內容版本失敗：${err?.message || err}`);
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -5928,16 +6094,18 @@ window.purgeSystemContentCache = async function() {
     }
 
     try {
-        const purgeContentCacheFn = firebase.functions().httpsCallable('purgeContentCache');
+        const purgeContentCacheFn = httpsCallable(functions, 'purgeContentCache');
         const res = await purgeContentCacheFn();
         if (res.data && res.data.success) {
             alert("成功清除所有網頁快取！");
+            setDashboardLog('已清除全網內容快取。');
         } else {
             alert("清除快取失敗。");
         }
     } catch (err) {
         console.error("purgeSystemContentCache error:", err);
         alert(`錯誤: ${err.message}`);
+        setDashboardLog(`清除快取失敗：${err?.message || err}`);
     } finally {
         if (btn) {
             btn.disabled = false;

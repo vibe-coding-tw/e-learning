@@ -465,6 +465,37 @@
                                 </div>
                             </div>
 
+                            <!-- Locale Runtime Settings -->
+                            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <h4 class="text-md font-bold text-slate-800 mb-1">站台 locale 設定 (Locale Runtime)</h4>
+                                        <p class="text-xs text-gray-500 leading-relaxed">集中維護前台可用語系、語系標籤與 fallback 對應，供 `nav-component` 與 `learning-path` 共用。</p>
+                                    </div>
+                                    <div id="dashboard-locale-status" class="text-xs font-mono text-blue-600">尚未載入</div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 mb-1.5">supportedLocales</label>
+                                        <textarea id="sys-supported-locales-input" class="w-full p-3 border rounded-xl font-mono text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white min-h-[110px]" placeholder="一行一個 locale，例如&#10;en&#10;zh-TW&#10;ja"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 mb-1.5">localeLabels (JSON)</label>
+                                        <textarea id="sys-locale-labels-input" class="w-full p-3 border rounded-xl font-mono text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white min-h-[110px]" placeholder='{"en":"English","zh-TW":"繁體中文"}'></textarea>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-bold text-slate-500 mb-1.5">localeFallbackMap (JSON)</label>
+                                        <textarea id="sys-locale-fallback-map-input" class="w-full p-3 border rounded-xl font-mono text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white min-h-[110px]" placeholder='{"zh":"zh-TW","en-US":"en"}'></textarea>
+                                    </div>
+                                </div>
+                                <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div class="text-xs text-gray-500 leading-relaxed">這些欄位會寫入 `metadata_settings/content_runtime`，並提供全站語系 fallback 與標籤解析。</div>
+                                    <button onclick="window.saveDashboardLocaleSettings()" id="btn-save-locale-settings" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl transition duration-150 active:scale-95 text-xs whitespace-nowrap">
+                                        儲存 locale 設定
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- Cache Maintenance -->
                             <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                                 <div class="flex-grow max-w-xl">
@@ -474,6 +505,18 @@
                                 <button onclick="window.purgeSystemContentCache()" id="btn-purge-content-cache" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition duration-150 active:scale-95 text-sm whitespace-nowrap">
                                     🔥 一鍵清除全網快取
                                 </button>
+                            </div>
+
+                            <!-- Prompt / Log -->
+                            <div class="bg-slate-950 text-slate-100 border border-slate-800 rounded-2xl p-6 shadow-lg">
+                                <div class="flex items-center justify-between gap-4 mb-4">
+                                    <div>
+                                        <h4 class="text-md font-bold text-white mb-1">&gt;_ 提示 / Log</h4>
+                                        <p class="text-xs text-slate-400">顯示站台設定與系統操作的最新訊息。</p>
+                                    </div>
+                                    <span class="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-bold">dashboard</span>
+                                </div>
+                                <pre id="dashboard-log" class="min-h-[120px] whitespace-pre-wrap break-words text-xs leading-6 text-slate-200 font-mono bg-slate-900/70 border border-slate-800 rounded-xl p-4">等待載入系統訊息。</pre>
                             </div>
                         </div>
                     </div>
@@ -711,7 +754,7 @@
 
     <script src="./js/dashboard-lookup-utils.21fe94aafa1d.js"></script>
     <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
-    <script type="module" src="./js/dashboard.793f9fedf13f.js"></script>
+    <script type="module" src="./js/dashboard.1b3377806d0d.js"></script>
 </body>
 
 </html>

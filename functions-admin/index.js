@@ -1065,7 +1065,15 @@ exports.adminUpdateSystemConfig = onCall(async (request) => {
     const role = await getRole(auth.uid);
     assertAdminRole(role);
 
-    const { contentVersion, defaultRegion, defaultDistributorId, defaultLocale } = data || {};
+    const {
+        contentVersion,
+        defaultRegion,
+        defaultDistributorId,
+        defaultLocale,
+        supportedLocales,
+        localeLabels,
+        localeFallbackMap
+    } = data || {};
     const updates = {};
 
     if (contentVersion !== undefined) {
@@ -1077,6 +1085,17 @@ exports.adminUpdateSystemConfig = onCall(async (request) => {
     if (defaultRegion !== undefined) updates.defaultRegion = String(defaultRegion || "").trim().toUpperCase();
     if (defaultDistributorId !== undefined) updates.defaultDistributorId = String(defaultDistributorId || "").trim();
     if (defaultLocale !== undefined) updates.defaultLocale = String(defaultLocale || "").trim();
+    if (supportedLocales !== undefined) {
+        updates.supportedLocales = Array.isArray(supportedLocales)
+            ? supportedLocales.map((item) => String(item || "").trim()).filter(Boolean)
+            : [];
+    }
+    if (localeLabels !== undefined) {
+        updates.localeLabels = localeLabels && typeof localeLabels === "object" && !Array.isArray(localeLabels) ? localeLabels : {};
+    }
+    if (localeFallbackMap !== undefined) {
+        updates.localeFallbackMap = localeFallbackMap && typeof localeFallbackMap === "object" && !Array.isArray(localeFallbackMap) ? localeFallbackMap : {};
+    }
 
     if (Object.keys(updates).length > 0) {
         updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();

@@ -711,12 +711,6 @@
             <button class="tab-btn" data-tab="pricebook" onclick="window.switchEditorTab('pricebook')">
               <i class="fa-solid fa-tags"></i> PRICEBOOK
             </button>
-            <button class="tab-btn" data-tab="locale-settings" onclick="window.switchEditorTab('locale-settings')">
-              <i class="fa-solid fa-globe"></i> 站台 locale 設定
-            </button>
-            <button class="tab-btn" data-tab="log" onclick="window.switchEditorTab('log')">
-              <i class="fa-solid fa-terminal"></i> 提示 / Log
-            </button>
           </div>
 
           <div class="editor-tab-content active" id="tab-course-master">
@@ -952,69 +946,6 @@
                   </div>
                 </div>
               </details>
-            </div>
-          </div>
-
-          <div class="editor-tab-content" id="tab-locale-settings">
-            <div class="editor-card">
-              <div class="card-title">
-                <div>
-                  <h2>站台 locale 設定</h2>
-                  <span>寫入 `metadata_settings/content_runtime`，作為全站語系預設與 fallback 真實來源。</span>
-                </div>
-                <div id="system-config-status" style="color:var(--muted);font-size:12px;">尚未載入</div>
-              </div>
-              <div class="editor-grid">
-                <div class="field">
-                  <label>defaultLocale</label>
-                  <input id="default-locale" placeholder="en / zh-TW" />
-                </div>
-                <div class="field">
-                  <label>defaultRegion</label>
-                  <input id="default-region" placeholder="US / TW" />
-                </div>
-                <div class="field">
-                  <label>defaultDistributorId</label>
-                  <input id="default-distributor-id" placeholder="default-usd" />
-                </div>
-                <div class="field">
-                  <label>contentVersion</label>
-                  <input id="content-version" placeholder="hash / version string" />
-                </div>
-                <div class="field full">
-                  <label>supportedLocales</label>
-                  <textarea id="supported-locales" class="textarea-list" placeholder="一行一個 locale，例如&#10;en&#10;zh-TW&#10;ja"></textarea>
-                  <div class="hint">前端可讀取的語系白名單，請保持簡潔且穩定。</div>
-                </div>
-                <div class="field full">
-                  <label>localeLabels (JSON)</label>
-                  <textarea id="locale-labels" class="textarea-list" placeholder='{"en":"English","zh-TW":"繁體中文"}'></textarea>
-                </div>
-                <div class="field full">
-                  <label>localeFallbackMap (JSON)</label>
-                  <textarea id="locale-fallback-map" class="textarea-list" placeholder='{"zh":"zh-TW","en-US":"en"}'></textarea>
-                </div>
-              </div>
-              <div class="action-row" style="margin-top: 14px;">
-                <div class="left">
-                  <span class="hint">這些值會集中寫入 `metadata_settings/content_runtime`，不要分散到前端常數。</span>
-                </div>
-                <div class="right">
-                  <button class="btn btn-primary btn-small" onclick="window.saveSystemConfig()"><i class="fa-solid fa-floppy-disk"></i> 儲存站台設定</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="editor-tab-content" id="tab-log">
-            <div class="log-card">
-              <div class="card-title">
-                <div>
-                  <h3 style="margin:0;font-size:18px;">提示 / Log</h3>
-                  <span>顯示當前操作與驗證訊息</span>
-                </div>
-              </div>
-              <pre id="log">等待載入課程資料。</pre>
             </div>
           </div>
 
@@ -2156,7 +2087,7 @@
       $("course-list").innerHTML = '<div class="empty-state">載入中...</div>';
       $("lesson-status").textContent = "載入中...";
       $("pricebook-status").textContent = "載入中...";
-      await Promise.all([loadDistributors(), loadLessons(), loadSystemConfig()]);
+      await Promise.all([loadDistributors(), loadLessons()]);
       state.isReady = true;
       setLog("管理頁已載入，請從左側選擇課程開始編輯。");
     }
