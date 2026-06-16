@@ -32,7 +32,7 @@ function normalizeCanonicalCourseKey(value = '') {
 
 function normalizeCanonicalCourseDocId(course = {}) {
   const metadataType = String(course.metadataType || '').toLowerCase();
-  if (metadataType === 'spec' || metadataType === 'product') {
+  if (metadataType === 'product') {
     return String(course.courseId || course.id || '').trim();
   }
 
@@ -113,7 +113,7 @@ function attachLocalizedPricing(course) {
 }
 
 function withEntryMetadata(course) {
-  if (course.metadataType === 'spec') {
+  if (course.metadataType === 'product' && course.hiddenFromCatalog === true) {
     return {
       ...course,
       courseId: course.courseId || '',
@@ -275,7 +275,7 @@ const courses = [
     courseUnits: ['start-01-unit-html5-basics.html', 'start-01-unit-flexbox-layout.html', 'start-01-unit-ui-ux-standards.html'],
     coreContent: ['HTML5 基礎結構', 'Flexbox 版面佈局', 'UI/UX 設計標準'],
     courseKey: 'car-starter-web-app',
-    entryUnitId: 'start-01-unit-flexbox-layout.html',
+    entryUnitId: 'start-01-unit-html5-basics.html',
     orderWeight: 10, isPhysical: false,
   },
   {
@@ -284,10 +284,10 @@ const courses = [
     title: 'Web BLE 藍牙整合',
     lessonLabel: '入門 02', icon: '📶', tagText: '入門', duration: '2.5 小時',
     price: 1200, category: 'started',
-    courseUnits: ['start-02-unit-ble-async.html', 'start-02-unit-ble-security.html', 'start-02-unit-typed-arrays.html'],
+    courseUnits: ['start-02-unit-typed-arrays.html', 'start-02-unit-ble-async.html', 'start-02-unit-ble-security.html'],
     coreContent: ['BLE 非同步連線', 'BLE 安全機制', 'TypedArray 資料處理'],
     courseKey: 'car-starter-web-ble',
-    entryUnitId: 'start-02-unit-ble-async.html',
+    entryUnitId: 'start-02-unit-typed-arrays.html',
     orderWeight: 11, isPhysical: false,
   },
   {
@@ -296,7 +296,7 @@ const courses = [
     title: '遙控器介面實作',
     lessonLabel: '入門 03', icon: '🎮', tagText: '入門', duration: '2 小時',
     price: 1200, category: 'started',
-    courseUnits: ['start-03-unit-control-panel.html', 'start-03-unit-data-json.html', 'start-03-unit-flow-logic.html'],
+    courseUnits: ['start-03-unit-control-panel.html', 'start-03-unit-flow-logic.html', 'start-03-unit-data-json.html'],
     coreContent: ['控制面板設計', 'JSON 資料交換', '流程邏輯設計'],
     courseKey: 'car-starter-remote-control',
     entryUnitId: 'start-03-unit-control-panel.html',
@@ -311,7 +311,7 @@ const courses = [
     courseUnits: ['start-04-unit-touch-basics.html', 'start-04-unit-prevent-default.html', 'start-04-unit-long-press.html'],
     coreContent: ['觸控基礎事件', 'preventDefault 應用', '長按事件實作'],
     courseKey: 'car-starter-touch-events',
-    entryUnitId: 'start-04-unit-long-press.html',
+    entryUnitId: 'start-04-unit-touch-basics.html',
     orderWeight: 13, isPhysical: false,
   },
   {
@@ -320,10 +320,10 @@ const courses = [
     title: '搖桿實驗室',
     lessonLabel: '入門 05', icon: '🕹️', tagText: '入門', duration: '2.5 小時',
     price: 1200, category: 'started',
-    courseUnits: ['start-05-unit-canvas-joystick.html', 'start-05-unit-joystick-math.html', 'start-05-unit-touch-vs-mouse.html'],
+    courseUnits: ['start-05-unit-touch-vs-mouse.html', 'start-05-unit-canvas-joystick.html', 'start-05-unit-joystick-math.html'],
     coreContent: ['Canvas 搖桿繪製', '搖桿數學運算', '觸控與滑鼠相容'],
     courseKey: 'car-starter-joystick-lab',
-    entryUnitId: 'start-05-unit-canvas-joystick.html',
+    entryUnitId: 'start-05-unit-touch-vs-mouse.html',
     orderWeight: 14, isPhysical: false,
   },
 
@@ -618,13 +618,13 @@ const courses = [
       '可用儲存空間 20GB+',
       '穩定 Wi‑Fi 與 Chrome/Edge'
     ],
-    metadataType: 'spec',
+    metadataType: 'product',
     hiddenFromCatalog: true,
     price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
     orderWeight: 507,
-    isPhysical: false,
+    isPhysical: true,
   },
   {
     id: 'spec-recommend-pro',
@@ -639,13 +639,13 @@ const courses = [
       '可用儲存空間 50GB+',
       '建議搭配雙螢幕與外接鍵盤滑鼠'
     ],
-    metadataType: 'spec',
+    metadataType: 'product',
     hiddenFromCatalog: true,
     price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
     orderWeight: 508,
-    isPhysical: false,
+    isPhysical: true,
   },
   {
     id: 'esp32-c3',
