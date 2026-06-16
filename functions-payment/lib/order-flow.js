@@ -8,6 +8,7 @@ const {
     buildReferralLinkDocId,
     extractReferralAssignmentsFromOrder,
     hasActiveOrderForCourse,
+    isPhysicalMetadataLesson,
     itemContainsUnit
 } = require("../lib/order-utils");
 const {
@@ -46,7 +47,7 @@ async function syncUserPurchaseCacheFromOrder(db, orderId, orderData = {}, lesso
 
     for (const itemKey of Object.keys(items)) {
         const lesson = resolveLessonForOrderItem(itemKey, lessons);
-        if (lesson && lesson.isPhysical !== true) {
+        if (lesson && !isPhysicalMetadataLesson(lesson)) {
             const lessonId = getCanonicalLessonIdentity(lesson).toLowerCase();
             const category = normalizeText(lesson.category || lesson.level || "").toLowerCase();
             if (lessonId.startsWith("car-starter-") || category === "start" || category === "started") {
@@ -160,11 +161,11 @@ async function activateOrderPermissionsAndNotify(db, orderId, hooks = {}) {
             itemKey,
             courseId: getCanonicalLessonIdentity(lesson) || null,
             courseKey: lesson.courseKey || null,
-            isPhysical: lesson.isPhysical === true,
+            isPhysical: isPhysicalMetadataLesson(lesson),
             status: "mapped"
         });
 
-        if (lesson.isPhysical === true) {
+        if (isPhysicalMetadataLesson(lesson)) {
             activationCheckedItems[activationCheckedItems.length - 1].status = "physical-skipped";
             continue;
         }
