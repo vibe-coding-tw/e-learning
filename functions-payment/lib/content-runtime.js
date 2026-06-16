@@ -32,9 +32,15 @@ function getLessonLookupKeys(lesson = {}) {
     const keys = new Set();
     const add = (value) => {
         const clean = toCourseKey(value);
-        if (!clean) return;
-        keys.add(clean);
-        keys.add(clean.replace(/\.html$/i, ""));
+        const variant = normalizeCourseVariantKey(value);
+        if (clean) {
+            keys.add(clean);
+            keys.add(clean.replace(/\.html$/i, ""));
+        }
+        if (variant) {
+            keys.add(variant);
+            keys.add(variant.replace(/\.html$/i, ""));
+        }
     };
 
     add(lesson.id);
@@ -53,13 +59,24 @@ function getCanonicalLessonIdentity(lesson = {}) {
 }
 
 function findLessonByCourseRef(courseRef = "", lessons = []) {
-    const target = toCourseKey(courseRef);
+    const target = normalizeCourseVariantKey(courseRef) || toCourseKey(courseRef);
     if (!target) return null;
+    const targetBare = target.replace(/\.html$/i, "");
+    const arr = Array.isArray(lessons) ? lessons : [];
 
-    return (Array.isArray(lessons) ? lessons : []).find((lesson) => {
+    let matched = arr.find((lesson) => {
+        if (lesson.hiddenFromCatalog === true) return false;
         const keys = getLessonLookupKeys(lesson);
-        return keys.includes(target) || keys.includes(target.replace(/\.html$/i, ""));
-    }) || null;
+        return keys.includes(target) || keys.includes(targetBare);
+    });
+
+    if (!matched) {
+        matched = arr.find((lesson) => {
+            const keys = getLessonLookupKeys(lesson);
+            return keys.includes(target) || keys.includes(targetBare);
+        });
+    }
+    return matched || null;
 }
 
 function resolveLessonForOrderItem(itemKey = "", lessons = []) {
@@ -288,8 +305,9 @@ function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
     const normalizedFileName = normalizeCourseFile(fileName);
     const normalizedPageIdNoHtml = normalizedPageId.replace(/\.html$/i, "");
     const normalizedFileNameNoHtml = normalizedFileName.replace(/\.html$/i, "");
+    const arr = Array.isArray(lessons) ? lessons : [];
 
-    return lessons.find(l => {
+    const matchesLesson = (l) => {
         const lessonId = String(l.id || l.docId || "");
         const lessonCourseId = String(l.courseId || "");
         const lessonCourseIdNoHtml = lessonCourseId.replace(/\.html$/i, "");
@@ -318,7 +336,18 @@ function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
             unitIdsMatch(lessonId.replace(/\.html$/i, ""), normalizedPageIdNoHtml) ||
             unitMatch ||
             assignmentUnitMatch;
-    }) || null;
+    };
+
+    // Prioritize non-hidden lessons
+    let matched = arr.find(l => {
+        if (l.hiddenFromCatalog === true) return false;
+        return matchesLesson(l);
+    });
+
+    if (!matched) {
+        matched = arr.find(l => matchesLesson(l));
+    }
+    return matched || null;
 }
 
 function buildAuthorizedFileCandidates(course = {}, locales = []) {
