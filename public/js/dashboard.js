@@ -26,6 +26,10 @@ const {
     normalizeTutorAdminUnitId,
     normalizeTutorIdentifier
 } = window.dashboardLookupUtils || {};
+const isPhysicalMetadataLesson = window.dashboardLookupUtils?.isPhysicalMetadataLesson || function (lesson = {}) {
+    const metadataType = String(lesson?.metadataType || "").toLowerCase();
+    return metadataType === "product" || metadataType === "legacy_product";
+};
 const { normalizeCanonicalRepoSlug, legacyRepoSlugFromCanonical } = window.repoSlugUtils || {};
 
 window.normalizeDashboardLooseKey = window.normalizeDashboardLooseKey || normalizeDashboardLooseKey;
@@ -820,7 +824,7 @@ function isNonCourseGuideContext(filterUnitId) {
     const lesson = resolveLessonByAnyKey(filterUnitId) || findParentCourseIdByUnit(filterUnitId) && resolveLessonByAnyKey(findParentCourseIdByUnit(filterUnitId));
     if (!lesson) return false;
     const metadataType = String(lesson.metadataType || '').toLowerCase();
-    return lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product' || metadataType === 'spec';
+    return isPhysicalMetadataLesson(lesson) || (metadataType === 'product' && lesson.hiddenFromCatalog === true);
 }
 
 async function fetchGuideSectionFromUnitPage(filterUnitId, sectionId) {
@@ -4055,8 +4059,8 @@ function buildBusinessPricingOverviewHtml() {
     
     // Apply filter
     const filteredLessons = pricedLessons.filter(lesson => {
-        if (filter === 'courses') return lesson.isPhysical !== true;
-        if (filter === 'physical') return lesson.isPhysical === true;
+        if (filter === 'courses') return !isPhysicalMetadataLesson(lesson);
+        if (filter === 'physical') return isPhysicalMetadataLesson(lesson);
         return true;
     });
 
@@ -4081,7 +4085,7 @@ function buildBusinessPricingOverviewHtml() {
             ? new Date(lesson.pricingUpdatedAt.seconds * 1000).toLocaleString()
             : (lesson.pricingUpdatedAt ? new Date(lesson.pricingUpdatedAt).toLocaleString() : '—');
 
-        const isPhysical = lesson.isPhysical === true;
+        const isPhysical = isPhysicalMetadataLesson(lesson);
         
         const badgeClass = 'bg-blue-50 text-blue-700 border border-blue-100';
         const badgeLabel = '🌐 經銷價格表';

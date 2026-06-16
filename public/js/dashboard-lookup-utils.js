@@ -21,6 +21,11 @@
         return v;
     }
 
+    function isPhysicalMetadataLesson(lesson = {}) {
+        const metadataType = String(lesson.metadataType || "").toLowerCase();
+        return metadataType === "product" || metadataType === "legacy_product";
+    }
+
     function addLookupKey(keys, value) {
         if (!value) return;
         const raw = String(value).trim();
@@ -48,8 +53,7 @@
 
     function getCanonicalLessonIdentity(lesson = {}) {
         if (!lesson || typeof lesson !== 'object') return '';
-        const metadataType = String(lesson.metadataType || '').toLowerCase();
-        if (lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product') {
+        if (isPhysicalMetadataLesson(lesson)) {
             return String(
                 lesson.docId ||
                 lesson.courseKey ||
@@ -168,6 +172,7 @@
         findParentCourseIdByUnit,
         getPreferredUnitId,
         normalizeTutorAdminUnitId,
-        normalizeTutorIdentifier
+        normalizeTutorIdentifier,
+        isPhysicalMetadataLesson
     };
 })();

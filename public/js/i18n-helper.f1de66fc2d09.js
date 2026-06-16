@@ -1,7 +1,10 @@
 (function () {
     // 1. 語系偵測邏輯
     function normalizeLocaleCode(value = "") {
-        return String(value || "").trim().replace(/_/g, "-");
+        const clean = String(value || "").trim().replace(/_/g, "-");
+        const lower = clean.toLowerCase();
+        if (lower === "tw" || lower.startsWith("tw-")) return "zh-TW";
+        return clean;
     }
 
     function getContentRuntimeConfig() {
@@ -32,24 +35,30 @@
     }
 
     function resolveLocaleCandidates(locale = "") {
-        const normalized = normalizeLocaleCode(locale);
+        const normalized = String(locale || "").trim().replace(/_/g, "-");
+        const normalizedLower = normalized.toLowerCase();
         const runtime = getContentRuntimeConfig();
         const candidates = [];
         const push = (value) => {
-            const clean = normalizeLocaleCode(value);
+            const cleanRaw = String(value || "").trim().replace(/_/g, "-");
+            if (!cleanRaw) return;
+            const lower = cleanRaw.toLowerCase();
+            const clean = (lower.startsWith("zh") || lower === "tw" || lower.startsWith("tw-"))
+                ? "zh-TW"
+                : (lower.startsWith("en") ? "en" : cleanRaw);
             if (clean && !candidates.includes(clean)) candidates.push(clean);
         };
 
-        push(normalized);
-        push(runtime.localeFallbackMap?.[normalized]);
-        if (normalized.startsWith("zh")) {
+        if (normalizedLower.startsWith("zh") || normalizedLower === "tw" || normalizedLower.startsWith("tw-")) {
             push("zh-TW");
             push("zh");
             push("zh-Hant");
-        }
-        if (normalized.startsWith("en")) {
+            push("tw");
+        } else if (normalizedLower.startsWith("en")) {
             push("en");
         }
+        push(normalized);
+        push(runtime.localeFallbackMap?.[normalized]);
         push(runtime.defaultLocale);
         push("zh-TW");
         push("en");
@@ -105,6 +114,14 @@
 
     function detectUiLocale() {
         try {
+            const explicitLocale = String(window.__vibeLocale || window.currentLocale || "").trim();
+            if (explicitLocale) {
+                const clean = normalizeLocaleCode(explicitLocale);
+                if (clean) return clean;
+            }
+        } catch (_) {}
+
+        try {
             const pathname = window.location.pathname;
             if (pathname.includes('/en/')) return 'en';
             if (pathname.includes('/tw/') || pathname.includes('/zh-TW/')) return 'zh-TW';
@@ -153,7 +170,18 @@
         return normalizeLocaleCode(getContentRuntimeConfig().defaultLocale || "en");
     }
 
-    const currentLocale = detectUiLocale();
+    let currentLocale = detectUiLocale();
+
+    function getActiveLocale() {
+        try {
+            const explicitLocale = String(window.__vibeLocale || window.currentLocale || currentLocale || "").trim();
+            if (explicitLocale) {
+                const clean = normalizeLocaleCode(explicitLocale);
+                if (clean) return clean;
+            }
+        } catch (_) {}
+        return detectUiLocale();
+    }
 
     // 2. 統一中英對照字典
     const DICTIONARY = {
@@ -469,6 +497,7 @@
 
             // learning-path.html
             "lp_title": "學習路徑",
+            "lp_productHeader": "產品",
             "lp_hardwareHeader": "硬體設備",
             "lp_specsHeader": "電腦規格推薦",
             "lp_coreContentLabel": "核心內容：",
@@ -851,6 +880,7 @@
 
             // learning-path.html
             "lp_title": "Learning Path",
+            "lp_productHeader": "Products",
             "lp_hardwareHeader": "Hardware Kits",
             "lp_specsHeader": "Computer Spec Recommendations",
             "lp_coreContentLabel": "Core Content:",
@@ -927,6 +957,8 @@
     window.detectUiLocale = detectUiLocale;
     window.currentLocale = currentLocale;
     window.t = function (key, fallback) {
+        currentLocale = getActiveLocale();
+        window.currentLocale = currentLocale;
         const localeDict = DICTIONARY[resolveDictionaryLocale(currentLocale)];
         if (localeDict && localeDict[key] !== undefined) {
             return localeDict[key];
@@ -936,6 +968,8 @@
 
     // 4. 動態翻譯 DOM 元素
     window.applyI18n = function () {
+        currentLocale = getActiveLocale();
+        window.currentLocale = currentLocale;
         const localeDict = DICTIONARY[resolveDictionaryLocale(currentLocale)];
         if (!localeDict) return;
 

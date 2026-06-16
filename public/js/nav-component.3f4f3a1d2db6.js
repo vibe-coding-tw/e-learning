@@ -120,7 +120,13 @@ function getLocaleOptions() {
 }
 
 function isZhLikeLocale(locale = "") {
-    return normalizeRuntimeLocaleCode(locale).toLowerCase().startsWith("zh");
+    const clean = normalizeRuntimeLocaleCode(locale).toLowerCase();
+    return clean.startsWith("zh") || clean === "tw" || clean.startsWith("tw-");
+}
+
+function isPhysicalMetadataLesson(lesson = {}) {
+    const metadataType = String(lesson?.metadataType || "").toLowerCase();
+    return metadataType === "product" || metadataType === "legacy_product";
 }
 
 async function ensureContentRuntimeConfig() {
@@ -151,17 +157,29 @@ function canonicalLearningPathHref(pathKey = "") {
     return `learning-path.html?path=${encodeURIComponent(canonical)}`;
 }
 
-function resolveMenuLabel(value = "", fallback = "") {
-    const text = extractCategoryLabelText(value, "zh-TW") || extractCategoryLabelText(value, "en");
+function resolveMenuLabel(value = "", fallback = "", uiLocale = "zh-TW") {
+    const text = extractCategoryLabelText(value, uiLocale) || extractCategoryLabelText(value, "zh-TW") || extractCategoryLabelText(value, "en");
     return String(text || fallback || "").trim();
 }
 
+function resolveLearningPathLabel(pathKey = "", uiLocale = "zh-TW", categoryLabelsMap = {}) {
+    const canonical = normalizeCanonicalLearningPathKey(pathKey);
+    const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap, uiLocale);
+    const labelEntry = normalizedMap[canonical || pathKey];
+    if (labelEntry) {
+        return resolveMenuLabel(labelEntry, getCategoryLabel(canonical || pathKey, uiLocale), uiLocale);
+    }
+    return getCategoryLabel(canonical || pathKey, uiLocale);
+}
+
+window.__vibeResolveLearningPathLabel = resolveLearningPathLabel;
+
 function getDefaultLearningPaths(uiLocale = "zh-TW", categoryLabels = {}) {
     return [
-        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: resolveMenuLabel(categoryLabels.common, getCategoryLabel("common", uiLocale)) },
-        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: resolveMenuLabel(categoryLabels["car-starter"], getCategoryLabel("car-starter", uiLocale)) },
-        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: resolveMenuLabel(categoryLabels["car-basic"], getCategoryLabel("car-basic", uiLocale)) },
-        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: resolveMenuLabel(categoryLabels["car-advanced"], getCategoryLabel("car-advanced", uiLocale)) }
+        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: resolveLearningPathLabel("common", uiLocale, categoryLabels) },
+        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: resolveLearningPathLabel("car-starter", uiLocale, categoryLabels) },
+        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: resolveLearningPathLabel("car-basic", uiLocale, categoryLabels) },
+        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: resolveLearningPathLabel("car-advanced", uiLocale, categoryLabels) }
     ];
 }
 
@@ -531,13 +549,12 @@ function sortCategoryKeys(keys = [], uiLocale = "zh-TW") {
 function isCatalogCourseLesson(lesson = {}) {
     const metadataType = String(lesson?.metadataType || "").toLowerCase();
     const isHidden = lesson?.hiddenFromCatalog === true;
-    const isPhysical = lesson?.isPhysical === true;
+    const isPhysical = isPhysicalMetadataLesson(lesson);
     const price = Number(lesson?.price);
 
     if (isHidden) return false;
     if (isPhysical) return false;
-    if (metadataType === "product" || metadataType === "legacy_product") return false;
-    if (metadataType === "course") return true;
+    if (metadataType !== "course") return false;
 
     const hasCourseUnits = Array.isArray(lesson?.courseUnits) && lesson.courseUnits.length > 0;
     const hasEntry = typeof lesson?.entryUnitId === "string" && lesson.entryUnitId.trim().length > 0;
@@ -616,13 +633,13 @@ function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS,
 
     desktop.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale))}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale), locale)}
         </a>
     `).join("");
 
     mobile.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale))}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale), locale)}
         </a>
     `).join("");
 }
@@ -659,10 +676,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         const dynamic = sortCategoryKeys(Array.from(keys), uiLocale).map((key) => ({
             key,
             href: getCategoryHref(key),
-            label: resolveMenuLabel(
-                categoryLabels[normalizeCanonicalLearningPathKey(key)],
-                getCategoryLabel(key, uiLocale)
-            ),
+            label: resolveLearningPathLabel(key, uiLocale, categoryLabels),
             icon: key.includes("advanced") ? "fa-microchip" :
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"
@@ -750,6 +764,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
     const isFluid = options.isFluid !== undefined ? options.isFluid : true;
 
     const uiLocale = detectUiLocale();
+    window.__vibeLocale = uiLocale;
     const runtimeConfig = getRuntimeContentConfig();
     const localeOptions = getLocaleOptions();
     const activeLocale = normalizeRuntimeLocaleCode(uiLocale);

@@ -17,12 +17,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="./style.1b939bdb0a17.css">
-  <script src="./js/i18n-helper.e35738cea3da.js"></script>
+  <script src="./js/i18n-helper.f1de66fc2d09.js"></script>
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.de3fe3be709f.js"></script>
-  <script src="./js/dashboard-lookup-utils.d70c831244bb.js"></script>
+  <script type="module" src="./js/nav-component.3f4f3a1d2db6.js"></script>
+  <script src="./js/dashboard-lookup-utils.21fe94aafa1d.js"></script>
+  <script src="./js/learning-path-core.78085a25651f.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
   <script src="./js/course-shared.166917798cfb.js"></script>
   <script src="./js/pricing-utils.909971c38740.js"></script>
@@ -37,6 +38,18 @@
 
   <div id="footer-placeholder" data-root="."></div>
   <script src="./js/footer-component.1a8264865ccf.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations()
+        .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+        .catch(() => {});
+    }
+    if ('caches' in window) {
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch(() => {});
+    }
+  </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -78,7 +91,7 @@
       try {
         const snap = await getDoc(doc(db, "metadata_settings", "learning_paths"));
         const data = snap.exists() ? (snap.data() || {}) : {};
-        return normalizeCategoryLabelsMap(data.categoryLabels || {}, detectUiLocale());
+        return LP.normalizeCategoryLabelsMap?.(data.categoryLabels || {}, LP.detectUiLocale?.() || "en") || {};
       } catch (error) {
         console.warn('[learning-path] Failed to load metadata_settings/learning_paths:', error);
         return {};
@@ -129,122 +142,7 @@
     };
     const AUTH_URL = "/auth.html?v=" + Date.now();
     const CART_URL = "cart.html";
-    const {
-      normalizeCanonicalLearningPathKey: normalizeCanonicalLearningPathKeyFromUtils,
-      legacyLearningPathKeyFromCanonical,
-      learningPathKeyCandidatesFromValue
-    } = window.repoSlugUtils || {};
-
-    function detectUiLocale() {
-      if (window.__vibeLocale) return String(window.__vibeLocale);
-      if (typeof window.detectUiLocale === 'function') return window.detectUiLocale();
-      try {
-        const pathname = window.location.pathname || '';
-        if (pathname.includes('/en/')) return 'en';
-        if (pathname.includes('/tw/') || pathname.includes('/zh-TW/')) return 'zh-TW';
-        const filename = pathname.split('/').pop() || '';
-        if (filename.startsWith('en-')) return 'en';
-        if (filename.startsWith('tw-')) return 'zh-TW';
-      } catch (_) {}
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const lang = params.get('lang') || params.get('locale');
-        if (lang) {
-          const normalized = String(lang).trim().toLowerCase();
-          if (normalized.startsWith('en')) return 'en';
-          if (normalized.startsWith('zh') || normalized === 'tw') return 'zh-TW';
-        }
-        const path = params.get('path');
-        if (path) {
-          const cleanPath = String(path).trim().toLowerCase();
-          if (cleanPath.startsWith('en-')) return 'en';
-          if (cleanPath.startsWith('tw-')) return 'zh-TW';
-        }
-      } catch (_) {}
-      const navLang = String(navigator.language || navigator.languages?.[0] || '').trim().toLowerCase();
-      if (navLang.startsWith('en')) return 'en';
-      if (navLang.startsWith('zh')) return 'zh-TW';
-      return "zh-TW";
-    }
-
-    function normalizeLocaleCode(raw = "") {
-      const v = String(raw || "").trim().toLowerCase();
-      if (!v) return "tw";
-      if (v.startsWith("zh")) return "tw";
-      return v.split(/[-_]/)[0] || "en";
-    }
-    function normalizeLevel(raw = "") {
-      const v = String(raw || "").trim().toLowerCase();
-      if (!v) return "common";
-      if (v === "started" || v === "start") return "starter";
-      if (v === "prepare") return "common";
-      return v;
-    }
-    function normalizeTrack(raw = "") {
-      const v = String(raw || "").trim().toLowerCase();
-      return v || "common";
-    }
-    function normalizeCategoryKey(raw = "") {
-      const v = String(raw || "").trim().toLowerCase();
-      if (!v) return "";
-      if (v === "common") return "common";
-      if (/^(?:tw|en)-common$/i.test(v)) return "common";
-      if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
-      if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
-      return "";
-    }
-    function normalizeCanonicalLearningPathKey(value = "") {
-      const fromUtils = typeof normalizeCanonicalLearningPathKeyFromUtils === "function"
-        ? normalizeCanonicalLearningPathKeyFromUtils(value)
-        : "";
-      if (fromUtils) return fromUtils;
-      const v = String(value || "").trim().toLowerCase().split('?')[0].split('#')[0].replace(/\.html$/i, '');
-      if (!v) return "";
-      if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
-      if (/^(?:tw|en)-common$/i.test(v)) return "common";
-      if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
-      if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
-      if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
-      if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
-      if (/^\d{2}-unit-/i.test(v)) return "common";
-      if (/^prepare-\d+/i.test(v)) return "common";
-      return v;
-    }
-    function legacyPathKeyFromCanonical(value = "", uiLocale = "zh-TW") {
-      const canonical = normalizeCanonicalLearningPathKey(value);
-      if (!canonical) return "";
-      if (typeof legacyLearningPathKeyFromCanonical === "function") {
-        return legacyLearningPathKeyFromCanonical(canonical, uiLocale);
-      }
-      const prefix = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "tw";
-      if (canonical === "common") return `${prefix}-common`;
-      return `${prefix}-${canonical}`;
-    }
-    function pathKeyCandidates(value = "", uiLocale = "zh-TW") {
-      if (typeof learningPathKeyCandidatesFromValue === "function") {
-        return learningPathKeyCandidatesFromValue(value, uiLocale);
-      }
-      const canonical = normalizeCanonicalLearningPathKey(value);
-      return [...new Set([String(value || "").trim(), canonical, legacyPathKeyFromCanonical(canonical, "zh-TW"), legacyPathKeyFromCanonical(canonical, "en")].filter(Boolean))];
-    }
-    function normalizeCanonicalCourseKey(value = "") {
-      const raw = String(value || "")
-        .trim()
-        .replace(/\.html$/i, "")
-        .replace(/^(?:tw|en)-/i, "")
-        .toLowerCase();
-      if (!raw) return "";
-      if (/^start-\d{2}-unit-/i.test(raw)) return raw.replace(/^start-\d{2}-unit-/i, "car-starter-");
-      if (/^basic-\d{2}-unit-/i.test(raw)) return raw.replace(/^basic-\d{2}-unit-/i, "car-basic-");
-      if (/^(?:adv|advanced)-\d{2}-unit-/i.test(raw)) return raw.replace(/^(?:adv|advanced)-\d{2}-unit-/i, "car-advanced-");
-      if (/^\d{2}-unit-/i.test(raw)) return raw.replace(/^\d{2}-unit-/i, "common-");
-      if (/^prepare-\d+-(.+)$/i.test(raw)) return raw.replace(/^prepare-\d+-/i, "common-");
-      if (/^(?:common|car-(?:starter|basic|advanced))-(.+)$/i.test(raw)) return raw;
-      return raw;
-    }
-    function resolveMatchingPathKeys(pathKey = "") {
-      return pathKeyCandidates(pathKey);
-    }
+    const LP = window.learningPathCore || {};
     function getPricingApi() {
       return window.vibePricing || {
       resolveLessonPrice(lesson = {}, locale = "zh-TW") {
@@ -269,510 +167,7 @@
         }
       };
     }
-    function formatCoursePrice(priceEntry = {}, locale = "zh-TW") {
-      return getPricingApi().formatPrice(priceEntry, locale);
-    }
-    function translateLessonLabel(label = "", uiLocale = "zh-TW") {
-      const raw = String(label || "").trim();
-      if (!raw) return "";
-      if (!uiLocale.startsWith("en")) return raw;
-      return raw
-        .replace(/^課前準備/, "Preparation")
-        .replace(/^入門/, "Starter")
-        .replace(/^基礎/, "Basic")
-        .replace(/^進階/, "Advanced")
-        .replace(/^課程/, "Course")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-    function titleCaseFromSlug(slug = "") {
-      return String(slug || "")
-        .split(/[-_]/)
-        .filter(Boolean)
-        .map((part) => {
-          const lower = part.toLowerCase();
-          const special = {
-            ai: "AI",
-            api: "API",
-            ble: "BLE",
-            css: "CSS",
-            cv: "CV",
-            fsm: "FSM",
-            html: "HTML",
-            http: "HTTP",
-            io: "IO",
-            iot: "IoT",
-            js: "JS",
-            json: "JSON",
-            jsx: "JSX",
-            pid: "PID",
-            pwm: "PWM",
-            s3: "S3",
-            ui: "UI",
-            ux: "UX",
-            url: "URL",
-            usb: "USB",
-            wifi: "WiFi",
-            ota: "OTA",
-          };
-          if (special[lower]) return special[lower];
-          if (lower === "web") return "Web";
-          if (lower === "dev") return "Dev";
-          return part.charAt(0).toUpperCase() + part.slice(1);
-        })
-        .join(" ")
-        .replace(/\bOf\b/g, "of")
-        .replace(/\bAnd\b/g, "and")
-        .replace(/\bTo\b/g, "to")
-        .trim();
-    }
-    const EN_TITLE_OVERRIDES = {
-      "legacy-car-intro": "Car Kit (Starter)",
-      "legacy-car-advanced": "Car Kit (Advanced)",
-      "product-esp32-c3": "ESP32-C3 Board",
-      "product-esp32-s3": "ESP32-S3 Board",
-      "common-developer-identity": "Developer Identity",
-      "common-vscode-online": "VS Code Online",
-      "common-vscode-setup": "Development Environment (VS Code Setup)",
-      "common-agent-mode": "AI Agent Workflow",
-      "common-vibe-coding": "Vibe Coding Practice",
-      "common-web-agents": "Web-Based AI Agent Practice",
-      "common-github-classroom": "GitHub Classroom & Vibe Coding Practice",
-      "common-wifi-setup": "WiFi Configuration",
-      "common-motor-ramping": "Motor Ramping Control",
-      "car-starter-web-app": "Web App Fundamentals",
-      "car-starter-web-ble": "Web BLE Integration",
-      "car-starter-remote-control": "Remote Control Interface",
-      "car-starter-touch-events": "Touch Event Handling",
-      "car-starter-joystick-lab": "Joystick Lab",
-      "basic-01-master-environment": "Development Environment Setup",
-      "basic-02-master-ota-architecture": "OTA Update Architecture",
-      "basic-03-master-io-mapping": "IO Pin Mapping",
-      "basic-04-master-pwm-control": "PWM Motor Control",
-      "basic-05-master-ble-gatt": "BLE GATT Protocol",
-      "basic-06-master-http-web": "HTTP and Web Communication",
-      "basic-07-master-wifi-modes": "WiFi Modes and Web Server",
-      "basic-08-master-joystick-math": "Joystick Math Model",
-      "basic-09-master-multitasking": "Multitasking",
-      "basic-10-master-fsm": "Finite State Machines",
-      "adv-01-master-s3-cam": "ESP32-S3 Camera",
-      "adv-02-master-video": "Image Streaming",
-      "adv-03-master-ble-advanced": "Advanced BLE Communication",
-      "adv-04-master-sensors": "Sensor Integration",
-      "adv-05-master-cv": "Computer Vision Basics",
-      "adv-06-master-cv-advanced": "Advanced Computer Vision",
-      "adv-07-master-ui-framework": "UI Framework Design",
-      "adv-08-master-image-processing": "Image Processing Practice",
-      "adv-09-master-ai-recognition": "AI Recognition Applications",
-      "adv-10-master-diff-drive": "Differential Drive Control",
-      "adv-11-master-photoelectric": "Photoelectric Sensors",
-      "adv-12-master-pid": "PID Control",
-      "adv-13-master-robustness": "System Robustness",
-      "adv-14-master-debugging-art": "The Art of Debugging",
-      "adv-15-master-architecture": "System Architecture Design",
-      "spec-recommend-lite": "Computer Spec Recommendation (Basic)",
-      "spec-recommend-pro": "Computer Spec Recommendation (Advanced)"
-    };
-    const EN_BULLET_TRANSLATIONS = {
-      "GitHub 帳號建立": "Set up a GitHub account",
-      "個人 Profile 設定": "Configure your personal profile",
-      "SSH Key 設定": "Configure SSH keys",
-      "GitHub Codespaces 啟用": "Enable GitHub Codespaces",
-      "線上編輯器操作": "Use the online editor",
-      "即開即用開發環境": "Use an instant-ready dev environment",
-      "VS Code 安裝與設定": "Install and configure VS Code",
-      "常用擴充套件": "Install common extensions",
-      "Terminal 基本操作": "Learn basic Terminal operations",
-      "Cursor Agent Mode": "Use Cursor Agent Mode",
-      "AI 輔助程式開發": "AI-assisted programming",
-      "提示工程基礎": "Prompt engineering basics",
-      "Vibe Coding 方法論": "Vibe Coding methodology",
-      "快速原型開發": "Rapid prototyping",
-      "AI 驅動開發流程": "AI-driven development workflow",
-      "ChatGPT / Claude 實務": "Practical use of ChatGPT / Claude",
-      "網頁版 AI 工具比較": "Compare web-based AI tools",
-      "提示工程進階技巧": "Advanced prompt engineering techniques",
-      "GitHub Classroom 加入流程": "Join flow for GitHub Classroom",
-      "作業繳交方式": "How to submit assignments",
-      "自動評分系統": "Automated grading system",
-      "ESP32 WiFi 連線設定": "ESP32 WiFi connection setup",
-      "WiFi 診斷與重連": "WiFi diagnostics and reconnection",
-      "網路狀態回傳": "Return network status",
-      "馬達平滑啟停": "Smooth motor start and stop",
-      "PWM 訊號調校": "Tune PWM signals",
-      "防止電壓突波": "Prevent voltage spikes",
-      "HTML5 基礎結構": "HTML5 basic structure",
-      "Flexbox 版面佈局": "Flexbox layout",
-      "UI/UX 設計標準": "UI/UX design standards",
-      "BLE 非同步連線": "Asynchronous BLE connection",
-      "BLE 安全機制": "BLE security mechanisms",
-      "TypedArray 資料處理": "TypedArray data handling",
-      "控制面板設計": "Control panel design",
-      "JSON 資料交換": "JSON data exchange",
-      "流程邏輯設計": "Workflow logic design",
-      "觸控基礎事件": "Basic touch events",
-      "preventDefault 應用": "Use preventDefault",
-      "長按事件實作": "Implement long-press events",
-      "Canvas 搖桿繪製": "Draw a joystick on Canvas",
-      "搖桿數學運算": "Joystick math calculations",
-      "觸控與滑鼠相容": "Touch and mouse compatibility",
-      "驅動與連接埠": "Drivers and ports",
-      "ESP32 架構概覽": "ESP32 architecture overview",
-      "PlatformIO 設定": "PlatformIO setup",
-      "OTA 更新原理": "OTA update principles",
-      "OTA 安全機制": "OTA security mechanisms",
-      "分區表設計": "Partition table design",
-      "腳位配置圖": "Pin mapping diagram",
-      "ADC 解析度": "ADC resolution",
-      "上拉電阻與防彈跳": "Pull-up resistors and debouncing",
-      "PWM 基礎原理": "PWM fundamentals",
-      "LEDC 語法": "LEDC syntax",
-      "H 橋電路驅動": "H-bridge driver circuit",
-      "廣播與連線": "Advertising and connection",
-      "BLE 特性值": "BLE characteristic values",
-      "GATT 資料結構": "GATT data structure",
-      "HTTP 請求": "HTTP requests",
-      "Fetch API": "Fetch API",
-      "CORS 安全機制": "CORS security",
-      "WiFi AP/STA 模式": "WiFi AP/STA modes",
-      "HTTP 生命週期": "HTTP lifecycle",
-      "非同步 WebServer": "Asynchronous WebServer",
-      "搖桿映射": "Joystick mapping",
-      "響應曲線": "Response curves",
-      "單輪車模型": "Unicycle model",
-      "millis() 計時": "millis() timing",
-      "硬體計時器": "Hardware timers",
-      "取樣率設計": "Sampling rate design",
-      "FSM 設計模式": "FSM design pattern",
-      "狀態一致性": "State consistency",
-      "UI 狀態設計": "UI state design",
-      "S3 介面配置": "S3 interface layout",
-      "MJPEG 串流": "MJPEG streaming",
-      "JPEG 品質調校": "JPEG quality tuning",
-      "影像串流實作": "Implement image streaming",
-      "Canvas 影像處理": "Canvas image processing",
-      "頻寬與 FPS 優化": "Bandwidth and FPS optimization",
-      "MTU 協商": "MTU negotiation",
-      "JSON 序列化": "JSON serialization",
-      "I2C/SPI 通訊": "I2C/SPI communication",
-      "JSON REST API": "JSON REST APIs",
-      "濾波演算法": "Filtering algorithms",
-      "重心誤差計算": "Centroid error calculation",
-      "閉迴路控制": "Closed-loop control",
-      "特徵提取": "Feature extraction",
-      "HSV 色彩數學": "HSV color math",
-      "閾值濾波": "Threshold filtering",
-      "重心演算法": "Centroid algorithm",
-      "前瞻追蹤": "Look-ahead tracking",
-      "UI 框架架構": "UI framework architecture",
-      "Chart Canvas 圖表": "Chart Canvas charts",
-      "事件輪詢": "Event polling",
-      "色彩空間": "Color spaces",
-      "MobileNet-SSD 模型": "MobileNet-SSD model",
-      "P 控制": "P control",
-      "誤差計算": "Error calculation",
-      "Teachable Machine": "Teachable Machine",
-      "CNN 音訊辨識": "CNN audio recognition",
-      "Web Speech API": "Web Speech API",
-      "流程控制": "Flow control",
-      "ICC 幾何模型": "ICC geometric model",
-      "PWM 限制": "PWM limits",
-      "API 設計": "API design",
-      "感測器原理": "Sensor principles",
-      "硬體中斷": "Hardware interrupts",
-      "測速演算法": "Speed measurement algorithms",
-      "穩健性設計": "Robustness design",
-      "系統效能分析": "System performance analysis",
-      "技術敘事": "Technical narrative",
-      "除錯技巧": "Debugging techniques",
-      "KPI 定義": "KPI definition",
-      "重構方法論": "Refactoring methodology",
-      "資料流設計": "Data flow design",
-      "BLE 非同步架構": "Asynchronous BLE architecture",
-      "影像 DMA": "Image DMA",
-      "PID 模擬": "PID simulation",
-      "Windows 10/11 或 macOS 13+": "Windows 10/11 or macOS 13+",
-      "RAM 8GB": "8GB RAM",
-      "可用儲存空間 20GB+": "20GB+ free storage",
-      "穩定 Wi‑Fi 與 Chrome/Edge": "Stable Wi‑Fi and Chrome/Edge",
-      "Windows 11 或 macOS 14+": "Windows 11 or macOS 14+",
-      "RAM 16GB+": "16GB+ RAM",
-      "可用儲存空間 50GB+": "50GB+ free storage",
-      "建議搭配雙螢幕與外接鍵盤滑鼠": "Recommended: dual monitors plus external keyboard and mouse",
-      "硬體設備推薦": "Recommended hardware kit",
-      "無人車組件入門包": "Starter car kit components",
-      "無人車組件進階包": "Advanced car kit components",
-      "ESP32-C3 開發板": "ESP32-C3 dev board",
-      "ESP32-S3 開發板": "ESP32-S3 dev board",
-      "馬達與驅動板": "Motor and driver board"
-    };
-    function translateBulletItem(value = "", uiLocale = "zh-TW") {
-      const raw = String(value || "").trim();
-      if (!uiLocale.startsWith("en")) return raw;
-      return EN_BULLET_TRANSLATIONS[raw] || raw;
-    }
-    function translateBulletList(items = [], uiLocale = "zh-TW") {
-      return (Array.isArray(items) ? items : []).map((item) => translateBulletItem(item, uiLocale));
-    }
-    function inferEnglishTitle(lesson = {}) {
-      const key = normalizeCanonicalCourseKey(
-        lesson.courseKey ||
-        lesson.courseId ||
-        lesson.entryUnitId ||
-        lesson.contentRef ||
-        lesson.id ||
-        ""
-      );
-      if (!key) return "";
-      if (EN_TITLE_OVERRIDES[key]) return EN_TITLE_OVERRIDES[key];
-      const rawTitle = String(lesson.title || "").trim();
-      const englishInParens = rawTitle.match(/\(([^)]+)\)\s*$/);
-      if (englishInParens && englishInParens[1]) return englishInParens[1].trim();
-      return titleCaseFromSlug(key);
-    }
-    function resolveLessonLabel(lesson = {}, uiLocale = "zh-TW") {
-      const resolved = window.__vibeResolveLocalizedFieldValue
-        ? window.__vibeResolveLocalizedFieldValue(lesson, "lessonLabel", uiLocale, lesson.lessonLabel || lesson.tagText || "")
-        : null;
-      if (resolved) return String(resolved).trim();
-      const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-      const i18n = lesson && typeof lesson.i18n === "object" && !Array.isArray(lesson.i18n) ? lesson.i18n : {};
-      const localizedLessonLabel = isEn
-        ? (i18n.en?.lessonLabel || i18n["en-US"]?.lessonLabel || i18n["en-GB"]?.lessonLabel)
-        : (i18n["zh-TW"]?.lessonLabel || i18n.zh?.lessonLabel || i18n["zh-Hant"]?.lessonLabel);
-      return String(localizedLessonLabel || (lesson.lessonLabel || lesson.tagText) || "").trim();
-    }
-    function resolveLessonCardTitle(lesson = {}, uiLocale = "zh-TW") {
-      const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-      if (isEn) {
-        return String(lesson.titleEn || inferEnglishTitle(lesson) || "").trim();
-      }
-      const resolved = window.__vibeResolveLocalizedFieldValue
-        ? window.__vibeResolveLocalizedFieldValue(lesson, "title", uiLocale, lesson.title || lesson.titleEn || "")
-        : lesson.title;
-      return String(resolved || lesson.title || "").trim();
-    }
-    function resolveLessonCardSummary(lesson = {}, uiLocale = "zh-TW") {
-      const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-      if (isEn) {
-        return String(lesson.summaryEn || lesson.descriptionEn || "English translation pending.").trim();
-      }
-      const resolved = window.__vibeResolveLocalizedFieldValue
-        ? window.__vibeResolveLocalizedFieldValue(lesson, "summary", uiLocale, lesson.summary || lesson.description || lesson.tagText || "")
-        : (lesson.summary || lesson.description || lesson.tagText || "");
-      return String(resolved || lesson.summary || lesson.description || lesson.tagText || "").trim();
-    }
-    function categoryFromLesson(lesson = {}) {
-      const category = normalizeCategoryKey(lesson.category || lesson.track || "");
-      if (category) return category;
-      const level = normalizeLevel(lesson.level || "");
-      const track = normalizeTrack(lesson.track || "");
-      if (level === "common" || track === "common" || track === "prepare") return "common";
-      if (track === "car" && level && level !== "common") return `car-${level}`;
-      if (/^(starter|basic|advanced)$/i.test(track)) return `car-${track}`;
-      return level && level !== "common" ? `car-${level}` : "common";
-    }
     let categoryLabelsMap = {};
-    function titleizeCategoryKey(path = "") {
-      return String(path || "")
-        .split("-")
-        .filter(Boolean)
-        .map((part) => part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1))
-        .join(" ");
-    }
-    function pickCategoryLabelFromLesson(lesson = {}, uiLocale = "zh-TW") {
-      const isZh = uiLocale.startsWith("zh");
-      const candidates = [];
-      if (isZh) {
-        candidates.push(
-          lesson.learningPathLabelZhTw,
-          lesson.learningPathLabelZh,
-          lesson.categoryLabelZhTw,
-          lesson.categoryLabelZh,
-          lesson.navLabelZhTw,
-          lesson.navLabelZh
-        );
-      } else {
-        candidates.push(
-          lesson.learningPathLabelEn,
-          lesson.categoryLabelEn,
-          lesson.navLabelEn
-        );
-      }
-      candidates.push(
-        lesson.learningPathLabel,
-        lesson.categoryLabel,
-        lesson.navLabel
-      );
-      const hit = candidates.find((v) => typeof v === "string" && v.trim());
-      return hit ? hit.trim() : "";
-    }
-
-    function extractCategoryLabelText(value = "", uiLocale = "zh-TW") {
-      const normalizedLocale = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
-      const visited = new Set();
-      const queue = [value];
-      const preferredKeys = normalizedLocale === "en"
-        ? ["en", "en-US", "en-GB", "labelEn", "enLabel", "titleEn", "nameEn", "textEn", "valueEn", "zh-TW", "zhTW", "zh", "tw", "label", "title", "name", "text", "value"]
-        : ["zh-TW", "zhTW", "zh", "tw", "labelZh", "twLabel", "titleZh", "nameZh", "textZh", "valueZh", "en", "en-US", "en-GB", "label", "title", "name", "text", "value"];
-
-      while (queue.length) {
-        const current = queue.shift();
-        if (current == null) continue;
-        if (typeof current === "string" || typeof current === "number" || typeof current === "boolean") {
-          const text = String(current).trim();
-          if (text) return text;
-          continue;
-        }
-        if (Array.isArray(current)) {
-          current.forEach((item) => queue.push(item));
-          continue;
-        }
-        if (typeof current !== "object") continue;
-        if (visited.has(current)) continue;
-        visited.add(current);
-
-        for (const key of preferredKeys) {
-          if (Object.prototype.hasOwnProperty.call(current, key)) {
-            queue.push(current[key]);
-          }
-        }
-        for (const nested of Object.values(current)) {
-          queue.push(nested);
-        }
-      }
-
-      return "";
-    }
-
-    function normalizeCategoryLabelEntry(entry = {}, uiLocale = "zh-TW") {
-      if (typeof entry === "string") {
-        const text = entry.trim();
-        return text ? { "zh-TW": text, en: text } : {};
-      }
-      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return "";
-      const zh = extractCategoryLabelText(entry, "zh-TW");
-      const en = extractCategoryLabelText(entry, "en");
-      const fallback = extractCategoryLabelText(entry, uiLocale);
-      return {
-        "zh-TW": zh || en || fallback,
-        en: en || zh || fallback,
-      };
-    }
-
-    function normalizeCategoryLabelsMap(sourceMap = {}, uiLocale = "zh-TW") {
-      const normalized = {};
-      if (!sourceMap || typeof sourceMap !== "object" || Array.isArray(sourceMap)) return normalized;
-
-      const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-
-      const assign = (key, value) => {
-        const canonical = normalizeCanonicalLearningPathKey(key);
-        if (!canonical) return;
-        const label = normalizeCategoryLabelEntry(value, uiLocale);
-        if (label) normalized[canonical] = label;
-      };
-
-      for (const [key, value] of Object.entries(sourceMap)) {
-        const lowerKey = key.trim().toLowerCase();
-        if (isEn) {
-          if (lowerKey.startsWith("tw-") || lowerKey.startsWith("tw_") || lowerKey.startsWith("zh-") || lowerKey.startsWith("zh_")) {
-            continue;
-          }
-        } else {
-          if (lowerKey.startsWith("en-") || lowerKey.startsWith("en_")) {
-            continue;
-          }
-        }
-
-        if (key === "zh-TW" || key === "en") {
-          const isKeyEn = key.startsWith("en");
-          if (isEn !== isKeyEn) continue;
-
-          if (value && typeof value === "object" && !Array.isArray(value)) {
-            for (const [nestedKey, nestedValue] of Object.entries(value)) {
-              assign(nestedKey, nestedValue);
-            }
-          }
-          continue;
-        }
-        assign(key, value);
-      }
-
-      return normalized;
-    }
-
-    function deriveCategoryLabels(lessons = [], existingMap = {}, uiLocale = "zh-TW") {
-      const derived = normalizeCategoryLabelsMap(existingMap, uiLocale);
-      (Array.isArray(lessons) ? lessons : []).forEach((lesson) => {
-        const key = categoryFromLesson(lesson);
-        if (!key || derived[key]) return;
-        const label = pickCategoryLabelFromLesson(lesson, uiLocale);
-        if (label) derived[key] = label;
-      });
-      return derived;
-    }
-    function categoryLabel(path = "") {
-      const uiLocale = detectUiLocale();
-      if (typeof window.__vibeResolveLearningPathLabel === 'function') {
-        return window.__vibeResolveLearningPathLabel(path, uiLocale, categoryLabelsMap);
-      }
-      const canonical = normalizeCanonicalLearningPathKey(path);
-      const labelMap = normalizeCategoryLabelsMap(categoryLabelsMap, uiLocale);
-      const localizedLabel = labelMap[canonical || path];
-      if (localizedLabel) {
-        if (typeof localizedLabel === "string") return localizedLabel;
-        const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-        return localizedLabel[isEn ? "en" : "zh-TW"] || localizedLabel["zh-TW"] || localizedLabel.en || "";
-      }
-      return titleizeCategoryKey(canonical || path);
-    }
-    function resolveUnitFile(lesson = {}) {
-      const pickFile = (value = "") => String(value || "").split("/").pop().split("?")[0];
-      if (Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0) {
-        const file = pickFile(lesson.courseUnits[0]);
-        if (file) return normalizeLegacyUnitFilename(file);
-      }
-      if (lesson.entryUnitId) {
-        const file = pickFile(lesson.entryUnitId);
-        if (file) return normalizeLegacyUnitFilename(file);
-      }
-      if (lesson.contentRef) {
-        const file = pickFile(lesson.contentRef);
-        if (file) return normalizeLegacyUnitFilename(file);
-      }
-      if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
-        const file = pickFile(lesson.classroomUrl);
-        if (file) return normalizeLegacyUnitFilename(file);
-      }
-      return "";
-    }
-
-    function normalizeLegacyUnitFilename(file = "") {
-      const v = String(file || "").trim();
-      if (!v) return "";
-      if (/^(?:tw|en)-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
-      if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, "car-starter-");
-      if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, "car-basic-");
-      if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(?:adv|advanced)-\d{2}-unit-/i, "car-advanced-");
-      if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, "common-");
-      if (/^prepare-\d+-(.+)$/i.test(v)) return v.replace(/^prepare-\d+-/i, "common-");
-      return v;
-    }
-
-    function resolveEntryUrl(lesson = {}, fallbackUrl = "") {
-      if (Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0) {
-        const firstUnit = normalizeLegacyUnitFilename(String(lesson.courseUnits[0]));
-        if (firstUnit) return `/courses/${firstUnit}`;
-      }
-      const entryUnit = lesson.entryUnitId
-        ? normalizeLegacyUnitFilename(String(lesson.entryUnitId))
-        : "";
-      if (entryUnit) return `/courses/${entryUnit}`;
-      const unitFile = resolveUnitFile(lesson);
-      if (unitFile) return `/courses/${unitFile}`;
-      return lesson.classroomUrl || fallbackUrl || "";
-    }
 
     function stripQueryAndHash(value = "") {
       return String(value || "").split("?")[0].split("#")[0];
@@ -825,7 +220,7 @@
       btn.onclick = null;
       btn.disabled = false;
 
-      const uiLocale = detectUiLocale();
+      const uiLocale = LP.detectUiLocale?.() || "en";
 
       if (!hasPriceData) {
         btn.textContent = uiLocale.startsWith("en") ? "Not for sale" : "未定價";
@@ -914,112 +309,10 @@
       }
     }
 
-    function isCatalogCourseLesson(lesson = {}) {
-      const metadataType = String(lesson?.metadataType || "").toLowerCase();
-      if (lesson?.hiddenFromCatalog === true) return false;
-      if (lesson?.isPhysical === true) return false;
-      if (metadataType === "product" || metadataType === "legacy_product") return false;
-      if (metadataType === "course") return true;
-      return Array.isArray(lesson?.courseUnits) || String(lesson?.courseId || "").endsWith(".html");
-    }
-
     function toList(value) {
       if (Array.isArray(value)) return value.filter(Boolean).map(String);
       if (typeof value === "string" && value.trim()) return [value.trim()];
       return [];
-    }
-
-    function hasHanText(value = "") {
-      return /[\u3400-\u4DBF\u4E00-\u9FFF]/.test(String(value || ""));
-    }
-
-    function lessonTextBlob(lesson = {}) {
-      const values = [
-        lesson.title,
-        lesson.titleEn,
-        lesson.summary,
-        lesson.summaryEn,
-        lesson.description,
-        lesson.descriptionEn,
-        lesson.lessonLabel,
-        lesson.lessonLabelEn,
-        lesson.tagText,
-        ...(Array.isArray(lesson.coreContent) ? lesson.coreContent : []),
-        ...(Array.isArray(lesson.coreContentEn) ? lesson.coreContentEn : [])
-      ];
-      return values.map((value) => String(value || "")).join(" ").trim();
-    }
-
-    function lessonVariantScore(lesson = {}, uiLocale = "zh-TW") {
-      const blob = lessonTextBlob(lesson);
-      const rawLocale = String(lesson.locale || "").trim().toLowerCase();
-      const explicitLocale = rawLocale ? normalizeLocaleCode(rawLocale) : "";
-      const isZh = uiLocale.startsWith("zh");
-      const hasHan = hasHanText(blob);
-      const hasLatin = /[A-Za-z]/.test(blob);
-      let score = 0;
-
-      if (Number.isFinite(Number(lesson.orderWeight))) {
-        score -= Number(lesson.orderWeight) / 1000;
-      }
-      if (isZh) {
-        if (explicitLocale === "tw") score += 100;
-        else if (explicitLocale === "en") score -= 50;
-        if (hasHan) score += 20;
-        if (hasLatin && !hasHan) score -= 5;
-      } else {
-        if (explicitLocale === "en") score += 100;
-        else if (explicitLocale === "tw") score -= 50;
-        if (hasLatin && !hasHan) score += 20;
-        if (hasHan) score -= 5;
-        // [新增] 英文模式下，若文件含有英文翻譯欄位，給予顯著加分以避免因欄位混合中文字而被當成純中文卡片
-        if (lesson.titleEn) score += 1000;
-        if (lesson.coreContentEn && lesson.coreContentEn.length > 0) score += 500;
-        if (lesson.lessonLabelEn) score += 500;
-      }
-      return score;
-    }
-
-    function lessonRenderKey(lesson = {}) {
-      return normalizeCanonicalCourseKey(
-        lesson.courseKey ||
-        lesson.docId ||
-        lesson.courseId ||
-        lesson.entryUnitId ||
-        lesson.contentRef ||
-        lesson.id ||
-        ""
-      );
-    }
-
-    function dedupeLessonsForRender(items = [], uiLocale = "zh-TW") {
-      const groups = new Map();
-      (Array.isArray(items) ? items : []).forEach((lesson) => {
-        const key = lessonRenderKey(lesson);
-        if (!key) return;
-        const bucket = groups.get(key) || [];
-        bucket.push(lesson);
-        groups.set(key, bucket);
-      });
-      return [...groups.values()]
-        .map((bucket) => bucket.slice().sort((a, b) => lessonVariantScore(b, uiLocale) - lessonVariantScore(a, uiLocale))[0])
-        .filter(Boolean);
-    }
-
-    function pickImage(lesson = {}) {
-      return (
-        lesson.cardImageUrl ||
-        lesson.imageUrl ||
-        lesson.thumbnailUrl ||
-        lesson.bannerUrl ||
-        ""
-      );
-    }
-
-    function pickVideo(lesson = {}) {
-      if (lesson.videoId) return `https://www.youtube.com/embed/${lesson.videoId}?autoplay=1&enablejsapi=1`;
-      if (lesson.videoUrl) return lesson.videoUrl;
-      return "";
     }
 
     function openVideo(url = "") {
@@ -1031,77 +324,51 @@
       window.open(url, "_blank", "noopener,noreferrer");
     }
 
-    function renderSection(title, html) {
-      const titleHtml = title ? `<h2 class="text-2xl font-bold text-slate-800 mb-4">${title}</h2>` : "";
-      return `
-        <section class="mb-10">
-          ${titleHtml}
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-2">${html}</div>
-        </section>
-      `;
-    }
-
     function renderLessons(lessons, pathKey) {
-      const uiLocale = detectUiLocale();
+      const uiLocale = LP.detectUiLocale?.() || "en";
       const t = {
         coreContentLabel: window.t('lp_coreContentLabel', uiLocale.startsWith('en') ? 'Core Content' : '核心內容'),
         freeLabel: window.t('lp_freeLabel', uiLocale.startsWith('en') ? 'Free' : '免費'),
         loadingText: window.t('lp_loadingText', uiLocale.startsWith('en') ? 'Loading...' : '載入中...')
       };
-      const pageTitleText = categoryLabel(pathKey);
-
-      const shouldHideCourse = (lesson = {}) => {
-        return lesson.hiddenFromCatalog === true;
-      };
+      const pageTitleText = LP.categoryLabel?.(pathKey, categoryLabelsMap, uiLocale) || String(pathKey || "");
 
       const container = document.getElementById("lesson-container");
       const title = document.getElementById("page-title");
       if (title) {
         title.textContent = pageTitleText;
-        title.setAttribute("data-path-title", categoryLabel(pathKey));
+        title.setAttribute("data-path-title", LP.categoryLabel?.(pathKey, categoryLabelsMap, uiLocale) || String(pathKey || ""));
       }
       document.title = pageTitleText;
-      const catalogCourses = lessons.filter(isCatalogCourseLesson);
-      const matchingPathKeys = resolveMatchingPathKeys(pathKey);
-
-      let rows = dedupeLessonsForRender(
-        catalogCourses
-        .filter((x) => matchingPathKeys.includes(categoryFromLesson(x)))
-        .filter((x) => !shouldHideCourse(x)),
-        uiLocale
-      ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
-      let hardwareRows = dedupeLessonsForRender(
-        lessons.filter(
-        (x) => x?.isPhysical === true &&
-               x?.hiddenFromCatalog !== true &&
-               Array.isArray(x?.learningPaths) &&
-               matchingPathKeys.some((key) => x.learningPaths.includes(key))
-        ),
-        uiLocale
-      ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
-      if (!rows.length && !hardwareRows.length && normalizeCanonicalLearningPathKey(pathKey) !== "common") {
+      const sections = LP.buildLearningPathSections?.(lessons, pathKey, uiLocale) || {
+        rows: [],
+        productRows: [],
+        specsRows: [],
+        isCommonPath: LP.normalizeCanonicalLearningPathKey?.(pathKey) === "common"
+      };
+      const { rows = [], productRows = [], hardwareRows = [], specsRows = [], isCommonPath = false } = sections;
+      const productEntries = productRows.length ? productRows : hardwareRows;
+      if (!rows.length && !productEntries.length && !specsRows.length && !isCommonPath) {
         container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">${window.t('lp_emptyCategory', '目前此分類尚無課程。')}</p>`;
         return;
       }
       const courseHtml = rows.map((lesson) => {
-        const entryUrl = resolveEntryUrl(lesson);
-        const unitFile = resolveUnitFile(lesson);
+        const entryUrl = LP.resolveEntryUrl?.(lesson) || (lesson.classroomUrl || "");
+        const unitFile = LP.resolveUnitFile?.(lesson) || "";
         const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-        const displayTitle = resolveLessonCardTitle(lesson, uiLocale);
-        const displayKey = categoryLabel(pathKey);
-        const contentList = translateBulletList(
-          toList(window.__vibeResolveLocalizedFieldValue
+        const displayTitle = LP.resolveLessonCardTitle?.(lesson, uiLocale) || String(lesson.title || lesson.titleEn || "");
+        const displayKey = LP.categoryLabel?.(pathKey, categoryLabelsMap, uiLocale) || String(pathKey || "");
+        const localizedCoreContent = toList(window.__vibeResolveLocalizedFieldValue
             ? window.__vibeResolveLocalizedFieldValue(lesson, "coreContent", uiLocale, isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])
-            : (isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])).slice(0, 4),
-          uiLocale
-        ).filter(Boolean);
-        const summary = resolveLessonCardSummary(lesson, uiLocale) || (isEn ? "English translation pending." : "課程內容由系統資料動態載入。");
+            : (isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])).slice(0, 4);
+        const contentList = LP.translateBulletList?.(localizedCoreContent, uiLocale) || localizedCoreContent;
+        const summary = LP.resolveLessonCardSummary?.(lesson, uiLocale) || (isEn ? "English translation pending." : "課程內容由系統資料動態載入。");
         const duration = String(lesson.duration || lesson.estimatedDuration || "");
-        const lessonLabel = resolveLessonLabel(lesson, uiLocale);
+        const lessonLabel = LP.resolveLessonLabel?.(lesson, uiLocale) || String(lesson.lessonLabel || lesson.tagText || "");
         const displayLessonLabel = lessonLabel || (isEn ? "Course Unit" : "課程單元");
         const icon = String(lesson.cardIcon || lesson.icon || "📘");
-        const imageUrl = pickImage(lesson);
-        const videoUrl = pickVideo(lesson);
+        const imageUrl = LP.pickImage?.(lesson) || "";
+        const videoUrl = LP.pickVideo?.(lesson) || "";
         const priceEntry = getPricingApi().resolveLessonPrice(lesson);
         const price = Number(priceEntry.amount || 0);
         const priceCurrency = String(priceEntry.currency || "");
@@ -1128,7 +395,7 @@
                data-course-price="${price}"
                data-course-currency="${priceCurrency}"
                data-has-price-data="${hasPriceData}"
-               data-is-physical="${lesson.isPhysical === true}"
+               data-is-physical="${LP.isPhysicalMetadataLesson?.(lesson) ? "true" : "false"}"
                data-classroom-url="${entryUrl}">
             <div class="flex items-start justify-between gap-3 mb-3">
               <div class="min-w-0 text-xs text-slate-500 truncate">${displayKey}</div>
@@ -1144,7 +411,7 @@
             </div>
             ${hasPriceData ? `
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-              <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : formatCoursePrice(priceEntry, uiLocale)}</span>
+              <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : (LP.formatPrice?.(priceEntry, uiLocale) || String(priceEntry?.amount ?? priceEntry ?? 0))}</span>
             </div>
             <div class="mt-3 flex flex-col sm:flex-row gap-2">
               ${videoButton}
@@ -1155,35 +422,47 @@
         `;
       }).join("");
 
-      const hardwareHtml = hardwareRows.map((lesson) => {
-        const entryUrl = resolveEntryUrl(lesson);
-        const unitFile = resolveUnitFile(lesson);
+      const productHtml = productEntries.map((lesson) => {
+        const entryUrl = LP.resolveEntryUrl?.(lesson) || (lesson.classroomUrl || "");
+        const unitFile = LP.resolveUnitFile?.(lesson) || "";
         const priceEntry = getPricingApi().resolveLessonPrice(lesson);
         const price = Number(priceEntry.amount || 0);
         const priceCurrency = String(priceEntry.currency || "");
         const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
         const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-        const displayKey = categoryLabel(pathKey);
-        const hardwareId = String(lesson.courseId || "").toLowerCase();
-        const imageUrl = pickImage(lesson);
-        const summary = isEn
-          ? String(lesson.summaryEn || lesson.descriptionEn || "Hardware recommendations")
-          : String((window.__vibeResolveLocalizedFieldValue
-              ? window.__vibeResolveLocalizedFieldValue(lesson, "summary", uiLocale, lesson.summary || lesson.description || lesson.tagText || "")
-              : (lesson.summary || lesson.description || lesson.tagText))
-            || "硬體設備推薦");
-        const displayTitle = resolveLessonCardTitle(lesson, uiLocale) || (uiLocale === "zh-TW" ? "硬體設備" : "Hardware Kit");
-        const contentList = translateBulletList(
-          toList(window.__vibeResolveLocalizedFieldValue
-            ? window.__vibeResolveLocalizedFieldValue(lesson, "coreContent", uiLocale, isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])
-            : (isEn ? (lesson.coreContentEn || []) : lesson.coreContent || [])).slice(0, 4),
-          uiLocale
-        ).filter(Boolean);
+        const displayKey = LP.categoryLabel?.(pathKey, categoryLabelsMap, uiLocale) || String(pathKey || "");
+        const imageUrl = LP.pickImage?.(lesson) || "";
+        const displayTitle = String(window.__vibeResolveLocalizedFieldValue
+          ? window.__vibeResolveLocalizedFieldValue(
+              lesson,
+              "title",
+              uiLocale,
+              isEn ? (lesson.titleEn || LP.inferEnglishTitle?.(lesson) || lesson.title || "") : (lesson.title || lesson.titleEn || "")
+            )
+          : (isEn ? (lesson.titleEn || LP.inferEnglishTitle?.(lesson) || lesson.title || "") : (lesson.title || lesson.titleEn || "")) || "").trim();
+        const summary = String(window.__vibeResolveLocalizedFieldValue
+          ? window.__vibeResolveLocalizedFieldValue(
+              lesson,
+              "summary",
+              uiLocale,
+              isEn ? (lesson.summaryEn || lesson.descriptionEn || lesson.summary || lesson.description || lesson.tagText || "") : (lesson.summary || lesson.description || lesson.tagText || lesson.summaryEn || lesson.descriptionEn || "")
+            )
+          : (isEn ? (lesson.summaryEn || lesson.descriptionEn || lesson.summary || lesson.description || lesson.tagText || "") : (lesson.summary || lesson.description || lesson.tagText || lesson.summaryEn || lesson.descriptionEn || "")) || "產品");
+        const localizedCoreContent = toList(window.__vibeResolveLocalizedFieldValue
+            ? window.__vibeResolveLocalizedFieldValue(
+                lesson,
+                "coreContent",
+                uiLocale,
+                isEn ? (lesson.coreContentEn || lesson.coreContent || []) : (lesson.coreContent || lesson.coreContentEn || [])
+              )
+            : (isEn ? (lesson.coreContentEn || lesson.coreContent || []) : (lesson.coreContent || lesson.coreContentEn || []))).slice(0, 4);
+        const contentList = LP.translateBulletList?.(localizedCoreContent, uiLocale) || localizedCoreContent;
         const listHtml = contentList.length
           ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
           : `<p class="text-sm text-slate-500">${summary}</p>`;
-        const objectPos = hardwareId === "car-intro" ? "50% 50%" : (hardwareId === "car-advanced" ? "50% 28%" : ((hardwareId === "esp32-s3" || hardwareId === "product-esp32-s3") ? "50% 15%" : "50% 50%"));
-        const objectScale = hardwareId === "car-advanced" ? "scale(1.08)" : (hardwareId === "car-intro" ? "scale(1.02)" : "scale(1)");
+        const productId = String(lesson.courseId || lesson.id || lesson.docId || "").toLowerCase();
+        const objectPos = productId === "car-intro" ? "50% 50%" : (productId === "car-advanced" ? "50% 28%" : ((productId === "esp32-s3" || productId === "product-esp32-s3") ? "50% 15%" : "50% 50%"));
+        const objectScale = productId === "car-advanced" ? "scale(1.08)" : (productId === "car-intro" ? "scale(1.02)" : "scale(1)");
         const imageHtml = imageUrl
           ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-white mb-3 h-56"><img src="${imageUrl}" alt="${displayTitle}" class="w-full h-full object-cover" style="object-position:${objectPos}; transform:${objectScale};"></div>`
           : "";
@@ -1198,15 +477,15 @@
                data-course-price="${price}"
                data-course-currency="${priceCurrency}"
                data-has-price-data="${hasPriceData}"
-               data-is-physical="true"
-               data-classroom-url="${entryUrl}">
+           data-is-physical="${LP.isPhysicalMetadataLesson?.(lesson) ? "true" : "false"}"
+           data-classroom-url="${entryUrl}">
             <div class="min-w-0 text-xs text-slate-500 mb-2 truncate">${displayKey}</div>
             <h3 class="text-xl font-bold text-slate-800 mb-2">${displayTitle}</h3>
             ${imageHtml}
             <div class="text-sm text-slate-700 mb-4">${listHtml}</div>
             ${hasPriceData ? `
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-              <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : formatCoursePrice(priceEntry, uiLocale)}</span>
+              <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : (LP.formatPrice?.(priceEntry, uiLocale) || String(priceEntry?.amount ?? priceEntry ?? 0))}</span>
             </div>
             <div class="mt-3">
               <button class="action-btn w-full py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>${t.loadingText}</button>
@@ -1216,34 +495,23 @@
         `;
       }).join("");
 
-      const specsRows = dedupeLessonsForRender(
-        lessons.filter((x) => {
-          if (x?.metadataType !== "spec") return false;
-          const paths = Array.isArray(x?.learningPaths) ? x.learningPaths.map(String).filter(Boolean) : [];
-          if (paths.some((key) => matchingPathKeys.includes(key))) return true;
-          return !paths.length && String(x?.category || "").toLowerCase() === "prepare" && matchingPathKeys.some((key) => /^(tw|en)-common$/.test(key));
-        }),
-        uiLocale
-      ).sort((a, b) => Number(a.orderWeight || 0) - Number(b.orderWeight || 0));
       const specsHtml = specsRows.map((spec) => {
         const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
         const displayTitle = isEn
-          ? String(spec.titleEn || inferEnglishTitle(spec) || spec.title || "").trim()
+          ? String(spec.titleEn || (LP.inferEnglishTitle?.(spec) || "") || spec.title || "").trim()
           : String((window.__vibeResolveLocalizedFieldValue
               ? window.__vibeResolveLocalizedFieldValue(spec, "title", uiLocale, spec.title || "")
               : spec.title) || "");
-        const specImg = pickImage(spec);
+        const specImg = LP.pickImage?.(spec) || "";
         const specSummary = isEn
           ? String(spec.summaryEn || spec.descriptionEn || "Computer Spec Recommendations")
           : String((window.__vibeResolveLocalizedFieldValue
               ? window.__vibeResolveLocalizedFieldValue(spec, "summary", uiLocale, spec.summary || spec.description || "")
               : (spec.summary || spec.description || "")));
-        const specContentList = translateBulletList(
-          toList(window.__vibeResolveLocalizedFieldValue
+        const localizedSpecContent = toList(window.__vibeResolveLocalizedFieldValue
             ? window.__vibeResolveLocalizedFieldValue(spec, "coreContent", uiLocale, isEn ? (spec.coreContentEn || spec.coreContent) : spec.coreContent || [])
-            : (isEn ? (spec.coreContentEn || spec.coreContent) : spec.coreContent || [])),
-          uiLocale
-        );
+            : (isEn ? (spec.coreContentEn || spec.coreContent) : spec.coreContent || []));
+        const specContentList = LP.translateBulletList?.(localizedSpecContent, uiLocale) || localizedSpecContent;
         return `
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             ${specImg ? `<div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 mb-3"><img src="${specImg}" alt="${displayTitle}" class="w-full h-40 object-cover"></div>` : ""}
@@ -1255,20 +523,20 @@
       }).join("");
 
       let pageHtml = "";
-      const isCommon = normalizeCanonicalLearningPathKey(pathKey) === "common";
+      const isCommon = isCommonPath;
       if (isCommon) {
-        if (hardwareHtml) pageHtml += renderSection(t.hardwareHeader, hardwareHtml);
-        if (courseHtml) pageHtml += renderSection("", courseHtml);
-        if (specsHtml) pageHtml += renderSection(t.specsHeader, specsHtml);
+        if (productHtml) pageHtml += LP.renderSection(window.t('lp_productHeader', '產品'), productHtml);
+        if (courseHtml) pageHtml += LP.renderSection("", courseHtml);
+        if (specsHtml) pageHtml += LP.renderSection(window.t('lp_specsHeader', '電腦規格推薦'), specsHtml);
       } else {
-        if (courseHtml) pageHtml += renderSection("", courseHtml);
-        if (hardwareHtml) pageHtml += renderSection(window.t('lp_hardwareHeader', '硬體設備'), hardwareHtml);
-        if (specsHtml) pageHtml += renderSection(window.t('lp_specsHeader', '電腦規格推薦'), specsHtml);
+        if (courseHtml) pageHtml += LP.renderSection("", courseHtml);
+        if (productHtml) pageHtml += LP.renderSection(window.t('lp_productHeader', '產品'), productHtml);
+        if (specsHtml) pageHtml += LP.renderSection(window.t('lp_specsHeader', '電腦規格推薦'), specsHtml);
       }
       container.innerHTML = pageHtml;
 
       container.querySelectorAll(".video-btn").forEach((btn, i) => {
-        const videoUrl = pickVideo(rows[i] || {});
+        const videoUrl = LP.pickVideo?.(rows[i] || {});
         btn.addEventListener("click", () => openVideo(videoUrl));
       });
     }
@@ -1289,11 +557,11 @@
     }
 
     async function init() {
-      const uiLocale = detectUiLocale();
+      const uiLocale = LP.detectUiLocale?.() || "en";
       window.__vibeLocale = uiLocale;
       document.documentElement.lang = uiLocale.startsWith("en") ? "en" : "zh-Hant";
-      currentPathKey = normalizeCanonicalLearningPathKey(new URLSearchParams(location.search).get("path") || "common") || "common";
-      document.title = categoryLabel(currentPathKey);
+      currentPathKey = LP.normalizeCanonicalLearningPathKey?.(new URLSearchParams(location.search).get("path") || "common") || "common";
+      document.title = LP.categoryLabel?.(currentPathKey, categoryLabelsMap) || String(currentPathKey || "");
       window.updateAuthUI = async function () {
         const cards = document.querySelectorAll(".lesson-card");
         const user = auth.currentUser;
