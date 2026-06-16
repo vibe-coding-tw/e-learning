@@ -275,33 +275,23 @@
       outline: none;
     }
     .unit-list {
-      display: grid;
-      gap: 8px;
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
     }
     .unit-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
+      border-top: 1px solid var(--line);
       background: #fff;
-      padding: 12px 14px;
       cursor: pointer;
-      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+      transition: background-color .15s ease, box-shadow .15s ease;
     }
     .unit-item:hover {
-      transform: translateY(-1px);
-      border-color: #c7d2fe;
-      box-shadow: 0 10px 24px rgba(79,70,229,.08);
-    }
-    .unit-item.active {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 4px rgba(99,102,241,.08);
+      background: #f8fafc;
+      box-shadow: inset 0 0 0 1px rgba(148,163,184,.12);
     }
     .unit-item.selected {
-      border-color: #0f766e;
-      box-shadow: 0 0 0 4px rgba(13,148,136,.10);
+      background: #f0fdfa;
+      box-shadow: inset 0 0 0 1px rgba(13,148,136,.16);
     }
     .unit-item-code {
       font-family: "JetBrains Mono", monospace;
@@ -314,6 +304,118 @@
       flex-wrap: wrap;
       gap: 8px;
       flex-shrink: 0;
+    }
+    .unit-table-head {
+      background: #f8fafc;
+      color: #475569;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .unit-table-head th {
+      text-align: left;
+      padding: 14px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .unit-table-head th:first-child,
+    .unit-table-row td:first-child {
+      padding-left: 18px;
+    }
+    .unit-table-head th:last-child,
+    .unit-table-row td:last-child {
+      padding-right: 18px;
+    }
+    .unit-table-head th:nth-child(1) { width: 36%; }
+    .unit-table-head th:nth-child(2) { width: 34%; }
+    .unit-table-head th:nth-child(3) { width: 14%; }
+    .unit-table-head th:nth-child(4) { width: 16%; }
+    .unit-table-row {
+      background: #fff;
+      cursor: pointer;
+      transition: background-color .15s ease;
+    }
+    .unit-table-row:hover td {
+      background: #f8fafc;
+    }
+    .unit-table-row.selected td {
+      background: #f0fdfa;
+    }
+    .unit-table-row td {
+      padding: 16px 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+    .unit-table-row:last-child td {
+      border-bottom: none;
+    }
+    .unit-cell-stack {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 0;
+    }
+    .unit-row-index {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #eef2ff, #e0e7ff);
+      color: #4338ca;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      margin-top: 1px;
+    }
+    .unit-main-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: var(--text);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .unit-subtitle {
+      margin-top: 6px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    .unit-status-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .unit-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: #334155;
+    }
+    .unit-pill.selected {
+      background: #ecfeff;
+      border-color: #a5f3fc;
+      color: #0e7490;
+    }
+    .unit-action-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .unit-action-group .btn {
+      min-width: 40px;
+      justify-content: center;
+      padding: 9px 11px;
+      border-radius: 12px;
     }
     .unit-advanced {
       border: 1px dashed var(--line);
@@ -604,7 +706,7 @@
               <i class="fa-solid fa-circle-info"></i> 課程維護
             </button>
             <button class="tab-btn" data-tab="unit-maintenance" onclick="window.switchEditorTab('unit-maintenance')">
-              <i class="fa-solid fa-list-check"></i> 課程單元維護
+              <i class="fa-solid fa-list-check"></i> 單元維護
             </button>
             <button class="tab-btn" data-tab="pricebook" onclick="window.switchEditorTab('pricebook')">
               <i class="fa-solid fa-tags"></i> PRICEBOOK
@@ -677,6 +779,13 @@
                   </select>
                   <div class="hint">`isPhysical` 會依 `metadataType` 自動推導：`course = false`，`product = true`。舊的 `legacy_product` 會在載入時自動視為 `product`。</div>
                 </div>
+                <div class="field full">
+                  <label>課程單元維護</label>
+                  <div class="hint">跨單元 TAB 與 `course_units` / `course_unit_titles` 的維護入口。若要調整單元清單，請切到下方的單元維護 tab。</div>
+                  <div style="margin-top:10px;">
+                    <button class="btn btn-ghost btn-small" onclick="window.switchEditorTab('unit-maintenance')"><i class="fa-solid fa-list-check"></i> 前往單元維護</button>
+                  </div>
+                </div>
                 <div class="field readonly" style="display:none;">
                   <label>Document ID / docId</label>
                   <input id="doc-id" placeholder="自動產生 UUID-like ID" readonly />
@@ -692,38 +801,57 @@
           </div>
 
           <div class="editor-tab-content" id="tab-unit-maintenance">
-            <div class="editor-card">
+            <div class="price-card">
               <div class="card-title">
                 <div>
-                  <h2>課程單元維護</h2>
+                  <h2>單元維護</h2>
                   <span>只維護跨單元 TAB，不會覆寫單元內 sidebar 或 `window.UNITS`。</span>
                 </div>
                 <div style="color:var(--muted);font-size:12px;" id="course-unit-status">尚未載入</div>
               </div>
-              <div class="unit-maintenance">
-                <div class="editor-grid" style="margin-bottom: 8px;">
-                  <div class="field">
-                    <label>單元檔名 / unitId</label>
-                    <input id="course-unit-input" type="text" placeholder="例如 start-01-unit-html5-basics.html" />
+              <div class="pricebook-list" style="margin-top:14px;">
+                <table class="unit-list" style="width:100%;">
+                  <thead class="unit-table-head">
+                    <tr>
+                      <th style="text-align:left;">UNIT</th>
+                      <th style="text-align:left;">Display Title</th>
+                      <th style="text-align:left;">Status</th>
+                      <th style="text-align:right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="course-unit-list" class="unit-list">
+                    <tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未載入</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <details id="course-unit-editor" class="pricebook-maintenance" style="margin-top:14px;">
+                <summary>維護單元</summary>
+                <div class="maintenance-body">
+                  <div class="editor-grid" style="margin-bottom: 8px;">
+                    <div class="field">
+                      <label>單元檔名 / unitId</label>
+                      <input id="course-unit-input" type="text" placeholder="例如 start-01-unit-html5-basics.html" />
+                    </div>
+                    <div class="field">
+                      <label>單元顯示標題</label>
+                      <input id="course-unit-title-input" type="text" placeholder="例如 HTML5 Basics" />
+                    </div>
                   </div>
-                  <div class="field">
-                    <label>單元顯示標題</label>
-                    <input id="course-unit-title-input" type="text" placeholder="例如 HTML5 Basics" />
+                  <div class="action-row" style="margin-top: 0; margin-bottom: 12px;">
+                    <div class="left"></div>
+                    <div class="right">
+                      <button class="btn btn-primary btn-small" onclick="window.addCourseUnitFromInput()"><i class="fa-solid fa-plus"></i> 新增 / 更新所選單元</button>
+                    </div>
                   </div>
+                  <details class="unit-advanced">
+                    <summary>進階文字編輯</summary>
+                    <textarea id="lesson-course-units" class="textarea-list" placeholder="一行一個 course_units 檔名，例如&#10;start-01-unit-html5-basics.html&#10;start-01-unit-flexbox-layout.html"></textarea>
+                    <textarea id="lesson-course-unit-titles" class="textarea-list" placeholder="一行一個單元標題，順序需與上方單元一致，例如&#10;HTML5 Basics&#10;Flexbox Layout"></textarea>
+                    <div class="hint">點擊下方單元可回填到上方輸入框；修改後按「新增 / 更新單元」即可覆寫所選項目。這裡會同步維護 `course_units` / `course_unit_titles`，並保留 camelCase 別名供舊 runtime 相容。</div>
+                  </details>
                 </div>
-                <div class="action-row" style="margin-top: 0; margin-bottom: 12px;">
-                  <div class="left"></div>
-                  <div class="right">
-                    <button class="btn btn-primary btn-small" onclick="window.addCourseUnitFromInput()"><i class="fa-solid fa-plus"></i> 新增 / 更新所選單元</button>
-                  </div>
-                </div>
-                <div id="course-unit-list" class="unit-list"></div>
-                <details class="unit-advanced">
-                  <summary>進階文字編輯</summary>
-                  <textarea id="lesson-course-units" class="textarea-list" placeholder="一行一個 course_units 檔名，例如&#10;start-01-unit-html5-basics.html&#10;start-01-unit-flexbox-layout.html"></textarea>
-                  <textarea id="lesson-course-unit-titles" class="textarea-list" placeholder="一行一個單元標題，順序需與上方單元一致，例如&#10;HTML5 Basics&#10;Flexbox Layout"></textarea>
-                  <div class="hint">點擊下方單元可回填到上方輸入框；修改後按「新增 / 更新單元」即可覆寫所選項目。這裡會同步維護 `course_units` / `course_unit_titles`，並保留 camelCase 別名供舊 runtime 相容。</div>
-                </details>
+              </details>
               </div>
             </div>
           </div>
@@ -1089,24 +1217,41 @@
           : "尚未設定";
       }
       if (!units.length) {
-        host.innerHTML = '<div class="empty-state" style="padding:16px;">尚未加入任何單元。請先從上方新增或貼上清單。</div>';
+        host.innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未加入任何單元。請先從上方新增或貼上清單。</td></tr>';
         return;
       }
       host.innerHTML = units.map((unitId, index) => {
         const title = normalizeText(titles[index] || unitId);
         const isSelected = state.selectedCourseUnitIndex === index;
+        const displayTitle = title || unitId;
+        const subtitle = title && title !== unitId ? unitId : "尚未設定顯示名稱";
         return `
-          <div class="unit-item ${isSelected ? "selected" : ""}" onclick="window.selectCourseUnit(${index})" title="點擊回填到單元輸入框">
-            <div>
-              <div class="unit-item-code">${escapeHtml(title || unitId)}</div>
-              ${title && title !== unitId ? `<div class="pricebook-meta">${escapeHtml(unitId)}</div>` : ''}
-            </div>
-            <div class="unit-item-actions">
-              <button class="btn btn-muted btn-small" onclick="event.stopPropagation(); window.moveCourseUnit(${index}, -1)"><i class="fa-solid fa-arrow-up"></i></button>
-              <button class="btn btn-muted btn-small" onclick="event.stopPropagation(); window.moveCourseUnit(${index}, 1)"><i class="fa-solid fa-arrow-down"></i></button>
-              <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); window.removeCourseUnit(${index})"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          </div>
+          <tr class="unit-table-row ${isSelected ? "selected" : ""}" onclick="window.selectCourseUnit(${index})" title="點擊回填到單元輸入框">
+            <td>
+              <div class="unit-cell-stack">
+                <div class="unit-row-index">${index + 1}</div>
+                <div style="min-width:0;">
+                  <div class="unit-main-title">${escapeHtml(displayTitle)}</div>
+                  <div class="unit-subtitle">${escapeHtml(subtitle)}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="unit-subtitle" style="margin-top:0;">${escapeHtml(unitId)}</div>
+            </td>
+            <td>
+              <div class="unit-status-cell">
+                ${isSelected ? '<span class="unit-pill selected"><i class="fa-solid fa-circle-check"></i> Selected</span>' : '<span class="unit-pill"><i class="fa-regular fa-circle"></i> Available</span>'}
+              </div>
+            </td>
+            <td style="text-align:right;">
+              <div class="unit-action-group">
+                <button class="btn btn-muted btn-small" title="上移" aria-label="上移" onclick="event.stopPropagation(); window.moveCourseUnit(${index}, -1)"><i class="fa-solid fa-arrow-up"></i></button>
+                <button class="btn btn-muted btn-small" title="下移" aria-label="下移" onclick="event.stopPropagation(); window.moveCourseUnit(${index}, 1)"><i class="fa-solid fa-arrow-down"></i></button>
+                <button class="btn btn-danger btn-small" title="刪除" aria-label="刪除" onclick="event.stopPropagation(); window.removeCourseUnit(${index})"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
         `;
       }).join("");
     }
