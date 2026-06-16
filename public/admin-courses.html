@@ -546,10 +546,10 @@
       <div class="page-head">
         <div class="hero">
           <h1>課程管理入口</h1>
-          <p>這裡可以新增、修改、停用課程主檔，並同步管理 `metadata_lessons` 與 `dealer_price_books`。主畫面只顯示清單，點擊任一課程會打開編輯對話框。</p>
+          <p>這裡可以新增、修改、停用課程，並同步管理 `metadata_lessons` 與 `dealer_price_books`。主畫面只顯示清單，點擊任一課程會打開編輯對話框。</p>
           <div class="hero-tags">
             <span class="tag"><i class="fa-solid fa-database"></i> Firestore source of truth</span>
-            <span class="tag"><i class="fa-solid fa-file-lines"></i> 課程主檔</span>
+            <span class="tag"><i class="fa-solid fa-file-lines"></i> 課程維護</span>
             <span class="tag"><i class="fa-solid fa-tags"></i> dealer_price_books</span>
             <span class="tag"><i class="fa-solid fa-circle-check"></i> Soft delete by default</span>
             <span class="tag"><i class="fa-solid fa-language"></i> i18n multi-locale editor</span>
@@ -601,7 +601,7 @@
           <!-- Tabs container -->
           <div class="editor-tabs-header">
             <button class="tab-btn active" data-tab="course-master" onclick="window.switchEditorTab('course-master')">
-              <i class="fa-solid fa-circle-info"></i> 課程主檔
+              <i class="fa-solid fa-circle-info"></i> 課程維護
             </button>
             <button class="tab-btn" data-tab="unit-maintenance" onclick="window.switchEditorTab('unit-maintenance')">
               <i class="fa-solid fa-list-check"></i> 課程單元維護
@@ -621,7 +621,7 @@
             <div class="editor-card">
               <div class="card-title">
                 <div>
-                  <h2>課程主檔</h2>
+                  <h2>課程維護</h2>
                   <span>修改 `metadata_lessons` 的 canonical 欄位與內容路徑</span>
                 </div>
                 <div id="lesson-status" style="color:var(--muted);font-size:12px;">尚未選擇課程</div>
@@ -1871,7 +1871,7 @@
         await upsertLessonMetadata(patch);
         const merged = existing ? { ...existing, ...patch } : patch;
         mergeLessonToState(merged);
-        setLog(`已儲存課程主檔：${docId}`);
+        setLog(`已儲存課程維護：${docId}`);
         $("lesson-status").textContent = `已儲存：${docId}`;
         await loadCurrentLessonPriceBooks();
       } catch (err) {
