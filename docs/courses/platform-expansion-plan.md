@@ -389,7 +389,7 @@ This spec covers:
 8. Add knowledge quizzes to all 95 unit files ✅
 9. Add `seed-emulator.js` and `firebase-local.js` for local dev ✅
 10. Align start unit files to match prepare/basic/adv styling ✅
-    - Top nav: `Vibe Coding Learn` → `Vibe Coding` + rocket icon, nav label linked to `/start.html`
+    - Top nav: `Vibe Coding` + rocket icon, nav label linked to `/start.html`
     - Sidebar: hide `module-label` via `display: none`
     - Breadcrumb: replace generic `Start 03`/`入門課程單元` with actual module titles
 11. Fix `prepare-08` and `prepare-09` JS init crash (`window.RESOURCES` accessed before definition) ✅
