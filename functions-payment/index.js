@@ -25,7 +25,6 @@ const {
     ECPAY_LOGISTICS_MAP_URL,
     normalizeText,
     normalizeUpper,
-    normalizeAmount,
     nowTaipeiDateTime,
     getRole,
     assertDistributorScope,
@@ -49,7 +48,9 @@ const contentRuntime = require("./lib/content-runtime");
 const {
     getCanonicalLessonIdentity,
     findLessonByCourseRef,
-    getLessons
+    findCourseByPageOrUnit,
+    getLessons,
+    normalizeCourseFile
 } = contentRuntime;
 const paymentOrderFlow = require("./lib/order-flow");
 const {
@@ -228,41 +229,41 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
     const tutorMode = data?.tutorMode === true || data?.tutorMode === "true" || data?.tutorMode === 1 || data?.tutorMode === "1";
 
     const lessons = await getLessons(db);
-    const lesson = findLessonByCourseRef(pageId, lessons) || findLessonByCourseRef(fileName, lessons);
+    const lesson = findCourseByPageOrUnit(pageId, fileName, lessons)
+        || findLessonByCourseRef(pageId, lessons)
+        || findLessonByCourseRef(fileName, lessons);
+    console.log("[checkPaymentAuthorization] lookup", {
+        uid: auth.uid,
+        pageId,
+        fileName,
+        lessonId: lesson?.id || lesson?.docId || lesson?.courseId || "",
+        category: lesson?.category || "",
+        level: lesson?.level || "",
+        units: Array.isArray(lesson?.courseUnits) ? lesson.courseUnits.length : 0
+    });
     if (!lesson && !pageId && !fileName) {
         return { authorized: false, reason: "missing-context" };
     }
 
-    const requestedPrice = normalizeAmount(price);
-    // Free access is determined only by the explicit price=0 request flag.
-    const isFreeCourse = requestedPrice === 0;
-
-    if (isFreeCourse) {
-        const token = buildServeToken({
-            uid: auth.uid,
-            pageId: pageId || getCanonicalLessonIdentity(lesson) || fileName,
-            fileName,
-            currency,
-            mode: "free",
-            exp: Date.now() + 60 * 60 * 1000
-        });
-        return {
-            authorized: true,
-            token,
-            reason: "free-course",
-            accessMode: "free"
-        };
-    }
-
     const courseId = pageId || getCanonicalLessonIdentity(lesson) || fileName;
     const access = await paymentOrderFlow.checkOrderAccessForUnit(db, auth.uid, courseId, fileName || pageId, lessons, tutorMode);
+    console.log("[checkPaymentAuthorization] access", {
+        uid: auth.uid,
+        courseId,
+        fileName,
+        authorized: access?.authorized === true,
+        reason: access?.reason || "",
+        accessMode: access?.accessMode || ""
+    });
     if (access.authorized) {
         const token = buildServeToken({
             uid: auth.uid,
             pageId: courseId,
             fileName,
             currency,
-            mode: access.accessMode === "tutor" ? "tutor" : "paid",
+            mode: access.accessMode === "tutor"
+                ? "tutor"
+                : (access.accessMode === "trial_course" || access.accessMode === "free" ? access.accessMode : "paid"),
             exp: Date.now() + 60 * 60 * 1000
         });
         return {
@@ -461,14 +462,22 @@ exports.stripeWebhook = onRequest(async (req, res) => {
 });
 
 exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, res) => {
-    const token = normalizeText(req.query?.token || req.headers["x-course-token"] || "");
-    const tokenData = verifyServeToken(token);
-    if (!tokenData) {
-        return res.status(403).json({ authorized: false, reason: "invalid-token" });
-    }
-
     try {
         const requestPath = normalizeText(req.path || req.originalUrl || req.url || "");
+        const fileName = normalizeCourseFile(requestPath);
+        const isPublicGuide = fileName === "students.html" || fileName === "tutors.html";
+
+        const token = normalizeText(req.query?.token || req.headers["x-course-token"] || "");
+        let tokenData = null;
+        if (isPublicGuide) {
+            tokenData = { pageId: fileName, fileName: fileName, mode: "free" };
+        } else {
+            tokenData = verifyServeToken(token);
+            if (!tokenData) {
+                return res.status(403).json({ authorized: false, reason: "invalid-token" });
+            }
+        }
+
         const result = await contentRuntime.resolveCourseHtml({ dbRef: db, requestPath, tokenData, req });
 
         if (!result.ok || !result.html) {

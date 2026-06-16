@@ -233,13 +233,22 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
     for (const locale of locales) {
         const localeCandidates = buildI18nFilenameCandidates(candidate, locale);
         for (const localeCandidate of localeCandidates) {
-            exactPathCandidates.push(`courses/${locale}/${localeCandidate}`);
+            // Check if the candidate is one of the user guide files (students.html / tutors.html)
+            const isGuide = localeCandidate === "tutors.html" || localeCandidate === "students.html";
+            const targetLocale = locale === "en" ? "en" : "zh-TW";
+            const pathPrefix = isGuide ? `public/${targetLocale}` : `courses/${locale}`;
+            exactPathCandidates.push(`${pathPrefix}/${localeCandidate}`);
         }
     }
 
     const tried = Array.from(new Set([
         ...exactPathCandidates,
-        ...locales.flatMap((locale) => buildI18nFilenameCandidates(candidate, locale).map((localeCandidate) => `courses/${locale}/${localeCandidate}`))
+        ...locales.flatMap((locale) => buildI18nFilenameCandidates(candidate, locale).map((localeCandidate) => {
+            const isGuide = localeCandidate === "tutors.html" || localeCandidate === "students.html";
+            const targetLocale = locale === "en" ? "en" : "zh-TW";
+            const pathPrefix = isGuide ? `public/${targetLocale}` : `courses/${locale}`;
+            return `${pathPrefix}/${localeCandidate}`;
+        }))
     ]));
 
     for (const contentPath of tried) {
