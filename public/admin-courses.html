@@ -628,6 +628,14 @@
               </div>
 
               <div class="editor-grid">
+                <div class="field full">
+                  <label>可見性 / 狀態</label>
+                  <div class="switch-row">
+                    <label class="switch"><input id="lesson-hidden" type="checkbox" /> hiddenFromCatalog</label>
+                    <label class="switch"><input id="lesson-deprecated" type="checkbox" /> isDeprecated</label>
+                  </div>
+                </div>
+
                 <div class="field full" style="display: none;">
                   <label>title (課程名稱)</label>
                   <input id="lesson-title" oninput="window.updateLocaleField('zh-TW', 'title', this.value)" placeholder="例如：Web App 基礎開發" />
@@ -645,52 +653,43 @@
                   <div id="locale-editor"></div>
                 </div>
 
-                <div class="field">
+                <div class="field" style="display:none;">
                   <label>track</label>
                   <input id="lesson-track" placeholder="car / common" />
-                </div>
-                <div class="field">
-                  <label>level</label>
-                  <input id="lesson-level" placeholder="starter / basic / advanced" />
                 </div>
                 <div class="field">
                   <label>category</label>
                   <input id="lesson-category" placeholder="common / car-starter / car-basic / car-advanced" />
                 </div>
                 <div class="field">
-                  <label>metadataType</label>
-                  <select id="lesson-metadata-type">
-                    <option value="course">course</option>
-                    <option value="product">product</option>
-                    <option value="legacy_product">legacy_product</option>
-                  </select>
-                </div>
-                <div class="field readonly">
-                  <label>Document ID / docId</label>
-                  <input id="doc-id" placeholder="自動產生 UUID-like ID" readonly />
-                  <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
-                </div>
-                <div class="field">
-                  <label>courseKey</label>
-                  <input id="lesson-course-key" placeholder="car-starter-web-app" />
-                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
+                  <label>level</label>
+                  <input id="lesson-level" placeholder="starter / basic / advanced" />
                 </div>
                 <div class="field">
                   <label>orderWeight</label>
                   <input id="lesson-order-weight" type="number" step="1" placeholder="0" />
                 </div>
-                <div class="field full">
-                  <label>可見性 / 狀態</label>
-                  <div class="switch-row">
-                    <label class="switch"><input id="lesson-is-physical" type="checkbox" /> isPhysical</label>
-                    <label class="switch"><input id="lesson-hidden" type="checkbox" /> hiddenFromCatalog</label>
-                    <label class="switch"><input id="lesson-deprecated" type="checkbox" /> isDeprecated</label>
-                  </div>
+                <div class="field">
+                  <label>metadataType</label>
+                  <select id="lesson-metadata-type">
+                    <option value="course">course - 線上課程</option>
+                    <option value="product">product - 實體商品</option>
+                  </select>
+                  <div class="hint">`isPhysical` 會依 `metadataType` 自動推導：`course = false`，`product = true`。舊的 `legacy_product` 會在載入時自動視為 `product`。</div>
+                </div>
+                <div class="field readonly" style="display:none;">
+                  <label>Document ID / docId</label>
+                  <input id="doc-id" placeholder="自動產生 UUID-like ID" readonly />
+                  <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
+                </div>
+                <div class="field" style="display:none;">
+                  <label>courseKey</label>
+                  <input id="lesson-course-key" placeholder="car-starter-web-app" />
+                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
                 </div>
               </div>
             </div>
           </div>
-
 
           <div class="editor-tab-content" id="tab-unit-maintenance">
             <div class="editor-card">
@@ -1313,12 +1312,21 @@
     window.openLessonModal = openLessonModal;
 
     window.switchEditorTab = function(tabId) {
+      const activeTabIds = tabId === 'unit-maintenance'
+        ? new Set(['course-master', 'unit-maintenance'])
+        : new Set([tabId]);
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tabId);
       });
       document.querySelectorAll('.editor-tab-content').forEach(content => {
-        content.classList.toggle('active', content.id === `tab-${tabId}`);
+        content.classList.toggle('active', activeTabIds.has(content.id.replace(/^tab-/, '')));
       });
+      if (tabId === 'unit-maintenance') {
+        const anchor = document.getElementById('tab-unit-maintenance');
+        if (anchor) {
+          window.requestAnimationFrame(() => anchor.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        }
+      }
     };
 
     window.selectCourseUnit = function(index) {
@@ -1499,7 +1507,7 @@
         const badges = [];
         badges.push(`<span class="badge ${status === "active" ? "green" : status === "hidden" ? "orange" : "red"}">${status}</span>`);
         if (lesson.metadataType) badges.push(`<span class="badge blue">${escapeHtml(lesson.metadataType)}</span>`);
-        if (lesson.isPhysical) badges.push('<span class="badge">physical</span>');
+        if (lesson.metadataType === "product" || lesson.metadataType === "legacy_product") badges.push('<span class="badge">physical</span>');
         return `
           <div class="course-item ${active ? "active" : ""}" onclick="window.selectLesson('${escapeHtml(String(lesson.id || lesson.docId || ""))}')">
             <div class="course-row">
@@ -1533,9 +1541,8 @@
       $("lesson-track").value = inferTrackFromCategory(target.category || target.track || "") || target.track || "";
       $("lesson-level").value = target.level || "";
       $("lesson-category").value = normalizeCategoryKey(target.category || target.track || "") || inferCategoryKey(target.track || "", target.level || "");
-      $("lesson-metadata-type").value = target.metadataType || "course";
+      $("lesson-metadata-type").value = target.metadataType === "legacy_product" ? "product" : (target.metadataType || "course");
       $("lesson-order-weight").value = target.orderWeight ?? 0;
-      $("lesson-is-physical").checked = target.isPhysical === true;
       $("lesson-hidden").checked = target.hiddenFromCatalog === true;
       $("lesson-deprecated").checked = target.isDeprecated === true;
       $("lesson-status").textContent = target.id ? `編輯：${target.id}` : "新增空白課程";
@@ -1633,6 +1640,7 @@
       }
       const primaryLocale = i18n.en;
       const legacyLocale = i18n["zh-TW"] || primaryLocale;
+      const metadataType = normalizeText($("lesson-metadata-type").value) || "course";
       return {
         id: docId,
         docId,
@@ -1651,13 +1659,13 @@
         track,
         level: levelInput,
         category,
-        metadataType: normalizeText($("lesson-metadata-type").value) || "course",
+        metadataType,
         course_units,
         course_unit_titles,
         courseUnits: course_units,
         courseUnitTitles: course_unit_titles,
         orderWeight: Number($("lesson-order-weight").value || 0) || 0,
-        isPhysical: $("lesson-is-physical").checked,
+        isPhysical: metadataType === "product" || metadataType === "legacy_product",
         hiddenFromCatalog: $("lesson-hidden").checked,
         isDeprecated: $("lesson-deprecated").checked
       };
@@ -1791,7 +1799,6 @@
         docId: nextDocId,
         metadataType: "course",
         orderWeight: 0,
-        isPhysical: false,
         hiddenFromCatalog: false,
         isDeprecated: false
       });
