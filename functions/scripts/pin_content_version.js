@@ -7,7 +7,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 async function main() {
-  const version = "84c09027304431a6edd082e21363842a2056029e";
+  const version = "c426b0c4fc4614ee08a13ca80885a363fb28360b";
   console.log("Updating contentVersion to:", version);
   await db.collection("metadata_settings").doc("content_runtime").set({
     contentVersion: version,
