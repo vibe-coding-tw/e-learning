@@ -259,6 +259,7 @@ function init() {
     const staleFabHide = document.getElementById('hide-dashboard-fab-style');
     if (staleFabHide) staleFabHide.remove();
     ensureUnitTabsTheme();
+    upgradeLegacyUnitToMsLayout();
     normalizeCourseTopNav();
     normalizeCourseBreadcrumbs();
     ensureDynamicUnitTabsFromFirestore();
@@ -1056,10 +1057,19 @@ function ensureDashboardFabFallback() {
     }
 }
 
-function upgradeLegacyStartUnitToMsLayout() {
+function getLegacyCourseFamilyFallbackTexts(family = '', isEn = false) {
+    if (family === 'starter') return isEn ? 'Starter Course' : '入門課程';
+    if (family === 'basic') return isEn ? 'Basic Course' : '基礎課程';
+    if (family === 'advanced') return isEn ? 'Advanced Course' : '進階課程';
+    if (family === 'prepare') return isEn ? 'Preparation' : '課前準備';
+    return isEn ? 'Course' : '課程';
+}
+
+function upgradeLegacyUnitToMsLayout() {
     try {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        if (!/^start-\d{2}-unit-.*\.html$/.test(file)) return;
+        const family = getCourseFamilyForCoursePage(file);
+        if (!family) return;
         if (document.querySelector('.ms-layout')) return;
 
         const legacyMain = document.querySelector('main');
@@ -1068,13 +1078,16 @@ function upgradeLegacyStartUnitToMsLayout() {
 
         const pageTitle = (document.querySelector('header h1')?.textContent || document.title || '課程單元').trim();
         const pageSubtitle = (document.querySelector('header p')?.textContent || '').trim();
+        const learningPathKey = getLearningPathCategoryKeyForFamily(family);
+        const familyLabel = getLearningPathLabelFromSettings(family, isEn ? 'en' : 'zh-TW') || getLegacyCourseFamilyFallbackTexts(family, isEn);
+        const courseHref = canonicalLearningPathHref(learningPathKey);
 
         const topNav = document.createElement('nav');
         topNav.className = 'ms-topnav';
         topNav.innerHTML = `
-            <a href="${canonicalLearningPathHref('car-starter')}" target="_top" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding</a>
+            <a href="/index.html" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
             <div class="divider"></div>
-            <a href="${canonicalLearningPathHref('car-starter')}" target="_top" class="nav-label nav-label-link">${isEn ? 'Starter Course' : '入門課程'}</a>
+            <a href="${courseHref}" target="_top" class="nav-label nav-label-link">${familyLabel}</a>
         `;
 
         const layout = document.createElement('div');
@@ -1101,7 +1114,7 @@ function upgradeLegacyStartUnitToMsLayout() {
         content.innerHTML = `
             <div class="ms-breadcrumb">
                 <a href="#">Vibe Coding</a><span>›</span>
-                <a href="#">${isEn ? 'Starter Course' : '入門課程'}</a><span>›</span>
+                <a href="${courseHref}">${familyLabel}</a><span>›</span>
                 <span id="bc-current">${isEn ? 'Course Overview' : '課程總覽'}</span>
             </div>
         `;
@@ -1113,10 +1126,10 @@ function upgradeLegacyStartUnitToMsLayout() {
             <div class="unit-content">
                 <h1>${pageTitle}</h1>
                 ${pageSubtitle ? `<p>${pageSubtitle}</p>` : ''}
-                <h2>本單元內容</h2>
+                <h2>${isEn ? 'Unit Contents' : '本單元內容'}</h2>
                 <div class="unit-card-list" id="index-unit-list"></div>
                 <div style="margin-top:32px;">
-                    <button class="ms-btn" onclick="goToUnit(1)">開始單元 &nbsp;›</button>
+                    <button class="ms-btn" onclick="goToUnit(1)">${isEn ? 'Start Unit' : '開始單元'} &nbsp;›</button>
                 </div>
             </div>
         `;
@@ -1231,7 +1244,7 @@ function upgradeLegacyStartUnitToMsLayout() {
         window.goToUnit(unitTitles.length > 0 ? 1 : 0);
         ensureMobileResponsiveLayout();
     } catch (e) {
-        console.warn('[CourseShared] upgradeLegacyStartUnitToMsLayout failed:', e);
+        console.warn('[CourseShared] upgradeLegacyUnitToMsLayout failed:', e);
     }
 }
 
