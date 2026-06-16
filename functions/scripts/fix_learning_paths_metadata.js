@@ -30,6 +30,14 @@ const TARGET_CATEGORY_LABELS = {
     "zh-TW": "入門課程",
     en: "Starter Course",
   },
+  "car-basic": {
+    "zh-TW": "基礎課程",
+    en: "Basic Course",
+  },
+  "car-advanced": {
+    "zh-TW": "進階課程",
+    en: "Advanced Course",
+  },
 };
 
 function parseArgs(argv) {

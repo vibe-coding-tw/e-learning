@@ -67,10 +67,14 @@ function normalizeCanonicalCourseKey(value = '') {
         .replace(/^(?:tw|en)-/i, '');
 }
 
+function isPhysicalMetadataLesson(lesson = {}) {
+    const metadataType = String(lesson.metadataType || '').toLowerCase();
+    return metadataType === 'product' || metadataType === 'legacy_product';
+}
+
 function getCanonicalLessonIdentity(lesson = {}) {
     if (!lesson || typeof lesson !== 'object') return '';
-    const metadataType = String(lesson.metadataType || '').toLowerCase();
-    if (lesson.isPhysical === true || metadataType === 'product' || metadataType === 'legacy_product') {
+    if (isPhysicalMetadataLesson(lesson)) {
         return String(
             lesson.docId ||
             lesson.courseKey ||

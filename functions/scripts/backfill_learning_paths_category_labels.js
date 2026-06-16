@@ -7,7 +7,9 @@
  *   schemaVersion: 1,
  *   categoryLabels: {
  *     common: { "zh-TW": "...", en: "..." },
- *     "car-starter": { "zh-TW": "...", en: "..." }
+ *     "car-starter": { "zh-TW": "...", en: "..." },
+ *     "car-basic": { "zh-TW": "...", en: "..." },
+ *     "car-advanced": { "zh-TW": "...", en: "..." }
  *   }
  * }
  *

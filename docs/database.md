@@ -109,14 +109,14 @@
 | :--- | :--- | :--- |
 | `id` | string | Firestore document ID；`metadata_lessons` 的 canonical lesson ID。 |
 | `docId` | string | `id` 的明確別名，僅供回傳資料與 migration 檢查使用。 |
-| `courseId` | string | 課程歷史/顯示識別碼，相容欄位。 |
+| `courseId` | string | 課程歷史/顯示識別碼，相容欄位，執行期不得作為單元路由或授權來源。 |
 | `title` | string | 課程/單元標題。 |
-| `courseUnits` | array | 該課程包含的單元 HTML 檔列表，只用於跨單元 TAB、授權與課程結構；不得用來覆寫單元內 page menu。 |
+| `courseUnits` | array | 該課程包含的單元 HTML 檔列表，為跨單元 TAB、授權與課程結構的唯一執行期來源；不得用來覆寫單元內 page menu。 |
 | `dealerPrice` | number | runtime join 後的經銷商課程價格；主來源為 `dealer_price_books`。 |
-| `category` | string | 課程類別（如 `prepare`, `start`, `basic`, `advanced`）。 |
-| `isPhysical` | boolean | 是否為實體商品。 |
+| `category` | string | 課程分類 canonical key；課程線建議使用 `common`、`car-starter`、`car-basic`、`car-advanced`。 |
+| `isPhysical` | boolean | 是否為實體商品；相容欄位，實務上由 `metadataType` 推導。 |
 | `orderWeight` | number | 排序權重。 |
-| `metadataType` | string | 元資料類型：`course` / `product` / `legacy_product`。 |
+| `metadataType` | string | 元資料類型：`course` / `product`；主型別欄位，`legacy_product` 僅作相容。 |
 | `docId` | string | 商品型 metadata 的 canonical document ID。 |
 | `pricing` | map | 多地區定價主欄位。建議使用 `tw` / `en`，各值格式為 `{ amount, currency }`。 |
 | `priceByLocale` | map | 語系定價相容別名。僅供歷史資料或 migration 使用，不應作為新的定價依據。 |
@@ -133,7 +133,7 @@
 
 - `metadata_lessons`、`dealer_price_books`、`orders` 與其他核心集合都必須以 Firestore document ID 作為唯一主鍵與主要關聯依據。
 - `metadata_lessons.id` / `metadata_lessons.docId` 必須對應 Firestore document ID，並視為 canonical lesson id；建立後不建議直接修改，若要換 ID 請複製成新課程再停用舊資料。
-- `courseId`、`courseKey`、`entryUnitId`、`contentRef`、`legacy product ID`、`sku` 等欄位只作為顯示、查詢輔助或 migration 相容資訊，不得再作為新的主關聯鍵。
+- `courseId`、`entryUnitId`、`contentRef`、`legacy product ID`、`sku` 等欄位只作為顯示、查詢輔助或 migration 相容資訊，不得再作為新的主關聯鍵。
 - 任何跨集合 join 都應先嘗試以 document ID 關聯；只有在遷移期間才允許讀取歷史 alias 欄位，且必須是明確、窄化的 migration path。
 - 後續新增的 price book、授權、內容路由、作業綁定資料，都應先設計成可直接用 document ID 追蹤與對照。
 
@@ -172,20 +172,19 @@
 
 ### `metadata_lessons` canonical 欄位
 
-`metadata_lessons` 已收斂為「最小 canonical schema + 少量 compat alias」。
+`metadata_lessons` 已收斂為「最小 canonical schema + 少量 compat alias」，其中 `category` 是優先分類鍵，`track` 不再是 canonical 主欄位。
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
 | `id` / `docId` | string | Firestore document ID，作為 canonical lesson key。若需要 key，應直接整合進 document ID，而不是再維護獨立的 `courseKey`。 |
 | `i18n` | map | 多語內容主結構。Key 為 locale，例如 `en`、`zh-TW`、`ja`、`fr`；每個 locale 內只維護 `title`、`summary`、`description`、`coreContent`。 |
 | `course_units` | array | 外部課程單元檔案名稱清單，用於跨單元 TAB 與授權，不再用來描述單元標題。 |
-| `track` | string | 課程主軸，例如 `common`、`car`。 |
 | `level` | string | 課程層級，例如 `starter`、`basic`、`advanced`。 |
-| `category` | string | 課程分類，供 catalog 與路由使用。 |
-| `metadataType` | string | `course` / `product` / `legacy_product`。 |
+| `category` | string | 課程分類 canonical key，作為主分類與學習路徑對應鍵。 |
+| `orderWeight` | number | 課程排序權重，作為主檔排列與 catalog 順序依據。 |
+| `metadataType` | string | `course` / `product`；`legacy_product` 僅作相容。 |
 | `hiddenFromCatalog` | boolean | 是否從前台列表隱藏。 |
 | `isDeprecated` | boolean | 是否為已廢止舊資料（保留對帳/歷史用途）。 |
-| `docId` | string | 商品型 metadata 的 canonical document ID。 |
 
 ### `metadata_lessons` compat / derived 欄位
 
@@ -193,7 +192,6 @@
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
-| `courseKey` | string | 既有 locale-neutral 主鍵相容欄位。若新資料仍需要 key，應改由 `docId` 承載。 |
 | `courseUnits` | array | `course_units` 的舊 camelCase 別名。 |
 | `courseUnitTitles` | array | 單元顯示標題清單，僅供管理介面或舊版 TAB 顯示相容。 |
 | `entryUnitId` | string | 入口單元相容欄位；原則上可由 `course_units[0]` 推導。 |
@@ -238,8 +236,9 @@
 
 執行期 canonical identity 規則：
 - 課程型 metadata：優先使用 Firestore document ID（`id` / `docId`）
-- 商品型 metadata（`metadataType=product|legacy_product` 或 `isPhysical=true`）：優先使用 `docId` / document ID
-- `courseId` 僅保留作為頁面入口 / 歷史相容欄位，不再作為所有執行期判斷的唯一主鍵
+- 商品型 metadata（`metadataType=product`，相容讀取時可接受 `legacy_product` / `isPhysical=true`）：優先使用 `docId` / document ID
+- `courseId` 僅保留作為頁面入口 / 歷史相容欄位，不得再作為任何課程單元路由或授權的執行期主鍵；執行期唯一來源為 `courseUnits`
+- `category` 是課程分類的優先鍵；若缺席才 fallback 到舊資料的相容讀取邏輯
 - `contentRef` / 頁面路由仍可保留 `tw-*` 檔名；若後續檔名規則完全標準化，才考慮改由 docId 推導並移除 `contentRef`
 
 參考模板：
@@ -460,7 +459,13 @@
 
 #### `metadata_settings/learning_paths`
 
-`learning_paths` 建議作為「課程分類與導覽顯示字典」的唯一來源，集中管理像 `common`、`car-starter`、`car-basic`、`car-advanced` 這類 path key 對應的顯示文字。
+`learning_paths` 建議作為「課程分類與導覽顯示字典」的唯一來源，集中管理像 `common`、`car-starter`、`car-basic`、`car-advanced` 這類 path key 對應的顯示文字，top-nav 與 learning-path 頁面都應讀這裡。
+
+目前前端實作會把這份字典同時用在：
+- `nav-component.js` 的 learning-path dropdown label
+- `learning-path.html` 的 H1 與 `document.title`
+
+因此這份文件所定義的 `categoryLabels` 必須視為單一 truth source，不可再由頁面各自做不同的 locale fallback 或檔名推導。
 
 Canonical schema：
 
@@ -480,8 +485,9 @@ Canonical schema：
 使用規則：
 - `categoryLabels` 是全站共用 taxonomy 顯示字典，不是單一 lesson 的內容欄位。
 - key 必須使用 canonical path key，不要長期保存 `tw-...` / `en-...` 這類 legacy 前綴；前端與後端需要時再做 locale 對照。
-- 若某個分類文字可從 `level`、`track`、`sequence` 推導，前端可先推導，`categoryLabels` 僅作覆寫與相容。
-- `metadata_lessons.i18n` 負責 lesson 本體文字，`metadata_settings.learning_paths.categoryLabels` 負責分類 / badge / 導覽文字，兩者應分層管理。
+- 若某個分類文字可從 `level`、`sequence` 推導，前端可先推導，`categoryLabels` 僅作覆寫與相容。
+- `metadata_lessons.i18n` 負責 lesson 本體文字，`metadata_settings.learning_paths.categoryLabels` 負責分類 / badge / 導覽文字，top-nav 與 learning-path 標題都應從這裡取值，兩者應分層管理。
+- `nav-component.js` 與 `learning-path.html` 必須共用相同的 category label resolver 與 locale 判斷，避免中文/英文版頁首標題不一致。
 - 舊資料若仍保存成 `zh-TW` / `en` 置頂 bucket 或 `tw-*` / `en-*` key，應透過 migration 一次性轉成 canonical schema，不再新增新的 legacy 寫入路徑。
 
 ---
@@ -762,9 +768,9 @@ Canonical schema：
 1. **退役計畫狀態**：`*-master-*.html` 頁面在架構上已退役，新生產網頁不再使用此命名。現行 runtime 不再讀取或維護歷史 mapping 相容層。
 2. **舊網址處理**：歷史連結若仍指向 master 頁面，需仰賴內容倉 alias 或外部內容同步結果；Cloud Functions 不再維護獨立的 redirect 表。
 3. **歷史訂單授權相容性**：遷移前成立之歷史訂單 `items` 曾使用 master 鍵值（例如 `start-01-master-web-app.html`），目前已完成 canonical 清理；現行後端只保留 canonical 比對邏輯，不再透過執行期 mapping 轉換。
-4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 historical master item key。歷史 `referral_links.unitId` 也已完成 canonical 清理，另 1 筆 malformed referral index 已刪除。`metadata_lessons.courseKey` 已收斂為 locale-neutral key（例如 `common-vscode-setup`、`car-starter-web-app`），而頁面路由與 `contentRef` 仍保留 `tw-*` 檔名以維持內容倉與舊網址相容。原先的一次性遷移腳本已退役並刪除，相關清理改由現行維運工具接手。
-5. **完全移除相容層之門檻**：若未來還需要重新引入任何 mapping 讀取，只能作為離線 migration 工具使用，不能回到 runtime。任何新流程都必須直接以 canonical `courseKey` / `docId` 為準。
-   - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `courseKey`，商品項目維持 `docId` / document ID。
+4. **2026-05-28 收斂狀態**：歷史 `orders.items` 已完成 canonical 清理；一般訂單授權、購買單元收集、分潤 referral 抽取不再依賴 historical master item key。歷史 `referral_links.unitId` 也已完成 canonical 清理，另 1 筆 malformed referral index 已刪除。`metadata_lessons` 現已收斂為 `id` / `docId` + `category` + `orderWeight` 的 canonical schema，而頁面路由與 `contentRef` 仍保留 `tw-*` 檔名以維持內容倉與舊網址相容。原先的一次性遷移腳本已退役並刪除，相關清理改由現行維運工具接手。
+5. **完全移除相容層之門檻**：若未來還需要重新引入任何 mapping 讀取，只能作為離線 migration 工具使用，不能回到 runtime。任何新流程都必須直接以 canonical `docId` / document ID 為準。
+   - 歷史訂單全部完成資料遷移：課程項目統一更新為 canonical `docId`，商品項目維持 `docId` / document ID。
    - 經過至少一次完整生產環境 pilot validation，確認無任何歷史用戶存取異常。
 
 ### 18.3 Historical Migration Notes (歷史遷移備註)

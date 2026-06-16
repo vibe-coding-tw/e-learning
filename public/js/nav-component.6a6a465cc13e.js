@@ -779,7 +779,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
     const resolve = (path) => {
         if (path.startsWith('http')) return path;
         if (path === 'students.html' || path === 'tutors.html') {
-            const meta = resolveLocalizedSitePageMeta(path.replace('.html', ''), uiLocale);
+            const meta = resolveLocalizedSitePageMeta(String(path || '').replace('.html', ''), uiLocale);
             return meta ? meta.href : `/${isZh ? 'tw' : 'en'}/${path}`;
         }
         const targetPath = path;

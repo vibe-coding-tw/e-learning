@@ -61,11 +61,14 @@
 - 課程頁資訊架構必須區分：
   - 上方 TAB：跨課程單元導覽，資料來源為 Firestore `metadata_lessons.courseUnits`。
   - 左側 page menu：目前單元內頁面導覽，資料來源為課程 HTML 的 `window.UNITS` / `#sidebar-nav`。
+- 課程 runtime 的單元路由、授權入口、跨單元 TAB 與課程進入連結，執行期只能讀取 `metadata_lessons.courseUnits`；`courseId`、`courseKey`、`entryUnitId` 僅可作歷史資料或 migration 檢查，不得再作為 runtime 的查找來源。
+- 跨單元 TAB 僅在同一課程的 `courseUnits` 至少有 2 個有效單元時才可顯示；單一單元課程不得渲染 tabs。
 - 平台 runtime 嚴禁使用 `courseUnits` 覆寫 `window.UNITS`、`#sidebar-nav` 或 `#index-unit-list`。
 - `.ms-topnav`、TAB、左側 page menu、breadcrumb、語言選單與 FAB 都是課程頁必要元件，不得以 legacy fallback、隱藏或功能縮減掩蓋缺失。
 - `.ms-topnav` 必須顯示 Firestore course metadata 的 `title` / `titleEn`，不得顯示目前單元名稱或以硬編碼 mapping 猜測名稱。
 - 免費課程需要先登入才能進入；非免費課程未登入時仍必須可以加入購物車。
 - `serveCourse` 必須確保課程 runtime scripts 使用可失效 CDN 快取的版本 URL 載入。
+- 進入課程內容時，預設必須顯示第一個有效課程單元；不得把 `unit[0]` 的索引字面值或總覽頁當作使用者看到的預設落點。
 - 單元視角（`unitId` 存在）時：
   - 隱藏 Overview 標籤。
   - 儀表板分頁順序應為 `Admin Console -> Assignments -> Settings`。

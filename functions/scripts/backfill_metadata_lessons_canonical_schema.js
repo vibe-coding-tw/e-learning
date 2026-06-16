@@ -73,6 +73,25 @@ function normalizeLocaleKey(locale = "") {
   return String(locale || "").trim().replace(/_/g, "-");
 }
 
+function normalizeCategoryKey(value = "") {
+  const raw = normalizeText(value).toLowerCase();
+  if (!raw) return "";
+  if (raw === "common") return "common";
+  if (/^(?:tw|en)-common$/i.test(raw)) return "common";
+  if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(raw)) return raw.replace(/^(?:tw|en)-/i, "");
+  if (/^car-(starter|basic|advanced)$/i.test(raw)) return raw;
+  return "";
+}
+
+function inferCategoryKey(track = "", level = "") {
+  const normalizedTrack = normalizeText(track).toLowerCase();
+  const normalizedLevel = normalizeText(level).toLowerCase();
+  if (!normalizedLevel || normalizedLevel === "common" || normalizedTrack === "common" || normalizedTrack === "prepare") return "common";
+  if (normalizedTrack === "car") return `car-${normalizedLevel}`;
+  if (/^(starter|basic|advanced)$/i.test(normalizedTrack)) return `car-${normalizedTrack}`;
+  return `car-${normalizedLevel}`;
+}
+
 function cloneLocaleContent(value = {}) {
   return {
     title: normalizeText(value.title || ""),
@@ -170,12 +189,17 @@ function buildPatch(data, { deleteFields = [] } = {}) {
   const patch = {};
   const i18n = buildCanonicalI18n(data);
   const { course_units, course_unit_titles } = buildCanonicalUnits(data);
+  const category = normalizeCategoryKey(data.category) || inferCategoryKey(data.track, data.level);
 
   patch.i18n = i18n;
   patch.course_units = course_units;
   patch.courseUnits = course_units;
   patch.course_unit_titles = course_unit_titles;
   patch.courseUnitTitles = course_unit_titles;
+  patch.category = category;
+  patch.track = DELETE;
+  patch.courseKey = DELETE;
+  patch.level = normalizeText(data.level || "");
   if (i18n["zh-TW"]?.lessonLabel) patch.lessonLabel = i18n["zh-TW"].lessonLabel;
   if (i18n.en?.lessonLabel) patch.lessonLabelEn = i18n.en.lessonLabel;
 

@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resolve = (path) => {
         if (path.startsWith('http') || path.startsWith('mailto:')) return path;
         if (path === 'students.html' || path === 'tutors.html') {
-            const meta = resolveLocalizedSitePageMeta(path.replace('.html', ''), isZh ? 'zh-TW' : 'en');
+            const meta = resolveLocalizedSitePageMeta(String(path || '').replace('.html', ''), isZh ? 'zh-TW' : 'en');
             return meta ? meta.href : `/${isZh ? 'tw' : 'en'}/${path}`;
         }
         const targetPath = path;

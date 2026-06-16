@@ -98,6 +98,7 @@ const {
     extractReferralAssignmentsFromOrder,
     hasActiveOrderForCourse,
     getPhysicalUnitIdSet,
+    isPhysicalMetadataLesson,
     isPhysicalOrderItem,
     itemContainsUnit,
     normalizeGitHubUrl,
@@ -743,9 +744,11 @@ exports.adminDebugTutorAuth = onRequest(async (req, res) => {
     try {
         const usersSnap = await db.collection("users").where("email", "==", email).get();
         if (usersSnap.empty) return res.status(404).send("User document not found.");
-        const data = usersSnap.docs[0].data() || {};
+        const doc = usersSnap.docs[0];
+        const data = doc.data() || {};
         return res.status(200).json({
             email,
+            docId: doc.id,
             tutorConfigs: data.tutorConfigs || {},
             fullDoc: data
         });
@@ -830,7 +833,7 @@ function getSeedableDistributorProducts(lessons = [], distributorCurrency = "TWD
 
     return (Array.isArray(lessons) ? lessons : [])
         .filter((lesson) => lesson && (
-            lesson.isPhysical === true
+            isPhysicalMetadataLesson(lesson)
             || lesson.dealerPrice != null
             || lesson.pricing
             || lesson.prices
@@ -853,7 +856,7 @@ function getSeedableDistributorProducts(lessons = [], distributorCurrency = "TWD
             return {
                 docId: docId || "",
                 title: lesson.title || lesson.name || lesson.id || "未命名商品",
-                isPhysical: lesson.isPhysical === true,
+                isPhysical: isPhysicalMetadataLesson(lesson),
                 currency: resolvedPrice.currency || normalizedCurrency,
                 salePrice: Number(resolvedPrice.amount || 0),
                 pricingVersion: lesson.pricingVersion || lesson.pricingSource || "legacy"
@@ -3753,6 +3756,7 @@ exports.adminGetDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async 
                             name: au.displayName || fallbackNameFromEmail(au.email || "", "New User"),
                             role,
                             createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
+                            joinedAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
                             updatedAt: admin.firestore.FieldValue.serverTimestamp()
                         }, { merge: true });
                         syncCount++;
@@ -4079,7 +4083,7 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
         canonicalUnitId = resolveCanonicalUnitId(course.courseUnits[0], lessons);
     }
 
-    const isPhysicalProduct = !!(course && course.isPhysical === true);
+    const isPhysicalProduct = !!(course && isPhysicalMetadataLesson(course));
     const userDoc = await dbRef.collection("users").doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     const isAdminRole = userData.role === "admin";
@@ -4145,23 +4149,47 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
             return { authorized: true, accessMode: "free_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course: freeCourseContext };
         }
 
+        const isStarterCourseReference = (value = "") => {
+            const normalized = String(value || "").trim().toLowerCase();
+            return /^start-\d{2}-unit-/.test(normalized) ||
+                /^car-starter-/.test(normalized) ||
+                /^tw-car-starter-/.test(normalized) ||
+                /^en-car-starter-/.test(normalized);
+        };
+        const starterReference = isStarterCourseReference(courseId) || isStarterCourseReference(unitId);
         const now = Date.now();
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-        const trialLesson = course || lessonByCourseRef || freeCourseContext || null;
-        const firestoreRegisteredAt = userData.createdAt?.toMillis
-            ? userData.createdAt.toMillis()
-            : (userData.createdAt?.seconds ? userData.createdAt.seconds * 1000 : (userData.createdAt ? new Date(userData.createdAt).getTime() : 0));
-        let registeredAtMs = Number.isFinite(firestoreRegisteredAt) ? firestoreRegisteredAt : 0;
+        const trialLesson = course || lessonByCourseRef || freeCourseContext || (starterReference ? {
+            id: courseId || unitId,
+            docId: courseId || unitId,
+            courseId: courseId || unitId,
+            courseKey: courseId || unitId,
+            category: "car-starter",
+            level: "starter"
+        } : null);
+        const registrationCandidates = [userData.createdAt, userData.joinedAt];
+        let registeredAtMs = 0;
+        for (const value of registrationCandidates) {
+            const ts = value?.toMillis
+                ? value.toMillis()
+                : (value?.seconds ? value.seconds * 1000 : (value ? new Date(value).getTime() : 0));
+            if (Number.isFinite(ts) && ts > registeredAtMs) {
+                registeredAtMs = ts;
+            }
+        }
         if (!registeredAtMs) {
             const userRecord = await admin.auth().getUser(uid);
             registeredAtMs = userRecord.metadata.creationTime ? new Date(userRecord.metadata.creationTime).getTime() : 0;
         }
+        const starterCategory = String(trialLesson.category || trialLesson.level || "").toLowerCase();
         const isTrialCourse = !!(trialLesson && (
+            trialLesson.category === "car-starter" ||
             trialLesson.category === "start" ||
             trialLesson.category === "started" ||
             trialLesson.level === "starter" ||
-            trialLesson.level === "start" ||
-            trialLesson.level === "started"
+            starterCategory === "car-starter" ||
+            starterCategory === "start" ||
+            starterCategory === "started"
         ) && registeredAtMs && ((now - registeredAtMs) < THIRTY_DAYS_MS));
         if (isTrialCourse) {
             return { authorized: true, accessMode: "trial_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course: trialLesson };

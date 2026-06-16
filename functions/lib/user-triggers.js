@@ -22,6 +22,7 @@ function createOnUserCreatedHandler() {
                     name: displayName || "",
                     role: "user",
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    joinedAt: admin.firestore.FieldValue.serverTimestamp(),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
                 console.log(`[onUserCreated] Initialized Firestore record for user ${uid} (${email})`);

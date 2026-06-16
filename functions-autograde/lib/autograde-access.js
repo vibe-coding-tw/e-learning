@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 
 const { normalizeLegacyId } = require("./id-utils");
-const { hasActiveOrderForCourse } = require("./order-utils");
+const { hasActiveOrderForCourse, isPhysicalMetadataLesson } = require("./order-utils");
 const { resolveLessonPrice } = require("./pricing-utils");
 const { getUserTutorConfig } = require("./tutor-utils");
 const {
@@ -89,7 +89,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         canonicalUnitId = resolveCanonicalUnitId(course.courseUnits[0], lessons);
     }
 
-    const isPhysicalProduct = !!(course && course.isPhysical === true);
+    const isPhysicalProduct = !!(course && isPhysicalMetadataLesson(course));
     const userDoc = await db.collection("users").doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     const isAdminRole = userData.role === "admin";

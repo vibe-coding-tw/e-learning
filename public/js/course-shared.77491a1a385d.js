@@ -39,37 +39,50 @@ const normalizeCanonicalUnitFilenameForRoute = REPO_UTILS.normalizeCanonicalRepo
     return v;
 };
 
+function collectLessonUnitKeys(lesson = {}) {
+    const keys = [];
+    const seen = new Set();
+    const add = (value) => {
+        const normalized = normalizeLooseKey(normalizeUnitFilenameForRoute(value));
+        if (!normalized || seen.has(normalized)) return;
+        seen.add(normalized);
+        keys.push(normalized);
+    };
+
+    if (Array.isArray(lesson?.courseUnits)) lesson.courseUnits.forEach(add);
+
+    return keys;
+}
+
+function findLessonByCourseUnitKey(lessons = [], targetValue = "") {
+    const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(targetValue));
+    if (!targetKey) return null;
+
+    const arr = Array.isArray(lessons) ? lessons : [];
+    let matchedLesson = arr.find((lesson) => {
+        if (lesson.hiddenFromCatalog === true) return false;
+        const lookupKeys = collectLessonUnitKeys(lesson);
+        return lookupKeys.includes(targetKey);
+    });
+
+    if (!matchedLesson) {
+        matchedLesson = arr.find((lesson) => {
+            const lookupKeys = collectLessonUnitKeys(lesson);
+            return lookupKeys.includes(targetKey);
+        });
+    }
+
+    return {
+        lesson: matchedLesson,
+        targetKey,
+        lookupKeys: matchedLesson ? collectLessonUnitKeys(matchedLesson) : [],
+    };
+}
+
 function getCourseFamilyForCoursePage(file = '') {
-    const normalizedFile = normalizeLooseKey(file);
     const lessons = Array.isArray(window.globalLessonsData) ? window.globalLessonsData : [];
-
-    const matchedLesson = lessons.find((lesson) => {
-        const keys = new Set();
-        const add = (value) => {
-            if (!value) return;
-            keys.add(normalizeLooseKey(value));
-        };
-
-        add(lesson?.courseKey);
-        add(lesson?.courseId);
-        add(lesson?.id);
-        add(lesson?.entryUnitId);
-        add(lesson?.classroomUrl);
-        if (Array.isArray(lesson?.courseUnits)) lesson.courseUnits.forEach(add);
-        return keys.has(normalizedFile);
-    }) || null;
-
-    const lessonKey = String(
-        matchedLesson?.courseKey ||
-        matchedLesson?.courseId ||
-        matchedLesson?.id ||
-        ''
-    ).trim().toLowerCase();
-
-    if (lessonKey.startsWith('car-starter')) return 'starter';
-    if (lessonKey.startsWith('car-basic')) return 'basic';
-    if (lessonKey.startsWith('car-advanced')) return 'advanced';
-    if (lessonKey.startsWith('common')) return 'prepare';
+    const match = findLessonByCourseUnitKey(lessons, file);
+    const normalizedFile = match?.targetKey || normalizeLooseKey(file);
 
     if (normalizedFile.startsWith('start-') || /^(?:tw|en|car-starter)-/i.test(normalizedFile)) return 'starter';
     if (normalizedFile.startsWith('basic-') || /^(?:tw|en|car-basic)-/i.test(normalizedFile)) return 'basic';
@@ -259,7 +272,18 @@ function init() {
     injectDashboardModal();
     initAnimations();
     enhanceAssignmentEntryButtons();
-    initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
+    const firebaseInitPromise = initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
+    if (firebaseInitPromise && typeof firebaseInitPromise.then === 'function') {
+        firebaseInitPromise
+            .then(() => {
+                ensureDynamicUnitTabsFromFirestore();
+                toggleUnitTabsVisibility();
+                requestAnimationFrame(syncCourseShellOffsets);
+            })
+            .catch((e) => {
+                console.warn('[CourseShared] Firebase init retry hook failed:', e);
+            });
+    }
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
     ensureDashboardFabFallback();
     ensureMobileResponsiveLayout();
@@ -479,21 +503,8 @@ function resolveUnitAuthPrice(unitFile = '') {
         return null;
     }
 
-    const normalizedTarget = normalizeLooseKey(unitFile);
-    const matchedLesson = lessons.find((lesson) => {
-        const candidates = new Set();
-        const add = (value) => {
-            if (!value) return;
-            candidates.add(normalizeLooseKey(value));
-        };
-
-        add(lesson?.courseId);
-        add(lesson?.courseKey);
-        add(lesson?.id);
-        add(lesson?.entryUnitId);
-        if (Array.isArray(lesson?.courseUnits)) lesson.courseUnits.forEach(add);
-        return candidates.has(normalizedTarget);
-    }) || null;
+    const match = findLessonByCourseUnitKey(lessons, unitFile);
+    const matchedLesson = match?.lesson || null;
 
     if (!matchedLesson) return null;
 
@@ -524,7 +535,8 @@ async function ensureDynamicUnitTabsFromFirestore() {
     try {
         const fileName = (window.location.pathname.split('/').pop() || '').toLowerCase();
         const excluded = new Set(['', 'index.html', 'prepare.html', 'start.html', 'basic.html', 'advanced.html', 'learning-path.html', 'dashboard.html', 'students.html', 'tutors.html', 'cart.html', 'payment-return.html']);
-        if (!fileName.endsWith('.html') || excluded.has(fileName)) return;
+        if (excluded.has(fileName)) return;
+        if (!fileName) return;
 
         if (!globalLessonsData || !Array.isArray(globalLessonsData) || globalLessonsData.length === 0) {
             globalLessonsData = await vibeFetchLessons();
@@ -544,7 +556,7 @@ async function ensureDynamicUnitTabsFromFirestore() {
         const hasUnit = units.some(unitFile => normalizeLooseKey(unitFile) === targetKey);
         if (!hasUnit) return; // Do not render tabs on overview pages
 
-        if (units.length < 2) return;
+        if (units.length <= 1) return; // Single-unit courses should not render cross-unit tabs.
 
         const existingTabs = document.getElementById('course-tabs-container');
         if (existingTabs && existingTabs.querySelector('.unit-tab-btn')) return;
@@ -620,19 +632,8 @@ function ensureDynamicSidebarFromFirestore() {
 }
 
 function findCourseForCoursePage(file = '') {
-    const targetKey = normalizeLooseKey(normalizeUnitFilenameForRoute(file));
     const lessons = Array.isArray(window.globalLessonsData) ? window.globalLessonsData : [];
-    return lessons.find((course) => {
-        const keys = new Set();
-        const add = (value) => {
-            if (value) keys.add(normalizeLooseKey(normalizeUnitFilenameForRoute(value)));
-        };
-        add(course?.courseId);
-        add(course?.courseKey);
-        add(course?.entryUnitId);
-        if (Array.isArray(course?.courseUnits)) course.courseUnits.forEach(add);
-        return keys.has(targetKey);
-    }) || null;
+    return findLessonByCourseUnitKey(lessons, file)?.lesson || null;
 }
 
 function getCourseRuntimeConfig() {
@@ -995,6 +996,7 @@ function hideGlobalNavOnCoursePage() {
         const isCourseRoute = path.startsWith('/courses/');
         const isPrepareUnit = /^(?:prepare-\d+|(?:tw|en-)?common-|common-).*\.html$/.test(file);
         if (!isCourseRoute && !isPrepareUnit) return;
+        if (!document.querySelector('.ms-topnav')) return;
         if (document.getElementById('course-hide-main-nav-style')) return;
 
         const style = document.createElement('style');
@@ -2390,46 +2392,29 @@ async function initFirebaseFeatures() {
 
         const findCourseIdByUnit = async (fileName) => {
             let globalLessonsData = window.globalLessonsData;
-        if (!globalLessonsData || globalLessonsData.length === 0) {
-            try {
-                const getLessonsFunc = httpsCallable(functions, 'getLessonsMetadata');
-                const distributorId = localStorage.getItem('vibe_user_preferred_distributor')
-                                   || localStorage.getItem('preferredDistributorId')
-                                   || '';
-                const result = await getLessonsFunc({ distributorId });
-                if (result.data && result.data.lessons) {
+            if (!globalLessonsData || globalLessonsData.length === 0) {
+                try {
+                    const getLessonsFunc = httpsCallable(functions, 'getLessonsMetadata');
+                    const distributorId = localStorage.getItem('vibe_user_preferred_distributor')
+                                       || localStorage.getItem('preferredDistributorId')
+                                       || '';
+                    const result = await getLessonsFunc({ distributorId });
+                    if (result.data && result.data.lessons) {
                         globalLessonsData = result.data.lessons;
                         window.globalLessonsData = globalLessonsData;
                     }
                 } catch (e) {
                     console.error("Failed to load global lessons data:", e);
+                }
             }
-        }
-        if (globalLessonsData) {
-            for (const course of globalLessonsData) {
-                    const candidateKeys = new Set([
-                        fileName,
-                        normalizeLooseKey(fileName)
-                    ]);
-                    const assignmentUrlMaps = [course.assignmentUrlMap, course.assignmentUrls];
-                    const hasAssignmentUrl = assignmentUrlMaps.some(urlMaps => {
-                        if (!urlMaps || typeof urlMaps !== 'object') return false;
-                        for (const candidateKey of candidateKeys) {
-                            if (urlMaps[candidateKey]) return true;
-                        }
-                        return false;
-                    });
-                    if (hasAssignmentUrl) {
-                        return course.id || course.docId || course.courseId;
-                    }
+
+            const match = findLessonByCourseUnitKey(globalLessonsData, fileName)?.lesson;
+            if (match) {
+                return match.id || match.docId || match.courseId || "";
             }
-        }
-            // Fallback prefix check
-            if (fileName.startsWith('adv-') || fileName.startsWith('advanced-') || fileName.startsWith('car-advanced-')) return 'advanced';
-            if (fileName.startsWith('basic-') || fileName.startsWith('car-basic-')) return 'basic';
-            if (fileName.startsWith('start-') || fileName.startsWith('car-starter-')) return 'started';
-            if (fileName.match(/^[0-9]/) || fileName.startsWith('prepare-') || fileName.startsWith('common-')) return 'prepare';
-            return 'basic';
+
+            console.warn(`[CourseShared] No matching courseUnits entry found for unit ${fileName}.`);
+            return "";
         };
 
         window.submitStudentBlockerAction = async function() {
@@ -3302,29 +3287,14 @@ async function findCourseIdByUnit(fileName) {
             globalLessonsData = await vibeFetchLessons();
         }
 
-        const targetKey = normalizeLooseKey(fileName);
-        
         if (globalLessonsData && Array.isArray(globalLessonsData)) {
-            const course = globalLessonsData.find(c => {
-        const candidateKeys = new Set([
-                    normalizeLooseKey(c.courseId),
-                    normalizeLooseKey(c.courseKey),
-                    normalizeLooseKey(c.entryUnitId),
-                    normalizeLooseKey(c.assignmentUrlMap ? Object.keys(c.assignmentUrlMap)[0] || '' : ''),
-                    normalizeLooseKey(c.assignmentUrls ? Object.keys(c.assignmentUrls)[0] || '' : ''),
-                    normalizeLooseKey(c.classroomUrl || ''),
-                    normalizeLooseKey(c.contentRef)
-                ].filter(Boolean));
-
-                (Array.isArray(c.courseUnits) ? c.courseUnits : []).forEach(unitId => candidateKeys.add(normalizeLooseKey(unitId)));
-                return candidateKeys.has(targetKey);
-            });
+            const course = findLessonByCourseUnitKey(globalLessonsData, fileName)?.lesson;
             if (course) {
-                console.log(`[CourseShared] Resolved ${fileName} -> ${course.id || course.docId || course.courseId}`);
-                return course.id || course.docId || course.courseId;
-            } else {
-                console.warn(`[CourseShared] No matching course found for unit ${fileName} in Firestore metadata.`);
+                const resolvedId = course.id || course.docId || course.courseId || "";
+                console.log(`[CourseShared] Resolved ${fileName} -> ${resolvedId}`);
+                return resolvedId;
             }
+            console.warn(`[CourseShared] No matching courseUnits entry found for unit ${fileName} in Firestore metadata.`);
         } else {
             console.error("[CourseShared] globalLessonsData is not an array:", globalLessonsData);
         }
@@ -3332,8 +3302,8 @@ async function findCourseIdByUnit(fileName) {
         console.error("[CourseShared] Error in findCourseIdByUnit:", e);
     }
 
-    console.warn(`[CourseShared] Fallback resolution failed for ${fileName}; returning original key.`);
-    return fileName;
+    console.warn(`[CourseShared] Fallback resolution failed for ${fileName}; returning empty course id.`);
+    return "";
 }
 
 function ensureMobileResponsiveLayout() {

@@ -199,13 +199,13 @@ const prepareSpecs = [
       '可用儲存空間 20GB+',
       '穩定 Wi‑Fi 與 Chrome/Edge'
     ],
-    metadataType: 'spec',
+    metadataType: 'product',
     hiddenFromCatalog: true,
     price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
     orderWeight: 507,
-    isPhysical: false,
+    isPhysical: true,
   },
   {
     id: 'spec-recommend-pro',
@@ -220,13 +220,13 @@ const prepareSpecs = [
       '可用儲存空間 50GB+',
       '建議搭配雙螢幕與外接鍵盤滑鼠'
     ],
-    metadataType: 'spec',
+    metadataType: 'product',
     hiddenFromCatalog: true,
     price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
     orderWeight: 508,
-    isPhysical: false,
+    isPhysical: true,
   },
 ];
 

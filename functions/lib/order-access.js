@@ -16,6 +16,7 @@ const {
     extractReferralAssignmentsFromOrder,
     getPhysicalUnitIdSet,
     hasActiveOrderForCourse,
+    isPhysicalMetadataLesson,
     isPhysicalOrderItem,
     normalizeGitHubUrl,
     normalizeLogisticsData
@@ -82,6 +83,38 @@ function createOrderAccessHelpers({
             return !!(tutorConfigs[unitId] && tutorConfigs[unitId].authorized === true);
         }
         return Object.values(tutorConfigs).some((config) => config && config.authorized === true);
+    }
+
+    function isStarterCourseCategory(value = "") {
+        const normalized = normalizeText(value).toLowerCase();
+        return normalized === "start" ||
+            normalized === "started" ||
+            normalized === "starter" ||
+            normalized === "car-starter";
+    }
+
+    function isStarterCourseReference(value = "") {
+        const normalized = normalizeText(value).toLowerCase();
+        return /^start-\d{2}-unit-/.test(normalized) ||
+            /^car-starter-/.test(normalized) ||
+            /^tw-car-starter-/.test(normalized) ||
+            /^en-car-starter-/.test(normalized);
+    }
+
+    function resolveRegistrationTimestampMs(userData = {}, uid = "") {
+        const candidates = [userData.createdAt, userData.joinedAt];
+        let latestTs = 0;
+        for (const value of candidates) {
+            const ts = value?.toMillis
+                ? value.toMillis()
+                : (value?.seconds ? value.seconds * 1000 : (value ? new Date(value).getTime() : 0));
+            if (Number.isFinite(ts) && ts > latestTs) {
+                latestTs = ts;
+            }
+        }
+        if (latestTs > 0) return latestTs;
+        if (!uid) return 0;
+        return 0;
     }
 
     function isTutorFullyQualifiedForCourseLocal(userData = {}, courseId = "", lessons = []) {
@@ -172,7 +205,7 @@ function createOrderAccessHelpers({
 
         for (const itemKey of Object.keys(items)) {
             const lesson = resolveLessonForOrderItemLocal(itemKey, lessons);
-            if (lesson && lesson.isPhysical !== true && isStarterLesson(lesson)) {
+            if (lesson && !isPhysicalMetadataLesson(lesson) && isStarterLesson(lesson)) {
                 hasStarterAccess = true;
                 break;
             }
@@ -195,7 +228,7 @@ function createOrderAccessHelpers({
         const canonicalLessonId = getCanonicalLessonIdentity(lesson) || lesson.courseKey || lesson.courseId || lesson.id || "";
         const normalizedLessonId = normalizeText(canonicalLessonId).toLowerCase();
         const category = normalizeText(lesson.category || lesson.level || "").toLowerCase();
-        return normalizedLessonId.startsWith("car-starter-") || category === "start" || category === "started";
+        return normalizedLessonId.startsWith("car-starter-") || isStarterCourseCategory(category);
     }
 
     function isStarterTrialLesson(lesson = {}) {
@@ -203,7 +236,7 @@ function createOrderAccessHelpers({
         const normalizedLessonId = normalizeText(canonicalLessonId).toLowerCase();
         const category = normalizeText(lesson.category || "").toLowerCase();
         const level = normalizeText(lesson.level || "").toLowerCase();
-        return normalizedLessonId.startsWith("car-starter-") || category === "start" || category === "started" || level === "starter" || level === "start" || level === "started";
+        return normalizedLessonId.startsWith("car-starter-") || isStarterCourseCategory(category) || isStarterCourseCategory(level);
     }
 
     async function syncReferralLink(db, url, tutorEmail, tutorName, unitId) {
@@ -255,6 +288,7 @@ function createOrderAccessHelpers({
 
         let canonicalUnitId = resolveCanonicalUnitId(normalizedUnitId, lessons);
         const course = findCourseByPageOrUnit(normalizedCourseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(normalizedCourseId, normalizedUnitId, lessons);
+        const starterReference = isStarterCourseReference(normalizedCourseId) || isStarterCourseReference(normalizedUnitId);
         const lessonByCourseRef = findLessonByCourseRef(normalizedCourseId, lessons)
             || findLessonByCourseRef(normalizedUnitId, lessons)
             || findLessonByCourseRef(canonicalUnitId, lessons)
@@ -265,7 +299,7 @@ function createOrderAccessHelpers({
         if (!canonicalUnitId && course && Array.isArray(course.courseUnits) && course.courseUnits.length > 0) {
             canonicalUnitId = resolveCanonicalUnitId(course.courseUnits[0], lessons);
         }
-        const isPhysicalProduct = !!(course && course.isPhysical === true);
+        const isPhysicalProduct = !!(course && isPhysicalMetadataLesson(course));
 
         const userDoc = await db.collection("users").doc(uid).get();
         const userData = userDoc.exists ? (userDoc.data() || {}) : {};
@@ -338,11 +372,15 @@ function createOrderAccessHelpers({
 
         const now = Date.now();
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-        const trialLesson = course || lessonByCourseRef || pricingLesson || null;
-        const firestoreRegisteredAt = userData.createdAt?.toMillis
-            ? userData.createdAt.toMillis()
-            : (userData.createdAt?.seconds ? userData.createdAt.seconds * 1000 : (userData.createdAt ? new Date(userData.createdAt).getTime() : 0));
-        let registeredAtMs = Number.isFinite(firestoreRegisteredAt) ? firestoreRegisteredAt : 0;
+        const trialLesson = course || lessonByCourseRef || pricingLesson || (starterReference ? {
+            id: normalizedCourseId || normalizedUnitId,
+            docId: normalizedCourseId || normalizedUnitId,
+            courseId: normalizedCourseId || normalizedUnitId,
+            courseKey: normalizedCourseId || normalizedUnitId,
+            category: "car-starter",
+            level: "starter"
+        } : null);
+        let registeredAtMs = resolveRegistrationTimestampMs(userData, uid);
         if (!registeredAtMs) {
             const userRecord = await admin.auth().getUser(uid);
             registeredAtMs = userRecord.metadata.creationTime ? new Date(userRecord.metadata.creationTime).getTime() : 0;
@@ -426,11 +464,11 @@ function createOrderAccessHelpers({
                         itemKey,
                         courseId: getCanonicalLessonIdentity(lesson) || null,
                         courseKey: lesson.courseKey || null,
-                        isPhysical: lesson.isPhysical === true,
+                        isPhysical: isPhysicalMetadataLesson(lesson),
                         status: "mapped"
                     });
 
-                    if (lesson.isPhysical === true) {
+                    if (isPhysicalMetadataLesson(lesson)) {
                         activationCheckedItems[activationCheckedItems.length - 1].status = "physical-skipped";
                         continue;
                     }

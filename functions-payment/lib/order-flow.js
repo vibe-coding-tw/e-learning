@@ -35,6 +35,41 @@ const {
     recordInvestorFinanceEvent
 } = require("../lib/investor-ledger");
 
+function isStarterCourseCategory(value = "") {
+    const normalized = String(value || "").trim().toLowerCase();
+    return normalized === "start" ||
+        normalized === "started" ||
+        normalized === "starter" ||
+        normalized === "car-starter";
+}
+
+function isStarterCourseReference(value = "") {
+    const normalized = String(value || "").trim().toLowerCase();
+    return /^start-\d{2}-unit-/.test(normalized) ||
+        /^car-starter-/.test(normalized) ||
+        /^tw-car-starter-/.test(normalized) ||
+        /^en-car-starter-/.test(normalized);
+}
+
+function resolveRegistrationTimestampMs(userData = {}, uid = "") {
+    const candidates = [
+        userData.createdAt,
+        userData.joinedAt
+    ];
+    let latestTs = 0;
+    for (const value of candidates) {
+        const ts = value?.toMillis
+            ? value.toMillis()
+            : (value?.seconds ? value.seconds * 1000 : (value ? new Date(value).getTime() : 0));
+        if (Number.isFinite(ts) && ts > latestTs) {
+            latestTs = ts;
+        }
+    }
+    if (latestTs > 0) return latestTs;
+    if (!uid) return 0;
+    return 0;
+}
+
 async function syncUserPurchaseCacheFromOrder(db, orderId, orderData = {}, lessons = []) {
     const uid = orderData.uid;
     if (!uid || uid === "GUEST") return;
@@ -50,7 +85,7 @@ async function syncUserPurchaseCacheFromOrder(db, orderId, orderData = {}, lesso
         if (lesson && !isPhysicalMetadataLesson(lesson)) {
             const lessonId = getCanonicalLessonIdentity(lesson).toLowerCase();
             const category = normalizeText(lesson.category || lesson.level || "").toLowerCase();
-            if (lessonId.startsWith("car-starter-") || category === "start" || category === "started") {
+            if (lessonId.startsWith("car-starter-") || isStarterCourseCategory(category)) {
                 hasStarterAccess = true;
                 break;
             }
@@ -76,7 +111,20 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
     }
 
     const lesson = findLessonByCourseRef(courseId, lessons) || findLessonByCourseRef(unitId, lessons);
+    const starterReference = isStarterCourseReference(courseId) || isStarterCourseReference(unitId);
     if (!lesson) {
+        if (starterReference) {
+            // Preserve the trial path even if course metadata lookup lags behind naming changes.
+            const fallbackLesson = {
+                id: courseId || unitId,
+                docId: courseId || unitId,
+                courseId: courseId || unitId,
+                courseKey: courseId || unitId,
+                category: "car-starter",
+                level: "starter"
+            };
+            return checkOrderAccessForUnit(db, uid, fallbackLesson.courseId, fallbackLesson.courseId, [fallbackLesson], tutorMode);
+        }
         return { authorized: false, reason: "missing-course" };
     }
 
@@ -88,10 +136,7 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
     const userRef = db.collection("users").doc(uid);
     const userSnap = await userRef.get();
     const userData = userSnap.exists ? (userSnap.data() || {}) : {};
-    const firestoreRegisteredAt = userData.createdAt?.toMillis
-        ? userData.createdAt.toMillis()
-        : (userData.createdAt?.seconds ? userData.createdAt.seconds * 1000 : (userData.createdAt ? new Date(userData.createdAt).getTime() : 0));
-    let registeredAtMs = Number.isFinite(firestoreRegisteredAt) ? firestoreRegisteredAt : 0;
+    let registeredAtMs = resolveRegistrationTimestampMs(userData, uid);
     if (!registeredAtMs) {
         const userRecord = await admin.auth().getUser(uid);
         registeredAtMs = userRecord.metadata.creationTime ? new Date(userRecord.metadata.creationTime).getTime() : 0;
@@ -102,12 +147,21 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
     const level = String(lesson.level || "").toLowerCase();
     const isStarterLesson = !!(
         lessonId.startsWith("car-starter-") ||
-        category === "start" ||
-        category === "started" ||
+        isStarterCourseCategory(category) ||
         level === "starter" ||
-        level === "start" ||
-        level === "started"
+        isStarterCourseCategory(level)
     );
+    console.log("[checkOrderAccessForUnit] trial-debug", {
+        uid,
+        courseId,
+        unitId,
+        lessonId,
+        category,
+        level,
+        registeredAtMs,
+        ageDays: registeredAtMs ? ((Date.now() - registeredAtMs) / THIRTY_DAYS_MS) : null,
+        isStarterLesson
+    });
     if (isStarterLesson && registeredAtMs && (Date.now() - registeredAtMs) < THIRTY_DAYS_MS) {
         return { authorized: true, reason: "trial_course", accessMode: "trial_course" };
     }

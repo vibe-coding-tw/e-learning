@@ -10,6 +10,7 @@
 
 const admin = require("firebase-admin");
 const { resolveLessonPrice } = require("../lib/pricing-utils");
+const { isPhysicalMetadataLesson } = require("../lib/order-utils");
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -99,7 +100,7 @@ function buildSeedableProducts(lessons = [], currency = "TWD") {
       return {
         docId,
         title: lesson.title || lesson.name || docId || "未命名商品",
-        isPhysical: lesson.isPhysical === true,
+        isPhysical: isPhysicalMetadataLesson(lesson),
         currency: normalizedCurrency,
         salePrice: salePrice,
         pricingVersion: "v1",

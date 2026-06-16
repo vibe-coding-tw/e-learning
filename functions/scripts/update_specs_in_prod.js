@@ -20,7 +20,8 @@ const SPEC_UPDATES = [
     id: 'spec-recommend-lite',
     patch: {
       orderWeight: 507,
-      metadataType: 'spec',
+      metadataType: 'product',
+      isPhysical: true,
       updatedBy: 'system-spec-order-update',
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }
@@ -29,7 +30,8 @@ const SPEC_UPDATES = [
     id: 'spec-recommend-pro',
     patch: {
       orderWeight: 508,
-      metadataType: 'spec',
+      metadataType: 'product',
+      isPhysical: true,
       updatedBy: 'system-spec-order-update',
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }

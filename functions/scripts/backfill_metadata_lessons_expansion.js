@@ -17,6 +17,7 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+const DELETE = admin.firestore.FieldValue.delete();
 
 function parseArgs(argv) {
   const args = {
@@ -96,6 +97,27 @@ function normalizeValue(value) {
   return raw || null;
 }
 
+function normalizeCategoryKey(value = "") {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return null;
+  if (raw === "common") return "common";
+  if (/^(?:tw|en)-common$/i.test(raw)) return "common";
+  if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(raw)) return raw.replace(/^(?:tw|en)-/i, "");
+  if (/^car-(starter|basic|advanced)$/i.test(raw)) return raw;
+  return null;
+}
+
+function inferCategoryKey(track = "", level = "", category = "") {
+  const normalizedCategory = normalizeCategoryKey(category);
+  if (normalizedCategory) return normalizedCategory;
+  const normalizedTrack = String(track || "").trim().toLowerCase();
+  const normalizedLevel = String(level || "").trim().toLowerCase();
+  if (!normalizedLevel || normalizedLevel === "common" || normalizedTrack === "common" || normalizedTrack === "prepare") return "common";
+  if (normalizedTrack === "car") return `car-${normalizedLevel}`;
+  if (/^(starter|basic|advanced)$/i.test(normalizedTrack)) return `car-${normalizedTrack}`;
+  return `car-${normalizedLevel}`;
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   const inputPath = path.resolve(process.cwd(), args.input);
@@ -131,11 +153,13 @@ async function main() {
 
     const doc = snap.docs[0];
     const current = doc.data() || {};
+    const category = inferCategoryKey(row.track, row.level, row.category);
     const next = {
-      courseKey: normalizeValue(row.proposed_course_key),
-      track: normalizeValue(row.track),
+      track: DELETE,
+      courseKey: DELETE,
       level: normalizeValue(row.level),
-      category: normalizeValue(row.category) || current.category || null,
+      category,
+      orderWeight: Number(row.order_weight || current.orderWeight || 0) || current.orderWeight || 0,
       entryUnitId: normalizeValue(row.entry_unit_id),
       contentRef: normalizeValue(row.entry_content_ref),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),

@@ -71,9 +71,8 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     return `
       <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
            data-lesson-id="${lesson.id || lesson.docId || ""}"
-           data-course-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
-           data-legacy-course-id="${lesson.courseId || ""}"
-           data-auth-page-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+           data-course-id="${lesson.id || lesson.docId || ""}"
+           data-auth-page-id="${Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0 ? String(lesson.courseUnits[0] || "").split("/").pop().split("?")[0] : ""}"
            data-auth-file-name="${unitFile || ""}"
            data-course-name="${lesson.title || ""}"
            data-course-price="${price}"
@@ -85,7 +84,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
           <div class="min-w-0 text-xs text-slate-500 truncate">${displayKey}</div>
           ${duration ? `<span class="flex-shrink-0 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${duration}</span>` : ""}
         </div>
-        <h2 class="text-xl font-bold text-slate-800 mb-2">${displayTitle || lesson.courseId || "Untitled Course"}</h2>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">${displayTitle || lesson.id || lesson.docId || "Untitled Course"}</h2>
         <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${displayLessonLabel}</div>
         ${imageHtml}
         <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary}</div>
@@ -140,7 +139,7 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     const listHtml = contentList.length
       ? `<ul class="list-disc pl-5 space-y-1">${contentList.map((x) => `<li>${x}</li>`).join("")}</ul>`
       : `<p class="text-sm text-slate-500">${summary}</p>`;
-    const productId = String(lesson.courseId || lesson.id || lesson.docId || "").toLowerCase();
+    const productId = String(lesson.id || lesson.docId || "").toLowerCase();
     const objectPos = productId === "car-intro" ? "50% 50%" : (productId === "car-advanced" ? "50% 28%" : ((productId === "esp32-s3" || productId === "product-esp32-s3") ? "50% 15%" : "50% 50%"));
     const objectScale = productId === "car-advanced" ? "scale(1.08)" : (productId === "car-intro" ? "scale(1.02)" : "scale(1)");
     const imageHtml = imageUrl
@@ -149,9 +148,8 @@ function renderLessons(lessons, pathKey, categoryLabelsMap = {}) {
     return `
       <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition"
            data-lesson-id="${lesson.id || lesson.docId || ""}"
-           data-course-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
-           data-legacy-course-id="${lesson.courseId || ""}"
-           data-auth-page-id="${lesson.id || lesson.docId || lesson.courseId || ""}"
+           data-course-id="${lesson.id || lesson.docId || ""}"
+           data-auth-page-id="${Array.isArray(lesson.courseUnits) && lesson.courseUnits.length > 0 ? String(lesson.courseUnits[0] || "").split("/").pop().split("?")[0] : ""}"
            data-auth-file-name="${unitFile || ""}"
            data-course-name="${displayTitle}"
            data-course-price="${price}"

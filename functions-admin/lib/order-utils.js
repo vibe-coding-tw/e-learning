@@ -27,11 +27,16 @@ function normalizeLegacyId(value = '') {
     return String(value || '').replace(/\.html$/i, '').toLowerCase();
 }
 
+function isPhysicalMetadataLesson(lesson = {}) {
+    const metadataType = normalizeText(lesson.metadataType || '').toLowerCase();
+    return metadataType === 'product' || metadataType === 'legacy_product';
+}
+
 function getPhysicalUnitIdSet(lessons = []) {
     return new Set(
         (Array.isArray(lessons) ? lessons : [])
-            .filter((lesson) => lesson && lesson.isPhysical === true)
-            .map((lesson) => lesson.id)
+            .filter((lesson) => lesson && isPhysicalMetadataLesson(lesson))
+            .map((lesson) => lesson.id || lesson.docId)
             .filter(Boolean)
     );
 }
@@ -359,6 +364,7 @@ module.exports = {
     collectPurchasedUnitIds,
     extractReferralAssignmentsFromOrder,
     getPhysicalUnitIdSet,
+    isPhysicalMetadataLesson,
     isPhysicalOrderItem,
     itemContainsUnit,
     hasActiveOrderForCourse,

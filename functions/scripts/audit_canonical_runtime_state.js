@@ -64,7 +64,6 @@ function isLegacyMaster(value = "") {
 }
 
 function isCourseLike(lesson = {}) {
-  if (lesson.isPhysical === true) return false;
   const metadataType = String(lesson.metadataType || "").toLowerCase();
   if (metadataType === "product" || metadataType === "legacy_product") return false;
   return Array.isArray(lesson.courseUnits) || String(lesson.courseId || "").endsWith(".html");
@@ -83,7 +82,7 @@ function pickCatalogIdentity(lesson = {}) {
 
 function getPrimaryMetadataIdentity(lesson = {}) {
   const metadataType = String(lesson.metadataType || "").toLowerCase();
-  if (lesson.isPhysical === true || metadataType === "product" || metadataType === "legacy_product") {
+  if (metadataType === "product" || metadataType === "legacy_product") {
     return String(lesson.docId || lesson.courseKey || lesson.courseId || lesson.id || "").trim();
   }
   return String(

@@ -18,7 +18,7 @@ const db = admin.firestore();
 
 /** PX4 X500 V2 完整資料補充 */
 const PX4_PATCH = {
-  imageUrl: 'assets/px4_x500_v2.png',
+  imageUrl: '/assets/px4_x500_v2.png',
   summary: '整合 Pixhawk 6C 飛控、Holybro X500 V2 機架與 M9N GPS 的完整 PX4 無人機開發套件。',
   summaryEn: 'A complete PX4 drone development kit integrating Pixhawk 6C flight controller, Holybro X500 V2 frame, and M9N GPS.',
   lessonLabel: '硬體卡 04',

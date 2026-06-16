@@ -78,7 +78,7 @@ function normalizeLoose(value = "") {
 
 function getPrimaryMetadataIdentity(lesson = {}) {
   const metadataType = String(lesson.metadataType || "").toLowerCase();
-  if (lesson.isPhysical === true || metadataType === "product" || metadataType === "legacy_product") {
+  if (metadataType === "product" || metadataType === "legacy_product") {
     return String(lesson.docId || lesson.courseKey || lesson.courseId || lesson.id || "").trim();
   }
   return String(
