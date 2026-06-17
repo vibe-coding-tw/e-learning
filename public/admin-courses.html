@@ -723,17 +723,6 @@
 	                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
 	                </div>
 	              </div>
-	              <div class="action-row">
-	                <div class="left">
-	                  <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> 複製</button>
-	                  <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> 清空</button>
-	                  <a class="btn btn-muted btn-small" href="#locale-editor"><i class="fa-solid fa-language"></i> 語系設定</a>
-	                </div>
-	                <div class="right">
-	                  <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
-	                  <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
-	                </div>
-	              </div>
 	            </div>
 	          </div>
 
@@ -886,6 +875,18 @@
                   </div>
                 </div>
               </details>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <div class="left">
+              <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> 複製</button>
+              <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> 清空</button>
+              <a class="btn btn-muted btn-small" href="#locale-editor"><i class="fa-solid fa-language"></i> 語系設定</a>
+            </div>
+            <div class="right">
+              <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
+              <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
             </div>
           </div>
         </div>
@@ -1801,6 +1802,7 @@
         setLog(`已儲存課程維護：${docId}`);
         $("lesson-status").textContent = `已儲存：${docId}`;
         await loadCurrentLessonPriceBooks();
+        closeLessonModal();
       } catch (err) {
         console.error("[admin-courses] saveLessonMetadata failed:", err);
         alert(`儲存課程失敗：${err.message}`);
