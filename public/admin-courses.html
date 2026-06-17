@@ -550,54 +550,6 @@
       padding: 22px; text-align: center; color: var(--muted);
       border: 1px dashed var(--line); border-radius: 18px; background: #fff;
     }
-    /* Editor Tabs styling */
-    .editor-tabs-header {
-      display: flex;
-      gap: 8px;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 8px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      margin-top: 22px;
-      margin-bottom: 4px;
-      flex-wrap: wrap;
-    }
-    .tab-btn {
-      background: transparent;
-      border: none;
-      color: #cbd5e1;
-      border-radius: 12px;
-      padding: 10px 18px;
-      font-weight: 800;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all .20s ease;
-    }
-    .tab-btn:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.06);
-    }
-    .tab-btn.active {
-      background: #4f46e5;
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
-    }
-    .editor-tab-content {
-      display: none;
-    }
-    .editor-tab-content.active {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      animation: fadeInTab .25s ease-out;
-    }
-    @keyframes fadeInTab {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
     @media (max-width: 1120px) {
       .page-head, .grid { grid-template-columns: 1fr; }
       .list-card { position: static; }
@@ -700,20 +652,7 @@
             <button class="modal-close" onclick="window.closeLessonModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
           </div>
 
-          <!-- Tabs container -->
-          <div class="editor-tabs-header">
-            <button class="tab-btn active" data-tab="course-master" onclick="window.switchEditorTab('course-master')">
-              <i class="fa-solid fa-circle-info"></i> 課程維護
-            </button>
-            <button class="tab-btn" data-tab="unit-maintenance" onclick="window.switchEditorTab('unit-maintenance')">
-              <i class="fa-solid fa-list-check"></i> 單元維護
-            </button>
-            <button class="tab-btn" data-tab="pricebook" onclick="window.switchEditorTab('pricebook')">
-              <i class="fa-solid fa-tags"></i> PRICEBOOK
-            </button>
-          </div>
-
-          <div class="editor-tab-content active" id="tab-course-master">
+          <div id="tab-course-master">
             <div class="editor-card">
               <div class="card-title">
                 <div>
@@ -778,21 +717,32 @@
                   <input id="doc-id" placeholder="自動產生 UUID-like ID" readonly />
                   <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
                 </div>
-                <div class="field" style="display:none;">
-                  <label>courseKey</label>
-                  <input id="lesson-course-key" placeholder="car-starter-web-app" />
-                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
-                </div>
-              </div>
-            </div>
-          </div>
+	                <div class="field" style="display:none;">
+	                  <label>courseKey</label>
+	                  <input id="lesson-course-key" placeholder="car-starter-web-app" />
+	                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
+	                </div>
+	              </div>
+	              <div class="action-row">
+	                <div class="left">
+	                  <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> 複製</button>
+	                  <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> 清空</button>
+	                  <a class="btn btn-muted btn-small" href="#locale-editor"><i class="fa-solid fa-language"></i> 語系設定</a>
+	                </div>
+	                <div class="right">
+	                  <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
+	                  <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
+	                </div>
+	              </div>
+	            </div>
+	          </div>
 
-          <div class="editor-tab-content" id="tab-unit-maintenance">
+          <div id="tab-unit-maintenance">
             <div class="price-card">
               <div class="card-title">
                 <div>
                   <h2>單元維護</h2>
-                  <span>只維護跨單元 TAB，不會覆寫單元內 sidebar 或 `window.UNITS`。</span>
+                  <span>只維護課程單元清單，不會覆寫單元內 sidebar 或 `window.UNITS`。</span>
                 </div>
                 <div style="color:var(--muted);font-size:12px;" id="course-unit-status">尚未載入</div>
               </div>
@@ -842,7 +792,7 @@
             </div>
           </div>
 
-          <div class="editor-tab-content" id="tab-pricebook">
+          <div id="tab-pricebook">
             <div class="price-card">
               <div class="card-title">
                 <div>
@@ -928,7 +878,7 @@
                   <div class="action-row" style="margin-top: 0;">
                     <div class="left">
                       <button class="btn btn-soft btn-small" onclick="window.loadSelectedLessonPriceBooks()"><i class="fa-solid fa-rotate"></i> 重新整理</button>
-                      <span class="hint" id="pricebook-hint">先點選上方 PRICEBOOK 進入維護。</span>
+                      <span class="hint" id="pricebook-hint">先點選上方清單中的 PRICEBOOK 進入維護。</span>
                     </div>
                     <div class="right">
                       <button class="btn btn-primary btn-small" onclick="window.saveSelectedPriceBook()"><i class="fa-solid fa-tag"></i> 儲存價格表</button>
@@ -938,18 +888,6 @@
               </details>
             </div>
           </div>
-
-            <div class="action-row">
-              <div class="left">
-                <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> 複製</button>
-                <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> 清空</button>
-                <a class="btn btn-muted btn-small" href="#locale-editor"><i class="fa-solid fa-language"></i> 語系設定</a>
-              </div>
-              <div class="right">
-                <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
-                <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
-              </div>
-            </div>
         </div>
       </div>
     </div>
@@ -1328,7 +1266,6 @@
       syncModalHeader();
       renderLocaleEditor();
       renderCourseUnitsEditor();
-      window.switchEditorTab('course-master');
     }
 
     function closeLessonModal() {
@@ -1338,24 +1275,6 @@
 
     window.closeLessonModal = closeLessonModal;
     window.openLessonModal = openLessonModal;
-
-    window.switchEditorTab = function(tabId) {
-      const activeTabIds = tabId === 'unit-maintenance'
-        ? new Set(['course-master', 'unit-maintenance'])
-        : new Set([tabId]);
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tabId);
-      });
-      document.querySelectorAll('.editor-tab-content').forEach(content => {
-        content.classList.toggle('active', activeTabIds.has(content.id.replace(/^tab-/, '')));
-      });
-      if (tabId === 'unit-maintenance') {
-        const anchor = document.getElementById('tab-unit-maintenance');
-        if (anchor) {
-          window.requestAnimationFrame(() => anchor.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-        }
-      }
-    };
 
     window.selectCourseUnit = function(index) {
       const units = getCourseUnitValues();
