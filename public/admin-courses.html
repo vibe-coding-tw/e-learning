@@ -773,14 +773,21 @@
                   </select>
                   <div class="hint">`isPhysical` 會依 `metadataType` 自動推導：`course = false`，`product = true`。舊的 `legacy_product` 會在載入時自動視為 `product`。</div>
                 </div>
-                <div class="field full">
-                  <label>課程單元維護</label>
-                  <div class="hint">跨單元 TAB 與 `course_units` / `course_unit_titles` 的維護入口。若要調整單元清單，請切到下方的單元維護 tab。</div>
-                  <div style="margin-top:10px;">
-                    <button class="btn btn-ghost btn-small" onclick="window.switchEditorTab('unit-maintenance')"><i class="fa-solid fa-list-check"></i> 前往單元維護</button>
-                  </div>
+                <div class="field readonly" style="display:none;">
+                  <label>Document ID / docId</label>
+                  <input id="doc-id" placeholder="自動產生 UUID-like ID" readonly />
+                  <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
                 </div>
+                <div class="field" style="display:none;">
+                  <label>courseKey</label>
+                  <input id="lesson-course-key" placeholder="car-starter-web-app" />
+                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
+                </div>
+              </div>
+            </div>
+          </div>
 
+          <div class="editor-tab-content" id="tab-unit-maintenance">
             <div class="price-card">
               <div class="card-title">
                 <div>
@@ -832,24 +839,7 @@
                   </details>
                 </div>
               </details>
-              </div>
             </div>
-
-                <div class="field readonly" style="display:none;">
-                  <label>Document ID / docId</label>
-                  <input id="doc-id" placeholder="自動產生 UUID-like ID" readonly />
-                  <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
-                </div>
-                <div class="field" style="display:none;">
-                  <label>courseKey</label>
-                  <input id="lesson-course-key" placeholder="car-starter-web-app" />
-                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="editor-tab-content" id="tab-unit-maintenance">
           </div>
 
           <div class="editor-tab-content" id="tab-pricebook">
