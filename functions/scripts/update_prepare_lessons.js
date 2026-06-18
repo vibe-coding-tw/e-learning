@@ -21,67 +21,16 @@ function normalizeCanonicalCourseKey(value = '') {
     .replace(/^(?:tw|en)-/i, '');
 }
 
-function normalizeLegacyPrice(value) {
-  const amount = Number(value || 0);
-  return Number.isFinite(amount) ? amount : 0;
-}
-
-function deriveUsdFromTwd(twdAmount) {
-  const numeric = normalizeLegacyPrice(twdAmount);
-  if (numeric <= 0) return 0;
-  return Math.max(1, Math.round(numeric / 30));
-}
-
-function pricingByCategory(category, twAmount) {
-  const amount = normalizeLegacyPrice(twAmount);
-  const usdByCategory = {
-    started: 40,
-    basic: 50,
-    advanced: 60,
-  };
-  const usdAmount = usdByCategory[category] ?? deriveUsdFromTwd(amount);
-  return {
-    pricing: {
-      tw: { amount, currency: 'TWD' },
-      en: { amount: usdAmount, currency: 'USD' },
-    },
-    prices: {
-      tw: amount,
-      en: usdAmount,
-    },
-    priceByLocale: {
-      'zh-TW': { amount, currency: 'TWD' },
-      en: { amount: usdAmount, currency: 'USD' },
-    },
-    priceByRegion: {
-      tw: { amount, currency: 'TWD' },
-      en: { amount: usdAmount, currency: 'USD' },
-    },
-    priceMap: {
-      tw: { amount, currency: 'TWD' },
-      en: { amount, currency: 'USD' },
-    },
-    price_twd: amount,
-    price_usd: usdAmount,
-    currency: 'TWD',
-  };
-}
-
-function attachLocalizedPricing(course) {
-  return {
-    ...course,
-    ...pricingByCategory(course.category, course.price),
-  };
-}
-
 const prepareCourses = [
   {
     id: 'common-developer-identity',
     courseId: 'common-developer-identity.html',
     courseKey: 'common-developer-identity',
     title: '開發者身分 (Developer Identity)',
-    lessonLabel: '準備課程 01', icon: '🆔', tagText: '免費', duration: '30 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 01 課',
+    lessonLabelEn: 'Lesson 01',
+    icon: '🆔', tagText: '免費', duration: '30 分鐘',
+    category: 'prepare',
     courseUnits: ['common-developer-identity.html'],
     entryUnitId: 'common-developer-identity.html',
     coreContent: ['GitHub 帳號建立', '個人 Profile 設定', 'SSH Key 設定'],
@@ -92,8 +41,10 @@ const prepareCourses = [
     courseId: 'common-vscode-online.html',
     courseKey: 'common-vscode-online',
     title: 'VS Code Online',
-    lessonLabel: '準備課程 02', icon: '🌐', tagText: '免費', duration: '20 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 02 課',
+    lessonLabelEn: 'Lesson 02',
+    icon: '🌐', tagText: '免費', duration: '20 分鐘',
+    category: 'prepare',
     courseUnits: ['common-vscode-online.html'],
     entryUnitId: 'common-vscode-online.html',
     coreContent: ['GitHub Codespaces 啟用', '線上編輯器操作', '即開即用開發環境'],
@@ -104,8 +55,10 @@ const prepareCourses = [
     courseId: 'common-vscode-setup.html',
     courseKey: 'common-vscode-setup',
     title: '開發環境 (VS Code Setup)',
-    lessonLabel: '準備課程 03', icon: '💻', tagText: '免費', duration: '40 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 03 課',
+    lessonLabelEn: 'Lesson 03',
+    icon: '💻', tagText: '免費', duration: '40 分鐘',
+    category: 'prepare',
     courseUnits: ['common-vscode-setup.html'],
     entryUnitId: 'common-vscode-setup.html',
     coreContent: ['VS Code 安裝與設定', '常用擴充套件', 'Terminal 基本操作'],
@@ -116,8 +69,10 @@ const prepareCourses = [
     courseId: 'common-agent-mode.html',
     courseKey: 'common-agent-mode',
     title: 'AI Agent 模式實務',
-    lessonLabel: '準備課程 04', icon: '🤖', tagText: '免費', duration: '35 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 04 課',
+    lessonLabelEn: 'Lesson 04',
+    icon: '🤖', tagText: '免費', duration: '35 分鐘',
+    category: 'prepare',
     courseUnits: ['common-agent-mode.html'],
     entryUnitId: 'common-agent-mode.html',
     coreContent: ['Cursor Agent Mode', 'AI 輔助程式開發', '提示工程基礎'],
@@ -128,8 +83,10 @@ const prepareCourses = [
     courseId: 'common-vibe-coding.html',
     courseKey: 'common-vibe-coding',
     title: 'Vibe Coding 實戰',
-    lessonLabel: '準備課程 05', icon: '🎵', tagText: '免費', duration: '45 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 05 課',
+    lessonLabelEn: 'Lesson 05',
+    icon: '🎵', tagText: '免費', duration: '45 分鐘',
+    category: 'prepare',
     courseUnits: ['common-vibe-coding.html'],
     entryUnitId: 'common-vibe-coding.html',
     coreContent: ['Vibe Coding 方法論', '快速原型開發', 'AI 驅動開發流程'],
@@ -140,8 +97,10 @@ const prepareCourses = [
     courseId: 'common-web-agents.html',
     courseKey: 'common-web-agents',
     title: '網頁版 AI 代理人實務',
-    lessonLabel: '準備課程 06', icon: '🌍', tagText: '免費', duration: '30 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 06 課',
+    lessonLabelEn: 'Lesson 06',
+    icon: '🌍', tagText: '免費', duration: '30 分鐘',
+    category: 'prepare',
     courseUnits: ['common-web-agents.html'],
     entryUnitId: 'common-web-agents.html',
     coreContent: ['ChatGPT / Claude 實務', '網頁版 AI 工具比較', '提示工程進階技巧'],
@@ -152,8 +111,10 @@ const prepareCourses = [
     courseId: 'common-github-classroom.html',
     courseKey: 'common-github-classroom',
     title: 'GitHub Classroom & Vibe Coding 實務',
-    lessonLabel: '準備課程 07', icon: '📚', tagText: '免費', duration: '25 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 07 課',
+    lessonLabelEn: 'Lesson 07',
+    icon: '📚', tagText: '免費', duration: '25 分鐘',
+    category: 'prepare',
     courseUnits: ['common-github-classroom.html'],
     entryUnitId: 'common-github-classroom.html',
     coreContent: ['GitHub Classroom 加入流程', '作業繳交方式', '自動評分系統'],
@@ -164,8 +125,10 @@ const prepareCourses = [
     courseId: 'common-wifi-setup.html',
     courseKey: 'common-wifi-setup',
     title: 'WiFi 組態設定',
-    lessonLabel: '準備課程 08', icon: '📡', tagText: '免費', duration: '25 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 08 課',
+    lessonLabelEn: 'Lesson 08',
+    icon: '📡', tagText: '免費', duration: '25 分鐘',
+    category: 'prepare',
     courseUnits: ['common-wifi-setup.html'],
     entryUnitId: 'common-wifi-setup.html',
     coreContent: ['ESP32 WiFi 連線設定', 'WiFi 診斷與重連', '網路狀態回傳'],
@@ -176,8 +139,10 @@ const prepareCourses = [
     courseId: 'common-motor-ramping.html',
     courseKey: 'common-motor-ramping',
     title: '馬達 Ramping 控制',
-    lessonLabel: '準備課程 09', icon: '⚙️', tagText: '免費', duration: '25 分鐘',
-    price: 0, category: 'prepare',
+    lessonLabel: '第 09 課',
+    lessonLabelEn: 'Lesson 09',
+    icon: '⚙️', tagText: '免費', duration: '25 分鐘',
+    category: 'prepare',
     courseUnits: ['common-motor-ramping.html'],
     entryUnitId: 'common-motor-ramping.html',
     coreContent: ['馬達平滑啟停', 'PWM 訊號調校', '防止電壓突波'],
@@ -192,6 +157,7 @@ const prepareSpecs = [
     courseKey: 'spec-recommend-lite',
     title: '電腦規格建議（基本）',
     summary: '可完成課前準備與入門課程。',
+    cardImageUrl: 'https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png',
     imageUrl: 'https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png',
     coreContent: [
       'Windows 10/11 或 macOS 13+',
@@ -201,7 +167,6 @@ const prepareSpecs = [
     ],
     metadataType: 'product',
     hiddenFromCatalog: true,
-    price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
     orderWeight: 507,
@@ -213,6 +178,7 @@ const prepareSpecs = [
     courseKey: 'spec-recommend-pro',
     title: '電腦規格建議（進階）',
     summary: '建議用於基礎/進階課程與較長時間開發。',
+    cardImageUrl: 'https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg',
     imageUrl: 'https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg',
     coreContent: [
       'Windows 11 或 macOS 14+',
@@ -222,7 +188,6 @@ const prepareSpecs = [
     ],
     metadataType: 'product',
     hiddenFromCatalog: true,
-    price: 0,
     category: 'prepare',
     learningPaths: ['tw-common', 'en-common'],
     orderWeight: 508,
@@ -256,22 +221,13 @@ async function run() {
   const isApply = process.argv.includes("--apply");
   console.log(`🚀 Update Prepare Lessons (Firestore Production) - Mode: ${isApply ? "APPLY" : "DRY RUN"}`);
 
-  const processed = prepareCourses.map((course) => attachLocalizedPricing(withEntryMetadata(course)));
-  const processedSpecs = prepareSpecs.map((spec) => attachLocalizedPricing(spec));
+  const processed = prepareCourses.map((course) => withEntryMetadata(course));
+  const processedSpecs = prepareSpecs.map((spec) => spec);
 
   if (isApply) {
     // 1. Write the 9 cards
     for (const docData of processed) {
       const { id, ...payload } = docData;
-      delete payload.price;
-      delete payload.pricing;
-      delete payload.prices;
-      delete payload.priceByLocale;
-      delete payload.priceByRegion;
-      delete payload.priceMap;
-      delete payload.price_twd;
-      delete payload.price_usd;
-      delete payload.currency;
       await db.collection("metadata_lessons").doc(id).set(payload);
       console.log(`  ✅ Written card: ${id}`);
     }
@@ -283,15 +239,6 @@ async function run() {
     // 3. Write the specs
     for (const spec of processedSpecs) {
       const { id, ...payload } = spec;
-      delete payload.price;
-      delete payload.pricing;
-      delete payload.prices;
-      delete payload.priceByLocale;
-      delete payload.priceByRegion;
-      delete payload.priceMap;
-      delete payload.price_twd;
-      delete payload.price_usd;
-      delete payload.currency;
       await db.collection("metadata_lessons").doc(id).set(payload);
       console.log(`  ✅ Written spec: ${id}`);
     }

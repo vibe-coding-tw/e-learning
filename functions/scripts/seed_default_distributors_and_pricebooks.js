@@ -10,7 +10,7 @@
 
 const admin = require("firebase-admin");
 const { resolveLessonPrice } = require("../lib/pricing-utils");
-const { isPhysicalMetadataLesson } = require("../lib/order-utils");
+const { isPhysicalMetadataLesson } = require("vibe-functions-core/order-utils");
 
 if (!admin.apps.length) {
   admin.initializeApp({

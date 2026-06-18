@@ -39,11 +39,11 @@ const {
 } = require("./lib/payment-core");
 const {
     normalizeLogisticsData,
-} = require("./lib/order-utils");
+} = require("vibe-functions-core/order-utils");
 const {
     sendPaymentSuccessEmail,
     sendOrderShippedEmail
-} = require("./emailService");
+} = require("vibe-functions-core/email-service");
 const contentRuntime = require("./lib/content-runtime");
 const {
     getCanonicalLessonIdentity,
@@ -61,7 +61,6 @@ const {
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-
 setGlobalOptions({
     region: "asia-east1",
     maxInstances: 10,
@@ -228,7 +227,7 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
     const currency = normalizeCurrency(data?.currency || "TWD", "TWD");
     const tutorMode = data?.tutorMode === true || data?.tutorMode === "true" || data?.tutorMode === 1 || data?.tutorMode === "1";
 
-    const lessons = await getLessons(db);
+    const lessons = await getLessons(db, { currencyHint: currency });
     const lesson = findCourseByPageOrUnit(pageId, fileName, lessons)
         || findLessonByCourseRef(pageId, lessons)
         || findLessonByCourseRef(fileName, lessons);
@@ -462,13 +461,13 @@ exports.stripeWebhook = onRequest(async (req, res) => {
 });
 
 exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, res) => {
+    let tokenData = null;
     try {
         const requestPath = normalizeText(req.path || req.originalUrl || req.url || "");
         const fileName = normalizeCourseFile(requestPath);
         const isPublicGuide = fileName === "students.html" || fileName === "tutors.html";
 
         const token = normalizeText(req.query?.token || req.headers["x-course-token"] || "");
-        let tokenData = null;
         if (isPublicGuide) {
             tokenData = { pageId: fileName, fileName: fileName, mode: "free" };
         } else {

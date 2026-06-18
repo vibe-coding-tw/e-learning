@@ -4,7 +4,8 @@ function getProxyFunctionBaseUrl(functionName) {
     const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || "e-learning-942f7";
     const isEmulator = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.FIREBASE_EMULATOR_HUB;
     if (isEmulator) {
-        return `http://127.0.0.1:5001/${projectId}/asia-east1/${functionName}`;
+        const emulatorHost = process.env.FUNCTIONS_EMULATOR_HOST || "127.0.0.1:15001";
+        return `http://${emulatorHost}/${projectId}/asia-east1/${functionName}`;
     }
     return `https://asia-east1-${projectId}.cloudfunctions.net/${functionName}`;
 }

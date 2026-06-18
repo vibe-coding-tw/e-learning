@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 const functionsV1 = require("firebase-functions/v1");
-const { sendWelcomeEmail } = require("../emailService");
+const { sendWelcomeEmail } = require("vibe-functions-core/email-service");
 
 function createOnUserCreatedHandler() {
     if (!admin.apps.length) {

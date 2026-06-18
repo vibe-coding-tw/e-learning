@@ -79,6 +79,73 @@ firebase deploy --project e-learning-942f7
 
 > 前端改動後需先執行 `node scripts/fingerprint-static-assets.js` 更新靜態資產指紋，再部署 hosting。
 
+### Staging / 測試環境
+
+建議用獨立 Firebase project 做 staging，不要和正式站共用 Firestore、Auth、Secrets 或 Webhook。
+
+```bash
+# 指定 staging project 後，部署整套服務到測試環境
+FIREBASE_STAGING_PROJECT=your-staging-project ./scripts/deploy_staging.sh
+
+# 本機起模擬器，但可沿用 staging 的設定值
+FIREBASE_EMULATOR_PROJECT=your-staging-project ./scripts/start_stage_emulators.sh
+
+# 一鍵起 local emulator 並同步必要 Firestore 資料
+./scripts/start_local.sh
+
+# 本地 emulator ports
+# auth 19099, firestore 18080, functions 15001, hosting 15002, hub 14405, logging 14505
+```
+
+各 codebase 的 staging 範本放在：
+
+- `functions/.env.staging.example`
+- `functions-payment/.env.staging.example`
+- `functions-autograde/.env.staging.example`
+- `functions-admin/.env.staging.example`
+
+把對應檔案複製成各自的 `.env` 後，再填 staging 的 ECPay、GitHub、Email 與 `APP_BASE_URL`。
+
+### 同步 Firestore 到本機
+
+如果你想把正式或 staging 的 Firestore 資料同步到 emulator，可以先起 emulator，再跑同步腳本：
+
+```bash
+firebase emulators:start --project e-learning-942f7
+cd functions
+npm run sync:firestore -- --dry-run --source-project=e-learning-942f7 --collections=metadata_lessons,metadata_settings,users,orders
+npm run sync:firestore -- --apply --source-project=e-learning-942f7 --collections=metadata_lessons,metadata_settings,users,orders --replace
+```
+
+若要同步所有頂層 collection，把 `--collections=all` 即可。  
+`--replace` 會先清掉 emulator 中對應 collection 再寫入；不加時只做 merge。
+如果來源是正式或 staging project，請先確保本機已完成 `gcloud auth application-default login` 或已設定可用的 Google Cloud ADC。
+
+`./scripts/start_local.sh` 會直接把來源 Firestore 同步到 local emulator，不再使用 repo 內的 seed mode；learning-path、nav、價格查詢都會直接讀本機 Firestore emulator。
+
+### 初始化 Firestore 基礎資料
+
+如果你要補齊 Firestore 的 canonical 基礎資料，可以直接跑統一入口：
+
+```bash
+cd functions
+npm run firestore:bootstrap -- --dry-run
+npm run firestore:bootstrap -- --apply
+npm run firestore:bootstrap -- --apply --overwrite
+```
+
+這個指令會依序執行：
+
+- `revenue_share_policies/default-v1`
+- `distributors/default-twd`、`distributors/default-usd`
+- 對應的 `dealer_price_books`
+
+建議：
+
+- staging 或新環境先用 `--dry-run`
+- 確認沒問題後再用 `--apply`
+- 若要重建價格表，可加 `--overwrite`
+
 ---
 
 ## ⚙️ 環境變數 (`functions/.env`)
@@ -120,7 +187,7 @@ firebase deploy --project e-learning-942f7
 
 > 收尾原則：內部命名維持中性語意；歷史相容欄位先保留，API 回傳欄位最後再 cutover。
 >
-> `public/en/` 與 `public/tw/` 的學生 / 導師入口不再保留本地鏡像頁面；這四個入口改由 `serveCourse` 即時從外部 `content-repo/public/en|zh-TW` 取得內容。請直接維護 `content-repo` 中的對應頁面，並以 `contentVersion` 進行版本鎖定。`students` / `tutors` 的繁中與英文入口不要再導去 `learning-path.html` 或 `index.html#core-values`。
+> `public/en/` 與 `public/tw/` 的學生 / 導師入口不再保留本地鏡像頁面；這四個入口改由 `serveCourse` 即時從外部 `content-repo/public/en|zh-TW` 取得內容。`content-repo/public` 也同樣是正常運作的來源。請直接維護 `content-repo` 中的對應頁面，並以 `contentVersion` 進行版本鎖定。`students` / `tutors` 的繁中與英文入口不要再導去 `learning-path.html` 或 `index.html#core-values`。
 >
 > `content-repo/courses` 的課程頁面樣式已開始分層共用：`course-base.css` 負責版型外框，`course-components.css` 負責重複元件，`course-quiz.css` 負責測驗區塊。更新課程 HTML 時，優先沿用這三層共用樣式，頁面內只保留真正單元專屬的覆寫。
 >

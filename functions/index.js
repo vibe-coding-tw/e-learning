@@ -20,7 +20,7 @@ const {
     initializeFunctionsRuntime
 } = require('./lib/functions-bootstrap');
 const admin = require("firebase-admin");
-const { getContentRuntimeConfig } = require("./lib/runtime-state");
+const { getContentRuntimeConfig } = require("vibe-functions-core/runtime-state");
 
 initializeFunctionsRuntime();
 

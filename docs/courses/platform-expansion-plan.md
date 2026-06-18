@@ -197,7 +197,7 @@ Frontend routing update (2026-05):
 
 | File | Purpose |
 |---|---|
-| `functions/scripts/seed-emulator.js` | Seed Firestore emulator with course metadata and test data |
+| `functions/scripts/sync_firestore_to_emulator.js` | Sync selected Firestore collections into the local emulator |
 | `public/js/firebase-local.js` | Auto-detect and connect to local Firebase emulator |
 | `functions/private_courses/_add_quiz.py` | Batch script used for inserting quizzes (build-time only) |
 
@@ -387,7 +387,7 @@ This spec covers:
 6. Rename `started.html` → `start.html` ✅
 7. Enrich all 104 course files to MS Learn standard ✅
 8. Add knowledge quizzes to all 95 unit files ✅
-9. Add `seed-emulator.js` and `firebase-local.js` for local dev ✅
+9. Add `sync_firestore_to_emulator.js` and `firebase-local.js` for local dev ✅
 10. Align start unit files to match prepare/basic/adv styling ✅
     - Top nav: `Vibe Coding` + rocket icon, nav label linked to `/start.html`
     - Sidebar: hide `module-label` via `display: none`
@@ -708,7 +708,7 @@ Status update (2026-05-26):
   - script added: `functions/scripts/seed_revenue_share_policies.js`
 - Seeding & Order Compatibility updates:
   - Added robust backward-compatible purchase matching (`itemContainsUnit` fallback) in `hasActiveOrderForCourse` and `resolveStudentAssignmentAccess`.
-  - Configured `functions/scripts/seed-emulator.js` to seed canonical `courseId` in orders items, users/orders regional defaults, and default revenue share policies.
+  - Configured local sync tooling to mirror canonical `courseId` values in orders items, users/orders regional defaults, and default revenue share policies.
   - Set prepare track landing to target resolved unit entries, while preserving original master entry URLs for started/basic/advanced tracks.
 
 ---
@@ -763,7 +763,7 @@ These are low-risk doc/script/runtime cleanups we can do before master retiremen
    - replace examples that imply master IDs are primary course IDs.
    - keep wording: Firestore canonical data is source of truth.
 2. Script defaults: [Completed 2026-05-26]
-   - `functions/scripts/seed-emulator.js` still seeds many `*-master-*` IDs; migrate seed set to canonical `entryUnitId` + unit IDs.
+   - Local emulator fixtures should be generated from `sync_firestore_to_emulator.js` or emulator import/export, not from a bespoke seed script.
 3. Dashboard cleanup: [Completed 2026-05-26]
    - trim non-essential master-title fallback branches that are only for legacy display.
 

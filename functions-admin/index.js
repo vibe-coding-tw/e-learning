@@ -27,8 +27,8 @@ function bindLazyExports(modulePath, exportNames) {
     }, {});
 }
 
-const { buildI18nFilenameCandidates, unitIdsMatch, normalizeLegacyId } = require("./lib/id-utils");
-const { getContentRuntimeConfig } = require("./lib/runtime-state");
+const { buildI18nFilenameCandidates, unitIdsMatch, normalizeLegacyId } = require("vibe-functions-core/id-utils");
+const { getContentRuntimeConfig } = require("vibe-functions-core/runtime-state");
 const {
     findLessonByDocumentId,
     resolvePriceBookAmount,
@@ -69,7 +69,7 @@ const {
     upsertTutorApplicationLegacyEntry,
     upsertTutorConfigForUser,
     ensureTutorPromotionCode
-} = bindLazyExports("./lib/tutor-utils", [
+} = bindLazyExports("vibe-functions-core/tutor-utils", [
     "buildTutorApplicationLegacyEntry",
     "buildTutorApplicationRecord",
     "buildTutorConfigEntry",
@@ -104,7 +104,7 @@ const {
     normalizeGitHubUrl,
     normalizeLogisticsData,
     normalizeOrderItems
-} = bindLazyExports("./lib/order-utils", [
+} = bindLazyExports("vibe-functions-core/order-utils", [
     "buildOrderRecordSummary",
     "buildPendingShipmentReminderEntry",
     "buildReferralLinkDocId",
@@ -115,6 +115,7 @@ const {
     "extractReferralAssignmentsFromOrder",
     "hasActiveOrderForCourse",
     "getPhysicalUnitIdSet",
+    "isPhysicalMetadataLesson",
     "isPhysicalOrderItem",
     "itemContainsUnit",
     "normalizeGitHubUrl",
@@ -123,7 +124,7 @@ const {
 ]);
 const {
     ensureGithubOrgMembership
-} = bindLazyExports("./lib/github-utils", [
+} = bindLazyExports("vibe-functions-core/github-utils", [
     "ensureGithubOrgMembership"
 ]);
 const { isAssignmentAuthorized } = bindLazyExports("./lib/assignment-flow", [
@@ -138,7 +139,7 @@ const {
     sendTutorRecommendationCandidateEmail,
     sendStudentPendingTutorAssignmentReminder,
     sendAdminShipmentReminder,
-} = require("./emailService");
+} = require("vibe-functions-core/email-service");
 const {
     DEFAULT_REVENUE_SHARE_POLICY,
     buildRevenueShareBalanceRecord,
@@ -148,7 +149,7 @@ const {
     collectRevenueShareChainTargets,
     loadRevenueSharePolicy,
     resolveRevenueShareRoleEmails
-} = require("./lib/revenue-sharing");
+} = require("vibe-functions-core/revenue-sharing");
 const {
     issueInvestorEquity,
     loadActiveBalanceSheetSnapshot,
@@ -162,7 +163,11 @@ const {
     settleAnnualInvestorDividends,
     upsertBalanceSheetSnapshot,
     upsertValuationSnapshot
-} = require("./lib/investor-ledger");
+} = require("vibe-functions-core/investor-ledger");
+const {
+    normalizeAmount,
+    normalizeCurrency
+} = require("vibe-functions-core/pricing-utils");
 const {
     exportLedgerReport,
     generateLedgerReport,
@@ -193,6 +198,14 @@ const {
     loadDistributorScopedUsers
 } = require("./lib/distributor-utils");
 const {
+    getPayoutAccountFromUser
+} = require("vibe-functions-core/distributor-utils-core");
+const {
+    isStarterCourseReference,
+    resolveRegistrationTimestampMs,
+    nowIsoTimestamp
+} = require("vibe-functions-core/access-utils-core");
+const {
     normalizeText,
     normalizeEmail,
     normalizeCourseFile,
@@ -220,6 +233,11 @@ const {
     extractHiddenSectionContent,
     getTutorAssignmentUrlFromConfig
 } = require("./dashboard-utils");
+const {
+    assertAuthenticated,
+    assertRequiredValue
+} = require("vibe-functions-core/access-utils-core");
+const { withAssignmentUrlAliases } = require("vibe-functions-core/dashboard-utils-core");
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
@@ -231,7 +249,7 @@ setGlobalOptions({
     concurrency: 80
 });
 
-exports.adminGetStudentAssignmentTutorReport = onCall(async (request) => {
+const getStudentAssignmentTutorReport = onCall(async (request) => {
     const data = request?.data || {};
     const auth = request.auth;
     assertAuthenticated(auth, "請先登入");
@@ -261,7 +279,7 @@ exports.adminGetStudentAssignmentTutorReport = onCall(async (request) => {
     };
 });
 
-exports.adminAssignStudentToTutor = onCall(async (request) => {
+const assignStudentToTutor = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth);
 
@@ -294,53 +312,6 @@ const db = admin.firestore();
 const CONTENT_FILE_CACHE = new Map();
 const GITHUB_CLASSROOM_ORG = process.env.GITHUB_CLASSROOM_ORG || "vibe-coding-classroom";
 const GITHUB_ORG_ADMIN_TOKEN = process.env.GITHUB_ORG_ADMIN_TOKEN || "";
-
-function normalizeCurrency(raw = "", fallback = "") {
-    const v = String(raw || fallback || "").trim().toUpperCase();
-    if (v === "NTD") return "TWD";
-    if (v === "USD") return "USD";
-    if (v === "TWD") return "TWD";
-    return v || fallback || "";
-}
-
-function normalizeAmount(value) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : 0;
-}
-
-function withAssignmentUrlAliases(lesson = {}) {
-    const currentUrlMap = lesson && typeof lesson.assignmentUrlMap === "object" && lesson.assignmentUrlMap !== null
-        ? lesson.assignmentUrlMap
-        : null;
-
-    const assignmentUrlMap = currentUrlMap || null;
-
-    return {
-        ...lesson,
-        ...(assignmentUrlMap ? { assignmentUrlMap } : {})
-    };
-}
-
-async function resolveLessonMetadataDistributorId(requestedDistributorId = "", uid = "") {
-    const requested = normalizeText(requestedDistributorId);
-    if (requested) return requested;
-    if (uid) {
-        try {
-            const userDoc = await db.collection("users").doc(uid).get();
-            const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-            const preferred = normalizeText(
-                userData.preferredDistributorId ||
-                userData.distributorId ||
-                userData.commercial?.distributorId ||
-                ""
-            );
-            if (preferred) return preferred;
-        } catch (err) {
-            console.warn("[getLessonsMetadata] failed to resolve user distributor:", err.message || err);
-        }
-    }
-    return "default-usd";
-}
 
 async function loadLessonsWithOptionalDistributorOverride(distributorId = "") {
     const lessonsSnap = await db.collection("metadata_lessons").orderBy("orderWeight", "asc").get();
@@ -421,12 +392,6 @@ async function getRole(uid) {
 function assertAdminRole(requesterRole, message = "僅限管理員執行此操作") {
     if (requesterRole !== "admin") {
         throw new HttpsError("permission-denied", message);
-    }
-}
-
-function assertRequiredValue(value, message = "缺少必要參數") {
-    if (value === undefined || value === null || value === "") {
-        throw new HttpsError("invalid-argument", message);
     }
 }
 
@@ -551,7 +516,7 @@ async function backfillTutorReferralForPaidOrders(dbRef, {
     return { updatedOrders, updatedItems };
 }
 
-exports.adminBindTutorToUnit = onCall(async (request) => {
+const bindTutorToUnit = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth);
 
@@ -603,7 +568,7 @@ exports.adminBindTutorToUnit = onCall(async (request) => {
                     const cId = resolveCanonicalUnitId(uId, lessons);
                     await upsertStudentUnitAssignment(uid, cId, tutorEmail, "selfBinding_cascade", true);
                 }
-                console.log(`[adminBindTutorToUnit] Cascade-assigned ${uid} -> ${tutorEmail} for ${course.courseUnits.length} units in ${effectiveCourseId}`);
+                console.log(`[bindTutorToUnit] Cascade-assigned ${uid} -> ${tutorEmail} for ${course.courseUnits.length} units in ${effectiveCourseId}`);
             }
         }
 
@@ -613,18 +578,18 @@ exports.adminBindTutorToUnit = onCall(async (request) => {
             tutorEmail,
             assignmentUrl: normalizedLink,
             lessons,
-            source: "adminBindTutorToUnit"
+            source: "bindTutorToUnit"
         });
 
         return { success: true, tutorEmail };
     } catch (error) {
-        console.error("adminBindTutorToUnit failed:", error);
+        console.error("bindTutorToUnit failed:", error);
         if (error instanceof HttpsError) throw error;
         throw new HttpsError("internal", error.message);
     }
 });
 
-exports.adminBindTutorByPromotionCode = onCall(async (request) => {
+const bindTutorByPromotionCode = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth);
 
@@ -697,7 +662,7 @@ exports.adminBindTutorByPromotionCode = onCall(async (request) => {
             throw new HttpsError("failed-precondition", "此導師尚未設定該單元作業連結，請通知管理員設定。");
         }
         if (isDefaultTutorSelection && !assignmentUrl) {
-            console.warn(`[adminBindTutorByPromotionCode] Default tutor selected for ${canonicalUnitId}, but no assignmentUrl was configured. Proceeding without referral link.`);
+            console.warn(`[bindTutorByPromotionCode] Default tutor selected for ${canonicalUnitId}, but no assignmentUrl was configured. Proceeding without referral link.`);
         }
 
         const tutorRef = dbRef.collection("users").doc(tutorDoc.id);
@@ -722,7 +687,7 @@ exports.adminBindTutorByPromotionCode = onCall(async (request) => {
             promotionCode: resolvedPromotionCode,
             assignmentUrl,
             lessons,
-            source: "adminBindTutorByPromotionCode"
+            source: "bindTutorByPromotionCode"
         });
 
         return {
@@ -733,13 +698,13 @@ exports.adminBindTutorByPromotionCode = onCall(async (request) => {
             assignmentUrl
         };
     } catch (error) {
-        console.error("adminBindTutorByPromotionCode failed:", error);
+        console.error("bindTutorByPromotionCode failed:", error);
         if (error instanceof HttpsError) throw error;
         throw new HttpsError("internal", error.message);
     }
 });
 
-exports.adminDebugTutorAuth = onRequest(async (req, res) => {
+const debugTutorAuth = onRequest(async (req, res) => {
     const email = req.query.email || "rover.k.chen@gmail.com";
     try {
         const usersSnap = await db.collection("users").where("email", "==", email).get();
@@ -756,25 +721,6 @@ exports.adminDebugTutorAuth = onRequest(async (req, res) => {
         return res.status(500).send(err.message);
     }
 });
-
-function nowIsoTimestamp() {
-    return new Date().toISOString();
-}
-
-function normalizeAssignmentLinkUrl(value = "") {
-    return normalizeText(value);
-}
-
-function isValidAssignmentLinkUrl(value = "") {
-    const normalized = normalizeText(value);
-    if (!normalized) return false;
-    try {
-        const parsed = new URL(normalized);
-        return parsed.protocol === "http:" || parsed.protocol === "https:";
-    } catch (_) {
-        return false;
-    }
-}
 
 function assertTutorApplicationState(appData = {}, { source = null, status = null } = {}) {
     if (source && appData.source !== source) {
@@ -897,18 +843,6 @@ async function purgeContentCacheHelper(dbRef) {
     console.log(`[purgeContentCacheHelper] ✅ Purged ${count} cache files from content_cache.`);
 }
 
-function normalizeLessonLocalePayload(localeData = {}) {
-    return {
-        title: normalizeText(localeData.title || ""),
-        summary: normalizeText(localeData.summary || ""),
-        description: normalizeText(localeData.description || ""),
-        lessonLabel: normalizeText(localeData.lessonLabel || ""),
-        coreContent: Array.isArray(localeData.coreContent)
-            ? localeData.coreContent.map((item) => normalizeText(item)).filter(Boolean)
-            : []
-    };
-}
-
 function normalizeLessonMetadataPatch(payload = {}) {
     const docId = normalizeText(payload.docId || payload.id || "");
     assertRequiredValue(docId, "missing-doc-id");
@@ -954,7 +888,15 @@ function normalizeLessonMetadataPatch(payload = {}) {
         for (const [locale, localeData] of Object.entries(payload.i18n)) {
             const key = normalizeText(locale).replace("_", "-");
             if (!key || !localeData || typeof localeData !== "object" || Array.isArray(localeData)) continue;
-            i18n[key] = normalizeLessonLocalePayload(localeData);
+            i18n[key] = {
+                title: normalizeText(localeData.title || ""),
+                summary: normalizeText(localeData.summary || ""),
+                description: normalizeText(localeData.description || ""),
+                lessonLabel: normalizeText(localeData.lessonLabel || ""),
+                coreContent: Array.isArray(localeData.coreContent)
+                    ? localeData.coreContent.map((item) => normalizeText(item)).filter(Boolean)
+                    : []
+            };
         }
         if (Object.keys(i18n).length > 0) patch.i18n = i18n;
     }
@@ -988,7 +930,7 @@ function normalizeLessonMetadataPatch(payload = {}) {
     return patch;
 }
 
-exports.adminUpdateLessonI18n = onCall(async (request) => {
+const updateLessonI18n = onCall(async (request) => {
     const { auth, data } = request;
 
     assertAuthenticated(auth);
@@ -1021,12 +963,12 @@ exports.adminUpdateLessonI18n = onCall(async (request) => {
     if (typeof lessonLabelEn === "string") updatePayload["i18n.en.lessonLabel"] = normalizeText(lessonLabelEn);
 
     await lessonDocRef.set(updatePayload, { merge: true });
-    console.log(`[adminUpdateLessonI18n] Updated i18n fields for courseId=${courseId} by uid=${auth.uid}`);
+    console.log(`[updateLessonI18n] Updated i18n fields for courseId=${courseId} by uid=${auth.uid}`);
 
     return { success: true, courseId };
 });
 
-exports.adminUpsertLessonMetadata = onCall(async (request) => {
+const upsertLessonMetadata = onCall(async (request) => {
     const { auth, data } = request;
 
     assertAuthenticated(auth);
@@ -1050,7 +992,7 @@ exports.adminUpsertLessonMetadata = onCall(async (request) => {
     }
 
     await docRef.set(patch, { merge: true });
-    console.log(`[adminUpsertLessonMetadata] Upserted lesson metadata for docId=${patch.docId} by uid=${auth.uid}`);
+    console.log(`[upsertLessonMetadata] Upserted lesson metadata for docId=${patch.docId} by uid=${auth.uid}`);
 
     return {
         success: true,
@@ -1058,7 +1000,7 @@ exports.adminUpsertLessonMetadata = onCall(async (request) => {
     };
 });
 
-exports.adminUpdateSystemConfig = onCall(async (request) => {
+const updateSystemConfig = onCall(async (request) => {
     const { auth, data } = request;
 
     assertAuthenticated(auth);
@@ -1102,7 +1044,7 @@ exports.adminUpdateSystemConfig = onCall(async (request) => {
         updates.updatedBy = auth.uid;
 
         await db.collection("metadata_settings").doc("content_runtime").set(updates, { merge: true });
-        console.log(`[adminUpdateSystemConfig] Updated config to ${JSON.stringify(updates)} by uid=${auth.uid}`);
+        console.log(`[updateSystemConfig] Updated config to ${JSON.stringify(updates)} by uid=${auth.uid}`);
 
         if (contentVersion !== undefined) {
             await purgeContentCacheHelper(db);
@@ -1112,7 +1054,7 @@ exports.adminUpdateSystemConfig = onCall(async (request) => {
     return { success: true };
 });
 
-exports.adminGetSystemConfig = onCall(async (request) => {
+const getSystemConfig = onCall(async (request) => {
     const { auth } = request;
 
     assertAuthenticated(auth);
@@ -1134,7 +1076,7 @@ exports.adminGetSystemConfig = onCall(async (request) => {
     };
 });
 
-exports.adminPurgeContentCache = onCall(async (request) => {
+const purgeContentCache = onCall(async (request) => {
     const { auth } = request;
 
     assertAuthenticated(auth);
@@ -1145,7 +1087,7 @@ exports.adminPurgeContentCache = onCall(async (request) => {
     return { success: true };
 });
 
-exports.adminUpsertLessonPricing = onCall(async (request) => {
+const upsertLessonPricing = onCall(async (request) => {
     const { auth, data } = request;
 
     assertAuthenticated(auth);
@@ -1221,7 +1163,7 @@ exports.adminUpsertLessonPricing = onCall(async (request) => {
         }, { merge: true })
     ]);
 
-    console.log(`[adminUpsertLessonPricing] Updated default price books for docId=${cleanProductId} by uid=${auth.uid}`);
+    console.log(`[upsertLessonPricing] Updated default price books for docId=${cleanProductId} by uid=${auth.uid}`);
     return {
         success: true,
         courseId: cleanProductId,
@@ -1229,7 +1171,7 @@ exports.adminUpsertLessonPricing = onCall(async (request) => {
     };
 });
 
-exports.adminGetDistributorPriceBooks = onCall(async (request) => {
+const getDistributorPriceBooks = onCall(async (request) => {
     const { auth, data } = request;
     assertAuthenticated(auth);
 
@@ -1245,7 +1187,7 @@ exports.adminGetDistributorPriceBooks = onCall(async (request) => {
     return { success: true, distributorId, items };
 });
 
-exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
+const upsertDistributorPriceBook = onCall(async (request) => {
     const { auth, data } = request;
     assertAuthenticated(auth);
 
@@ -1314,7 +1256,7 @@ exports.adminUpsertDistributorPriceBook = onCall(async (request) => {
     return { success: true, priceBookId, distributorId, docId };
 });
 
-exports.adminGetLessonPriceBooks = onCall(async (request) => {
+const getLessonPriceBooks = onCall(async (request) => {
     const { auth, data } = request;
 
     assertAuthenticated(auth);
@@ -1362,7 +1304,7 @@ exports.adminGetLessonPriceBooks = onCall(async (request) => {
     };
 });
 
-exports.adminSeedDistributorPriceBooksFromLessons = onCall(async (request) => {
+const seedDistributorPriceBooksFromLessons = onCall(async (request) => {
     const { auth, data } = request;
     assertAuthenticated(auth);
 
@@ -1438,7 +1380,7 @@ exports.adminSeedDistributorPriceBooksFromLessons = onCall(async (request) => {
     };
 });
 
-exports.adminGetDistributorRoutingOptions = onCall(async (request) => {
+const getDistributorRoutingOptions = onCall(async (request) => {
     const { auth, data } = request;
     const dbRef = admin.firestore();
     const runtimeConfig = await getContentRuntimeConfig(dbRef);
@@ -1506,7 +1448,7 @@ exports.adminGetDistributorRoutingOptions = onCall(async (request) => {
     };
 });
 
-exports.adminUpdateUserRoutingPreference = onCall(async (request) => {
+const updateUserRoutingPreference = onCall(async (request) => {
     const { auth, data } = request;
     assertAuthenticated(auth);
 
@@ -1527,13 +1469,13 @@ exports.adminUpdateUserRoutingPreference = onCall(async (request) => {
     if (preferredDistributorId) {
         const distributorDoc = await dbRef.collection("distributors").doc(preferredDistributorId).get();
         if (!distributorDoc.exists) {
-            console.warn("[adminUpdateUserRoutingPreference] skip missing distributor", { uid: auth.uid, preferredDistributorId });
+            console.warn("[updateUserRoutingPreference] skip missing distributor", { uid: auth.uid, preferredDistributorId });
             safePreferredDistributorId = "";
         } else {
             const distributorData = distributorDoc.data() || {};
             const requestedRegion = preferredRegion || payload.region || distributorData.regions?.[0] || "";
             if (!distributorMatchesRegion(distributorData, requestedRegion)) {
-                console.warn("[adminUpdateUserRoutingPreference] skip mismatched distributor/region", {
+                console.warn("[updateUserRoutingPreference] skip mismatched distributor/region", {
                     uid: auth.uid,
                     preferredDistributorId,
                     preferredRegion: requestedRegion
@@ -1565,38 +1507,6 @@ exports.adminUpdateUserRoutingPreference = onCall(async (request) => {
     };
 });
 
-function buildDistributorPortalOrderRecord(order = {}, orderId = "") {
-    const items = order.items || {};
-    const itemEntries = Object.entries(items);
-    const physicalItemCount = itemEntries.filter(([_, item]) => item && item.isPhysical === true).length;
-    const itemNames = itemEntries
-        .map(([itemKey, item]) => item?.name || item?.productName || itemKey)
-        .filter(Boolean)
-        .slice(0, 3);
-    return {
-        id: orderId,
-        orderNumber: order.orderNumber || orderId,
-        uid: order.uid || "",
-        amount: Number(order.amount || 0),
-        currency: order.currency || "TWD",
-        status: order.status || "",
-        fulfillmentStatus: order.fulfillmentStatus || "PENDING",
-        distributorId: order.distributorId || order.commercial?.distributorId || "",
-        priceBookId: order.priceBookId || "",
-        pricingVersion: order.pricingVersion || "",
-        itemCount: itemEntries.length,
-        physicalItemCount,
-        hasPhysical: physicalItemCount > 0,
-        items: itemNames,
-        logistics: order.logistics || null,
-        shippingContact: order.logistics ? { name: order.logistics.receiverName || order.logistics.ReceiverName || "", phone: order.logistics.receiverPhone || order.logistics.ReceiverPhone || order.logistics.ReceiverCellPhone || "" } : { name: "", phone: "" },
-        shippingAddress: order.logistics?.storeAddress || order.logistics?.CVSAddress || order.logistics?.ReceiverAddress || "",
-        createdAt: order.createdAt || null,
-        paidAt: order.paidAt || order.createdAt || null,
-        shippedAt: order.shippedAt || null
-    };
-}
-
 async function loadDistributorPortalOrders(dbRef, distributorId = "", lessons = []) {
     const normalizedDistributorId = normalizeText(distributorId);
     if (!normalizedDistributorId) {
@@ -1617,7 +1527,34 @@ async function loadDistributorPortalOrders(dbRef, distributorId = "", lessons = 
         const isOwnOrder = orderDistributorId === normalizedDistributorId || (orderPriceBookId && priceBookIds.has(orderPriceBookId));
         if (!isOwnOrder) return;
 
-        const record = buildDistributorPortalOrderRecord(order, doc.id);
+        const itemEntries = Object.entries(order.items || {});
+        const physicalItemCount = itemEntries.filter(([_, item]) => item && item.isPhysical === true).length;
+        const itemNames = itemEntries
+            .map(([itemKey, item]) => item?.name || item?.productName || itemKey)
+            .filter(Boolean)
+            .slice(0, 3);
+        const record = {
+            id: doc.id,
+            orderNumber: order.orderNumber || doc.id,
+            uid: order.uid || "",
+            amount: Number(order.amount || 0),
+            currency: order.currency || "TWD",
+            status: order.status || "",
+            fulfillmentStatus: order.fulfillmentStatus || "PENDING",
+            distributorId: order.distributorId || order.commercial?.distributorId || "",
+            priceBookId: order.priceBookId || "",
+            pricingVersion: order.pricingVersion || "",
+            itemCount: itemEntries.length,
+            physicalItemCount,
+            hasPhysical: physicalItemCount > 0,
+            items: itemNames,
+            logistics: order.logistics || null,
+            shippingContact: order.logistics ? { name: order.logistics.receiverName || order.logistics.ReceiverName || "", phone: order.logistics.receiverPhone || order.logistics.ReceiverPhone || order.logistics.ReceiverCellPhone || "" } : { name: "", phone: "" },
+            shippingAddress: order.logistics?.storeAddress || order.logistics?.CVSAddress || order.logistics?.ReceiverAddress || "",
+            createdAt: order.createdAt || null,
+            paidAt: order.paidAt || order.createdAt || null,
+            shippedAt: order.shippedAt || null
+        };
         const physicalItems = Object.keys(order.items || {}).filter((itemId) => isPhysicalOrderItem(itemId, order.items?.[itemId] || {}, physicalUnitIds));
         record.physicalItemCount = physicalItems.length;
         record.hasPhysical = physicalItems.length > 0;
@@ -1777,7 +1714,7 @@ async function loadDistributorPortalSettlement(dbRef, distributorId = "", tutors
     return { period, rows, summary };
 }
 
-exports.adminGetDistributorPortalData = onCall(async (request) => {
+const getDistributorPortalData = onCall(async (request) => {
     const { auth } = request;
     assertAuthenticated(auth, "請先登入");
 
@@ -1859,7 +1796,7 @@ exports.adminGetDistributorPortalData = onCall(async (request) => {
     };
 });
 
-exports.adminResolveDistributorCheckoutQuote = onCall(async (request) => {
+const resolveDistributorCheckoutQuoteCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const { auth, data } = request;
     assertAuthenticated(auth, "請先登入");
@@ -1884,7 +1821,7 @@ exports.adminResolveDistributorCheckoutQuote = onCall(async (request) => {
     };
 });
 
-async function adminRunPendingAssignmentReminder() {
+async function runPendingAssignmentReminderTask() {
     return runPendingAssignmentReminder({
         db,
         admin,
@@ -1898,7 +1835,7 @@ async function adminRunPendingAssignmentReminder() {
     });
 }
 
-async function adminRunPendingShipmentReminder() {
+async function runPendingShipmentReminderTask() {
     return runPendingShipmentReminder({
         db,
         admin,
@@ -1913,10 +1850,7 @@ async function adminRunPendingShipmentReminder() {
     });
 }
 
-exports.adminRunPendingAssignmentReminder = adminRunPendingAssignmentReminder;
-exports.adminRunPendingShipmentReminder = adminRunPendingShipmentReminder;
-
-async function adminCalculateMonthlySharing() {
+async function calculateMonthlySharing() {
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
@@ -1950,14 +1884,6 @@ async function adminCalculateMonthlySharing() {
         } catch {
             return Math.max(1, Number(fallbackMonths || 12));
         }
-    };
-    const getPayoutAccountFromUser = (userData = {}) => {
-        if (!userData || typeof userData !== "object") return "";
-        if (typeof userData.payoutAccount === "string" && userData.payoutAccount.trim()) return userData.payoutAccount.trim();
-        if (typeof userData.paymentAccount === "string" && userData.paymentAccount.trim()) return userData.paymentAccount.trim();
-        const map = userData.payoutAccounts || {};
-        const candidate = map.default || map.bank || "";
-        return typeof candidate === "string" ? candidate.trim() : "";
     };
     const getUserByEmail = async (email = "") => {
         const normalized = normalizeEmail(email);
@@ -2228,7 +2154,7 @@ async function adminCalculateMonthlySharing() {
     }
 }
 
-async function adminCalculateAnnualInvestorDividends() {
+async function calculateAnnualInvestorDividends() {
     const currentYear = new Date().getFullYear();
     const targetYear = currentYear - 1;
     try {
@@ -2246,17 +2172,17 @@ async function adminCalculateAnnualInvestorDividends() {
 }
 
 exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async () => {
-    await adminCalculateMonthlySharing();
+    await calculateMonthlySharing();
 });
 
 exports.calculateAnnualInvestorDividends = onSchedule({
     schedule: "0 0 1 1 *",
     timeZone: "Asia/Taipei"
 }, async () => {
-    await adminCalculateAnnualInvestorDividends();
+    await calculateAnnualInvestorDividends();
 });
 
-exports.adminLogActivity = onCall(async (request) => {
+const logActivity = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth, "User must be logged in.");
 
@@ -2291,7 +2217,7 @@ exports.remindAdminPendingAssignments = onSchedule({
     timeZone: "Asia/Taipei"
 }, async () => {
     try {
-        await adminRunPendingAssignmentReminder();
+        await runPendingAssignmentReminderTask();
     } catch (error) {
         console.error("Error in remindAdminPendingAssignments:", error);
     }
@@ -2302,39 +2228,27 @@ exports.remindAdminPendingShipments = onSchedule({
     timeZone: "Asia/Taipei"
 }, async () => {
     try {
-        await adminRunPendingShipmentReminder();
+        await runPendingShipmentReminderTask();
     } catch (error) {
         console.error("Error in remindAdminPendingShipments:", error);
     }
 });
 
-function normalizeClassroomInviteAdmin(value = "") {
-    const s = String(value || "").trim();
-    if (!s) return "";
-    try {
-        const url = new URL(s);
-        if (url.hostname !== "classroom.github.com") return s;
-        return `${url.origin}${url.pathname}`.replace(/\/+$/, "").toLowerCase();
-    } catch (_) {
-        const token = s.replace(/^https?:\/\/classroom\.github\.com\/a\//i, "").replace(/\/+$/, "");
-        return token ? `https://classroom.github.com/a/${token}`.toLowerCase() : "";
-    }
-}
-
-function extractInviteCandidatesAdmin(cfg) {
-    if (!cfg) return [];
-    if (typeof cfg === "string") return [normalizeClassroomInviteAdmin(cfg)].filter(Boolean);
-    if (typeof cfg === "object") {
-        return Object.values(cfg)
-            .filter((v) => typeof v === "string" && v.trim())
-            .map((v) => normalizeClassroomInviteAdmin(v))
-            .filter(Boolean);
-    }
-    return [];
-}
-
 async function lookupClassroomInviteBindingAdmin(inputRaw) {
-    const normalizedInvite = normalizeClassroomInviteAdmin(inputRaw);
+    const normalizeClassroomInvite = (value = "") => {
+        const s = String(value || "").trim();
+        if (!s) return "";
+        try {
+            const url = new URL(s);
+            if (url.hostname !== "classroom.github.com") return s;
+            return `${url.origin}${url.pathname}`.replace(/\/+$/, "").toLowerCase();
+        } catch (_) {
+            const token = s.replace(/^https?:\/\/classroom\.github\.com\/a\//i, "").replace(/\/+$/, "");
+            return token ? `https://classroom.github.com/a/${token}`.toLowerCase() : "";
+        }
+    };
+
+    const normalizedInvite = normalizeClassroomInvite(inputRaw);
     if (!normalizedInvite.includes("classroom.github.com/a/")) {
         throw new HttpsError("invalid-argument", "請輸入 GitHub Classroom 邀請連結或 invite code。");
     }
@@ -2344,7 +2258,14 @@ async function lookupClassroomInviteBindingAdmin(inputRaw) {
     for (const lesson of lessons) {
         const urlMap = lesson?.githubClassroomUrls || {};
         for (const [unitKey, cfg] of Object.entries(urlMap)) {
-            const candidates = extractInviteCandidatesAdmin(cfg);
+            const candidates = !cfg ? [] : (typeof cfg === "string"
+                ? [normalizeClassroomInvite(cfg)].filter(Boolean)
+                : (typeof cfg === "object"
+                    ? Object.values(cfg)
+                        .filter((v) => typeof v === "string" && v.trim())
+                        .map((v) => normalizeClassroomInvite(v))
+                        .filter(Boolean)
+                    : []));
             if (!candidates.includes(normalizedInvite)) continue;
             matches.push({
                 lessonDocId: lesson.id || null,
@@ -2358,7 +2279,7 @@ async function lookupClassroomInviteBindingAdmin(inputRaw) {
     return { success: true, normalizedInvite, totalMatches: matches.length, matches };
 }
 
-exports.adminVerifyReferralLink = onCall(async (request) => {
+const verifyReferralLink = onCall(async (request) => {
     const { data } = request;
     const referralLink = data?.referralLink || data?.promoCode;
     const { cartItems = [] } = data || {};
@@ -2419,7 +2340,7 @@ exports.adminVerifyReferralLink = onCall(async (request) => {
     }
 });
 
-exports.adminFindClassroomInviteBinding = onCall(async (request) => {
+const findClassroomInviteBinding = onCall(async (request) => {
     const auth = request.auth;
     if (!auth) throw new HttpsError("unauthenticated", "User must be logged in.");
     const requesterRole = await getRole(auth.uid);
@@ -2435,7 +2356,7 @@ exports.adminFindClassroomInviteBinding = onCall(async (request) => {
     return lookupClassroomInviteBindingAdmin(inputRaw);
 });
 
-exports.adminFindClassroomInviteBindingHttp = onRequest(async (req, res) => {
+const findClassroomInviteBindingHttp = onRequest(async (req, res) => {
     res.set("Access-Control-Allow-Origin", "https://vibe-coding.tw");
     res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -2462,12 +2383,12 @@ exports.adminFindClassroomInviteBindingHttp = onRequest(async (req, res) => {
         const result = await lookupClassroomInviteBindingAdmin(inputRaw);
         return res.json(result);
     } catch (error) {
-        console.error("[adminFindClassroomInviteBindingHttp] failed:", error);
+        console.error("[findClassroomInviteBindingHttp] failed:", error);
         return res.status(500).json({ error: error.message || "internal error" });
     }
 });
 
-exports.adminPrecheckGithubClassroomAccess = onCall(async (request) => {
+const precheckGithubClassroomAccess = onCall(async (request) => {
     const { auth, data } = request;
     if (!auth) throw new HttpsError("unauthenticated", "請先登入");
 
@@ -2504,7 +2425,7 @@ exports.adminPrecheckGithubClassroomAccess = onCall(async (request) => {
             settingsUrl: "https://github.com/settings/organizations"
         };
     } catch (error) {
-        console.error("[adminPrecheckGithubClassroomAccess] failed:", error);
+        console.error("[precheckGithubClassroomAccess] failed:", error);
         return {
             success: false,
             precheckEnabled: true,
@@ -2515,7 +2436,7 @@ exports.adminPrecheckGithubClassroomAccess = onCall(async (request) => {
     }
 });
 
-exports.adminSetUserRole = onCall(async (request) => {
+const setUserRole = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth, "User must be logged in.");
 
@@ -2541,7 +2462,7 @@ exports.adminSetUserRole = onCall(async (request) => {
     }
 });
 
-exports.adminGetRevenueSharePolicies = onCall(async (request) => {
+const getRevenueSharePolicies = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2560,7 +2481,7 @@ exports.adminGetRevenueSharePolicies = onCall(async (request) => {
     };
 });
 
-exports.adminUpsertRevenueSharePolicy = onCall(async (request) => {
+const upsertRevenueSharePolicy = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2599,7 +2520,7 @@ exports.adminUpsertRevenueSharePolicy = onCall(async (request) => {
     return { success: true, policyId };
 });
 
-exports.adminGetInvestorProfiles = onCall(async (request) => {
+const getInvestorProfiles = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2657,7 +2578,7 @@ exports.adminGetInvestorProfiles = onCall(async (request) => {
     };
 });
 
-exports.adminUpsertInvestorProfile = onCall(async (request) => {
+const upsertInvestorProfile = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2699,7 +2620,7 @@ exports.adminUpsertInvestorProfile = onCall(async (request) => {
     return { success: true, investorId };
 });
 
-exports.adminUpsertValuationSnapshot = onCall(async (request) => {
+const upsertValuationSnapshotCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2718,7 +2639,7 @@ exports.adminUpsertValuationSnapshot = onCall(async (request) => {
     return { success: true, valuationId: result.valuationId, snapshot: result };
 });
 
-exports.adminUpsertBalanceSheetSnapshot = onCall(async (request) => {
+const upsertBalanceSheetSnapshotCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2737,7 +2658,7 @@ exports.adminUpsertBalanceSheetSnapshot = onCall(async (request) => {
     return { success: true, snapshotId: result.snapshotId, snapshot: result };
 });
 
-exports.adminIssueInvestorEquity = onCall(async (request) => {
+const issueInvestorEquityCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2758,7 +2679,7 @@ exports.adminIssueInvestorEquity = onCall(async (request) => {
     return { success: true, ...result };
 });
 
-exports.adminRecordInvestorFinanceEvent = onCall(async (request) => {
+const recordInvestorFinanceEventCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2777,7 +2698,7 @@ exports.adminRecordInvestorFinanceEvent = onCall(async (request) => {
     return { success: true, ...result };
 });
 
-exports.adminSettleAnnualInvestorDividends = onCall(async (request) => {
+const settleAnnualInvestorDividendsCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2803,7 +2724,7 @@ exports.adminSettleAnnualInvestorDividends = onCall(async (request) => {
     return { success: true, ...result };
 });
 
-exports.adminRecordLedgerEvent = onCall(async (request) => {
+const recordLedgerEventCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2821,7 +2742,7 @@ exports.adminRecordLedgerEvent = onCall(async (request) => {
     return { success: true, ...result };
 });
 
-exports.adminGenerateLedgerReport = onCall(async (request) => {
+const generateLedgerReportCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2845,7 +2766,7 @@ exports.adminGenerateLedgerReport = onCall(async (request) => {
     return { success: true, report };
 });
 
-exports.adminExportLedgerReport = onCall(async (request) => {
+const exportLedgerReportCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2871,7 +2792,7 @@ exports.adminExportLedgerReport = onCall(async (request) => {
     return { success: true, ...result };
 });
 
-exports.adminRecordOrderRefundEvent = onCall(async (request) => {
+const recordOrderRefundEventCallable = onCall(async (request) => {
     const dbRef = admin.firestore();
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
@@ -2942,7 +2863,7 @@ exports.adminRecordOrderRefundEvent = onCall(async (request) => {
     return { success: true, ...result };
 });
 
-exports.adminUpdateUserRelationships = onCall(async (request) => {
+const updateUserRelationships = onCall(async (request) => {
     const { auth, data } = request;
 
     assertAuthenticated(auth);
@@ -2960,12 +2881,12 @@ exports.adminUpdateUserRelationships = onCall(async (request) => {
     if (courseDevEmail !== undefined) updatePayload.courseDevEmail = courseDevEmail ? normalizeEmail(courseDevEmail) : "";
 
     await db.collection("users").doc(targetUid).set(updatePayload, { merge: true });
-    console.log(`[adminUpdateUserRelationships] ✅ Updated user relationships for targetUid=${targetUid} by admin=${auth.uid}`);
+    console.log(`[updateUserRelationships] ✅ Updated user relationships for targetUid=${targetUid} by uid=${auth.uid}`);
 
     return { success: true };
 });
 
-exports.adminGetUserRelationships = onCall(async (request) => {
+const getUserRelationships = onCall(async (request) => {
     const { auth, data } = request;
 
     assertAuthenticated(auth);
@@ -3006,7 +2927,7 @@ exports.adminGetUserRelationships = onCall(async (request) => {
     };
 });
 
-exports.adminSaveTutorConfigs = onCall(async (request) => {
+const saveTutorConfigs = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth, "User must be logged in.");
 
@@ -3089,7 +3010,7 @@ exports.adminSaveTutorConfigs = onCall(async (request) => {
     return { success: true, message: "Configs saved and synced to user documents." };
 });
 
-exports.adminGetTutorConfigs = onCall(async (request) => {
+const getTutorConfigs = onCall(async (request) => {
     const { data } = request;
     const { courseId } = data || {};
 
@@ -3152,10 +3073,6 @@ exports.adminGetTutorConfigs = onCall(async (request) => {
         throw new HttpsError("internal", e.message);
     }
 });
-
-function assertAuthenticated(auth, message = "請先登入") {
-    if (!auth) throw new HttpsError("unauthenticated", message);
-}
 
 async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig, locales) {
     if (!runtimeConfig?.enabled) return null;
@@ -3316,60 +3233,60 @@ async function fetchGuideContentFromLocalFiles({ lessons, courseId, unitId, pref
     return aggregatedGuides;
 }
 
-function normalizeLearningPathCategoryLabelEntry(value = {}) {
-    if (typeof value === "string") {
-        const text = String(value || "").trim();
-        return {
-            "zh-TW": text,
-            en: "",
-        };
-    }
-
-    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-
-    const zh = String(
-        value["zh-TW"] ||
-        value.zhTW ||
-        value.zh ||
-        value.tw ||
-        value.labelZh ||
-        value.twLabel ||
-        value.label ||
-        value.title ||
-        ""
-    ).trim();
-    const en = String(
-        value.en ||
-        value["en-US"] ||
-        value.labelEn ||
-        value.enLabel ||
-        value.titleEn ||
-        value.label ||
-        value.title ||
-        ""
-    ).trim();
-
-    return {
-        "zh-TW": zh,
-        en: en,
-    };
-}
-
-function normalizeCanonicalLearningPathKey(value = "") {
-    const v = String(value || "").trim().toLowerCase().split("/").pop().split("?")[0].split("#")[0].replace(/\.html$/i, "");
-    if (!v) return "";
-    if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
-    if (/^(?:tw|en)-common$/i.test(v)) return "common";
-    if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
-    if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
-    if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
-    if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
-    if (/^\d{2}-unit-/i.test(v)) return "common";
-    if (/^prepare-\d+/i.test(v)) return "common";
-    return v;
-}
-
 function normalizeLearningPathCategoryLabels(sourceMap = {}) {
+    const normalizeCanonicalLearningPathKeyLocal = (value = "") => {
+        const v = String(value || "").trim().toLowerCase().split("/").pop().split("?")[0].split("#")[0].replace(/\.html$/i, "");
+        if (!v) return "";
+        if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
+        if (/^(?:tw|en)-common$/i.test(v)) return "common";
+        if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+        if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
+        if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
+        if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
+        if (/^\d{2}-unit-/i.test(v)) return "common";
+        if (/^prepare-\d+/i.test(v)) return "common";
+        return v;
+    };
+
+    const normalizeLearningPathCategoryLabelEntryLocal = (value = {}) => {
+        if (typeof value === "string") {
+            const text = String(value || "").trim();
+            return {
+                "zh-TW": text,
+                en: "",
+            };
+        }
+
+        if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+        const zh = String(
+            value["zh-TW"] ||
+            value.zhTW ||
+            value.zh ||
+            value.tw ||
+            value.labelZh ||
+            value.twLabel ||
+            value.label ||
+            value.title ||
+            ""
+        ).trim();
+        const en = String(
+            value.en ||
+            value["en-US"] ||
+            value.labelEn ||
+            value.enLabel ||
+            value.titleEn ||
+            value.label ||
+            value.title ||
+            ""
+        ).trim();
+
+        return {
+            "zh-TW": zh,
+            en: en,
+        };
+    };
+
     const normalized = {};
     if (!sourceMap || typeof sourceMap !== "object" || Array.isArray(sourceMap)) return normalized;
 
@@ -3379,11 +3296,11 @@ function normalizeLearningPathCategoryLabels(sourceMap = {}) {
     };
 
     const assignLabel = (rawKey, rawValue, localeHint = "") => {
-        const canonicalKey = normalizeCanonicalLearningPathKey(rawKey);
+        const canonicalKey = normalizeCanonicalLearningPathKeyLocal(rawKey);
         if (!canonicalKey) return;
 
         const entry = ensureEntry(canonicalKey);
-        const normalizedEntry = normalizeLearningPathCategoryLabelEntry(rawValue);
+        const normalizedEntry = normalizeLearningPathCategoryLabelEntryLocal(rawValue);
 
         if (localeHint === "zh-TW") {
             const val = (typeof rawValue === "string" ? rawValue : normalizedEntry["zh-TW"]) || "";
@@ -3449,7 +3366,23 @@ function normalizeLearningPathCategoryLabels(sourceMap = {}) {
 exports.getLessonsMetadata = onCall(async (request) => {
     try {
         const data = request?.data || {};
-        const distributorId = await resolveLessonMetadataDistributorId(data.distributorId || "", request.auth?.uid || "");
+        const requestedDistributorId = normalizeText(data.distributorId || "");
+        let distributorId = requestedDistributorId;
+        if (!distributorId && request.auth?.uid) {
+            try {
+                const userDoc = await db.collection("users").doc(request.auth.uid).get();
+                const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+                distributorId = normalizeText(
+                    userData.preferredDistributorId ||
+                    userData.distributorId ||
+                    userData.commercial?.distributorId ||
+                    ""
+                );
+            } catch (err) {
+                console.warn("[getLessonsMetadata] failed to resolve user distributor:", err.message || err);
+            }
+        }
+        distributorId = distributorId || "default-usd";
         const lessons = await loadLessonsWithOptionalDistributorOverride(distributorId);
 
         const settingsSnap = await db.collection("metadata_settings").doc("learning_paths").get();
@@ -3466,10 +3399,6 @@ exports.getLessonsMetadata = onCall(async (request) => {
         throw new HttpsError("internal", err.message || "Failed to load lessons metadata");
     }
 });
-
-function normalizeCourseContextId(value = "") {
-    return String(value || "");
-}
 
 function buildStudentsRelevantToTutor({ usersMap = {}, lessons = [], email = "", targetUnitId = null, targetCourseId = null, isTutorModeAdmin = false }) {
     const normalizedEmail = normalizeEmail(email);
@@ -3502,7 +3431,7 @@ function buildStudentsRelevantToTutor({ usersMap = {}, lessons = [], email = "",
     return relevant;
 }
 
-exports.adminGetDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (request) => {
+const getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (request) => {
     const data = request.data || {};
     const auth = request.auth;
     assertAuthenticated(auth, "User must be logged in.");
@@ -3540,7 +3469,7 @@ exports.adminGetDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async 
                 };
             });
         } catch (appErr) {
-            console.warn("[adminGetDashboardData] Failed to fetch user applications:", appErr.message);
+            console.warn("[getDashboardData] Failed to fetch user applications:", appErr.message);
         }
 
         const myTutorConfigs = userData.tutorConfigs || {};
@@ -3550,7 +3479,7 @@ exports.adminGetDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async 
             const termsDoc = await db.collection("metadata_settings").doc("tutor_terms").get();
             tutorTerms = termsDoc.exists ? (termsDoc.data().content || "") : "尚未設定合格教師權利義務細則。";
         } catch (e) {
-            console.warn("[adminGetDashboardData] Failed to fetch tutor terms:", e);
+            console.warn("[getDashboardData] Failed to fetch tutor terms:", e);
         }
 
         let allPendingApplications = [];
@@ -3785,7 +3714,7 @@ exports.adminGetDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async 
                         usersSnapshotForMap = await db.collection("users").get();
                     }
                 } catch (syncErr) {
-                    console.error("[adminGetDashboardData] Internal User Sync failed:", syncErr);
+                    console.error("[getDashboardData] Internal User Sync failed:", syncErr);
                 }
             }
 
@@ -4021,7 +3950,7 @@ exports.adminGetDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async 
                     }));
                 });
             } catch (intErr) {
-                console.warn("[adminGetDashboardData] Failed to fetch assignment_interventions:", intErr.message);
+                console.warn("[getDashboardData] Failed to fetch assignment_interventions:", intErr.message);
             }
         }
         result.interventions = interventions;
@@ -4071,7 +4000,7 @@ exports.adminGetDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async 
                     result.defaultLocale = cData.defaultLocale || "en";
                 }
             } catch (err) {
-                console.warn("[adminGetDashboardData] Failed to fetch content_runtime version:", err.message);
+                console.warn("[getDashboardData] Failed to fetch content_runtime version:", err.message);
             }
         }
 
@@ -4083,6 +4012,7 @@ exports.adminGetDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async 
     }
 });
 
+exports.getDashboardData = getDashboardData;
 async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId, lessons = [], tutorMode = false) {
     const normalizedCourseId = normalizeLegacyId(courseId || "");
     const normalizedUnitId = normalizeLegacyId(unitId || "");
@@ -4168,13 +4098,6 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
             return { authorized: true, accessMode: "free_course", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course: freeCourseContext };
         }
 
-        const isStarterCourseReference = (value = "") => {
-            const normalized = String(value || "").trim().toLowerCase();
-            return /^start-\d{2}-unit-/.test(normalized) ||
-                /^car-starter-/.test(normalized) ||
-                /^tw-car-starter-/.test(normalized) ||
-                /^en-car-starter-/.test(normalized);
-        };
         const starterReference = isStarterCourseReference(courseId) || isStarterCourseReference(unitId);
         const now = Date.now();
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -4186,19 +4109,11 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
             category: "car-starter",
             level: "starter"
         } : null);
-        const registrationCandidates = [userData.createdAt, userData.joinedAt];
-        let registeredAtMs = 0;
-        for (const value of registrationCandidates) {
-            const ts = value?.toMillis
-                ? value.toMillis()
-                : (value?.seconds ? value.seconds * 1000 : (value ? new Date(value).getTime() : 0));
-            if (Number.isFinite(ts) && ts > registeredAtMs) {
-                registeredAtMs = ts;
-            }
-        }
+        let registeredAtMs = resolveRegistrationTimestampMs(userData, uid);
         if (!registeredAtMs) {
             const userRecord = await admin.auth().getUser(uid);
-            registeredAtMs = userRecord.metadata.creationTime ? new Date(userRecord.metadata.creationTime).getTime() : 0;
+            const fallbackRegisteredAtMs = userRecord.metadata.creationTime ? new Date(userRecord.metadata.creationTime).getTime() : 0;
+            registeredAtMs = fallbackRegisteredAtMs;
         }
         const starterCategory = String(trialLesson.category || trialLesson.level || "").toLowerCase();
         const isTrialCourse = !!(trialLesson && (
@@ -4249,7 +4164,7 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
     };
 }
 
-exports.adminResolveAssignmentAccess = onCall(async (request) => {
+const resolveAssignmentAccess = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth);
 
@@ -4380,7 +4295,7 @@ exports.adminResolveAssignmentAccess = onCall(async (request) => {
     };
 });
 
-exports.adminAuthorizeTutorForCourse = onCall(async (request) => {
+const authorizeTutorForCourse = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth);
 
@@ -4451,7 +4366,7 @@ exports.adminAuthorizeTutorForCourse = onCall(async (request) => {
     }
 });
 
-exports.adminRecommendTutorForUnit = onCall(async (request) => {
+const recommendTutorForUnit = onCall(async (request) => {
     const data = request.data || {};
     const auth = request.auth;
     assertAuthenticated(auth, "User must be logged in.");
@@ -4527,7 +4442,7 @@ exports.adminRecommendTutorForUnit = onCall(async (request) => {
     return { success: true, applicationId: newAppRef.id, status: "awaiting_candidate_link" };
 });
 
-exports.adminDecideTutorApplication = onCall(async (request) => {
+const decideTutorApplication = onCall(async (request) => {
     const data = request.data || {};
     const auth = request.auth;
     assertAuthenticated(auth, "User must be logged in.");
@@ -4608,7 +4523,7 @@ exports.adminDecideTutorApplication = onCall(async (request) => {
     return { success: true };
 });
 
-exports.adminApplyForTutorRole = onCall(async (request) => {
+const applyForTutorRole = onCall(async (request) => {
     const data = request.data || {};
     const auth = request.auth;
     assertAuthenticated(auth, "User must be logged in.");
@@ -4668,7 +4583,7 @@ exports.adminApplyForTutorRole = onCall(async (request) => {
     return { success: true, applicationId: newAppRef.id };
 });
 
-exports.adminSubmitTutorRecommendationInviteLink = onCall(async (request) => {
+const submitTutorRecommendationInviteLink = onCall(async (request) => {
     const data = request.data || {};
     const auth = request.auth;
     assertAuthenticated(auth, "User must be logged in.");
@@ -4678,8 +4593,13 @@ exports.adminSubmitTutorRecommendationInviteLink = onCall(async (request) => {
     assertRequiredValue(applicationId, "Missing applicationId or assignmentLink");
     assertRequiredValue(candidateAssignmentLink, "Missing applicationId or assignmentLink");
 
-    const normalizedAssignmentLink = normalizeAssignmentLinkUrl(candidateAssignmentLink);
-    if (!isValidAssignmentLinkUrl(normalizedAssignmentLink)) {
+    const normalizedAssignmentLink = normalizeText(candidateAssignmentLink);
+    try {
+        const parsed = new URL(normalizedAssignmentLink);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            throw new Error("invalid-assignment-link");
+        }
+    } catch (_) {
         throw new HttpsError("invalid-argument", "作業連結格式不正確，請提供有效的 http/https 連結。");
     }
 
@@ -4708,3 +4628,52 @@ exports.adminSubmitTutorRecommendationInviteLink = onCall(async (request) => {
 
     return { success: true, status: "pending" };
 });
+
+exports.updateSystemConfig = updateSystemConfig;
+exports.getSystemConfig = getSystemConfig;
+exports.getDistributorRoutingOptions = getDistributorRoutingOptions;
+exports.resolveDistributorCheckoutQuote = resolveDistributorCheckoutQuoteCallable;
+exports.getDistributorPriceBooks = getDistributorPriceBooks;
+exports.getLessonPriceBooks = getLessonPriceBooks;
+exports.getDistributorPortalData = getDistributorPortalData;
+exports.logActivity = logActivity;
+exports.saveTutorConfigs = saveTutorConfigs;
+exports.getTutorConfigs = getTutorConfigs;
+exports.resolveAssignmentAccess = resolveAssignmentAccess;
+exports.getStudentAssignmentTutorReport = getStudentAssignmentTutorReport;
+exports.assignStudentToTutor = assignStudentToTutor;
+exports.bindTutorToUnit = bindTutorToUnit;
+exports.bindTutorByPromotionCode = bindTutorByPromotionCode;
+exports.updateLessonI18n = updateLessonI18n;
+exports.upsertLessonMetadata = upsertLessonMetadata;
+exports.purgeContentCache = purgeContentCache;
+exports.upsertLessonPricing = upsertLessonPricing;
+exports.upsertDistributorPriceBook = upsertDistributorPriceBook;
+exports.seedDistributorPriceBooksFromLessons = seedDistributorPriceBooksFromLessons;
+exports.updateUserRoutingPreference = updateUserRoutingPreference;
+exports.findClassroomInviteBinding = findClassroomInviteBinding;
+exports.findClassroomInviteBindingHttp = findClassroomInviteBindingHttp;
+exports.precheckGithubClassroomAccess = precheckGithubClassroomAccess;
+exports.debugTutorAuth = debugTutorAuth;
+exports.verifyReferralLink = verifyReferralLink;
+exports.setUserRole = setUserRole;
+exports.getRevenueSharePolicies = getRevenueSharePolicies;
+exports.upsertRevenueSharePolicy = upsertRevenueSharePolicy;
+exports.getInvestorProfiles = getInvestorProfiles;
+exports.upsertInvestorProfile = upsertInvestorProfile;
+exports.upsertValuationSnapshot = upsertValuationSnapshotCallable;
+exports.upsertBalanceSheetSnapshot = upsertBalanceSheetSnapshotCallable;
+exports.issueInvestorEquity = issueInvestorEquityCallable;
+exports.recordInvestorFinanceEvent = recordInvestorFinanceEventCallable;
+exports.settleAnnualInvestorDividends = settleAnnualInvestorDividendsCallable;
+exports.recordLedgerEvent = recordLedgerEventCallable;
+exports.generateLedgerReport = generateLedgerReportCallable;
+exports.exportLedgerReport = exportLedgerReportCallable;
+exports.recordOrderRefundEvent = recordOrderRefundEventCallable;
+exports.updateUserRelationships = updateUserRelationships;
+exports.getUserRelationships = getUserRelationships;
+exports.authorizeTutorForCourse = authorizeTutorForCourse;
+exports.recommendTutorForUnit = recommendTutorForUnit;
+exports.decideTutorApplication = decideTutorApplication;
+exports.applyForTutorRole = applyForTutorRole;
+exports.submitTutorRecommendationInviteLink = submitTutorRecommendationInviteLink;

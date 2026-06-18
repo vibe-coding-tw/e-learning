@@ -1,6 +1,9 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { HttpsError } = require("firebase-functions/v2/https");
+const { normalizeText } = require("vibe-functions-core/access-utils-core");
+const { normalizeAmount } = require("./pricing-utils");
+const { getUserDistributorScope } = require("vibe-functions-core/distributor-utils-core");
 
 if (!admin.apps.length) {
     admin.initializeApp();
@@ -26,17 +29,8 @@ const ECPAY_LOGISTICS_MAP_URL = process.env.ECPAY_LOGISTICS_MAP_URL || "https://
 const SERVE_TOKEN_SECRET = process.env.SERVE_COURSE_TOKEN_SECRET || HASH_KEY || HASH_IV || PROJECT_ID;
 const cloudFunctionUrl = (functionName) => `https://asia-east1-${PROJECT_ID}.cloudfunctions.net/${functionName}`;
 
-function normalizeText(value = "") {
-    return String(value ?? "").trim();
-}
-
 function normalizeUpper(value = "") {
     return normalizeText(value).toUpperCase();
-}
-
-function normalizeAmount(value = 0) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : 0;
 }
 
 function nowTaipeiDateTime() {
@@ -58,16 +52,6 @@ function getRole(uid) {
         console.error("[payment] Error in getRole:", err);
         return "user";
     });
-}
-
-function getUserDistributorScope(userData = {}) {
-    return normalizeText(
-        userData.distributorId ||
-        userData.commercial?.distributorId ||
-        userData.tutorDistributorId ||
-        userData.partnerDistributorId ||
-        ""
-    );
 }
 
 function assertDistributorScope(userData = {}, requestedDistributorId = "", message = "僅限該經銷商執行此操作") {
@@ -236,7 +220,6 @@ module.exports = {
     normalizeAmount,
     nowTaipeiDateTime,
     getRole,
-    getUserDistributorScope,
     assertDistributorScope,
     assertAdminRole,
     encodeSpecialChars,

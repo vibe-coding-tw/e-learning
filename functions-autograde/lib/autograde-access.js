@@ -1,9 +1,17 @@
 const admin = require("firebase-admin");
 
-const { normalizeLegacyId } = require("./id-utils");
-const { hasActiveOrderForCourse, isPhysicalMetadataLesson } = require("./order-utils");
+const {
+    assertAuthenticated,
+    assertRequiredValue,
+    loadLessons,
+    normalizeEmail,
+    normalizeText,
+    nowIsoTimestamp
+} = require("vibe-functions-core/access-utils-core");
+const { normalizeLegacyId } = require("vibe-functions-core/id-utils");
+const { hasActiveOrderForCourse, isPhysicalMetadataLesson } = require("vibe-functions-core/order-utils");
 const { resolveLessonPrice } = require("./pricing-utils");
-const { getUserTutorConfig } = require("./tutor-utils");
+const { getUserTutorConfig } = require("vibe-functions-core/tutor-utils");
 const {
     findCourseByPageOrUnit,
     findLessonByCourseRef,
@@ -16,28 +24,6 @@ const {
 } = require("../dashboard-utils");
 const { HttpsError } = require("firebase-functions/v2/https");
 
-function assertAuthenticated(auth, message = "請先登入") {
-    if (!auth) throw new HttpsError("unauthenticated", message);
-}
-
-function assertRequiredValue(value, message = "缺少必要參數") {
-    if (value === undefined || value === null || value === "") {
-        throw new HttpsError("invalid-argument", message);
-    }
-}
-
-function normalizeText(value = "") {
-    return String(value || "").trim();
-}
-
-function normalizeEmail(value = "") {
-    return normalizeText(value).toLowerCase();
-}
-
-function nowIsoTimestamp() {
-    return new Date().toISOString();
-}
-
 const orderNormalizationResolvers = {
     resolveLessonForOrderItem,
     resolveCanonicalUnitId,
@@ -47,12 +33,6 @@ const orderNormalizationResolvers = {
     cleanUnitId,
     getLessonLookupKeys
 };
-
-async function loadLessons() {
-    const db = admin.firestore();
-    const snap = await db.collection("metadata_lessons").orderBy("orderWeight", "asc").get();
-    return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-}
 
 function assertAdminOrAssignedTutor(isAdmin, isAssignedTutor) {
     if (isAdmin || isAssignedTutor) return;

@@ -31,7 +31,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden flex flex-col min-h-screen" data-i18n-doc-title="doc_title_index">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.6a6a465cc13e.js"></script>
+    <script type="module" src="./js/nav-component.09bc80539436.js"></script>
     
 
     <header class="relative pt-28 pb-20 hero-gradient overflow-hidden">
@@ -53,7 +53,7 @@
             </h2>
 
             <div class="mb-8 max-w-sm mx-auto p-2 glass-card rounded-xl shadow-lg">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSn2zZn3SPhLGxHFRcR-Tz_4-iBAAjQFztFyg&s"
+                <img src="/assets/generated/market-trend.png"
                     alt="台灣教育科技市場增長趨勢示意圖" class="w-full h-auto rounded-lg">
                 <p class="text-xs text-slate-600 mt-2" data-i18n="exec_summary_label">執行摘要：我們正在彌合程式教育與實際應用的鴻溝。</p>
             </div>
@@ -232,10 +232,10 @@
         })();
 
         const DEFAULT_CARD_META = {
-            common: { icon: "📘" },
-            "car-starter": { icon: "🚀" },
-            "car-basic": { icon: "🧩" },
-            "car-advanced": { icon: "🚗" }
+            common: { icon: "📘", image: "assets/generated/course-common.png" },
+            "car-starter": { icon: "🚀", image: "assets/generated/course-starter.png" },
+            "car-basic": { icon: "🧩", image: "assets/generated/course-basic.png" },
+            "car-advanced": { icon: "🚗", image: "assets/generated/course-advanced.png" }
         };
 
         function normalizeTrack(raw = "") {
@@ -420,27 +420,23 @@
             return bucket[0] || null;
         }
 
-        async function loadLearningPathCategoryLabels(uiLocale = "zh-TW") {
-            try {
-                const snap = await getDoc(doc(db, "metadata_settings", "learning_paths"));
-                const data = snap.exists() ? (snap.data() || {}) : {};
-                const categoryLabels = normalizeCategoryLabelsMap(data.categoryLabels || {}, uiLocale);
-                return categoryLabels;
-            } catch (error) {
-                console.warn("[index] Failed to load metadata_settings/learning_paths:", error);
-                return {};
-            }
-        }
-
+        /**
+         * 套用課程卡片的視覺效果（圖片或 Icon）
+         * @param {HTMLElement} card 
+         * @param {Object} lesson 
+         * @param {string} slot 
+         */
         function applyCardVisual(card, lesson, slot) {
             const visual = card.querySelector("[data-course-visual]");
             if (!visual) return;
-            const image = pickLessonImage(lesson);
+            // 優先使用 Firestore 的圖片，若無則使用預設的圖
+            const image = pickLessonImage(lesson) || DEFAULT_CARD_META[slot]?.image;
             if (image) {
                 visual.innerHTML = `<img src="${image}" alt="" class="w-full h-full object-cover">`;
                 visual.className = "w-14 h-14 rounded-2xl overflow-hidden shadow-sm border border-cyan-100 bg-white";
                 return;
             }
+            // 若皆無圖片，退回使用 Emoji Icon
             visual.textContent = pickLessonIcon(lesson, slot);
             visual.className = "w-14 h-14 rounded-2xl bg-cyan-100 text-cyan-600 flex items-center justify-center text-2xl font-black shadow-sm overflow-hidden";
         }
@@ -451,7 +447,7 @@
             try {
                 const res = await getLessonsMetadata({});
                 const lessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
-                const categoryLabels = await loadLearningPathCategoryLabels(uiLocale);
+                const categoryLabels = normalizeCategoryLabelsMap(res?.data?.categoryLabels || {}, uiLocale);
                 for (const card of cards) {
                     const slot = card.dataset.courseSlot || "";
                     const lesson = pickFeaturedLesson(lessons, slot);

@@ -6,6 +6,7 @@
  *   node functions/scripts/import_lesson_level_metadata_lessons.js --dry-run
  *   node functions/scripts/import_lesson_level_metadata_lessons.js --apply
  *   node functions/scripts/import_lesson_level_metadata_lessons.js --apply --files=docs/courses/lesson-level-metadata-lessons-starter-seed.json
+ *   node functions/scripts/import_lesson_level_metadata_lessons.js --apply --catalog-visible
  *
  * The script intentionally keeps canonical identity on Firestore document ID
  * and only writes compat aliases that are still used by current runtime.
@@ -29,6 +30,7 @@ function parseArgs(argv) {
     dryRun: true,
     files: [],
     collection: "metadata_lessons",
+    catalogVisible: false,
   };
 
   for (const token of argv.slice(2)) {
@@ -44,6 +46,8 @@ function parseArgs(argv) {
     } else if (token.startsWith("--collection=")) {
       const raw = token.split("=")[1] || "";
       args.collection = raw.trim() || args.collection;
+    } else if (token === "--catalog-visible" || token === "--public-catalog") {
+      args.catalogVisible = true;
     }
   }
 
@@ -118,7 +122,7 @@ function buildLocaleContent(rawLocale = {}, fallbackTitle = "") {
   };
 }
 
-function buildNormalizedDocument(rawDoc = {}) {
+function buildNormalizedDocument(rawDoc = {}, options = {}) {
   const docId = normalizeText(rawDoc.docId || rawDoc.id);
   if (!docId) return null;
 
@@ -146,7 +150,7 @@ function buildNormalizedDocument(rawDoc = {}) {
     metadataType: normalizeText(rawDoc.metadataType || "course"),
     level: normalizeText(rawDoc.level),
     category,
-    hiddenFromCatalog: rawDoc.hiddenFromCatalog === true,
+    hiddenFromCatalog: options.catalogVisible ? false : rawDoc.hiddenFromCatalog === true,
     isDeprecated: rawDoc.isDeprecated === true,
     pilotOnly: rawDoc.pilotOnly === true,
     lessonIndex: Number(rawDoc.lessonIndex || 0) || 0,
@@ -193,6 +197,9 @@ async function main() {
   const files = args.files.length ? args.files : defaultFiles;
 
   console.log(`[lesson-level-import] mode=${args.apply ? "APPLY" : "DRY_RUN"} collection=${args.collection}`);
+  if (args.catalogVisible) {
+    console.log("[lesson-level-import] catalog-visible override enabled for emulator preview");
+  }
 
   let total = 0;
   const writes = [];
@@ -201,7 +208,7 @@ async function main() {
     const { absolutePath, documents } = await loadSeedFile(filePath);
     console.log(`\n[seed] ${absolutePath}`);
     for (const rawDoc of documents) {
-      const normalized = buildNormalizedDocument(rawDoc);
+      const normalized = buildNormalizedDocument(rawDoc, args);
       if (!normalized) {
         console.log("  - skip: missing docId/id");
         continue;
@@ -242,7 +249,9 @@ async function main() {
   console.log(`\n[lesson-level-import] applied documents=${committed}`);
 }
 
-main().catch((err) => {
-  console.error("[lesson-level-import] failed:", err);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("[lesson-level-import] failed:", err);
+    process.exit(1);
+  });

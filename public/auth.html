@@ -283,10 +283,12 @@
                 } else {
                     const reason = result?.data?.reason || result?.data?.error || null;
                     let message = authT('noAuthRecord');
-                    if (reason === 'missing-context') {
+                    if (reason === 'missing-context' || reason === 'missing-course') {
                         message = authT('invalidCourseId');
                     } else if (reason === 'payment-required') {
                         message = authT('paymentRequired');
+                    } else if (reason === 'unauthenticated') {
+                        message = authT('googleLoginFailed');
                     } else if (result?.data?.error) {
                         message = `${authT('authFailedPrefix')}${result.data.error}`;
                     }

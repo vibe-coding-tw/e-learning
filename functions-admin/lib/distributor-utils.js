@@ -1,17 +1,7 @@
-function getUserDistributorScope(userData = {}) {
-    return String(
-        userData.distributorId ||
-        userData.commercial?.distributorId ||
-        userData.tutorDistributorId ||
-        userData.partnerDistributorId ||
-        ""
-    ).trim();
-}
-
-function countAuthorizedTutorUnits(userData = {}) {
-    const tutorConfigs = userData.tutorConfigs || {};
-    return Object.values(tutorConfigs).filter((cfg) => cfg && cfg.authorized === true).length;
-}
+const {
+    countAuthorizedTutorUnits,
+    getUserDistributorScope
+} = require("vibe-functions-core/distributor-utils-core");
 
 async function loadDistributorScopedUsers(dbRef, distributorId = "") {
     const normalizedDistributorId = String(distributorId || "").trim();

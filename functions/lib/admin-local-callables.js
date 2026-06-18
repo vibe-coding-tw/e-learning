@@ -1,7 +1,14 @@
 const admin = require("firebase-admin");
 const { HttpsError } = require("firebase-functions/v2/https");
 
-const { getContentRuntimeConfig } = require("./runtime-state");
+const { getContentRuntimeConfig } = require("vibe-functions-core/runtime-state");
+const { loadLessons, normalizeText } = require("vibe-functions-core/access-utils-core");
+const { getUserDistributorScope } = require("vibe-functions-core/distributor-utils-core");
+const {
+    collectDistributorRegions,
+    chooseRecommendedDistributor,
+    normalizeRoutingRegionCode
+} = require("vibe-functions-core/routing-utils-core");
 const {
     resolveDistributorCheckoutQuote,
     findLessonByDocumentId,
@@ -12,101 +19,10 @@ if (!admin.apps.length) {
     admin.initializeApp();
 }
 
-function normalizeText(value = "") {
-    return String(value || "").trim();
-}
-
-function getUserDistributorScope(userData = {}) {
-    return normalizeText(
-        userData.distributorId ||
-        userData.commercial?.distributorId ||
-        userData.tutorDistributorId ||
-        userData.partnerDistributorId ||
-        userData.preferredDistributorId ||
-        ""
-    );
-}
-
-function normalizeRoutingRegionCode(value = "") {
-    const raw = normalizeText(value).toUpperCase();
-    if (!raw) return "";
-    if (raw === "ZH-TW" || raw === "TW" || raw === "TWD") return "TW";
-    if (raw === "EN" || raw === "EN-US" || raw === "US" || raw === "USD") return "US";
-    return raw;
-}
-
-function distributorMatchesRegion(distributor = {}, regionCode = "") {
-    const normalizedRegionCode = normalizeRoutingRegionCode(regionCode);
-    if (!normalizedRegionCode) return true;
-    const regions = Array.isArray(distributor.regions) ? distributor.regions : [];
-    return regions.some((region) => normalizeRoutingRegionCode(region) === normalizedRegionCode);
-}
-
-function collectDistributorRegions(distributors = []) {
-    const regions = new Set();
-    (Array.isArray(distributors) ? distributors : []).forEach((distributor) => {
-        const items = Array.isArray(distributor.regions) ? distributor.regions : [];
-        items.forEach((region) => {
-            const normalized = normalizeRoutingRegionCode(region);
-            if (normalized) regions.add(normalized);
-        });
-    });
-    return Array.from(regions).sort((a, b) => String(a).localeCompare(String(b)));
-}
-
-function chooseRecommendedDistributor(distributors = [], {
-    regionCode = "",
-    preferredDistributorId = "",
-    ruleDefaultDistributorId = "",
-    ruleBackupDistributorIds = []
-} = {}) {
-    const active = (Array.isArray(distributors) ? distributors : [])
-        .filter((item) => item && item.id && item.status === "ACTIVE");
-    const regionMatched = active.filter((item) => distributorMatchesRegion(item, regionCode));
-    const pickById = (distributorId = "") => {
-        const normalizedId = String(distributorId || "").trim();
-        if (!normalizedId) return null;
-        return regionMatched.find((item) => item.id === normalizedId)
-            || active.find((item) => item.id === normalizedId)
-            || null;
-    };
-
-    const preferred = pickById(preferredDistributorId);
-    if (preferred) {
-        return { distributor: preferred, reason: "preferred-distributor" };
-    }
-
-    const defaultDistributor = pickById(ruleDefaultDistributorId);
-    if (defaultDistributor) {
-        return { distributor: defaultDistributor, reason: "region-default" };
-    }
-
-    for (const candidateId of Array.isArray(ruleBackupDistributorIds) ? ruleBackupDistributorIds : []) {
-        const candidate = pickById(candidateId);
-        if (candidate) {
-            return { distributor: candidate, reason: "region-backup" };
-        }
-    }
-
-    if (regionMatched.length === 1) {
-        return { distributor: regionMatched[0], reason: "single-region-match" };
-    }
-
-    const fallback = regionMatched[0] || active[0] || null;
-    return fallback
-        ? { distributor: fallback, reason: regionMatched.length > 1 ? "first-region-match" : "first-active-distributor" }
-        : { distributor: null, reason: "no-active-distributor" };
-}
-
 async function loadUserData(db, uid = "") {
     if (!uid) return {};
     const userDoc = await db.collection("users").doc(uid).get();
     return userDoc.exists ? (userDoc.data() || {}) : {};
-}
-
-async function loadLessons(db) {
-    const snap = await db.collection("metadata_lessons").orderBy("orderWeight", "asc").get();
-    return snap.docs.map((doc) => ({ ...doc.data(), id: doc.id, docId: doc.id }));
 }
 
 async function loadDistributorRoutingOptions(request = {}) {

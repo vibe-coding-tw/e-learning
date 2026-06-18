@@ -6,16 +6,16 @@
 在發佈或更新學生可見 starter / template repo 前，先檢查是否把教師答案或解答檔一起放進學生可見 repo。
 
 ## 工具
-- 腳本：`scripts/check_classroom_solution_leak.sh`
+- 腳本：`archive/scripts/check_classroom_solution_leak.sh`
 - 預設掃描路徑：`/Users/roverchen/Documents/Classrooms`（舊資料夾名；也可改為你的 starter / template repo 路徑）
 
 ## 使用方式
 ```bash
 # 使用預設路徑
-scripts/check_classroom_solution_leak.sh
+archive/scripts/check_classroom_solution_leak.sh
 
 # 指定其他路徑
-scripts/check_classroom_solution_leak.sh /path/to/starter-repos
+archive/scripts/check_classroom_solution_leak.sh /path/to/starter-repos
 ```
 
 ## 判讀結果

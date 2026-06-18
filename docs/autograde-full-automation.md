@@ -72,9 +72,9 @@ Make repo grading write back to Vibe Coding automatically with no manual input f
 1. 準備 mapping CSV（含 header）：
    - `repo,unit_id,user_id`
 2. 先 dry-run：
-   - `scripts/bootstrap_classroom_repo_autograde.sh --dry-run <csv_path>`
+  - `archive/scripts/bootstrap_classroom_repo_autograde.sh --dry-run <csv_path>`
 3. 正式套用：
-   - `scripts/bootstrap_classroom_repo_autograde.sh --apply <csv_path>`
+  - `archive/scripts/bootstrap_classroom_repo_autograde.sh --apply <csv_path>`
 
 腳本行為：
 - 會依 `unit_id` 套用對應模板：
@@ -122,10 +122,10 @@ Make repo grading write back to Vibe Coding automatically with no manual input f
 若要避免手動建立 token，可使用腳本自動生成並分發到所有目標 repos：
 
 1. 先 dry-run（不寫入）：
-   - `scripts/generate_and_distribute_autograde_token.sh --dry-run docs/examples/autograde-repo-mapping.firestore.csv`
+   - `archive/scripts/generate_and_distribute_autograde_token.sh --dry-run docs/examples/autograde-repo-mapping.firestore.csv`
 
 2. 正式執行（會生成新 token 並寫入每個 repo 的 `VC_AUTOGRADE_TOKEN`）：
-   - `scripts/generate_and_distribute_autograde_token.sh --apply docs/examples/autograde-repo-mapping.firestore.csv`
+   - `archive/scripts/generate_and_distribute_autograde_token.sh --apply docs/examples/autograde-repo-mapping.firestore.csv`
 
 3. 會輸出兩個檔案：
    - 報表（/tmp/*.csv）

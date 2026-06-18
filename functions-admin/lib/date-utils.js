@@ -1,15 +1,4 @@
-function toMillis(value = null) {
-    if (!value) return 0;
-    try {
-        if (typeof value.toMillis === "function") return value.toMillis();
-        if (typeof value.toDate === "function") return value.toDate().getTime();
-        if (value instanceof Date) return value.getTime();
-        const parsed = new Date(value);
-        return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
-    } catch (_) {
-        return 0;
-    }
-}
+const { toMillis } = require("vibe-functions-core/order-utils");
 
 function previousYmPeriod(date = new Date()) {
     const d = date instanceof Date ? date : new Date(date);

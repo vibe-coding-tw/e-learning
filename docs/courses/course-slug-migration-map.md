@@ -49,7 +49,7 @@
 
 如果真的要把前綴移除，至少要一起處理：
 
-- `functions/scripts/seed-emulator.js`
+- `functions/scripts/sync_firestore_to_emulator.js`
 - `functions/scripts/update_prepare_lessons.js`
 - `functions/scripts/audit_*` 類腳本
 - `functions/lib/assignment-flow.js`

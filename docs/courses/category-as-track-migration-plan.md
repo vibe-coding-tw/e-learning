@@ -140,7 +140,6 @@
 - `public/index.html`
 - `public/learning-path.html`
 - `public/js/nav-component.js`
-- `public/js/learning-path-local.js`
 - `public/js/dashboard.js`
 - `public/admin-courses.html`
 
@@ -148,7 +147,7 @@
 
 - `functions/lib/order-access.js`
 - `functions/scripts/import_lesson_level_metadata_lessons.js`
-- `functions/scripts/seed-emulator.js`
+- `functions/scripts/sync_firestore_to_emulator.js`
 - `functions/scripts/update_prepare_lessons.js`
 - `functions/scripts/backfill_metadata_lessons_expansion.js`
 

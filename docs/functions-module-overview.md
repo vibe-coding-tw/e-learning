@@ -13,6 +13,8 @@
 
 真正的共用 helper 已逐步拆到下列模組：
 
+另外，`shared-function-core/` 現在承接了多個跨 package 的共用 helper 實作，`functions/`、`functions-payment/`、`functions-autograde/`、`functions-admin/` 內的對應檔案只保留薄 wrapper。
+
 | 模組 | 負責範圍 |
 |---|---|
 | `functions/lib/revenue-sharing.js` | 月結分潤、policy snapshot、credit/payout/balance 組裝 |
@@ -20,10 +22,7 @@
 | `functions/lib/investor-ledger.js` | 投資人事件流水、資產負債快照、valuation snapshot、credit/年度結算、股利與餘額彙整 |
 | `functions/lib/assignment-flow.js` | 作業提交、autograde payload、intervention 同步、history / repo assignment 組裝 |
 | `functions/lib/tutor-utils.js` | 導師 config、申請紀錄、推薦碼、name resolver、dashboard tutor config 彙整 |
-| `functions/lib/course-lookup.js` | 課程 / 單元 canonical、lookup、alias 與 dashboard 正規化 helper |
 | `functions/lib/order-utils.js` | 訂單 / 物流 / referral link / order normalization / shipment reminder / order authorization |
-| `functions/lib/order-access.js` | 訂單開通、學生授權、導師綁定、推薦碼與 referral backfill 的共用 access flow |
-| `functions/lib/distributor-portal.js` | 經銷商 portal 的 scoped users、orders、tutors 聚合 helpers |
 | `functions/lib/proxy-utils.js` | callable / request proxy wrappers，統一轉發 admin / payment / autograde 入口 |
 | `functions/lib/index-export-registry.js` | `functions/index.js` 的資料驅動 export 註冊與少量特殊 handler 組裝 |
 | `functions/lib/functions-bootstrap.js` | `functions/index.js` 的 `.env` 載入、環境檢查與 V2 global options 初始化 |
@@ -70,9 +69,6 @@ Current ledger-facing callable surface:
   - `revenue-sharing`
   - `ledger-engine`
   - `investor-ledger`
-  - `course-lookup`
-  - `order-access`
-  - `distributor-portal`
   - `proxy-utils`
   - `index-export-registry`
   - `functions-bootstrap`

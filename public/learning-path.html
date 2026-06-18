@@ -21,12 +21,12 @@
 </head>
 <body class="flex flex-col min-h-screen">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.6a6a465cc13e.js"></script>
+  <script type="module" src="./js/nav-component.09bc80539436.js"></script>
   <script src="./js/dashboard-lookup-utils.21fe94aafa1d.js"></script>
-  <script src="./js/learning-path-core.fa3edf65831d.js"></script>
+  <script src="./js/learning-path-core.ffb4cf5511dd.js"></script>
   <script src="./js/repo-slug-utils.eb9ddd0ebbdf.js"></script>
-  <script src="./js/course-shared.015bfaa7000e.js"></script>
-  <script src="./js/pricing-utils.909971c38740.js"></script>
+  <script src="./js/course-shared.2bb9487346c8.js"></script>
+  <script src="./js/pricing-utils.9d9d0ab34e62.js"></script>
 
   <div class="container mx-auto px-4 py-8 flex-grow">
     <div class="page-header text-center mb-10">
@@ -85,17 +85,6 @@
       if (!normalized) return;
       localStorage.setItem('vibe_user_preferred_distributor', normalized);
       localStorage.setItem('preferredDistributorId', normalized);
-    }
-
-    async function loadLearningPathCategoryLabels() {
-      try {
-        const snap = await getDoc(doc(db, "metadata_settings", "learning_paths"));
-        const data = snap.exists() ? (snap.data() || {}) : {};
-        return LP.normalizeCategoryLabelsMap?.(data.categoryLabels || {}, LP.detectUiLocale?.() || "en") || {};
-      } catch (error) {
-        console.warn('[learning-path] Failed to load metadata_settings/learning_paths:', error);
-        return {};
-      }
     }
 
     function getScopedTutorModeForUid(uid = "") {
@@ -558,6 +547,7 @@
 
     async function loadLessonsForCurrentDistributor() {
       const requestId = ++currentLessonsRequestId;
+      const uiLocale = LP.detectUiLocale?.() || "en";
       const distributorId = await resolveLessonsDistributorId();
       if (auth.currentUser && distributorId) {
         persistLocalPreferredDistributorId(distributorId);
@@ -565,7 +555,7 @@
       const result = await getLessonsFunc({ distributorId });
       if (requestId !== currentLessonsRequestId) return null;
       currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
-      categoryLabelsMap = await loadLearningPathCategoryLabels();
+      categoryLabelsMap = LP.normalizeCategoryLabelsMap?.(result?.data?.categoryLabels || {}, uiLocale) || {};
       window.__vibeLearningPathCategoryLabels = categoryLabelsMap;
       renderLessons(currentLessons, currentPathKey);
       return currentLessons;
@@ -586,11 +576,17 @@
         });
       };
       onAuthStateChanged(auth, async () => {
-        await loadLessonsForCurrentDistributor();
+        try {
+          await loadLessonsForCurrentDistributor();
+        } catch (error) {
+          console.warn('[learning-path] Failed to load lessons:', error);
+        }
         await window.updateAuthUI();
       });
     }
-    init();
+    init().catch((error) => {
+      console.warn('[learning-path] init failed:', error);
+    });
     window.addEventListener('storage', (event) => {
       if (event.key !== 'vibe_user_preferred_distributor' && event.key !== 'preferredDistributorId') return;
       loadLessonsForCurrentDistributor().catch((error) => {

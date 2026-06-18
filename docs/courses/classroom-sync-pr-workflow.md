@@ -8,7 +8,7 @@
 ## 先備條件
 - 已安裝並登入 GitHub CLI：`gh auth status`
 - 具備學生 repos 的 push / PR 權限
-- 本專案腳本：`scripts/sync_classroom_repos.sh`
+- 本專案腳本：`archive/scripts/sync_classroom_repos.sh`
 
 ## CSV 格式
 請準備 CSV（可參考 `docs/examples/classroom-sync-sample.csv`）：
@@ -21,12 +21,12 @@
 ## 執行步驟
 1. 先 dry-run（不會 push、不會開 PR）
 ```bash
-scripts/sync_classroom_repos.sh --csv docs/examples/classroom-sync-sample.csv
+archive/scripts/sync_classroom_repos.sh --csv docs/examples/classroom-sync-sample.csv
 ```
 
 2. 確認輸出計畫後，正式執行
 ```bash
-scripts/sync_classroom_repos.sh \
+archive/scripts/sync_classroom_repos.sh \
   --csv docs/examples/classroom-sync-sample.csv \
   --apply \
   --pr-label classroom-sync

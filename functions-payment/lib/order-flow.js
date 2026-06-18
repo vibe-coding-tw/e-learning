@@ -10,10 +10,10 @@ const {
     hasActiveOrderForCourse,
     isPhysicalMetadataLesson,
     itemContainsUnit
-} = require("../lib/order-utils");
+} = require("vibe-functions-core/order-utils");
 const {
     normalizeEmail
-} = require("../lib/tutor-utils");
+} = require("vibe-functions-core/tutor-utils");
 const {
     normalizeText,
     getLessonLookupKeys,
@@ -24,6 +24,12 @@ const {
     findParentCourseIdByUnit,
     getLessons
 } = require("./content-runtime");
+const { resolveLessonPrice } = require("../lib/pricing-utils");
+const {
+    isStarterCourseCategory,
+    isStarterCourseReference,
+    resolveRegistrationTimestampMs
+} = require("vibe-functions-core/access-utils-core");
 const {
     loadUserProfile,
     isQualifiedTutorUser
@@ -33,42 +39,7 @@ const {
 } = require("../lib/ledger-engine");
 const {
     recordInvestorFinanceEvent
-} = require("../lib/investor-ledger");
-
-function isStarterCourseCategory(value = "") {
-    const normalized = String(value || "").trim().toLowerCase();
-    return normalized === "start" ||
-        normalized === "started" ||
-        normalized === "starter" ||
-        normalized === "car-starter";
-}
-
-function isStarterCourseReference(value = "") {
-    const normalized = String(value || "").trim().toLowerCase();
-    return /^start-\d{2}-unit-/.test(normalized) ||
-        /^car-starter-/.test(normalized) ||
-        /^tw-car-starter-/.test(normalized) ||
-        /^en-car-starter-/.test(normalized);
-}
-
-function resolveRegistrationTimestampMs(userData = {}, uid = "") {
-    const candidates = [
-        userData.createdAt,
-        userData.joinedAt
-    ];
-    let latestTs = 0;
-    for (const value of candidates) {
-        const ts = value?.toMillis
-            ? value.toMillis()
-            : (value?.seconds ? value.seconds * 1000 : (value ? new Date(value).getTime() : 0));
-        if (Number.isFinite(ts) && ts > latestTs) {
-            latestTs = ts;
-        }
-    }
-    if (latestTs > 0) return latestTs;
-    if (!uid) return 0;
-    return 0;
-}
+} = require("vibe-functions-core/investor-ledger");
 
 async function syncUserPurchaseCacheFromOrder(db, orderId, orderData = {}, lessons = []) {
     const uid = orderData.uid;
@@ -128,7 +99,10 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
         return { authorized: false, reason: "missing-course" };
     }
 
-    const lessonPrice = lesson.dealerPrice != null ? Number(lesson.dealerPrice) : Number.POSITIVE_INFINITY;
+    const resolvedLessonPrice = resolveLessonPrice(lesson, lesson.dealerCurrency || lesson.currency || "");
+    const lessonPrice = resolvedLessonPrice?.hasPriceData === true && Number.isFinite(Number(resolvedLessonPrice.amount))
+        ? Number(resolvedLessonPrice.amount)
+        : Number.POSITIVE_INFINITY;
     if (lessonPrice <= 0) {
         return { authorized: true, reason: "free-course", accessMode: "free" };
     }
@@ -198,7 +172,7 @@ async function activateOrderPermissionsAndNotify(db, orderId, hooks = {}) {
 
     const orderData = orderSnap.data() || {};
     const items = orderData.items || {};
-    const lessons = await getLessons(db);
+    const lessons = await getLessons(db, { currencyHint: orderData.currency || "TWD" });
 
     const validationAlerts = [];
     const activationCheckedItems = [];

@@ -10,7 +10,7 @@
 - `bridge_repo`: `vibe-coding-classroom/vibe-coding-classroom-*`（publish）
 
 ## 工具
-- `scripts/sync_classroom_bridge_repos.sh`
+- `archive/scripts/sync_classroom_bridge_repos.sh`
 - 範例 CSV: `docs/examples/classroom-bridge-sync-sample.csv`
 
 ## CSV 欄位
@@ -22,10 +22,10 @@
 ## 執行
 ```bash
 # 先 dry-run
-scripts/sync_classroom_bridge_repos.sh --csv docs/examples/classroom-bridge-sync-sample.csv
+archive/scripts/sync_classroom_bridge_repos.sh --csv docs/examples/classroom-bridge-sync-sample.csv
 
 # 確認後正式執行
-scripts/sync_classroom_bridge_repos.sh \
+archive/scripts/sync_classroom_bridge_repos.sh \
   --csv docs/examples/classroom-bridge-sync-sample.csv \
   --apply \
   --pr-label classroom-bridge-sync
@@ -39,7 +39,7 @@ scripts/sync_classroom_bridge_repos.sh \
 
 ## 注意
 1. 這只更新中間層 repo，不會自動更新既有學生 repo。
-2. 既有學生 repo 請再跑 `scripts/sync_classroom_repos.sh` 回補。
+2. 既有學生 repo 請再跑 `archive/scripts/sync_classroom_repos.sh` 回補。
 3. 同步完成後，請用測試帳號驗證 starter 內容與作業派發是否一致。
 4. 若 bridge 先有修正，請同步回 template 開 PR/issue；template 合併後再重跑 bridge sync，避免雙方長期漂移。
 
@@ -63,7 +63,7 @@ scripts/sync_classroom_bridge_repos.sh \
 - [ ] 更新 `tests/` 目錄與 `.github/workflows/classroom.yml` 的評分條件（若有）
 
 ### 2. Vibe Coding 後台（`vibe-coding-tw`）
-- [ ] 更新 `functions/private_courses/<unit_id>.html` 的 `assignment-guide` 和 `tutor-guide` 隱藏區塊（使用 `scripts/enrich_guides.py --apply` 自動同步）
+- [ ] 更新 `functions/private_courses/<unit_id>.html` 的 `assignment-guide` 和 `tutor-guide` 隱藏區塊（使用 `archive/scripts/enrich_guides.py --apply` 自動同步）
 - [ ] 更新 `scripts/workflow-templates/<unit_id>.yml` 的評分邏輯（對應新提交檔案格式與分數分配）
 
 ### 3. Bridge Repo 同步
@@ -77,8 +77,8 @@ scripts/sync_classroom_bridge_repos.sh \
 ### 4. Bootstrap 腳本
 - 若 workflow 評分邏輯有改動（例如 `submission/` 目錄的提交檔案名稱改變），需重新 bootstrap 受影響的學生 repo：
   ```bash
-  scripts/bootstrap_classroom_repo_autograde.sh --dry-run docs/examples/autograde-repo-mapping.apply-ready.csv
-  scripts/bootstrap_classroom_repo_autograde.sh --apply docs/examples/autograde-repo-mapping.apply-ready.csv
+  archive/scripts/bootstrap_classroom_repo_autograde.sh --dry-run docs/examples/autograde-repo-mapping.apply-ready.csv
+  archive/scripts/bootstrap_classroom_repo_autograde.sh --apply docs/examples/autograde-repo-mapping.apply-ready.csv
   ```
 
 > **注意**：`03-unit-github-classroom` 的 bridge repo 確認為 `unrelated` 狀態，任何 template 更新都必須走 manual-sync PR 流程，不可使用自動化腳本直推。

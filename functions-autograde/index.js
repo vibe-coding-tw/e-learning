@@ -4,7 +4,7 @@ const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https")
 const { defineSecret } = require("firebase-functions/params");
 const { setGlobalOptions } = require("firebase-functions/v2");
 
-const { resolveAssignmentDocRefByUserAndUnit } = require("./lib/github-utils");
+const { resolveAssignmentDocRefByUserAndUnit } = require("vibe-functions-core/github-utils");
 const {
     addAssignmentHistoryEntry,
     backfillAutogradeGithubVariables,
@@ -26,7 +26,11 @@ const {
 const {
     sendAssignmentNotification,
     sendAutogradeFailureAlertEmail
-} = require("./emailService");
+} = require("vibe-functions-core/email-service");
+const {
+    normalizeTemplateRepoName,
+    templateRepoCandidates
+} = require("vibe-functions-core/template-utils");
 const {
     findParentCourseIdByUnit,
     resolveCanonicalUnitId,
@@ -34,7 +38,7 @@ const {
 } = require("./dashboard-utils");
 const {
     getUserTutorConfig
-} = require("./lib/tutor-utils");
+} = require("vibe-functions-core/tutor-utils");
 const GitHubAPIHelper = require("./github-api-helper");
 
 const GITHUB_API_TOKEN = defineSecret("GITHUB_API_TOKEN");
@@ -160,31 +164,6 @@ async function submitAssignmentHandler(request) {
         if (e instanceof HttpsError) throw e;
         throw new HttpsError("internal", "操作失敗，請稍後再試");
     }
-}
-
-function normalizeTemplateRepoName(id) {
-    const v = normalizeText(id || '');
-    if (/^(common|car-(starter|basic|advanced))-/i.test(v)) return v;
-    if (/^tw-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^tw-/i, '');
-    if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, 'car-starter-');
-    if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
-    if (/^(adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
-    if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, 'common-');
-    return v;
-}
-
-function legacyTemplateRepoNameFromCanonical(id) {
-    const v = normalizeTemplateRepoName(id);
-    if (!v) return '';
-    if (/^common-/i.test(v)) return `tw-${v}`;
-    if (/^car-(starter|basic|advanced)-/i.test(v)) return `tw-${v}`;
-    return v;
-}
-
-function templateRepoCandidates(id) {
-    const canonical = normalizeTemplateRepoName(id);
-    const legacy = legacyTemplateRepoNameFromCanonical(canonical);
-    return [...new Set([canonical, legacy].filter(Boolean))];
 }
 
 async function createStudentRepositoryHandler(request) {

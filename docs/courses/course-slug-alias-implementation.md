@@ -40,7 +40,7 @@
 
 需要處理的腳本：
 
-- `functions/scripts/seed-emulator.js`
+- `functions/scripts/sync_firestore_to_emulator.js`
 - `functions/scripts/update_prepare_lessons.js`
 - `functions/scripts/audit_canonical_runtime_state.js`
 

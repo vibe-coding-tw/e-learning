@@ -25,30 +25,16 @@
   - Firestore audit、資料回補、分潤修補、物流回補、自動評分匯出等。
   - 這一層已是後端維運主場，建議繼續保留在 `functions/scripts/`。
 
-## 可退役候選
+## 已搬入 archive
 
-以下腳本多半與舊 Classroom / bridge 遷移、模板同步、README 自動整理、一次性回補有關；若後續不再需要相關作業，可考慮退役：
+以下腳本已從主樹 `scripts/` 移到 `archive/scripts/`，目前僅作歷史留存：
 
-- `scripts/sync_classroom_repos.sh`
-- `scripts/sync_classroom_bridge_repos.sh`
-- `scripts/bootstrap_classroom_repo_autograde.sh`
-- `scripts/generate_and_distribute_autograde_token.sh`
-- `scripts/standardize_classroom_readme_autograde.sh`
-- `scripts/sync_check_assignment_from_template.sh`
-- `scripts/rewrite_template_org_in_csv.sh`
-- `scripts/prune_bridge_repo_contents.sh`
-- `scripts/remove_bridge_readme_title_prefix.sh`
-- `scripts/remove_bridge_tutor_guide.sh`
-- `scripts/merge_classroom_workflows.sh`
-- `scripts/sync_bridge_readme_from_assignment_guide.py`
-- `scripts/enrich_guides.py`
-- `scripts/enrich_html5_basics.py`
-- `scripts/migrate_tutor_guides.py`
-- `scripts/normalize_bridge_readme_tone.sh`
-- `scripts/revert_readme_autograde_section.sh`
-- `scripts/setup_autograde_repo_mapping.sh`
-- `scripts/check_classroom_solution_leak.sh`
-- `scripts/translate_courses.py`
+- `archive/scripts/sync_classroom_repos.sh`
+- `archive/scripts/sync_classroom_bridge_repos.sh`
+- `archive/scripts/bootstrap_classroom_repo_autograde.sh`
+- `archive/scripts/generate_and_distribute_autograde_token.sh`
+- `archive/scripts/enrich_guides.py`
+- `archive/scripts/check_classroom_solution_leak.sh`
 
 ## 已移除
 
@@ -70,29 +56,24 @@
 - `functions/scripts/rename_basic_advanced_metadata_lessons_doc_ids.js`
 - `functions/scripts/rename_starter_metadata_lessons_doc_ids.js`
 
-## 可先搬入 archive
+## 已從 archive 移除
 
-以下腳本目前仍被文件提到，但已經不在主 runtime 或 active workflow 中，適合先搬到 `archive/`，之後再視情況決定是否刪除：
+以下腳本原本曾移到 `archive/scripts/`，後續確認已無任何引用，因此直接移除：
 
-- `scripts/sync_classroom_repos.sh`
-- `scripts/sync_classroom_bridge_repos.sh`
-- `scripts/bootstrap_classroom_repo_autograde.sh`
-- `scripts/generate_and_distribute_autograde_token.sh`
-- `scripts/standardize_classroom_readme_autograde.sh`
-- `scripts/sync_check_assignment_from_template.sh`
-- `scripts/rewrite_template_org_in_csv.sh`
-- `scripts/prune_bridge_repo_contents.sh`
-- `scripts/remove_bridge_readme_title_prefix.sh`
-- `scripts/remove_bridge_tutor_guide.sh`
-- `scripts/merge_classroom_workflows.sh`
-- `scripts/sync_bridge_readme_from_assignment_guide.py`
-- `scripts/enrich_guides.py`
-- `scripts/enrich_html5_basics.py`
-- `scripts/migrate_tutor_guides.py`
-- `scripts/normalize_bridge_readme_tone.sh`
-- `scripts/revert_readme_autograde_section.sh`
-- `scripts/setup_autograde_repo_mapping.sh`
-- `scripts/translate_courses.py`
+- `archive/scripts/enrich_html5_basics.py`
+- `archive/scripts/merge_classroom_workflows.sh`
+- `archive/scripts/migrate_tutor_guides.py`
+- `archive/scripts/normalize_bridge_readme_tone.sh`
+- `archive/scripts/prune_bridge_repo_contents.sh`
+- `archive/scripts/remove_bridge_readme_title_prefix.sh`
+- `archive/scripts/remove_bridge_tutor_guide.sh`
+- `archive/scripts/revert_readme_autograde_section.sh`
+- `archive/scripts/rewrite_template_org_in_csv.sh`
+- `archive/scripts/setup_autograde_repo_mapping.sh`
+- `archive/scripts/standardize_classroom_readme_autograde.sh`
+- `archive/scripts/sync_bridge_readme_from_assignment_guide.py`
+- `archive/scripts/sync_check_assignment_from_template.sh`
+- `archive/scripts/translate_courses.py`
 
 ## 模板資產，非執行檔
 
@@ -104,5 +85,6 @@
 ## 建議處理方式
 
 1. 先保留 `仍建議保留` 類腳本。
-2. `可退役候選` 先不要直接刪，先搬到 `archive/` 或標註 deprecated。
-3. 等確定目前沒有任何文件、workflow、手動操作流程再引用它們後，再正式移除。
+2. `已搬入 archive` 代表已完成主樹清理；若未來完全確認不再需要，再考慮刪除 archive 版本。
+3. `已從 archive 移除` 的項目已確認無引用。
+4. 等確定目前沒有任何文件、workflow、手動操作流程再引用它們後，再正式移除其餘 archive 項目。

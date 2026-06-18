@@ -86,6 +86,14 @@ node functions/scripts/import_lesson_level_metadata_lessons.js --apply
 node functions/scripts/import_lesson_level_metadata_lessons.js --apply --files=docs/courses/lesson-level-metadata-lessons-starter-seed.json
 ```
 
+若要做 local emulator preview，讓 catalog 在本機看得到這批 lesson cards，可以加上：
+
+```bash
+node functions/scripts/import_lesson_level_metadata_lessons.js --apply --catalog-visible
+```
+
+這個旗標只應用在 emulator / local preview，不建議用在正式上線資料。
+
 ---
 
 ## 5. Verification
