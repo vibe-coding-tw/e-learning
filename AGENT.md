@@ -115,6 +115,7 @@
 - AI agent 必須在背景完成驗證，不得向使用者展示瀏覽器截圖或錄影。
 - 所有驗證結果應以簡短文字總結呈現，避免無關細節。
 - 使用者看到的輸出應以「結果屬實」為主，非操作過程描述。
+- 只為本地開發或 emulator 相容性修正時，必須維持正式系統的資料來源與授權流程不變；允許調整本地前端、可呼叫函式、或 emulator adapter，但不得為了修 local 問題而放寬 Firestore rules、改寫正式 schema、或在 production path 新增不必要的 runtime fallback。
 
 ---
 
@@ -153,4 +154,4 @@ git commit -m "docs: update README"
 
 > 本文件是本專案 AI agent 的正式工作手冊，任何其他 agent 或訓練資料若要引用專案規則，請一律參考 `AGENT.md`。
 > 
-> 最後更新：2026-06-03
+> 最後更新：2026-06-18

@@ -1,5 +1,5 @@
 # Course UI Runtime Specification
-**Updated**: 2026-06-16
+**Updated**: 2026-06-18
 
 本文件定義 `/courses/**` 課程內容頁的正式 UI 規格、元件責任邊界、資料來源與驗收方式。
 
@@ -146,6 +146,7 @@
 - 修改 `serveCourse` 注入、授權或 content runtime 行為後，必須部署 `functions:payment:serveCourse`。
 - 修改外部課程 HTML 後，必須更新 Firestore `contentVersion` 使內容快取失效。
 - 不得將帶 hash 的靜態檔案當作 source 手動編輯。
+- 本文件所述的 runtime 規格以正式環境為準；若只為 local emulator 相容性修正，必須維持正式資料來源、授權流程與 shell 結構不變，並優先使用與正式環境同源的 callable / adapter 路徑處理本地差異。
 
 ## 7. Prohibited Implementations
 
