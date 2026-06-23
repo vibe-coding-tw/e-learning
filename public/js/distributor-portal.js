@@ -23,8 +23,6 @@ const state = {
     selectedPriceBookId: ''
 };
 
-window.__distributorPriceBookCache = window.__distributorPriceBookCache || {};
-
 function el(id) {
     return document.getElementById(id);
 }
@@ -266,14 +264,6 @@ function renderDistributorTabs(distributors = []) {
 }
 
 function renderPriceBooks(items = []) {
-    const cache = {};
-    (Array.isArray(items) ? items : []).forEach((book) => {
-        const id = String(book?.id || book?.priceBookId || '').trim();
-        if (!id) return;
-        cache[id] = { ...book, id };
-    });
-    window.__distributorPriceBookCache = cache;
-
     const filteredItems = getFilteredPriceBooks(items);
     updateSummary(items);
     updatePriceBookFilterButtons();
@@ -382,43 +372,6 @@ window.distributorPortalResolvePriceDisplay = function(book = {}) {
         return `${Number(book.promoPrice || 0).toLocaleString()} ${book.currency || 'TWD'}（促銷）`;
     }
     return base;
-};
-
-window.distributorPortalSeedFromLessons = async function() {
-    const distributorId = state.distributorId || getFormValue('portal-distributor-id-input');
-    if (!distributorId) {
-        toast(window.t('alert_load_distributor_first', '請先載入經銷商 ID。'), 'error');
-        return;
-    }
-
-    const button = document.querySelector('button[onclick="window.distributorPortalSeedFromLessons()"]');
-    const originalText = button?.textContent || '';
-    if (button) {
-        button.disabled = true;
-        button.textContent = window.t('status_applying', '套用中...');
-    }
-
-    try {
-        const fn = httpsCallable(functions, 'seedDistributorPriceBooksFromLessons');
-        const res = await fn({ distributorId });
-        if (!res?.data?.success) {
-            throw new Error(res?.data?.message || window.t('alert_apply_failed', '套用失敗'));
-        }
-        const msg = window.t('toast_apply_success', '已套用現有商品：建立 {created} 筆、更新 {updated} 筆、略過 {skipped} 筆')
-            .replace('{created}', res.data.created || 0)
-            .replace('{updated}', res.data.updated || 0)
-            .replace('{skipped}', res.data.skipped || 0);
-        toast(msg, 'success');
-        await loadPriceBooks();
-    } catch (e) {
-        console.error('[DistributorPortal] seed failed:', e);
-        toast(window.t('toast_apply_failed', '套用現有商品失敗：{msg}').replace('{msg}', e.message || 'unknown error'), 'error');
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.textContent = originalText;
-        }
-    }
 };
 
 function renderOrders(items = []) {
@@ -666,23 +619,36 @@ async function loadPortalData(distributorId = '') {
 }
 
 async function loadPriceBooks() {
-    const distributorId = getFormValue('portal-distributor-id-input') || state.selectedDistributorId || state.distributorId;
+    const role = String(state.portal?.role || '').trim().toLowerCase();
+    const distributorId = role === 'admin'
+        ? ''
+        : (getFormValue('portal-distributor-id-input') || state.selectedDistributorId || state.distributorId);
     if (!distributorId) {
-        state.priceBooks = [];
-        renderPriceBooks([]);
-        el('portal-summary').textContent = '請先輸入經銷商 ID。';
-        return;
+        if (role === 'admin') {
+            el('portal-summary').textContent = '管理員模式：載入所有經銷商的價格表中...';
+        } else {
+            state.priceBooks = [];
+            renderPriceBooks([]);
+            el('portal-summary').textContent = '請先輸入經銷商 ID。';
+            return;
+        }
     }
 
-    el('portal-summary').textContent = `載入經銷商 ${distributorId} 的價格表中...`;
+    el('portal-summary').textContent = role === 'admin'
+        ? '管理員模式：載入所有經銷商的價格表中...'
+        : `載入經銷商 ${distributorId} 的價格表中...`;
     try {
         const fn = httpsCallable(functions, 'getDistributorPriceBooks');
-        const res = await fn({ distributorId });
-        state.distributorId = distributorId;
-        state.selectedDistributorId = distributorId;
+        const res = await fn(distributorId ? { distributorId } : {});
+        if (distributorId) {
+            state.distributorId = distributorId;
+            state.selectedDistributorId = distributorId;
+        }
         state.priceBooks = Array.isArray(res?.data?.items) ? res.data.items : [];
         renderPriceBooks(state.priceBooks);
-        setText('portal-summary', `目前經銷商：${distributorId}，共 ${state.priceBooks.length} 筆價格表。`);
+        setText('portal-summary', role === 'admin'
+            ? `管理員模式：共 ${state.priceBooks.length} 筆價格表。`
+            : `目前經銷商：${distributorId}，共 ${state.priceBooks.length} 筆價格表。`);
     } catch (e) {
         console.error('[DistributorPortal] load failed:', e);
         state.priceBooks = [];
@@ -808,9 +774,7 @@ window.distributorPortalSelectDistributor = async function (distributorId = '') 
 window.distributorPortalOpenPriceBookModal = function (priceBookId = '') {
     const normalizedId = String(priceBookId || '').trim();
     const cached = normalizedId
-        ? state.priceBooks.find((book) => String(book.id || book.priceBookId || '').trim() === normalizedId)
-            || window.__distributorPriceBookCache?.[normalizedId]
-            || null
+        ? state.priceBooks.find((book) => String(book.id || book.priceBookId || '').trim() === normalizedId) || null
         : null;
     if (cached) {
         state.selectedPriceBookId = normalizedId;
@@ -829,14 +793,13 @@ window.distributorPortalClosePriceBookModal = function () {
 window.distributorPortalPopulateById = function (priceBookId) {
     const normalizedId = String(priceBookId || '').trim();
     const cached = state.priceBooks.find((book) => String(book.id || book.priceBookId || '').trim() === normalizedId);
-    const fallback = cached || window.__distributorPriceBookCache?.[normalizedId] || null;
-    if (!fallback) {
+    if (!cached) {
         toast(window.t('toast_no_pricebook_found', '找不到這筆價格表，請重新載入後再試。'), 'error');
         return;
     }
     state.selectedPriceBookId = normalizedId;
-    populateForm(fallback);
-    setText('portal-form-state', window.t('status_loaded_pricebook', '已載入：{msg}').replace('{msg}', fallback.id || fallback.docId || '未命名價格表'));
+    populateForm(cached);
+    setText('portal-form-state', window.t('status_loaded_pricebook', '已載入：{msg}').replace('{msg}', cached.id || cached.docId || '未命名價格表'));
     showPriceBookModal(true);
     document.getElementById('portal-doc-id')?.focus?.();
 };

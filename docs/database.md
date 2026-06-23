@@ -196,8 +196,8 @@
 | `courseUnitTitles` | array | 單元顯示標題清單，僅供管理介面或舊版 TAB 顯示相容。 |
 | `entryUnitId` | string | 入口單元相容欄位；原則上可由 `course_units[0]` 推導。 |
 | `contentRef` | string | 外部內容倉路徑相容欄位；若路徑規則完全標準化，未來可改為推導欄位。 |
-| `title` / `summary` / `description` | string | 舊有頂層內容欄位，已由 `i18n` 取代。 |
-| `titleEn` / `summaryEn` / `descriptionEn` / `coreContentEn` | string / array | 歷史相容欄位。 |
+| `title` / `summary` / `description` | string | 舊有頂層內容欄位，已由 `i18n` 取代；新資料只建議寫 `title`。 |
+| `titleEn` / `summaryEn` / `descriptionEn` / `coreContentEn` | string / array | 歷史相容欄位；新表單不再寫入。 |
 | `learningPathLabel*` / `categoryLabel*` / `navLabel*` | string | 學習路徑分類顯示名稱的相容欄位。 |
 
 ### `metadata_lessons` 多語與相容欄位（i18n Content Fields）
@@ -207,7 +207,7 @@
 
 | 欄位名稱 | 類型 | 中文對應欄位 | 說明 |
 | :--- | :--- | :--- | :--- |
-| `titleEn` | string | `title` | 課程英文標題（legacy / compatibility）。 |
+| `titleEn` | string | `title` | 課程英文標題（legacy / compatibility，僅讀不寫）。 |
 | `summaryEn` | string | `summary` | 課程英文摘要（一句話簡介，legacy / compatibility）。 |
 | `descriptionEn` | string | `description` | 課程英文詳細說明（legacy / compatibility）。 |
 | `coreContentEn` | array | `coreContent` | 核心學習內容英文列表（legacy / compatibility）。 |
@@ -218,7 +218,7 @@
 - `lessonLabel` 也應併入 `i18n` 管理，建議使用 `i18n.zh-TW.lessonLabel`、`i18n.en.lessonLabel`。
 - 若要保留相容層，頂層 `lessonLabel` 可視為中文 fallback，`lessonLabelEn` 視為英文 fallback。
 - `getLessonsMetadata` Cloud Function 直接傳回 Firestore 文件所有欄位，**不需要後端修改**即可生效。
-- 欄位維護以 `admin-courses.html` 的 `i18n` 編輯器為主。
+- 欄位維護以 `courses-management.html` 的 `i18n` 編輯器為主。
 - 建議以 `i18n.en`、`i18n.zh-TW` 這類 locale key 管理全部文字，不再依賴頂層 `title` / `summary` / `description`。
 
 ### `lessonLabel` 收斂建議
@@ -459,13 +459,13 @@
 
 #### `metadata_settings/learning_paths`
 
-`learning_paths` 建議作為「課程分類與導覽顯示字典」的唯一來源，集中管理像 `common`、`car-starter`、`car-basic`、`car-advanced` 這類 path key 對應的顯示文字，top-nav 與 learning-path 頁面都應讀這裡。
+`learning_paths` 是「課程分類與導覽顯示字典」的唯一來源，集中管理像 `common`、`car-starter`、`car-basic`、`car-advanced` 這類 path key 對應的顯示文字，top-nav 與 learning-path 頁面都只讀這裡，不再使用本地 fallback、seed 或快取。
 
 目前前端實作會把這份字典同時用在：
 - `nav-component.js` 的 learning-path dropdown label
 - `learning-path.html` 的 H1 與 `document.title`
 
-因此這份文件所定義的 `categoryLabels` 必須視為單一 truth source，不可再由頁面各自做不同的 locale fallback 或檔名推導。
+因此這份文件所定義的 `categoryLabels` 必須視為單一 truth source，不可再由頁面各自做不同的 locale fallback、檔名推導或本地快取。
 
 Canonical schema：
 
@@ -485,9 +485,8 @@ Canonical schema：
 使用規則：
 - `categoryLabels` 是全站共用 taxonomy 顯示字典，不是單一 lesson 的內容欄位。
 - key 必須使用 canonical path key，不要長期保存 `tw-...` / `en-...` 這類 legacy 前綴；前端與後端需要時再做 locale 對照。
-- 若某個分類文字可從 `level`、`sequence` 推導，前端可先推導，`categoryLabels` 僅作覆寫與相容。
-- `metadata_lessons.i18n` 負責 lesson 本體文字，`metadata_settings.learning_paths.categoryLabels` 負責分類 / badge / 導覽文字，top-nav 與 learning-path 標題都應從這裡取值，兩者應分層管理。
-- `nav-component.js` 與 `learning-path.html` 必須共用相同的 category label resolver 與 locale 判斷，避免中文/英文版頁首標題不一致。
+- `metadata_lessons.i18n` 負責 lesson 本體文字，`metadata_settings.learning_paths.categoryLabels` 負責分類 / badge / 導覽文字，top-nav 與 learning-path 標題都只可從這裡取值。
+- `nav-component.js` 與 `learning-path.html` 必須共用相同的 category label resolver 與 locale 判斷，且不得加入本地 fallback、seed 或快取。
 - 舊資料若仍保存成 `zh-TW` / `en` 置頂 bucket 或 `tw-*` / `en-*` key，應透過 migration 一次性轉成 canonical schema，不再新增新的 legacy 寫入路徑。
 
 ---

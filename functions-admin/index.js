@@ -203,6 +203,8 @@ const {
 const {
     isStarterCourseReference,
     resolveRegistrationTimestampMs,
+    isAdminEmail,
+    lookupAuthUserEmailByUid,
     nowIsoTimestamp
 } = require("vibe-functions-core/access-utils-core");
 const {
@@ -255,7 +257,7 @@ const getStudentAssignmentTutorReport = onCall(async (request) => {
     assertAuthenticated(auth, "請先登入");
 
     const uid = auth.uid;
-    const requesterRole = await getRole(uid);
+    const requesterRole = await getRole(uid, auth?.token?.email || "");
     assertAdminRole(requesterRole, "Only admins can query the student assignment tutor report.");
 
     const lessons = await loadLessonsWithOptionalDistributorOverride(data.distributorId || "");
@@ -272,7 +274,7 @@ const getStudentAssignmentTutorReport = onCall(async (request) => {
         generatedAt: new Date().toISOString(),
         totalRows: rows.length,
         totalStudents: Object.values(usersMap).filter((userData) => {
-            const role = userData?.role || "user";
+            const role = resolveAdminRole(userData, request.auth?.token?.email || "");
             return role !== "admin" && !hasQualifiedTutorStatus(userData);
         }).length,
         rows
@@ -284,7 +286,7 @@ const assignStudentToTutor = onCall(async (request) => {
     assertAuthenticated(auth);
 
     const uid = auth.uid;
-    const requesterRole = await getRole(uid);
+    const requesterRole = await getRole(uid, auth?.token?.email || "");
     assertAdminRole(requesterRole);
 
     const { studentUid, unitId: rawUnitId, tutorEmail } = data || {};
@@ -309,7 +311,6 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-const CONTENT_FILE_CACHE = new Map();
 const GITHUB_CLASSROOM_ORG = process.env.GITHUB_CLASSROOM_ORG || "vibe-coding-classroom";
 const GITHUB_ORG_ADMIN_TOKEN = process.env.GITHUB_ORG_ADMIN_TOKEN || "";
 
@@ -376,13 +377,17 @@ async function loadLessonsWithOptionalDistributorOverride(distributorId = "") {
     return lessons;
 }
 
-async function getRole(uid) {
+async function getRole(uid, fallbackEmail = "") {
     try {
         const userDoc = await db.collection("users").doc(uid).get();
         if (userDoc.exists) {
-            const role = userDoc.data().role;
+            const userData = userDoc.data() || {};
+            if (isAdminEmail(userData.email || fallbackEmail)) return "admin";
+            const role = userData.role;
             return role === "admin" ? "admin" : "user";
         }
+        const authEmail = fallbackEmail || await lookupAuthUserEmailByUid(uid);
+        if (isAdminEmail(authEmail)) return "admin";
     } catch (e) {
         console.error("[Role] Error in getRole:", e);
     }
@@ -393,6 +398,11 @@ function assertAdminRole(requesterRole, message = "僅限管理員執行此操�
     if (requesterRole !== "admin") {
         throw new HttpsError("permission-denied", message);
     }
+}
+
+function resolveAdminRole(userData = {}, fallbackEmail = "") {
+    if (isAdminEmail(userData.email || fallbackEmail)) return "admin";
+    return userData.role === "admin" ? "admin" : "user";
 }
 
 async function syncReferralLink(dbRef, url, tutorEmail, tutorName, unitId) {
@@ -600,7 +610,7 @@ const bindTutorByPromotionCode = onCall(async (request) => {
 
     const dbRef = admin.firestore();
     const uid = auth.uid;
-    const requesterRole = await getRole(uid);
+    const requesterRole = await getRole(uid, auth?.token?.email || "");
 
     try {
         const lessons = await getLessonsForAdmin(data?.distributorId || "");
@@ -767,8 +777,8 @@ function isTutorFullyQualifiedForCourseAdmin(userData = {}, courseId = "", lesso
     });
 }
 
-function assertDistributorScope(userData = {}, requestedDistributorId = "", message = "僅限該經銷商執行此操作") {
-    if ((userData || {}).role === "admin") return;
+function assertDistributorScope(userData = {}, requestedDistributorId = "", message = "僅限該經銷商執行此操作", fallbackEmail = "") {
+    if (resolveAdminRole(userData, fallbackEmail) === "admin") return;
     const ownDistributorId = getUserDistributorScope(userData);
     if (ownDistributorId && requestedDistributorId && ownDistributorId === requestedDistributorId) return;
     throw new HttpsError("permission-denied", message);
@@ -813,34 +823,6 @@ function getSeedableDistributorProducts(lessons = [], distributorCurrency = "TWD
 
 async function getLessonsForAdmin(distributorId = "") {
     return loadLessonsWithOptionalDistributorOverride(distributorId);
-}
-
-async function purgeContentCacheHelper(dbRef) {
-    console.log(`[purgeContentCacheHelper] Starting cache purge...`);
-    const cacheSnap = await dbRef.collection("content_cache").get();
-    if (cacheSnap.empty) {
-        console.log(`[purgeContentCacheHelper] No cache records found.`);
-        return;
-    }
-
-    const batchSize = 100;
-    let batch = dbRef.batch();
-    let count = 0;
-
-    for (const doc of cacheSnap.docs) {
-        batch.delete(doc.ref);
-        count++;
-        if (count % batchSize === 0) {
-            await batch.commit();
-            batch = dbRef.batch();
-        }
-    }
-
-    if (count % batchSize !== 0) {
-        await batch.commit();
-    }
-
-    console.log(`[purgeContentCacheHelper] ✅ Purged ${count} cache files from content_cache.`);
 }
 
 function normalizeLessonMetadataPatch(payload = {}) {
@@ -1013,8 +995,7 @@ const updateSystemConfig = onCall(async (request) => {
         defaultDistributorId,
         defaultLocale,
         supportedLocales,
-        localeLabels,
-        localeFallbackMap
+        localeLabels
     } = data || {};
     const updates = {};
 
@@ -1035,9 +1016,6 @@ const updateSystemConfig = onCall(async (request) => {
     if (localeLabels !== undefined) {
         updates.localeLabels = localeLabels && typeof localeLabels === "object" && !Array.isArray(localeLabels) ? localeLabels : {};
     }
-    if (localeFallbackMap !== undefined) {
-        updates.localeFallbackMap = localeFallbackMap && typeof localeFallbackMap === "object" && !Array.isArray(localeFallbackMap) ? localeFallbackMap : {};
-    }
 
     if (Object.keys(updates).length > 0) {
         updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();
@@ -1046,9 +1024,6 @@ const updateSystemConfig = onCall(async (request) => {
         await db.collection("metadata_settings").doc("content_runtime").set(updates, { merge: true });
         console.log(`[updateSystemConfig] Updated config to ${JSON.stringify(updates)} by uid=${auth.uid}`);
 
-        if (contentVersion !== undefined) {
-            await purgeContentCacheHelper(db);
-        }
     }
 
     return { success: true };
@@ -1071,20 +1046,8 @@ const getSystemConfig = onCall(async (request) => {
         defaultDistributorId: data.defaultDistributorId || "default-usd",
         defaultLocale: data.defaultLocale || "en",
         supportedLocales: Array.isArray(data.supportedLocales) ? data.supportedLocales : [],
-        localeLabels: data.localeLabels && typeof data.localeLabels === "object" && !Array.isArray(data.localeLabels) ? data.localeLabels : {},
-        localeFallbackMap: data.localeFallbackMap && typeof data.localeFallbackMap === "object" && !Array.isArray(data.localeFallbackMap) ? data.localeFallbackMap : {}
+        localeLabels: data.localeLabels && typeof data.localeLabels === "object" && !Array.isArray(data.localeLabels) ? data.localeLabels : {}
     };
-});
-
-const purgeContentCache = onCall(async (request) => {
-    const { auth } = request;
-
-    assertAuthenticated(auth);
-    const role = await getRole(auth.uid);
-    assertAdminRole(role);
-
-    await purgeContentCacheHelper(db);
-    return { success: true };
 });
 
 const upsertLessonPricing = onCall(async (request) => {
@@ -1094,7 +1057,7 @@ const upsertLessonPricing = onCall(async (request) => {
     const db = admin.firestore();
     const userDoc = await db.collection("users").doc(auth.uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-    assertAdminRole(userData.role);
+    assertAdminRole(resolveAdminRole(userData, request.auth?.token?.email || ""));
 
     const { courseId, pricing } = data || {};
     assertRequiredValue(courseId, "missing-course-id");
@@ -1178,13 +1141,33 @@ const getDistributorPriceBooks = onCall(async (request) => {
     const db = admin.firestore();
     const userDoc = await db.collection("users").doc(auth.uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const requesterRole = await getRole(auth.uid, auth.token?.email || "");
     const distributorId = normalizeText(data?.distributorId || userData.distributorId || userData.commercial?.distributorId || "");
 
-    assertRequiredValue(distributorId, "missing-distributor-id");
-    assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員查看價格表");
+    if (requesterRole !== "admin") {
+        assertRequiredValue(distributorId, "missing-distributor-id");
+        assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員查看價格表", auth.token?.email || "");
+        const items = await listDistributorPriceBooks(db, distributorId);
+        return { success: true, distributorId, items };
+    }
 
-    const items = await listDistributorPriceBooks(db, distributorId);
-    return { success: true, distributorId, items };
+    if (distributorId) {
+        assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員查看價格表", auth.token?.email || "");
+        const items = await listDistributorPriceBooks(db, distributorId);
+        return { success: true, distributorId, items };
+    }
+
+    const snap = await db.collection("dealer_price_books").get();
+    const items = [];
+    snap.forEach((docSnap) => {
+        items.push({ id: docSnap.id, ...normalizePriceBookDoc(docSnap.data() || {}) });
+    });
+    items.sort((a, b) => {
+        const aKey = `${normalizeText(a.distributorId)}::${normalizeText(a.docId || a.sourceDocId)}::${normalizeText(a.id)}`;
+        const bKey = `${normalizeText(b.distributorId)}::${normalizeText(b.docId || b.sourceDocId)}::${normalizeText(b.id)}`;
+        return aKey.localeCompare(bKey);
+    });
+    return { success: true, distributorId: "", items };
 });
 
 const upsertDistributorPriceBook = onCall(async (request) => {
@@ -1202,7 +1185,7 @@ const upsertDistributorPriceBook = onCall(async (request) => {
 
     assertRequiredValue(distributorId, "missing-distributor-id");
     assertRequiredValue(docId, "missing-doc-id");
-    assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員編輯價格表");
+    assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員編輯價格表", auth.token?.email || "");
 
     const salePrice = Number(payload.salePrice);
     const promoPriceRaw = payload.promoPrice;
@@ -1315,7 +1298,7 @@ const seedDistributorPriceBooksFromLessons = onCall(async (request) => {
 
     const distributorId = normalizeText(payload.distributorId || userData.distributorId || userData.commercial?.distributorId || "");
     assertRequiredValue(distributorId, "missing-distributor-id");
-    assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員套用商品價格");
+    assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員套用商品價格", auth.token?.email || "");
 
     const distributorDoc = await db.collection("distributors").doc(distributorId).get();
     const distributorData = distributorDoc.exists ? (distributorDoc.data() || {}) : {};
@@ -1595,7 +1578,7 @@ async function loadDistributorPortalTutors(dbRef, distributorId = "") {
             uid: user.id,
             name: user.name || user.displayName || email || user.id,
             email,
-            role: user.role === "admin" ? "admin" : "user",
+            role: resolveAdminRole(user, request.auth?.token?.email || ""),
             isTutor: countAuthorizedTutorUnits(user) > 0 || Object.keys(user.tutorConfigs || {}).length > 0,
             distributorId: getUserDistributorScope(user) || normalizedDistributorId,
             authorizedUnitCount: countAuthorizedTutorUnits(user),
@@ -1722,7 +1705,7 @@ const getDistributorPortalData = onCall(async (request) => {
     const dbRef = admin.firestore();
     const userDoc = await dbRef.collection("users").doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-    const role = await getRole(uid);
+    const role = await getRole(uid, auth?.token?.email || "");
     const myDistributorId = getUserDistributorScope(userData) || "";
     const canManagePricing = role === "admin" || !!myDistributorId;
     const requestedDistributorId = normalizeText(request.data?.distributorId || "");
@@ -2467,7 +2450,7 @@ const getRevenueSharePolicies = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can read revenue policies.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can read revenue policies.");
 
     const policyCache = new Map();
     const policy = await loadRevenueSharePolicy({ db: dbRef, policyCache });
@@ -2486,7 +2469,7 @@ const upsertRevenueSharePolicy = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can write revenue policies.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can write revenue policies.");
 
     const payload = request.data || {};
     const policyId = normalizeText(payload.policyId || "");
@@ -2525,7 +2508,7 @@ const getInvestorProfiles = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can read investor profiles.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can read investor profiles.");
 
     const profileCache = new Map();
     const configCache = new Map();
@@ -2583,7 +2566,7 @@ const upsertInvestorProfile = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can write investor profiles.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can write investor profiles.");
 
     const payload = request.data || {};
     const investorId = normalizeText(payload.investorId || payload.id || "");
@@ -2625,7 +2608,7 @@ const upsertValuationSnapshotCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can write valuation snapshots.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can write valuation snapshots.");
 
     const payload = request.data || {};
     const snapshotCache = new Map();
@@ -2644,7 +2627,7 @@ const upsertBalanceSheetSnapshotCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can write balance sheet snapshots.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can write balance sheet snapshots.");
 
     const payload = request.data || {};
     const snapshotCache = new Map();
@@ -2663,7 +2646,7 @@ const issueInvestorEquityCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can issue investor equity.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can issue investor equity.");
 
     const payload = request.data || {};
     const profileCache = new Map();
@@ -2684,7 +2667,7 @@ const recordInvestorFinanceEventCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can record investor events.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can record investor events.");
 
     const payload = request.data || {};
     const profileCache = new Map();
@@ -2703,7 +2686,7 @@ const settleAnnualInvestorDividendsCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can settle investor dividends.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can settle investor dividends.");
 
     const payload = request.data || {};
     const targetYear = Number(payload.year || new Date().getFullYear() - 1);
@@ -2729,7 +2712,7 @@ const recordLedgerEventCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can record ledger events.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can record ledger events.");
 
     const payload = request.data || {};
     const result = await recordLedgerEvent({
@@ -2747,7 +2730,7 @@ const generateLedgerReportCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can generate ledger reports.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can generate ledger reports.");
 
     const payload = request.data || {};
     const period = String(payload.period || "").trim();
@@ -2771,7 +2754,7 @@ const exportLedgerReportCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can export ledger reports.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can export ledger reports.");
 
     const payload = request.data || {};
     const period = String(payload.period || "").trim();
@@ -2797,7 +2780,7 @@ const recordOrderRefundEventCallable = onCall(async (request) => {
     const uid = request.auth?.uid;
     assertAuthenticated(request.auth, "請先登入");
     const userDoc = await dbRef.collection("users").doc(uid).get();
-    assertAdminRole((userDoc.data() || {}).role, "Only admins can record order refunds.");
+    assertAdminRole(resolveAdminRole(userDoc.data() || {}, request.auth?.token?.email || ""), "Only admins can record order refunds.");
 
     const payload = request.data || {};
     const orderId = String(payload.orderId || "").trim();
@@ -2933,7 +2916,7 @@ const saveTutorConfigs = onCall(async (request) => {
 
     const uid = auth.uid;
     const email = auth.token?.email || "";
-    const role = await getRole(uid);
+    const role = await getRole(uid, auth?.token?.email || "");
     const { courseId, configs } = data || {};
     assertRequiredValue(courseId, "Missing courseId or configs.");
     assertRequiredValue(configs, "Missing courseId or configs.");
@@ -3089,30 +3072,6 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
     for (const locale of locales) {
         const localeCandidates = buildI18nFilenameCandidates(candidateFileName, locale);
         for (const localeCandidate of localeCandidates) {
-            const key = `${repoOwner}/${repoName}@${ref}|${locale}|${localeCandidate}`;
-            const cacheDocId = require("crypto").createHash("md5").update(key).digest("hex");
-
-            const cached = CONTENT_FILE_CACHE.get(key);
-            if (cached && cached.expiresAt > Date.now()) {
-                return { content: cached.content, source: "external-cache", locale, file: localeCandidate };
-            }
-
-            try {
-                const cacheDoc = await db.collection("course_cache").doc(cacheDocId).get();
-                if (cacheDoc.exists) {
-                    const cacheData = cacheDoc.data();
-                    if (cacheData && cacheData.expiresAt > Date.now()) {
-                        CONTENT_FILE_CACHE.set(key, {
-                            content: cacheData.content,
-                            expiresAt: cacheData.expiresAt
-                        });
-                        return { content: cacheData.content, source: "external-cache-shared", locale, file: localeCandidate };
-                    }
-                }
-            } catch (err) {
-                console.warn("[content-runtime] Firestore cache read error:", err.message || err);
-            }
-
             const contentPath = (localeCandidate === "tutors.html" || localeCandidate === "students.html")
                 ? `public/${locale === "en" ? "en" : "zh-TW"}/${localeCandidate}`
                 : `courses/${locale}/${localeCandidate}`;
@@ -3134,18 +3093,6 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
                 const encoded = String(payload?.content || "").replace(/\n/g, "");
                 if (!encoded) continue;
                 const content = Buffer.from(encoded, "base64").toString("utf8");
-                const expiresAt = Date.now() + (Math.max(30, Number(runtimeConfig.cacheTtlSec || 300)) * 1000);
-
-                CONTENT_FILE_CACHE.set(key, { content, expiresAt });
-                db.collection("course_cache").doc(cacheDocId).set({
-                    content,
-                    expiresAt,
-                    key,
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                }).catch((err) => {
-                    console.warn("[content-runtime] Firestore cache write error:", err.message || err);
-                });
-
                 return { content, source: "external", locale, file: localeCandidate };
             } catch (err) {
                 console.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
@@ -3240,6 +3187,8 @@ function normalizeLearningPathCategoryLabels(sourceMap = {}) {
         if (v === "common" || v === "car-starter" || v === "car-basic" || v === "car-advanced") return v;
         if (/^(?:tw|en)-common$/i.test(v)) return "common";
         if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+        if (/^(?:tw|en)-drone-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+        if (/^drone-(starter|basic|advanced)$/i.test(v)) return v;
         if (/^start-\d{2}-unit-/i.test(v)) return "car-starter";
         if (/^basic-\d{2}-unit-/i.test(v)) return "car-basic";
         if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return "car-advanced";
@@ -3438,11 +3387,11 @@ const getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (reques
 
     const uid = auth.uid;
     const email = normalizeEmail(auth.token.email || "");
-    const requesterRole = await getRole(uid);
+    const requesterRole = await getRole(uid, auth?.token?.email || "");
     const lessons = await loadLessonsWithOptionalDistributorOverride(data.distributorId || "");
     const physicalUnitIds = getPhysicalUnitIdSet(lessons);
 
-    if (!data.unitId && !data.courseId && requesterRole !== "admin") {
+    if (!data.unitId && !data.courseId && requesterRole !== "admin" && !isAdminEmail(email)) {
         throw new HttpsError("permission-denied", "You must specify a unitId or courseId to view your dashboard.");
     }
 
@@ -4035,7 +3984,7 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
     const isPhysicalProduct = !!(course && isPhysicalMetadataLesson(course));
     const userDoc = await dbRef.collection("users").doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-    const isAdminRole = userData.role === "admin";
+    const isAdminRole = resolveAdminRole(userData) === "admin";
 
     const lookupUnitId = canonicalUnitId || normalizedUnitId || "";
     const assignedTutorEmail = userData.unitAssignments?.[lookupUnitId] || null;
@@ -4168,12 +4117,19 @@ const resolveAssignmentAccess = onCall(async (request) => {
     const { data, auth } = request;
     assertAuthenticated(auth);
 
-    const { unitId, courseId, tutorMode, assignmentId } = data || {};
-    assertRequiredValue(unitId, "缺少單元 ID");
+    const { unitId, courseId, docId, tutorMode, assignmentId } = data || {};
+    assertRequiredValue(unitId || docId, "缺少單元 ID");
 
     const dbRef = admin.firestore();
     const lessons = await getLessonsForAdmin(data?.distributorId || "");
-    const access = await resolveStudentAssignmentAccessAdmin(dbRef, auth.uid, courseId, unitId, lessons, tutorMode === true);
+    const access = await resolveStudentAssignmentAccessAdmin(
+        dbRef,
+        auth.uid,
+        courseId || docId,
+        unitId || docId,
+        lessons,
+        tutorMode === true
+    );
     if (!access.authorized) {
         return { authorized: false, reason: access.reason || "forbidden", accessMode: access.accessMode || null };
     }
@@ -4300,7 +4256,7 @@ const authorizeTutorForCourse = onCall(async (request) => {
     assertAuthenticated(auth);
 
     const uid = auth.uid;
-    const requesterRole = await getRole(uid);
+    const requesterRole = await getRole(uid, auth?.token?.email || "");
     assertAdminRole(requesterRole, "僅限管理員");
 
     const { courseId, tutorEmail, action } = data || {};
@@ -4646,7 +4602,6 @@ exports.bindTutorToUnit = bindTutorToUnit;
 exports.bindTutorByPromotionCode = bindTutorByPromotionCode;
 exports.updateLessonI18n = updateLessonI18n;
 exports.upsertLessonMetadata = upsertLessonMetadata;
-exports.purgeContentCache = purgeContentCache;
 exports.upsertLessonPricing = upsertLessonPricing;
 exports.upsertDistributorPriceBook = upsertDistributorPriceBook;
 exports.seedDistributorPriceBooksFromLessons = seedDistributorPriceBooksFromLessons;

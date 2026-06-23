@@ -17,7 +17,7 @@
 > 若要批次收斂既有課程資料，優先使用 [`functions/scripts/backfill_metadata_lessons_canonical_schema.js`](../../functions/scripts/backfill_metadata_lessons_canonical_schema.js)；預設只做 normalize，不會主動刪欄位，刪除舊欄位需顯式帶 `--delete=...`。
 
 > 目前可直接使用的 Admin 入口：
-> - [`public/admin-courses.html`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/admin-courses.html)：課程主檔、多語內容、停用與價格表
+> - [`public/courses-management.html`](/Users/roverchen/Documents/Apps/vibe-coding-tw/public/courses-management.html)：課程主檔、多語內容、停用與價格表
 
 ---
 
@@ -84,7 +84,7 @@
 5. 建立多語內容
    - 以 `i18n.en` 作為主體內容
    - 其他 locale 可在同一個課程對話框內一起維護
-   - 舊有 `titleEn` / `summaryEn` / `descriptionEn` / `coreContentEn` 僅保留過渡相容
+   - 舊有 `titleEn` / `summaryEn` / `descriptionEn` / `coreContentEn` 只保留過渡讀取相容，不再由新表單寫入
 
 6. 建立 template repo / student repo workflow
    - `.github/workflows/autograde-and-sync.yml` 保持最小化

@@ -1,5 +1,4 @@
 const admin = require("firebase-admin");
-const crypto = require("crypto");
 const { defineSecret } = require("firebase-functions/params");
 
 const { buildI18nFilenameCandidates, normalizeLegacyId, unitIdsMatch } = require("vibe-functions-core/id-utils");
@@ -13,9 +12,7 @@ const {
 } = require("vibe-functions-core/distributor-pricing");
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
-const CONTENT_CACHE_COLLECTION = "content_cache";
-const CONTENT_FILE_CACHE = new Map();
-const COURSE_RUNTIME_VERSION = "20260608-course-title-and-cta-fix";
+const COURSE_RUNTIME_VERSION = "20260623-tutor-mode-admin-uid-fix";
 const {
     cleanUnitId,
     findCourseByPageOrUnit,
@@ -28,84 +25,28 @@ const {
     resolveLessonForOrderItem
 } = dashboardUtils;
 
-async function readCachedContent(dbRef, cacheKey) {
-    if (!cacheKey) return null;
-
-    const now = Date.now();
-    const memoryHit = CONTENT_FILE_CACHE.get(cacheKey);
-    if (memoryHit && Number(memoryHit.expiresAt || 0) > now && memoryHit.html) {
-        return memoryHit;
-    }
-
-    const snap = await dbRef.collection(CONTENT_CACHE_COLLECTION).doc(cacheKey).get();
-    if (!snap.exists) return null;
-
-    const data = snap.data() || {};
-    const expiresAt = Number(data.expiresAt || 0);
-    const cached = {
-        html: String(data.html || ""),
-        contentType: String(data.contentType || "text/html; charset=utf-8"),
-        sourcePath: String(data.sourcePath || ""),
-        sourceUrl: String(data.sourceUrl || ""),
-        expiresAt,
-        updatedAt: Number(data.updatedAt || 0)
-    };
-
-    if (cached.html) {
-        CONTENT_FILE_CACHE.set(cacheKey, cached);
-    }
-
-    if (expiresAt > now && cached.html) {
-        return cached;
-    }
-
-    return cached.html ? cached : null;
-}
-
-function buildContentCacheKey({ repoOwner, repoName, ref, locale, contentPath } = {}) {
-    return crypto.createHash("md5").update([
-        normalizeText(repoOwner),
-        normalizeText(repoName),
-        normalizeText(ref),
-        normalizeText(locale),
-        normalizeText(contentPath)
-    ].join("|")).digest("hex");
-}
-
 function resolvePreferredLocales(runtimeConfig = null, req = null) {
     const queryLocale = normalizeLocale(req?.query?.lang || req?.query?.locale || "");
     const header = String(req?.headers?.["accept-language"] || "");
     const headerPrimary = normalizeLocale(header.split(",")[0] || "");
-    
+
     const chain = [];
     if (queryLocale) chain.push(queryLocale);
     if (headerPrimary && !chain.includes(headerPrimary)) chain.push(headerPrimary);
 
-    const primaryLang = chain[0] || "";
-    const isPrimaryZh = primaryLang.toLowerCase().startsWith("zh");
-
-    // Order backup locales based on the primary requested language
-    const fallbacks = isPrimaryZh ? ["zh-TW", "en"] : ["en", "zh-TW"];
-    
-    const defaultLocale = normalizeLocale(runtimeConfig?.defaultLocale || "");
-    if (defaultLocale && !fallbacks.includes(defaultLocale)) {
-        fallbacks.unshift(defaultLocale);
+    const configuredLocale = normalizeLocale(runtimeConfig?.defaultLocale || "");
+    if (!chain.length && configuredLocale) {
+        chain.push(configuredLocale);
     }
 
-    for (const locale of fallbacks) {
-        if (!chain.includes(locale)) {
-            chain.push(locale);
-        }
-    }
-
-    return chain;
+    return chain.length ? chain : ["en"];
 }
 
-async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig, locales, dbRef) {
+async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig, locales) {
     if (!runtimeConfig?.enabled) return null;
     const contentRepoToken = CONTENT_REPO_TOKEN.value();
     if (!contentRepoToken) {
-        console.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
+        console.warn("[content-runtime] CONTENT_REPO_TOKEN missing.");
         return null;
     }
 
@@ -139,22 +80,8 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
     ]));
 
     for (const contentPath of tried) {
-        const cacheKey = buildContentCacheKey({
-            repoOwner,
-            repoName,
-            ref,
-            locale: contentPath.split("/")[1] || "",
-            contentPath
-        });
-
-        const cached = await readCachedContent(dbRef, cacheKey);
-        if (cached && cached.expiresAt > Date.now()) {
-            return { content: cached.html, source: "external-cache", locale: cached.locale || "", file: cached.sourcePath || contentPath };
-        }
-
         const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/contents/${contentPath}?ref=${encodeURIComponent(ref)}`;
         try {
-            const startedAt = Date.now();
             const resp = await fetch(apiUrl, {
                 method: "GET",
                 headers: {
@@ -163,30 +90,11 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
                     "User-Agent": "vibe-coding-runtime"
                 }
             });
-            if (!resp.ok) {
-                if (resp.status !== 404) {
-                    console.warn(`[content-runtime] external fetch non-404: ${resp.status} ${contentPath}`);
-                }
-                continue;
-            }
+            if (!resp.ok) continue;
             const payload = await resp.json();
             const encoded = String(payload?.content || "").replace(/\n/g, "");
             if (!encoded) continue;
             const content = Buffer.from(encoded, "base64").toString("utf8");
-            const expiresAt = Date.now() + (Math.max(30, Number(runtimeConfig.cacheTtlSec || 300)) * 1000);
-            const cachePayload = {
-                html: content,
-                contentType: "text/html; charset=utf-8",
-                sourcePath: contentPath,
-                sourceUrl: apiUrl,
-                expiresAt,
-                updatedAt: Date.now()
-            };
-            CONTENT_FILE_CACHE.set(cacheKey, cachePayload);
-            dbRef.collection(CONTENT_CACHE_COLLECTION).doc(cacheKey).set(cachePayload, { merge: true }).catch(err => {
-                console.warn(`[content-runtime] Firestore cache write error:`, err.message || err);
-            });
-            console.log(`[content-runtime] source=external file=${contentPath} ms=${Date.now() - startedAt}`);
             return { content, source: "external", locale: contentPath.split("/")[1] || "", file: contentPath };
         } catch (err) {
             console.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
@@ -304,7 +212,7 @@ async function resolveCourseHtml({ dbRef, requestPath, tokenData, req }) {
 
     const tried = [];
     for (const candidate of candidateNames) {
-        const hit = await fetchExternalCourseContentHelper(candidate, runtimeConfig, locales, dbRef);
+        const hit = await fetchExternalCourseContentHelper(candidate, runtimeConfig, locales);
         tried.push({ contentPath: candidate });
         if (hit && hit.content) {
             return {
@@ -313,7 +221,7 @@ async function resolveCourseHtml({ dbRef, requestPath, tokenData, req }) {
                 contentType: "text/html; charset=utf-8",
                 sourcePath: candidate,
                 sourceUrl: "",
-                cacheHit: hit.source === "external-cache"
+                cacheHit: false
             };
         }
     }
@@ -343,7 +251,7 @@ function injectCourseRuntimeShell(html = "") {
     }
 
     const runtimeScriptBlock = runtimeScripts.length
-        ? `\n<!-- [Runtime Script Fallback] -->\n${runtimeScripts.join("\n")}\n`
+        ? `\n${runtimeScripts.join("\n")}\n`
         : "";
 
     const bootstrapper = `
@@ -379,7 +287,6 @@ module.exports = {
     findLessonByCourseRef,
     resolveLessonForOrderItem,
     cleanUnitId,
-    readCachedContent,
     normalizeCourseFile,
     normalizeCourseVariantKey,
     resolvePreferredLocales,

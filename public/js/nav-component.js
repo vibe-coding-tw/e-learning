@@ -41,17 +41,50 @@ async function startGoogleLogin() {
         }
     }
 }
-const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v9";
-const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
-
-const DEFAULT_LEARNING_PATHS = [
-    { key: "common", href: "learning-path.html?path=common", icon: "fa-book-open" },
-    { key: "car-starter", href: "learning-path.html?path=car-starter", icon: "fa-rocket" },
-    { key: "car-basic", href: "learning-path.html?path=car-basic", icon: "fa-code" },
-    { key: "car-advanced", href: "learning-path.html?path=car-advanced", icon: "fa-microchip" }
-];
-
 const REPO_UTILS = window.repoSlugUtils || {};
+const ROLE_UTILS = window.vibeRoleUtils || {};
+const isAdminEmail = ROLE_UTILS.isAdminEmail || function (value = "") {
+    return String(value || "").trim().toLowerCase() === "rover.k.chen@gmail.com";
+};
+function normalizeNavAccess(userData = {}, email = "") {
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const rawRole = String(userData.role || "").trim().toLowerCase();
+    const role = isAdminEmail(normalizedEmail) ? "admin" : rawRole;
+    const distributorId = String(userData.distributorId || userData.commercial?.distributorId || "").trim();
+    const investorId = String(userData.investorId || userData.commercial?.investorId || "").trim();
+    return {
+        role,
+        isAdmin: role === "admin",
+        isDistributor: role === "distributor" || !!distributorId,
+        isInvestor: role === "investor" || !!investorId,
+        distributorId,
+        investorId
+    };
+}
+function applyNavAccessVisibility(access = {}) {
+    const visibility = {
+        admin: !!access.isAdmin,
+        distributor: !!access.isAdmin || !!access.isDistributor,
+        investor: !!access.isAdmin || !!access.isInvestor
+    };
+
+    document.querySelectorAll("[data-nav-roles]").forEach((node) => {
+        const roles = String(node.getAttribute("data-nav-roles") || "")
+            .split(/\s+/)
+            .map((item) => item.trim().toLowerCase())
+            .filter(Boolean);
+        const allowed = !roles.length || roles.some((role) => visibility[role]);
+        node.classList.toggle("hidden", !allowed);
+    });
+
+    document.querySelectorAll("[data-nav-role-group]").forEach((group) => {
+        const visibleChildren = Array.from(group.querySelectorAll("[data-nav-roles]"))
+            .some((node) => !node.classList.contains("hidden"));
+        group.classList.toggle("hidden", !visibleChildren);
+    });
+
+    window.__vibeNavAccess = access;
+}
 const normalizeCanonicalLearningPathKey = REPO_UTILS.normalizeCanonicalLearningPathKey || function (value = "") {
     const v = String(value || "").trim().toLowerCase().split('/').pop().split('?')[0].split('#')[0].replace(/\.html$/i, '');
     if (!v) return "";
@@ -87,8 +120,7 @@ function getRuntimeContentConfig() {
     const defaults = {
         defaultLocale: "en",
         supportedLocales: ["zh-TW", "en"],
-        localeLabels: { "zh-TW": "繁體中文", "en": "English" },
-        localeFallbackMap: { "zh-TW": "zh-TW", "en": "en" }
+        localeLabels: { "zh-TW": "繁體中文", "en": "English" }
     };
     return {
         ...defaults,
@@ -99,10 +131,6 @@ function getRuntimeContentConfig() {
         localeLabels: {
             ...defaults.localeLabels,
             ...(runtime.localeLabels && typeof runtime.localeLabels === "object" ? runtime.localeLabels : {})
-        },
-        localeFallbackMap: {
-            ...defaults.localeFallbackMap,
-            ...(runtime.localeFallbackMap && typeof runtime.localeFallbackMap === "object" ? runtime.localeFallbackMap : {})
         }
     };
 }
@@ -158,52 +186,21 @@ function canonicalLearningPathHref(pathKey = "") {
 }
 
 function resolveMenuLabel(value = "", fallback = "", uiLocale = "zh-TW") {
-    const text = extractCategoryLabelText(value, uiLocale) || extractCategoryLabelText(value, "zh-TW") || extractCategoryLabelText(value, "en");
-    return String(text || fallback || "").trim();
+    if (typeof value === "string") return String(value || fallback || "").trim();
+    if (!value || typeof value !== "object") return String(fallback || "").trim();
+    const key = String(uiLocale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
+    return String(value[key] || fallback || "").trim();
 }
 
 function resolveLearningPathLabel(pathKey = "", uiLocale = "zh-TW", categoryLabelsMap = {}) {
     const canonical = normalizeCanonicalLearningPathKey(pathKey);
-    const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap, uiLocale);
+    const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap);
     const labelEntry = normalizedMap[canonical || pathKey];
-    if (labelEntry) {
-        return resolveMenuLabel(labelEntry, getCategoryLabel(canonical || pathKey, uiLocale), uiLocale);
-    }
-    return getCategoryLabel(canonical || pathKey, uiLocale);
+    if (!labelEntry) return "";
+    return resolveMenuLabel(labelEntry, "", uiLocale);
 }
 
 window.__vibeResolveLearningPathLabel = resolveLearningPathLabel;
-
-function getDefaultLearningPaths(uiLocale = "zh-TW", categoryLabels = {}) {
-    return [
-        { key: "common", href: canonicalLearningPathHref("common"), icon: "fa-book-open", label: resolveLearningPathLabel("common", uiLocale, categoryLabels) },
-        { key: "car-starter", href: canonicalLearningPathHref("car-starter"), icon: "fa-rocket", label: resolveLearningPathLabel("car-starter", uiLocale, categoryLabels) },
-        { key: "car-basic", href: canonicalLearningPathHref("car-basic"), icon: "fa-code", label: resolveLearningPathLabel("car-basic", uiLocale, categoryLabels) },
-        { key: "car-advanced", href: canonicalLearningPathHref("car-advanced"), icon: "fa-microchip", label: resolveLearningPathLabel("car-advanced", uiLocale, categoryLabels) }
-    ];
-}
-
-function getLearningPathCacheKey(uiLocale = "zh-TW", version = "") {
-    return `${LEARNING_PATH_CACHE_KEY}_${uiLocale}_${String(version || "default").trim() || "default"}`;
-}
-
-async function loadLearningPathSettings(uiLocale = "zh-TW") {
-    try {
-        const callable = httpsCallable(functions, "getLessonsMetadata");
-        const response = await callable({});
-        const data = response?.data || response || {};
-        const categoryLabels = normalizeCategoryLabelsMap(data.categoryLabels || {}, uiLocale);
-        const version = [
-            String(data.distributorId || ""),
-            String(Array.isArray(data.lessons) ? data.lessons.length : 0),
-            String(Object.keys(categoryLabels).length || 0)
-        ].join(":");
-        return { categoryLabels, version };
-    } catch (error) {
-        console.warn("[NavComp] Failed to load metadata_settings/learning_paths:", error);
-        return { categoryLabels: {}, version: "" };
-    }
-}
 
 const LOCALIZED_SITE_PAGES = {
     students: {
@@ -402,19 +399,14 @@ function normalizeCategoryKey(raw = "") {
     if (v === "common") return "common";
     if (/^(?:tw|en)-common$/i.test(v)) return "common";
     if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+    if (/^(?:tw|en)-drone-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
     if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
+    if (/^drone-(starter|basic|advanced)$/i.test(v)) return v;
     return "";
 }
 
 function resolveCategoryFromLesson(lesson = {}) {
-    const category = normalizeCategoryKey(lesson.category || lesson.track || "");
-    if (category) return category;
-    const level = normalizeLevel(lesson.level || "");
-    const track = normalizeTrack(lesson.track || "");
-    if (level === "common" || track === "common" || track === "prepare") return "common";
-    if (track === "car" && level && level !== "common") return `car-${level}`;
-    if (/^(starter|basic|advanced)$/i.test(track)) return `car-${track}`;
-    return level && level !== "common" ? `car-${level}` : "common";
+    return normalizeCategoryKey(lesson.category || "");
 }
 
 function getCategoryHref(categoryKey = "") {
@@ -422,44 +414,7 @@ function getCategoryHref(categoryKey = "") {
     return canonicalLearningPathHref(canonical || categoryKey || "common");
 }
 
-function extractCategoryLabelText(value = "", locale = "zh-TW") {
-    const normalizedLocale = String(locale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
-    const visited = new Set();
-    const queue = [value];
-    const preferredKeys = normalizedLocale === "en"
-        ? ["en", "en-US", "en-GB", "labelEn", "enLabel", "titleEn", "nameEn", "textEn", "valueEn", "zh-TW", "zhTW", "zh", "tw", "label", "title", "name", "text", "value"]
-        : ["zh-TW", "zhTW", "zh", "tw", "labelZh", "twLabel", "titleZh", "nameZh", "textZh", "valueZh", "en", "en-US", "en-GB", "label", "title", "name", "text", "value"];
-
-    while (queue.length) {
-        const current = queue.shift();
-        if (current == null) continue;
-        if (typeof current === "string" || typeof current === "number" || typeof current === "boolean") {
-            const text = String(current).trim();
-            if (text) return text;
-            continue;
-        }
-        if (Array.isArray(current)) {
-            current.forEach((item) => queue.push(item));
-            continue;
-        }
-        if (typeof current !== "object") continue;
-        if (visited.has(current)) continue;
-        visited.add(current);
-
-        for (const key of preferredKeys) {
-            if (Object.prototype.hasOwnProperty.call(current, key)) {
-                queue.push(current[key]);
-            }
-        }
-        for (const nested of Object.values(current)) {
-            queue.push(nested);
-        }
-    }
-
-    return "";
-}
-
-function normalizeCategoryLabelEntry(value = "", locale = "zh-TW") {
+function normalizeCategoryLabelEntry(value = "") {
     if (typeof value === "string") {
         const text = value.trim();
         return {
@@ -469,13 +424,12 @@ function normalizeCategoryLabelEntry(value = "", locale = "zh-TW") {
     }
     if (!value || typeof value !== "object") return {};
 
-    const zh = extractCategoryLabelText(value, "zh-TW");
-    const en = extractCategoryLabelText(value, "en");
-    const fallback = extractCategoryLabelText(value, locale);
+    const zh = String(value["zh-TW"] || value.zhTW || value.zh || value.tw || "").trim();
+    const en = String(value.en || value["en-US"] || value["en-GB"] || value.enLabel || value.labelEn || "").trim();
 
     return {
-        "zh-TW": zh || en || fallback,
-        en: en || zh || fallback,
+        "zh-TW": zh,
+        en: en,
     };
 }
 
@@ -488,19 +442,6 @@ function normalizeCategoryLabelsMap(rawMap = {}) {
         out[canonical] = normalizeCategoryLabelEntry(value);
     });
     return out;
-}
-
-function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
-    const _ = uiLocale;
-    const key = String(categoryKey || "").trim();
-    return key
-        .split("-")
-        .filter(Boolean)
-        .map((part, index) => {
-            if (index === 0 && part.length <= 3) return part.toUpperCase();
-            return part.charAt(0).toUpperCase() + part.slice(1);
-        })
-        .join(" ");
 }
 
 function sortCategoryKeys(keys = [], uiLocale = "zh-TW") {
@@ -533,65 +474,7 @@ function isCatalogCourseLesson(lesson = {}) {
     return looksCourseLike && validPrice;
 }
 
-const CATEGORY_TRANSLATIONS = {
-    "zh-TW": {
-        "tw-common": "課前準備",
-        "tw-car-starter": "入門課程",
-        "tw-car-basic": "基礎課程",
-        "tw-car-advanced": "進階課程",
-        "en-common": "課前準備",
-        "en-car-starter": "入門課程",
-        "en-car-basic": "基礎課程",
-        "en-car-advanced": "進階課程"
-    },
-    "en": {
-        "tw-common": "Preparation",
-        "tw-car-starter": "Starter Course",
-        "tw-car-basic": "Basic Course",
-        "tw-car-advanced": "Advanced Course",
-        "en-common": "Preparation",
-        "en-car-starter": "Starter Course",
-        "en-car-basic": "Basic Course",
-        "en-car-advanced": "Advanced Course"
-    }
-};
-
-function getCategoryLabel(key, uiLocale) {
-    const locale = isZhLocale(uiLocale) ? "zh-TW" : "en";
-    const dict = CATEGORY_TRANSLATIONS[locale];
-    const canonical = normalizeCanonicalLearningPathKey(key);
-    const legacy = legacyLearningPathKeyFromCanonical(canonical || key, uiLocale);
-    if (dict && dict[legacy]) return dict[legacy];
-    if (dict && dict[canonical]) return dict[canonical];
-    if (dict && dict[key]) return dict[key];
-    return categoryLabelFromParts(canonical || key, uiLocale);
-}
-
-function getLearningPathsFromCache(uiLocale, version = "") {
-    try {
-        const key = getLearningPathCacheKey(uiLocale, version);
-        const raw = localStorage.getItem(key);
-        if (!raw) return null;
-        const data = JSON.parse(raw);
-        if (!data || !Array.isArray(data.paths)) return null;
-        if ((Date.now() - Number(data.updatedAt || 0)) > LEARNING_PATH_CACHE_TTL_MS) return null;
-        return data.paths;
-    } catch (_) {
-        return null;
-    }
-}
-
-function setLearningPathsCache(paths = [], uiLocale, version = "") {
-    try {
-        const key = getLearningPathCacheKey(uiLocale, version);
-        localStorage.setItem(key, JSON.stringify({
-            updatedAt: Date.now(),
-            paths
-        }));
-    } catch (_) {}
-}
-
-function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS, locale = "zh-TW") {
+function renderLearningPathMenus(rootPath = ".", items = [], locale = "zh-TW") {
     const resolve = (path) => {
         if (path.startsWith("http")) return path;
         return `${rootPath}/${path}`.replace("./http", "http").replace("//", "/");
@@ -602,15 +485,37 @@ function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS,
 
     desktop.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale), locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${resolveMenuLabel(item.label, "", locale)}
         </a>
     `).join("");
 
     mobile.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${resolveMenuLabel(item.label, getCategoryLabel(item.key, locale), locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${resolveMenuLabel(item.label, "", locale)}
         </a>
     `).join("");
+}
+
+function buildSupportCollabInternalLinks(resolve, isZh = true) {
+    return `
+        <div class="hidden mt-2 pt-2 border-t border-slate-50" data-nav-role-group="internal-portal">
+            <div class="px-4 pb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">${isZh ? "內部入口" : "Internal Portals"}</div>
+            <div class="flex flex-col">
+                <a href="${resolve('dashboard.html')}" data-nav-roles="admin" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 hover:text-slate-700 transition-colors">
+                    <i class="fa-solid fa-chart-line text-xs opacity-40"></i> ${isZh ? 'Dashboard' : 'Dashboard'}
+                </a>
+                <a href="${resolve('courses-management.html')}" data-nav-roles="admin" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 hover:text-slate-700 transition-colors">
+                    <i class="fa-solid fa-graduation-cap text-xs opacity-40"></i> ${isZh ? '課程管理' : 'Courses Management'}
+                </a>
+                <a href="${resolve('distributor-portal.html')}" data-nav-roles="admin distributor" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 hover:text-slate-700 transition-colors">
+                    <i class="fa-solid fa-truck-fast text-xs opacity-40"></i> ${isZh ? '經銷商入口' : 'Distributor Portal'}
+                </a>
+                <a href="${resolve('investor-portal.html')}" data-nav-roles="admin investor" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 hover:text-slate-700 transition-colors">
+                    <i class="fa-solid fa-coins text-xs opacity-40"></i> ${isZh ? '投資人入口' : 'Investor Portal'}
+                </a>
+            </div>
+        </div>
+    `;
 }
 
 async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
@@ -620,14 +525,7 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         const allLessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
         const lessons = allLessons.filter(isCatalogCourseLesson);
         const categoryLabels = normalizeCategoryLabelsMap(res?.data?.categoryLabels || {});
-        const version = [
-            String(res?.data?.distributorId || ""),
-            String(lessons.length || 0),
-            String(Object.keys(categoryLabels).length || 0)
-        ].join(":");
-        const cached = getLearningPathsFromCache(uiLocale, version);
-        if (cached?.length) return cached;
-        const keys = new Set();
+        const keys = new Set(Object.keys(categoryLabels));
         lessons.forEach((lesson) => {
             let key = resolveCategoryFromLesson(lesson);
             if (!key) {
@@ -652,30 +550,28 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
                 key.includes("basic") ? "fa-code" :
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"
         }));
-        const finalPaths = dynamic.length ? dynamic : getDefaultLearningPaths(uiLocale, categoryLabels);
         window.__vibeLearningPathDebug = {
             locale: uiLocale,
             lessonsCount: lessons.length,
             sourceLessonsCount: allLessons.length,
-            categories: finalPaths.map((x) => x.key),
+            categoryLabelsCount: Object.keys(categoryLabels).length,
+            categories: dynamic.map((x) => x.key),
             generatedAt: new Date().toISOString(),
-            source: dynamic.length ? "getLessonsMetadata + metadata_lessons" : "fallback-default"
+            source: "getLessonsMetadata + metadata_lessons"
         };
         console.info("[NavComp] learning paths generated:", window.__vibeLearningPathDebug);
-        setLearningPathsCache(finalPaths, uiLocale, version);
-        return finalPaths;
+        return dynamic;
     } catch (e) {
         console.warn("[NavComp] loadLearningPathsDynamic failed:", e);
-        const fallbackPaths = getDefaultLearningPaths(uiLocale, {});
         window.__vibeLearningPathDebug = {
             locale: uiLocale,
             lessonsCount: 0,
-            categories: fallbackPaths.map((x) => x.key),
+            categories: [],
             generatedAt: new Date().toISOString(),
-            source: "fallback-default-error"
+            source: "empty"
         };
-        console.info("[NavComp] learning paths generated (fallback):", window.__vibeLearningPathDebug);
-        return fallbackPaths;
+        console.info("[NavComp] learning paths generated (empty):", window.__vibeLearningPathDebug);
+        return [];
     }
 }
 
@@ -745,7 +641,6 @@ window.renderNav = function (rootPath = '.', options = {}) {
             || item.locale.toLowerCase().startsWith(activeLocale.split('-')[0] || "");
     }) || localeOptions[0] || { locale: "en", label: "English" };
     const isZh = isZhLocale(activeLocale);
-    const defaultPaths = getDefaultLearningPaths(uiLocale);
 
     const resolve = (path) => {
         if (path.startsWith('http')) return path;
@@ -815,6 +710,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                 <a href="${resolve('examples/index.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 hover:text-slate-700 transition-colors">
                                     <i class="fa-solid fa-display text-xs opacity-40"></i> ${isZh ? '範例展示參考' : 'Examples'}
                                 </a>
+                                ${buildSupportCollabInternalLinks(resolve, isZh)}
                             </div>
                         </div>
                     </div>
@@ -918,6 +814,33 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                 <span class="text-sm font-bold text-slate-900">${isZh ? '範例程式展示' : 'Examples'}</span>
                             </div>
                         </a>
+                        <div class="hidden space-y-2 pt-2" data-nav-role-group="internal-portal">
+                            <div class="px-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">${isZh ? '內部入口' : 'Internal Portals'}</div>
+                            <a href="${resolve('dashboard.html')}" data-nav-roles="admin" class="flex items-center justify-between py-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 hover:text-slate-700 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-chart-line text-slate-600"></i>
+                                    <span class="text-sm font-bold text-slate-900">${isZh ? 'Dashboard' : 'Dashboard'}</span>
+                                </div>
+                            </a>
+                            <a href="${resolve('courses-management.html')}" data-nav-roles="admin" class="flex items-center justify-between py-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 hover:text-slate-700 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-graduation-cap text-slate-600"></i>
+                                    <span class="text-sm font-bold text-slate-900">${isZh ? '課程管理' : 'Courses Management'}</span>
+                                </div>
+                            </a>
+                            <a href="${resolve('distributor-portal.html')}" data-nav-roles="admin distributor" class="flex items-center justify-between py-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 hover:text-slate-700 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-truck-fast text-slate-600"></i>
+                                    <span class="text-sm font-bold text-slate-900">${isZh ? '經銷商入口' : 'Distributor Portal'}</span>
+                                </div>
+                            </a>
+                            <a href="${resolve('investor-portal.html')}" data-nav-roles="admin investor" class="flex items-center justify-between py-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 hover:text-slate-700 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-coins text-slate-600"></i>
+                                    <span class="text-sm font-bold text-slate-900">${isZh ? '投資人入口' : 'Investor Portal'}</span>
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -955,7 +878,6 @@ window.renderNav = function (rootPath = '.', options = {}) {
         });
     }, 0);
 
-    renderLearningPathMenus(rootPath, defaultPaths, uiLocale);
     loadLearningPathsDynamic(uiLocale).then((paths) => {
         renderLearningPathMenus(rootPath, paths, uiLocale);
     });
@@ -1181,14 +1103,27 @@ async function initNavComponent() {
             try {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 const userData = userDoc.exists() ? (userDoc.data() || {}) : {};
+                const navAccess = normalizeNavAccess(userData, user.email || "");
+                if (isAdminEmail(user.email) && userData.role !== "admin") {
+                    await setDoc(doc(db, "users", user.uid), {
+                        email: user.email || "",
+                        name: userData.name || user.displayName || "",
+                        role: "admin",
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                }
                 resolvedDisplayName = userData.name ||
                     userData.displayName ||
                     user.displayName ||
                     (user.email ? user.email.split('@')[0] : (isZh ? '使用者' : 'User'));
+                applyNavAccessVisibility(navAccess);
             } catch (e) {
                 console.warn('[NavComp] Failed to resolve user display name from Firestore:', e);
                 resolvedDisplayName = user.displayName || (user.email ? user.email.split('@')[0] : (isZh ? '使用者' : 'User'));
+                applyNavAccessVisibility(normalizeNavAccess({}, user.email || ""));
             }
+        } else {
+            applyNavAccessVisibility({});
         }
 
         updateUI(desktopUser, desktopLogin);

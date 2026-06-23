@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { HttpsError } = require("firebase-functions/v2/https");
-const { normalizeText } = require("vibe-functions-core/access-utils-core");
+const { normalizeText, isAdminEmail, lookupAuthUserEmailByUid } = require("vibe-functions-core/access-utils-core");
 const { normalizeAmount } = require("./pricing-utils");
 const { getUserDistributorScope } = require("vibe-functions-core/distributor-utils-core");
 
@@ -41,13 +41,18 @@ function nowTaipeiDateTime() {
     return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
 }
 
-function getRole(uid) {
+function getRole(uid, fallbackEmail = "") {
     return db.collection("users").doc(uid).get().then((userDoc) => {
         if (userDoc.exists) {
-            const role = userDoc.data().role;
+            const userData = userDoc.data() || {};
+            if (isAdminEmail(userData.email || fallbackEmail)) return "admin";
+            const role = userData.role;
             return role === "admin" ? "admin" : "user";
         }
-        return "user";
+        return lookupAuthUserEmailByUid(uid).then((authEmail) => {
+            if (isAdminEmail(fallbackEmail || authEmail)) return "admin";
+            return "user";
+        });
     }).catch((err) => {
         console.error("[payment] Error in getRole:", err);
         return "user";
@@ -55,7 +60,7 @@ function getRole(uid) {
 }
 
 function assertDistributorScope(userData = {}, requestedDistributorId = "", message = "僅限該經銷商執行此操作") {
-    if ((userData || {}).role === "admin") return;
+    if (isAdminEmail(userData?.email) || (userData || {}).role === "admin") return;
     const ownDistributorId = getUserDistributorScope(userData);
     if (ownDistributorId && requestedDistributorId && ownDistributorId === requestedDistributorId) return;
     throw new HttpsError("permission-denied", message);
@@ -199,7 +204,7 @@ async function loadUserProfile(uid = "", email = "") {
 }
 
 function isQualifiedTutorUser(userData = {}) {
-    return userData.role === "admin"
+    return isAdminEmail(userData.email) || userData.role === "admin"
         || userData.isQualifiedTutor === true
         || userData.qualifiedTutor === true
         || Object.keys(userData.tutorConfigs || {}).length > 0;

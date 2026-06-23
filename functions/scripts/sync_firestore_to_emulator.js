@@ -33,8 +33,7 @@ function parseArgs(argv) {
       "revenue_share_policies",
       "tutor_applications",
       "activity_logs",
-      "profit_ledger",
-      "content_cache"
+      "profit_ledger"
     ]
   };
 

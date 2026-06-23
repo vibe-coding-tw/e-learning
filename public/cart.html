@@ -31,7 +31,7 @@
 
 <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.09bc80539436.js"></script>
+    <script type="module" src="./js/nav-component.1e352d10a4ac.js?v=20260623-2"></script>
     
 
     <main class="flex-grow pt-32 pb-20 hero-gradient">
@@ -435,11 +435,9 @@
                 manual: window.t('routing_source_manual', '手動選擇'),
                 auto: window.t('routing_source_auto', '系統自動帶入'),
                 checkout: window.t('routing_source_checkout', '結帳後記錄'),
-                local: window.t('routing_source_local', '本機預設'),
                 regiondefault: window.t('routing_source_region_default', '地區預設'),
                 lastsuccess: window.t('routing_source_last_success', '上次成功付款'),
                 explicit: window.t('routing_source_manual', '手動選擇'),
-                guestlocal: window.t('routing_source_guest_local', '訪客預設'),
                 shippingcountry: window.t('routing_source_shipping', '依收件地帶入')
             };
             return labels[normalized] || window.t('routing_source_unknown', '系統預設');
@@ -457,8 +455,6 @@
                 'user-binding': window.t('routing_reason_user_binding', '依你的已儲存偏好'),
                 'promotioncode': window.t('routing_reason_promotion', '依 Promotion code'),
                 'explicit': window.t('routing_reason_explicit', '依你手動選擇'),
-                'guest-local': window.t('routing_reason_guest_local', '訪客預設'),
-                'local-fallback': window.t('routing_reason_guest_local', '本機預設'),
                 'checkout': window.t('routing_reason_checkout', '結帳時自動帶入'),
                 'shipping-country': window.t('routing_reason_shipping', '依收件地預設')
             };
@@ -479,24 +475,6 @@
             if (routingSummaryReason) routingSummaryReason.textContent = reasonValue;
         }
 
-        function buildFallbackRoutingDistributors(region = '') {
-            const normalizedRegion = normalizeRegionCode(region);
-            const fallbackDistributors = [
-                { id: 'default-twd', name: '預設台幣經銷商', regions: ['TW'] },
-                { id: 'default-usd', name: '預設美金經銷商', regions: ['US'] }
-            ];
-            if (!normalizedRegion) return fallbackDistributors;
-            const regionalFallback = fallbackDistributors.filter((dist) => Array.isArray(dist.regions) && dist.regions.includes(normalizedRegion));
-            return regionalFallback.length ? regionalFallback : fallbackDistributors;
-        }
-
-        function resolveFallbackDistributorIdForRegion(region = '') {
-            const normalizedRegion = normalizeRegionCode(region);
-            if (normalizedRegion === 'TW') return 'default-twd';
-            if (normalizedRegion === 'US') return 'default-usd';
-            return buildFallbackRoutingDistributors(normalizedRegion)[0]?.id || '';
-        }
-
         function renderDistributorOptions(snapshot = {}) {
             if (!preferredRegionSelect || !preferredDistributorSelect) return;
             let regions = Array.isArray(snapshot.regions) ? snapshot.regions : [];
@@ -506,11 +484,6 @@
             const localRegion = getPreferredRegion();
             const localDistributorId = getPreferredDistributorId();
             const initialRegion = localRegion || userPreference.preferredRegion || snapshot.region || regions[0] || 'US';
-
-            if (regions.length === 0) regions = ['TW', 'US'];
-            if (distributors.length === 0) {
-                distributors = buildFallbackRoutingDistributors(initialRegion);
-            }
 
             const selectRegionText = window.t('routing_select_region_placeholder', '-- 請選擇地區 --');
             preferredRegionSelect.innerHTML = [`<option value="">${escapeHtml(selectRegionText)}</option>`]
@@ -523,9 +496,6 @@
                 !initialRegion || !Array.isArray(dist.regions) || dist.regions.length === 0 ||
                 dist.regions.map(r => r.toUpperCase()).includes(initialRegion.toUpperCase())
             );
-            if (matchedDistributors.length === 0) {
-                matchedDistributors = buildFallbackRoutingDistributors(initialRegion);
-            }
 
             const availableDistributorIds = new Set(
                 matchedDistributors
@@ -536,7 +506,7 @@
                 || userPreference.preferredDistributorId
                 || recommendation.distributorId
                 || matchedDistributors[0]?.id
-                || (initialRegion === 'TW' ? 'default-twd' : 'default-usd');
+                || '';
             if (initialDistributorId && !availableDistributorIds.has(initialDistributorId)) {
                 initialDistributorId = recommendation.distributorId && availableDistributorIds.has(recommendation.distributorId)
                     ? recommendation.distributorId
@@ -590,44 +560,16 @@
                 setRoutingStatus(statusMsg, 'info');
             } catch (error) {
                 console.warn('Failed to load distributor routing options:', error);
-                
-                const targetRegion = (region || getPreferredRegion() || 'US').toUpperCase();
-                const allFallbackDistributors = [
-                    { id: 'default-twd', name: '預設台幣經銷商', regions: ['TW'] },
-                    { id: 'default-usd', name: '預設美金經銷商', regions: ['US'] }
-                ];
-                const filteredDistributors = allFallbackDistributors.filter(d => 
-                    d.regions.includes(targetRegion)
-                );
-                
-                const fallbackSnapshot = {
-                    regions: ['TW', 'US'],
-                    eligibleDistributors: filteredDistributors.length ? filteredDistributors : allFallbackDistributors,
-                    recommendation: {
-                        distributorId: targetRegion === 'TW' ? 'default-twd' : 'default-usd',
-                        distributorName: targetRegion === 'TW' ? '預設台幣經銷商' : '預設美金經銷商',
-                        reason: 'local-fallback'
-                    },
-                    userPreference: {
-                        preferredRegion: targetRegion,
-                        preferredDistributorId: getPreferredDistributorId() || (targetRegion === 'TW' ? 'default-twd' : 'default-usd')
-                    }
-                };
-                renderDistributorOptions(fallbackSnapshot);
-                updateRoutingSummary(fallbackSnapshot);
-                
-                setRoutingPreferenceLocal(targetRegion, fallbackSnapshot.userPreference.preferredDistributorId, { source: 'auto' });
-                setRoutingStatus(window.t('routing_load_failed_fallback', '無法載入推薦清單，已載入預設地區設定。'), 'error');
+                renderDistributorOptions({ regions: [], eligibleDistributors: [], recommendation: {}, userPreference: {} });
+                updateRoutingSummary({ regions: [], eligibleDistributors: [], recommendation: {}, userPreference: {} });
+                setRoutingStatus(window.t('routing_load_failed', '無法載入推薦清單，請稍後再試。'), 'error');
             }
         }
 
         async function saveRoutingPreference() {
             const preferredRegion = String(preferredRegionSelect?.value || '').trim().toUpperCase();
             const selectedDistributorId = String(preferredDistributorSelect?.value || '').trim();
-            const fallbackDistributorId = resolveFallbackDistributorIdForRegion(preferredRegion);
-            const preferredDistributorId = selectedDistributorId
-                || getPreferredDistributorId()
-                || fallbackDistributorId;
+            const preferredDistributorId = selectedDistributorId || getPreferredDistributorId();
             const distributorLabel = preferredDistributorSelect?.selectedOptions?.[0]?.textContent || preferredDistributorId;
             if (!preferredRegion && !preferredDistributorId) {
                 setRoutingStatus(window.t('routing_save_empty', '請至少選擇地區或經銷商。'), 'error');

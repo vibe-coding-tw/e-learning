@@ -221,7 +221,8 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
         throw new HttpsError("unauthenticated", "請先登入。");
     }
 
-    const pageId = normalizeText(data?.pageId || "");
+    const docId = normalizeText(data?.docId || "");
+    const pageId = normalizeText(data?.pageId || docId);
     const fileName = normalizeText(data?.fileName || "");
     const price = Number(data?.price || 0);
     const currency = normalizeCurrency(data?.currency || "TWD", "TWD");
@@ -233,6 +234,7 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
         || findLessonByCourseRef(fileName, lessons);
     console.log("[checkPaymentAuthorization] lookup", {
         uid: auth.uid,
+        docId,
         pageId,
         fileName,
         lessonId: lesson?.id || lesson?.docId || lesson?.courseId || "",
@@ -244,10 +246,19 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
         return { authorized: false, reason: "missing-context" };
     }
 
-    const courseId = pageId || getCanonicalLessonIdentity(lesson) || fileName;
-    const access = await paymentOrderFlow.checkOrderAccessForUnit(db, auth.uid, courseId, fileName || pageId, lessons, tutorMode);
+    const courseId = docId || pageId || getCanonicalLessonIdentity(lesson) || fileName;
+    const access = await paymentOrderFlow.checkOrderAccessForUnit(
+        db,
+        auth.uid,
+        courseId,
+        fileName || pageId,
+        lessons,
+        tutorMode,
+        auth.token?.email || ""
+    );
     console.log("[checkPaymentAuthorization] access", {
         uid: auth.uid,
+        docId,
         courseId,
         fileName,
         authorized: access?.authorized === true,
@@ -386,7 +397,7 @@ exports.paymentMarkOrderShipped = onCall(async (request) => {
     if (!orderId) throw new HttpsError("invalid-argument", "缺少訂單編號");
 
     try {
-        const role = await getRole(uid);
+        const role = await getRole(uid, request.auth?.token?.email || "");
         assertAdminRole(role, "只有管理員可以標記出貨");
 
         await db.collection("orders").doc(orderId).update({

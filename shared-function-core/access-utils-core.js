@@ -9,6 +9,37 @@ function normalizeEmail(value = "") {
     return normalizeText(value).toLowerCase();
 }
 
+const ADMIN_ROLE_EMAILS = new Set([
+    "rover.k.chen@gmail.com",
+]);
+
+function isAdminEmail(value = "") {
+    return ADMIN_ROLE_EMAILS.has(normalizeEmail(value));
+}
+
+async function lookupAuthUserEmailByUid(uid = "") {
+    const cleanUid = normalizeText(uid);
+    if (!cleanUid) return "";
+
+    const host = process.env.FIREBASE_AUTH_EMULATOR_HOST || process.env.AUTH_EMULATOR_HOST || "";
+    if (!host) return "";
+
+    try {
+        const response = await fetch(`http://${host}/identitytoolkit.googleapis.com/v1/accounts:lookup?key=fake-api-key`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ localId: [cleanUid] }),
+        });
+        if (!response.ok) return "";
+        const json = await response.json();
+        return normalizeEmail(json?.users?.[0]?.email || "");
+    } catch (_) {
+        return "";
+    }
+}
+
 function assertAuthenticated(auth, message = "請先登入") {
     if (!auth) throw new HttpsError("unauthenticated", message);
 }
@@ -67,6 +98,8 @@ module.exports = {
     loadLessons,
     isStarterCourseCategory,
     isStarterCourseReference,
+    isAdminEmail,
+    lookupAuthUserEmailByUid,
     normalizeEmail,
     normalizeText,
     nowIsoTimestamp,

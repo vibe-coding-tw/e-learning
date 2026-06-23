@@ -11,8 +11,7 @@
         const defaults = {
             defaultLocale: "en",
             supportedLocales: ["zh-TW", "en"],
-            localeLabels: { "zh-TW": "繁體中文", "en": "English" },
-            localeFallbackMap: { "zh-TW": "zh-TW", "en": "en" }
+            localeLabels: { "zh-TW": "繁體中文", "en": "English" }
         };
         const runtime = window.__vibeContentRuntimeConfig && typeof window.__vibeContentRuntimeConfig === "object"
             ? window.__vibeContentRuntimeConfig
@@ -26,10 +25,6 @@
             localeLabels: {
                 ...defaults.localeLabels,
                 ...(runtime.localeLabels && typeof runtime.localeLabels === "object" ? runtime.localeLabels : {})
-            },
-            localeFallbackMap: {
-                ...defaults.localeFallbackMap,
-                ...(runtime.localeFallbackMap && typeof runtime.localeFallbackMap === "object" ? runtime.localeFallbackMap : {})
             }
         };
     }
@@ -58,7 +53,6 @@
             push("en");
         }
         push(normalized);
-        push(runtime.localeFallbackMap?.[normalized]);
         push(runtime.defaultLocale);
         push("zh-TW");
         push("en");
@@ -71,8 +65,6 @@
         for (const candidate of candidates) {
             if (Object.prototype.hasOwnProperty.call(DICTIONARY, candidate)) return candidate;
         }
-        const fallback = normalizeLocaleCode(runtime.localeFallbackMap?.[normalizeLocaleCode(locale)] || "");
-        if (fallback && Object.prototype.hasOwnProperty.call(DICTIONARY, fallback)) return fallback;
         if (String(locale || "").toLowerCase().startsWith("zh")) return "zh-TW";
         return "en";
     }
@@ -286,7 +278,6 @@
             "routing_no_distributor": "無可用經銷商",
             "routing_sys_recommend": "系統推薦：{name}",
             "routing_prompt_select": "請先選擇地區與經銷商。",
-            "routing_load_failed_fallback": "無法載入推薦清單，已載入預設地區設定。",
             "routing_save_empty": "請至少選擇地區或經銷商。",
             "routing_save_success": "偏好已儲存。",
             "routing_save_local_success": "偏好已儲存（僅限本機）。",
@@ -297,10 +288,8 @@
             "routing_source_manual": "手動選擇",
             "routing_source_auto": "系統自動帶入",
             "routing_source_checkout": "結帳後記錄",
-            "routing_source_local": "本機預設",
             "routing_source_region_default": "地區預設",
             "routing_source_last_success": "上次成功付款",
-            "routing_source_guest_local": "訪客預設",
             "routing_source_shipping": "依收件地帶入",
             "routing_source_unknown": "系統預設",
             "routing_reason_region_default": "依地區預設",
@@ -310,7 +299,6 @@
             "routing_reason_user_binding": "依你的已儲存偏好",
             "routing_reason_promotion": "依 Promotion code",
             "routing_reason_explicit": "依你手動選擇",
-            "routing_reason_guest_local": "訪客預設",
             "routing_reason_checkout": "結帳時自動帶入",
             "routing_reason_shipping": "依收件地預設",
             "routing_reason_unknown": "系統預設",
@@ -669,7 +657,6 @@
             "routing_no_distributor": "No distributor available",
             "routing_sys_recommend": "Recommended: {name}",
             "routing_prompt_select": "Please select region & distributor.",
-            "routing_load_failed_fallback": "Failed to load options. Local defaults applied.",
             "routing_save_empty": "Please select at least region or distributor.",
             "routing_save_success": "Preferences saved successfully.",
             "routing_save_local_success": "Preferences saved (locally).",
@@ -680,10 +667,8 @@
             "routing_source_manual": "Manual selection",
             "routing_source_auto": "Auto-filled by system",
             "routing_source_checkout": "Recorded at checkout",
-            "routing_source_local": "Local default",
             "routing_source_region_default": "Region default",
             "routing_source_last_success": "Last successful checkout",
-            "routing_source_guest_local": "Guest default",
             "routing_source_shipping": "Derived from shipping country",
             "routing_source_unknown": "System default",
             "routing_reason_region_default": "Region default",
@@ -693,7 +678,6 @@
             "routing_reason_user_binding": "Using your saved preference",
             "routing_reason_promotion": "Based on promotion code",
             "routing_reason_explicit": "Based on your manual choice",
-            "routing_reason_guest_local": "Guest default",
             "routing_reason_checkout": "Recorded during checkout",
             "routing_reason_shipping": "Derived from shipping country",
             "routing_reason_unknown": "System default",

@@ -14,7 +14,6 @@ const registerAdminExports = (target, proxyAdminCallable, proxyAdminRequest) => 
         ["updateLessonI18n", "updateLessonI18n"],
         ["updateSystemConfig", "updateSystemConfig"],
         ["getSystemConfig", "getSystemConfig"],
-        ["purgeContentCache", "purgeContentCache"],
         ["updateUserRelationships", "updateUserRelationships"],
         ["getUserRelationships", "getUserRelationships"],
         ["upsertLessonPricing", "upsertLessonPricing"],

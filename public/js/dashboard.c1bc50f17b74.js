@@ -28,6 +28,9 @@ const {
     normalizeTutorAdminUnitId,
     normalizeTutorIdentifier
 } = window.dashboardLookupUtils || {};
+const isAdminEmail = window.vibeRoleUtils?.isAdminEmail || function (value = "") {
+    return String(value || "").trim().toLowerCase() === "rover.k.chen@gmail.com";
+};
 const isPhysicalMetadataLesson = window.dashboardLookupUtils?.isPhysicalMetadataLesson || function (lesson = {}) {
     const metadataType = String(lesson?.metadataType || "").toLowerCase();
     return metadataType === "product" || metadataType === "legacy_product";
@@ -229,7 +232,6 @@ function applyDashboardSystemConfigToUI(config = {}) {
     const contentVersionEl = document.getElementById('sys-content-version-input');
     const supportedLocalesEl = document.getElementById('sys-supported-locales-input');
     const localeLabelsEl = document.getElementById('sys-locale-labels-input');
-    const localeFallbackMapEl = document.getElementById('sys-locale-fallback-map-input');
     const versionDisplay = document.getElementById('current-content-version-display');
     const localeStatus = document.getElementById('dashboard-locale-status');
     const defaultLocale = String(config.defaultLocale || 'en').trim() || 'en';
@@ -242,7 +244,6 @@ function applyDashboardSystemConfigToUI(config = {}) {
     }
     if (supportedLocalesEl) supportedLocalesEl.value = Array.isArray(config.supportedLocales) ? config.supportedLocales.join('\n') : '';
     if (localeLabelsEl) localeLabelsEl.value = toPrettyJson(config.localeLabels || {});
-    if (localeFallbackMapEl) localeFallbackMapEl.value = toPrettyJson(config.localeFallbackMap || {});
     if (versionDisplay) {
         versionDisplay.textContent = `當前鎖定版本 (Current Locked Hash): ${config.contentVersion || '未設定 (None)'}`;
     }
@@ -262,8 +263,7 @@ async function loadDashboardSystemConfig() {
             defaultRegion: data.defaultRegion || 'US',
             defaultDistributorId: data.defaultDistributorId || 'default-usd',
             supportedLocales: Array.isArray(data.supportedLocales) ? data.supportedLocales : [],
-            localeLabels: data.localeLabels && typeof data.localeLabels === 'object' && !Array.isArray(data.localeLabels) ? data.localeLabels : {},
-            localeFallbackMap: data.localeFallbackMap && typeof data.localeFallbackMap === 'object' && !Array.isArray(data.localeFallbackMap) ? data.localeFallbackMap : {}
+            localeLabels: data.localeLabels && typeof data.localeLabels === 'object' && !Array.isArray(data.localeLabels) ? data.localeLabels : {}
         };
         applyDashboardSystemConfigToUI(dashboardData.systemConfig);
         setDashboardLog('已載入站台 locale 設定。', { replace: true });
@@ -311,8 +311,7 @@ window.updateSystemDefaults = async function() {
 window.saveDashboardLocaleSettings = async function() {
     const payload = {
         supportedLocales: normalizeMultilineList(document.getElementById('sys-supported-locales-input')?.value || ''),
-        localeLabels: parseJsonLoose(document.getElementById('sys-locale-labels-input')?.value || '{}', {}),
-        localeFallbackMap: parseJsonLoose(document.getElementById('sys-locale-fallback-map-input')?.value || '{}', {})
+        localeLabels: parseJsonLoose(document.getElementById('sys-locale-labels-input')?.value || '{}', {})
     };
 
     const btn = document.getElementById('btn-save-locale-settings');
@@ -577,7 +576,8 @@ async function loadDashboard() {
             }
         }
 
-        myRole = data.role;
+        const currentUser = auth.currentUser;
+        myRole = isAdminEmail(currentUser?.email) ? "admin" : (data.role || "");
         const isAdmin = myRole === 'admin';
         const hasPaidAnything = (data.students?.[0]?.orders?.length > 0 || data.students?.[0]?.accountStatus === 'paid');
         
@@ -1782,281 +1782,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     // [V8.1] GitHub README loading moved to renderAssignments for better container management
     renderAssignments(displayAssignments, "", { showGuide: false });
 
-    // Render Financial Statements (P&L and Balance Sheet) at the bottom of the overview tab
-    if (!filterUnitId && myRole === 'admin') {
-        renderFinanceStatements(data);
-    }
 }
-
-/**
- * Renders the Profit & Loss Statement and Balance Sheet dynamically from real order data
- * @param {Object} data The dashboard overview data returned from backend
- */
-function renderFinanceStatements(data) {
-    const plPlaceholder = document.getElementById('overview-pl-statement');
-    const bsPlaceholder = document.getElementById('overview-balance-sheet');
-    if (!plPlaceholder || !bsPlaceholder) return;
-
-    // 1. Gather all successful unique orders
-    const uniqueOrders = new Map();
-    const allStudents = data.students || [];
-    allStudents.forEach(student => {
-        (student.orderRecords || []).forEach(order => {
-            if (order.id && (order.status === 'SUCCESS' || order.paidAt)) {
-                uniqueOrders.set(order.id, {
-                    ...order,
-                    email: student.email || '未提供'
-                });
-            }
-        });
-    });
-
-    const ordersList = Array.from(uniqueOrders.values());
-
-    // 2. Setup standard rates / variables
-    const tutorRate = 0.20;
-    const tutorUplineRate = 0.20;
-    const gatewayFeeRate = 0.032;
-    const hardwareCOGSPercent = 0.62;
-
-    // Create user by email index
-    const userByEmail = {};
-    allStudents.forEach(s => {
-        if (s.email) {
-            userByEmail[s.email.toLowerCase().trim()] = s;
-        }
-    });
-
-    // Helper: trace upline tutor recursively
-    function getTutorUpline(email) {
-        const normalized = String(email || '').trim().toLowerCase();
-        const tutorUser = userByEmail[normalized];
-        if (tutorUser && tutorUser.tutorEmail) {
-            return tutorUser.tutorEmail.toLowerCase().trim();
-        }
-        return 'info@vibe-coding.tw';
-    }
-
-    // 3. Compute variables
-    let courseRevenue = 0;
-    let hardwareRevenue = 0;
-    let totalTutorShare = 0;
-    let totalHardwareCOGS = 0;
-
-    ordersList.forEach(order => {
-        const items = order.items || {};
-        Object.entries(items).forEach(([itemKey, itemValue]) => {
-            const quantity = parseInt(itemValue?.quantity || 1, 10) || 1;
-            const price = parseFloat(itemValue?.price || 0) || 0;
-            const amount = price * quantity;
-            if (amount <= 0) return;
-
-            const isPhysical = itemValue?.isPhysical === true || itemKey === 'esp32-c3' || itemKey === 'esp32-s3';
-
-            if (isPhysical) {
-                hardwareRevenue += amount;
-                totalHardwareCOGS += amount * hardwareCOGSPercent;
-            } else {
-                courseRevenue += amount;
-            }
-
-            // Calculate Tutor sharing recursively
-            const initialTutor = String(
-                itemValue?.referredTutorEmail ||
-                itemValue?.referralTutor ||
-                'info@vibe-coding.tw'
-            ).trim().toLowerCase();
-
-            let currentTutor = initialTutor;
-            let currentShare = amount * tutorRate;
-
-            while (currentTutor && currentShare >= 0.01) {
-                totalTutorShare += currentShare;
-                if (currentTutor === 'info@vibe-coding.tw') break;
-                currentTutor = getTutorUpline(currentTutor);
-                currentShare = currentShare * tutorUplineRate;
-            }
-        });
-    });
-
-    // Standardize total calculations
-    courseRevenue = Math.round(courseRevenue * 100) / 100;
-    hardwareRevenue = Math.round(hardwareRevenue * 100) / 100;
-    const totalRevenue = courseRevenue + hardwareRevenue;
-
-    totalTutorShare = Math.round(totalTutorShare * 100) / 100;
-    const totalGatewayFees = Math.round(totalRevenue * gatewayFeeRate * 100) / 100;
-    totalHardwareCOGS = Math.round(totalHardwareCOGS * 100) / 100;
-    const totalCOGS = totalTutorShare + totalGatewayFees + totalHardwareCOGS;
-
-    const grossProfit = totalRevenue - totalCOGS;
-    const grossMarginPct = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
-
-    const totalOPEX = 0;
-    const netOperatingIncome = grossProfit - totalOPEX;
-
-    // Reconstruct Balance Sheet variables
-    const totalAssets = totalRevenue;
-    const tutorPayable = totalTutorShare;
-    const gatewayPayable = totalGatewayFees;
-    const hardwarePayable = totalHardwareCOGS;
-    const totalLiabilities = tutorPayable + gatewayPayable + hardwarePayable;
-    const retainedEarnings = netOperatingIncome;
-    const totalEquity = retainedEarnings;
-
-    const issuedShares = 10000000;
-    const navPerShare = issuedShares > 0 ? totalEquity / issuedShares : 0;
-
-    // 4. Render HTML for Profit & Loss
-    plPlaceholder.innerHTML = `
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                <thead>
-                    <tr class="border-b text-gray-500 font-medium">
-                        <th class="py-2">項目 (Financial Items)</th>
-                        <th class="py-2 text-right">金額 (TWD)</th>
-                        <th class="py-2 text-right">佔比 (Ratio)</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y text-gray-700">
-                    <tr>
-                        <td class="py-2 font-semibold">總營業收入 (Total Revenue)</td>
-                        <td class="py-2 text-right font-semibold">$${totalRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-2 text-right font-semibold">100.00%</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ 數位課程 (Digital Course)</td>
-                        <td class="py-1.5 text-right">$${courseRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((courseRevenue / totalRevenue) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">└ 實體硬體 (Physical Hardware)</td>
-                        <td class="py-1.5 text-right">$${hardwareRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((hardwareRevenue / totalRevenue) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 font-semibold">營業成本 (Total COGS)</td>
-                        <td class="py-2 text-right font-semibold">$${totalCOGS.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-2 text-right font-semibold">${totalRevenue > 0 ? ((totalCOGS / totalRevenue) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ 導師分潤 (Tutor Share)</td>
-                        <td class="py-1.5 text-right">$${totalTutorShare.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalTutorShare / totalRevenue) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ 金流交易費 (Gateway Fees)</td>
-                        <td class="py-1.5 text-right">$${totalGatewayFees.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalGatewayFees / totalRevenue) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">└ 硬體製造成本 (Hardware COGS)</td>
-                        <td class="py-1.5 text-right">$${totalHardwareCOGS.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalHardwareCOGS / totalRevenue) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="bg-blue-50/50 font-bold text-blue-900">
-                        <td class="py-2">營業毛利 (Gross Profit)</td>
-                        <td class="py-2 text-right">$${grossProfit.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-2 text-right">${grossMarginPct.toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 font-semibold">營業費用 (Total OPEX)</td>
-                        <td class="py-2 text-right font-semibold">$0.00</td>
-                        <td class="py-2 text-right font-semibold">0.00%</td>
-                    </tr>
-                    <tr class="bg-blue-50/70 font-bold text-blue-950 border-t-2 border-blue-200">
-                        <td class="py-2.5">營業淨利 (EBITDA / Net Income)</td>
-                        <td class="py-2.5 text-right">$${netOperatingIncome.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-2.5 text-right">${grossMarginPct.toFixed(2)}%</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-
-    // 5. Render HTML for Balance Sheet
-    bsPlaceholder.innerHTML = `
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                <thead>
-                    <tr class="border-b text-gray-500 font-medium">
-                        <th class="py-2">科目 (Accounting Items)</th>
-                        <th class="py-2 text-right">金額 (TWD)</th>
-                        <th class="py-2 text-right">佔比 (Ratio)</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y text-gray-700">
-                    <tr class="bg-gray-50/50 font-bold">
-                        <td class="py-2" colspan="3">【資產 (Assets)】</td>
-                    </tr>
-                    <tr>
-                        <td class="py-1.5 pl-4">現金及約當現金 (Cash)</td>
-                        <td class="py-1.5 text-right">$${totalAssets.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">100.00%</td>
-                    </tr>
-                    <tr class="font-semibold text-gray-900">
-                        <td class="py-2">資產總計 (Total Assets)</td>
-                        <td class="py-2 text-right">$${totalAssets.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-2 text-right">100.00%</td>
-                    </tr>
-                    
-                    <tr class="bg-gray-50/50 font-bold">
-                        <td class="py-2" colspan="3">【負債 (Liabilities)】</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ 應付導師分潤 (Tutor Share Payable)</td>
-                        <td class="py-1.5 text-right">$${tutorPayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalAssets > 0 ? ((tutorPayable / totalAssets) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ 應付金流手續費 (Gateway Payable)</td>
-                        <td class="py-1.5 text-right">$${gatewayPayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalAssets > 0 ? ((gatewayPayable / totalAssets) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">└ 應付履約成本 (Hardware Payable)</td>
-                        <td class="py-1.5 text-right">$${hardwarePayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalAssets > 0 ? ((hardwarePayable / totalAssets) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="font-semibold text-gray-900">
-                        <td class="py-2">負債總計 (Total Liabilities)</td>
-                        <td class="py-2 text-right">$${totalLiabilities.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-2 text-right">${totalAssets > 0 ? ((totalLiabilities / totalAssets) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-
-                    <tr class="bg-gray-50/50 font-bold">
-                        <td class="py-2" colspan="3">【權益 (Equity)】</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ 原始資本 (Paid-in Capital)</td>
-                        <td class="py-1.5 text-right">$0.00</td>
-                        <td class="py-1.5 text-right">0.00%</td>
-                    </tr>
-                    <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">└ 保留盈餘 (Retained Earnings)</td>
-                        <td class="py-1.5 text-right">$${retainedEarnings.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 text-right">${totalAssets > 0 ? ((retainedEarnings / totalAssets) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="bg-emerald-50/50 font-bold text-emerald-900 border-t border-emerald-200">
-                        <td class="py-2">權益總額 / 淨資產 (Total Equity)</td>
-                        <td class="py-2 text-right">$${totalEquity.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-2 text-right">${totalAssets > 0 ? ((totalEquity / totalAssets) * 100).toFixed(2) : 0}%</td>
-                    </tr>
-                    <tr class="bg-emerald-50/70 font-bold text-emerald-950 border-t-2 border-emerald-200">
-                        <td class="py-2.5">負債與權益總額 (Liabilities & Equity)</td>
-                        <td class="py-2.5 text-right">$${(totalLiabilities + totalEquity).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-2.5 text-right">100.00%</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="mt-4 p-3 bg-emerald-50/40 rounded-xl border border-emerald-100 flex justify-between items-center text-xs font-semibold text-emerald-800">
-            <span>發行股份: ${issuedShares.toLocaleString('zh-TW')} 股</span>
-            <span>每股淨值 (NAV): $${navPerShare.toFixed(5)} TWD</span>
-        </div>
-    `;
-}
-
 // --- Global Toggle Functions ---
 window.toggleCourseRows = function (id, event) {
     if (event) event.stopPropagation();
@@ -3036,10 +2762,10 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <a href="admin-courses.html" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700">
+                    <a href="courses-management.html" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700">
                         <i class="fa-solid fa-layer-group"></i> 開啟課程管理
                     </a>
-                    <a href="admin-courses.html#locale-editor" class="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm font-bold text-indigo-700 transition hover:bg-indigo-50">
+                    <a href="courses-management.html#locale-editor" class="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm font-bold text-indigo-700 transition hover:bg-indigo-50">
                         <i class="fa-solid fa-language"></i> 語系設定
                     </a>
                 </div>
@@ -4422,21 +4148,6 @@ function setDistributorPriceBookFormValue(id, value) {
 function buildDistributorPriceBookRow(book = {}) {
     const id = String(book.id || book.priceBookId || '').trim();
     const safeId = id.replace(/[^a-z0-9_-]/gi, '-');
-    window.__distributorPriceBookCache = window.__distributorPriceBookCache || {};
-    if (id) {
-        window.__distributorPriceBookCache[id] = {
-            id,
-            distributorId: book.distributorId || '',
-            docId: book.docId || '',
-            currency: book.currency || 'TWD',
-            salePrice: Number(book.salePrice || 0),
-            promoPrice: book.promoPrice != null ? Number(book.promoPrice) : '',
-            version: book.version || 'v1',
-            effectiveFrom: book.effectiveFrom || '',
-            effectiveTo: book.effectiveTo || '',
-            isActive: book.isActive !== false
-        };
-    }
     const activeBadge = book.isActive !== false
         ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
         : 'bg-slate-100 text-slate-600 border-slate-200';
@@ -4539,7 +4250,9 @@ window.populateDistributorPriceBookForm = function(book = {}) {
 window.populateDistributorPriceBookFormById = function(priceBookId) {
     const id = String(priceBookId || '').trim();
     if (!id) return;
-    const cached = window.__distributorPriceBookCache?.[id];
+    const cached = Array.isArray(window.__loadedDistributorPriceBooks)
+        ? window.__loadedDistributorPriceBooks.find((book) => String(book.id || book.priceBookId || '').trim() === id)
+        : null;
     if (cached) {
         window.populateDistributorPriceBookForm(cached);
     }
@@ -5979,8 +5692,7 @@ async function renderBusinessTab() {
             defaultRegion: dashboardData?.systemConfig?.defaultRegion || 'US',
             defaultDistributorId: dashboardData?.systemConfig?.defaultDistributorId || 'default-usd',
             supportedLocales: dashboardData?.systemConfig?.supportedLocales || [],
-            localeLabels: dashboardData?.systemConfig?.localeLabels || {},
-            localeFallbackMap: dashboardData?.systemConfig?.localeFallbackMap || {}
+            localeLabels: dashboardData?.systemConfig?.localeLabels || {}
         });
         loadDashboardSystemConfig();
     }
@@ -6034,38 +5746,6 @@ window.updateSystemContentVersion = async function() {
     }
 };
 
-window.purgeSystemContentCache = async function() {
-    if (!confirm("確定要清除整個系統的外部網頁快取嗎？這會讓下一次學生連線時重新至 Git 下載最新檔案。")) {
-        return;
-    }
-
-    const btn = document.getElementById('btn-purge-content-cache');
-    const originalText = btn ? btn.textContent : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = "正在清除快取...";
-    }
-
-    try {
-        const purgeContentCacheFn = httpsCallable(functions, 'purgeContentCache');
-        const res = await purgeContentCacheFn();
-        if (res.data && res.data.success) {
-            alert("成功清除所有網頁快取！");
-            setDashboardLog('已清除全網內容快取。');
-        } else {
-            alert("清除快取失敗。");
-        }
-    } catch (err) {
-        console.error("purgeSystemContentCache error:", err);
-        alert(`錯誤: ${err.message}`);
-        setDashboardLog(`清除快取失敗：${err?.message || err}`);
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = originalText;
-        }
-    }
-};
 
 window.searchUserRelationships = async function() {
     const searchInput = document.getElementById('sys-user-search-input');
@@ -6805,94 +6485,8 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
 window.renderReferralInviteKitSection = window.renderReferralInviteKitSection || function(data) {
     const inviteKitEl = document.getElementById('promo-invite-kit-assignments');
     if (!inviteKitEl) return;
-
-    const { filterUnitId } = getCurrentDashboardContext();
-    const isTutor = !!currentDashboardPermissions.isQualifiedTutor || (myRole === 'admin' && adminTutorMode);
-    const isUnitContext = !!filterUnitId;
-
-    if (!isTutor) {
-        inviteKitEl.innerHTML = '';
-        inviteKitEl.classList.add('hidden');
-        return;
-    }
-
-    const inviteKit = buildReferralInviteKit(filterUnitId, data.myReferralLink);
-    inviteKitEl.classList.remove('hidden');
-
-    if (!isUnitContext) {
-        inviteKitEl.innerHTML = '';
-        return;
-    }
-
-    if (!inviteKit.ready) {
-        inviteKitEl.innerHTML = '';
-        return;
-    }
-
-    inviteKitEl.innerHTML = `
-        <div class="space-y-6">
-            <div class="border-b border-slate-100 pb-4">
-                <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">${window.t('dash_registration_tools_title', 'Registration Tools')}</p>
-                <h3 class="text-2xl font-black text-gray-900 mt-2">${window.t('dash_registration_tools_title', 'Registration Tools')}</h3>
-                <p class="text-sm text-gray-500 mt-2 leading-relaxed">${window.t('dash_registration_tools_desc', 'Once students open the link, the course is added to their cart and linked to your teaching assignment permissions.')}</p>
-            </div>
-
-            <div class="flex flex-col lg:flex-row gap-8 items-start">
-                <div class="lg:w-[320px] w-full flex flex-col gap-6 flex-shrink-0">
-                    <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center">
-                        <div class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm flex items-center justify-center text-center">
-                            <div>
-                                <div class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Share Link</div>
-                                <p class="text-[10px] text-slate-600 break-all font-mono">${escapeHtml(inviteKit.inviteUrl)}</p>
-                            </div>
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-4 text-center break-all font-mono max-w-full">${escapeHtml(inviteKit.inviteUrl)}</p>
-                    </div>
-
-                    <div class="flex flex-col gap-4">
-                        <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                            <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">Referral Link</p>
-                            <button type="button" class="promo-copy-link w-full inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition shadow-md active:scale-95">${window.t('dash_copy_referral_link', 'Copy Referral Link')}</button>
-                        </div>
-                        <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
-                            <p class="text-[10px] text-emerald-600 font-bold uppercase mb-2 tracking-widest">快速分享 / Quick Share</p>
-                            <a href="${escapeHtml(inviteKit.mailtoUrl)}" class="w-full inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition shadow-md active:scale-95">按此發送郵件</a>
-                        </div>
-                    </div>
-
-                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 italic">
-                        💡 建議：您可以直接將專屬連結貼到班級群組中，或放進通知信件裡。
-                    </div>
-                </div>
-
-                <div class="flex-grow w-full">
-                    <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden h-full flex flex-col">
-                        <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
-                            <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Registration Notice</p>
-                            <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
-                            <p class="text-sm text-slate-500 mt-1 font-medium">複製下方文案並貼給學生，能提供最完整的報名指引。</p>
-                        </div>
-                        <div class="p-8 flex-grow">
-                            <pre class="promo-invite-letter whitespace-pre-wrap break-words text-sm leading-8 text-slate-700 font-sans bg-slate-50 rounded-2xl p-6 border border-slate-100 h-full">${escapeHtml(inviteKit.letterText)}</pre>
-                        </div>
-                        <div class="px-8 pb-8 flex flex-col sm:flex-row gap-4 mt-auto">
-                            <button type="button" class="promo-copy-letter flex-1 inline-flex items-center justify-center rounded-xl bg-slate-900 px-6 py-4 text-sm font-bold text-white hover:bg-slate-800 transition shadow-lg active:scale-95">複製完整通知書內容</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    const copyLinkBtn = inviteKitEl.querySelector('.promo-copy-link');
-    const copyLetterBtn = inviteKitEl.querySelector('.promo-copy-letter');
-
-    if (copyLinkBtn) {
-        copyLinkBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.inviteUrl, '已複製專屬報名連結'));
-    }
-    if (copyLetterBtn) {
-        copyLetterBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.letterText, '已複製通知書內容'));
-    }
+    inviteKitEl.innerHTML = '';
+    inviteKitEl.classList.add('hidden');
 };
 
 window.buildReferralInviteKit = window.buildReferralInviteKit || function(unitId, referralLink) {

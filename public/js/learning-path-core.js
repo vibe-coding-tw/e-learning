@@ -88,7 +88,9 @@
         if (v === "common") return "common";
         if (/^(?:tw|en)-common$/i.test(v)) return "common";
         if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
+        if (/^(?:tw|en)-drone-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
         if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
+        if (/^drone-(starter|basic|advanced)$/i.test(v)) return v;
         if (v === "started" || v === "start" || v === "starter") return "car-starter";
         if (v === "basic") return "car-basic";
         if (v === "advanced" || v === "adv") return "car-advanced";
@@ -211,14 +213,7 @@
     }
 
     function categoryFromLesson(lesson = {}) {
-        const category = normalizeCategoryKey(lesson.category || lesson.track || "");
-        if (category) return category;
-        const level = normalizeLevel(lesson.level || "");
-        const track = normalizeTrack(lesson.track || "");
-        if (level === "common" || track === "common" || track === "prepare") return "common";
-        if (track === "car" && level && level !== "common") return `car-${level}`;
-        if (/^(starter|basic|advanced)$/i.test(track)) return `car-${track}`;
-        return level && level !== "common" ? `car-${level}` : "common";
+        return normalizeCategoryKey(lesson.category || "");
     }
 
     function titleizeCategoryKey(path = "") {
@@ -266,57 +261,32 @@
         return "";
     }
 
-    function normalizeCategoryLabelEntry(entry = {}, uiLocale = "zh-TW") {
+    function normalizeCategoryLabelEntry(entry = {}) {
         if (typeof entry === "string") {
             const text = entry.trim();
             return text ? { "zh-TW": text, en: text } : {};
         }
         if (!entry || typeof entry !== "object" || Array.isArray(entry)) return {};
-        const zh = extractCategoryLabelText(entry, "zh-TW");
-        const en = extractCategoryLabelText(entry, "en");
-        const fallback = extractCategoryLabelText(entry, uiLocale);
+        const zh = String(entry["zh-TW"] || entry.zhTW || entry.zh || entry.tw || "").trim();
+        const en = String(entry.en || entry["en-US"] || entry["en-GB"] || entry.enLabel || entry.labelEn || "").trim();
         return {
-            "zh-TW": zh || en || fallback,
-            en: en || zh || fallback,
+            "zh-TW": zh,
+            en: en,
         };
     }
 
-    function normalizeCategoryLabelsMap(sourceMap = {}, uiLocale = "zh-TW") {
+    function normalizeCategoryLabelsMap(sourceMap = {}) {
         const normalized = {};
         if (!sourceMap || typeof sourceMap !== "object" || Array.isArray(sourceMap)) return normalized;
-
-        const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
 
         const assign = (key, value) => {
             const canonical = normalizeCanonicalLearningPathKey(key);
             if (!canonical) return;
-            const label = normalizeCategoryLabelEntry(value, uiLocale);
+            const label = normalizeCategoryLabelEntry(value);
             if (label) normalized[canonical] = label;
         };
 
         for (const [key, value] of Object.entries(sourceMap)) {
-            const lowerKey = key.trim().toLowerCase();
-            if (isEn) {
-                if (lowerKey.startsWith("tw-") || lowerKey.startsWith("tw_") || lowerKey.startsWith("zh-") || lowerKey.startsWith("zh_")) {
-                    continue;
-                }
-            } else {
-                if (lowerKey.startsWith("en-") || lowerKey.startsWith("en_")) {
-                    continue;
-                }
-            }
-
-            if (key === "zh-TW" || key === "en") {
-                const isKeyEn = key.startsWith("en");
-                if (isEn !== isKeyEn) continue;
-
-                if (value && typeof value === "object" && !Array.isArray(value)) {
-                    for (const [nestedKey, nestedValue] of Object.entries(value)) {
-                        assign(nestedKey, nestedValue);
-                    }
-                }
-                continue;
-            }
             assign(key, value);
         }
 
@@ -324,7 +294,7 @@
     }
 
     function deriveCategoryLabels(lessons = [], existingMap = {}, uiLocale = "zh-TW") {
-        const derived = normalizeCategoryLabelsMap(existingMap, uiLocale);
+        const derived = normalizeCategoryLabelsMap(existingMap);
         (Array.isArray(lessons) ? lessons : []).forEach((lesson) => {
             const key = categoryFromLesson(lesson);
             if (!key || derived[key]) return;
@@ -334,35 +304,16 @@
         return derived;
     }
 
-    const LOCAL_CATEGORY_TRANSLATIONS = {
-        "zh-TW": {
-            "common": "課前準備",
-            "car-starter": "入門課程",
-            "car-basic": "基礎課程",
-            "car-advanced": "進階課程"
-        },
-        "en": {
-            "common": "Preparation",
-            "car-starter": "Starter Course",
-            "car-basic": "Basic Course",
-            "car-advanced": "Advanced Course"
-        }
-    };
-
     function categoryLabel(path = "", categoryLabelsMap = {}, uiLocale = detectUiLocale()) {
         const canonical = normalizeCanonicalLearningPathKey(path);
         const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-        const dictKey = isEn ? "en" : "zh-TW";
-        if (LOCAL_CATEGORY_TRANSLATIONS[dictKey] && LOCAL_CATEGORY_TRANSLATIONS[dictKey][canonical]) {
-            return LOCAL_CATEGORY_TRANSLATIONS[dictKey][canonical];
-        }
-        const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap, uiLocale);
+        const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap);
         const localizedLabel = normalizedMap[canonical || path];
         if (localizedLabel) {
             if (typeof localizedLabel === "string") return localizedLabel;
-            return localizedLabel[isEn ? "en" : "zh-TW"] || localizedLabel["zh-TW"] || localizedLabel.en || "";
+            return localizedLabel[isEn ? "en" : "zh-TW"] || "";
         }
-        return titleizeCategoryKey(canonical || path);
+        return "";
     }
 
     function formatPrice(priceEntry = {}, locale = "zh-TW") {

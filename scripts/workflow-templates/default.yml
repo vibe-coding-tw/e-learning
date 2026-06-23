@@ -1,0 +1,30 @@
+name: Classroom Grade + Sync
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  grade_and_sync:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      vars.VC_AUTOGRADE_ON_PUSH == 'true' ||
+      contains(github.event.head_commit.message, '[autograde]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Grade and Sync
+        env:
+          VC_USER_ID: ${{ vars.VC_USER_ID }}
+          VC_UNIT_KEY: ${{ vars.VC_UNIT_KEY }}
+          VC_UNIT_ID: ${{ vars.VC_UNIT_ID }}
+          VC_AUTOGRADE_URL: ${{ secrets.VC_AUTOGRADE_URL }}
+          VC_AUTOGRADE_TOKEN: ${{ secrets.VC_AUTOGRADE_TOKEN }}
+        run: |
+          curl -fsSL https://vibe-coding.tw/graders/run.sh | bash

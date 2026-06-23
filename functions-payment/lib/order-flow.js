@@ -76,7 +76,7 @@ async function syncUserPurchaseCacheFromOrder(db, orderId, orderData = {}, lesso
     await userRef.set(patch, { merge: true });
 }
 
-async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], tutorMode = false) {
+async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], tutorMode = false, authEmail = "") {
     if (!uid || !courseId || !unitId) {
         return { authorized: false, reason: "missing-context" };
     }
@@ -94,7 +94,7 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
                 category: "car-starter",
                 level: "starter"
             };
-            return checkOrderAccessForUnit(db, uid, fallbackLesson.courseId, fallbackLesson.courseId, [fallbackLesson], tutorMode);
+            return checkOrderAccessForUnit(db, uid, fallbackLesson.courseId, fallbackLesson.courseId, [fallbackLesson], tutorMode, authEmail);
         }
         return { authorized: false, reason: "missing-course" };
     }
@@ -141,7 +141,12 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
     }
 
     const userProfile = await loadUserProfile(uid);
-    if (tutorMode && userProfile && isQualifiedTutorUser(userProfile)) {
+    const authEmailProfile = authEmail ? { email: authEmail } : null;
+    const tutorEligible = !!(
+        (userProfile && isQualifiedTutorUser(userProfile)) ||
+        (authEmailProfile && isQualifiedTutorUser(authEmailProfile))
+    );
+    if (tutorMode && tutorEligible) {
         return { authorized: true, reason: "qualified-tutor", accessMode: "tutor" };
     }
 
@@ -205,7 +210,15 @@ async function activateOrderPermissionsAndNotify(db, orderId, hooks = {}) {
         }
 
         const firstUnitId = lesson.courseUnits[0];
-        const access = await checkOrderAccessForUnit(db, orderData.uid, getCanonicalLessonIdentity(lesson), firstUnitId, lessons);
+        const access = await checkOrderAccessForUnit(
+            db,
+            orderData.uid,
+            getCanonicalLessonIdentity(lesson),
+            firstUnitId,
+            lessons,
+            false,
+            orderData.email || ""
+        );
         if (!access.authorized) {
             validationAlerts.push(`Student authorization check failed for course '${getCanonicalLessonIdentity(lesson) || lesson.courseId}' / unit '${firstUnitId}': ${access.reason || "unknown"}`);
             activationCheckedItems[activationCheckedItems.length - 1].status = "authorization-failed";

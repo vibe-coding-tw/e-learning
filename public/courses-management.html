@@ -5,18 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>課程管理 — Vibe Coding Admin</title>
   <meta name="description" content="Vibe Coding 管理後台：課程新增、修改、停用與價格表管理" />
+  <script src="./js/i18n-helper.f1de66fc2d09.js"></script>
+  <script>
+    (function() {
+      const w = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+        w.apply(console, args);
+      };
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="./style.1b939bdb0a17.css" />
+  <script src="./js/admin-role-utils.js?v=20260623-2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
     body {
       font-family: Inter, system-ui, sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(99,102,241,.16), transparent 26%),
-        radial-gradient(circle at top right, rgba(16,185,129,.12), transparent 24%),
-        linear-gradient(180deg, #0b1020 0%, #0f172a 38%, #f8fafc 38%, #f8fafc 100%);
+      background: #f8fafc;
       color: #0f172a;
     }
     a { color: inherit; }
@@ -39,28 +49,40 @@
     }
     .wrap { max-width: 1600px; margin: 0 auto; padding: 24px; }
     .topbar {
-      display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      padding: 18px 22px; border: 1px solid rgba(255,255,255,.18);
-      background: rgba(15,23,42,.58); backdrop-filter: blur(18px);
-      color: #fff; border-radius: 24px; box-shadow: var(--shadow);
+      display: flex; align-items: center; justify-content: space-between; gap: 18px;
+      padding: 20px 22px; border: 1px solid rgba(255,255,255,.14);
+      background:
+        linear-gradient(180deg, rgba(15,23,42,.96), rgba(15,23,42,.90)),
+        radial-gradient(circle at top left, rgba(99,102,241,.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(34,211,238,.14), transparent 28%);
+      backdrop-filter: blur(18px);
+      color: #fff; border-radius: 30px; box-shadow: 0 28px 90px rgba(15,23,42,.28);
     }
     .brand {
-      display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .01em;
+      display: flex; align-items: center; gap: 14px; font-weight: 800; letter-spacing: .01em; min-width: 0;
     }
     .brand .mark {
-      width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center;
-      background: linear-gradient(135deg, #818cf8, #22d3ee); color: #081120;
-      box-shadow: 0 12px 40px rgba(34,211,238,.24);
+      width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
+      background: linear-gradient(135deg, #8b5cf6, #22d3ee 75%); color: #081120;
+      box-shadow: 0 18px 44px rgba(34,211,238,.18), inset 0 1px 0 rgba(255,255,255,.35);
+      flex: 0 0 auto;
     }
+    .brand .meta { min-width: 0; }
+    .brand .title { font-size: 18px; line-height: 1.1; font-weight: 900; letter-spacing: -.02em; }
+    .brand .subtitle { margin-top: 4px; font-size: 13px; color: rgba(226,232,240,.82); font-weight: 700; line-height: 1.35; }
     .top-actions { display: flex; flex-wrap: wrap; gap: 10px; }
     .btn {
       display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer;
-      border-radius: 14px; padding: 10px 14px; font-weight: 700; text-decoration: none;
+      border-radius: 18px; padding: 14px 18px; font-weight: 800; text-decoration: none;
       transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
     }
     .btn:hover { transform: translateY(-1px); }
     .btn-primary { background: linear-gradient(135deg, #6366f1, #22d3ee); color: #07111f; }
-    .btn-dark { background: rgba(255,255,255,.11); color: #fff; border: 1px solid rgba(255,255,255,.18); }
+    .btn-dark {
+      background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.14);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .btn-dark:hover { background: rgba(255,255,255,.12); }
     .btn-ghost { background: #fff; border: 1px solid var(--line); color: var(--text); }
     .page-head {
       margin: 26px 0 18px;
@@ -110,6 +132,8 @@
     .grid {
       display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start;
     }
+    /* Hide the floating Dashboard FAB only on this page. */
+    #dashboard-fab, .dashboard-fab { display: none !important; opacity: 0 !important; pointer-events: none !important; }
     .list-card { padding: 14px; position: sticky; top: 18px; }
     .list-title, .card-title {
       display: flex; justify-content: space-between; align-items: center; gap: 12px;
@@ -202,11 +226,6 @@
     .btn-success { background: #ecfdf5; color: #047857; border: 1px solid #bbf7d0; }
     .btn-muted { background: #f8fafc; color: var(--muted); border: 1px solid var(--line); }
     .btn-small { padding: 9px 12px; border-radius: 12px; font-size: 12px; }
-    .notice {
-      border-radius: 18px; padding: 14px 16px; border: 1px solid #fde68a; background: #fffbeb; color: #92400e;
-      font-size: 13px; line-height: 1.65;
-    }
-    .notice strong { font-weight: 900; }
     .modal-chrome {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
       padding: 4px 4px 18px;
@@ -224,6 +243,60 @@
       font-weight: 800;
     }
     .modal-close:hover { background: rgba(255,255,255,.14); }
+    .section-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      overflow: auto;
+      padding: 28px 16px;
+      background: rgba(2, 6, 23, .76);
+      backdrop-filter: blur(12px);
+    }
+    .section-modal.show { display: flex; }
+    .section-modal-dialog {
+      width: min(1280px, 100%);
+      border-radius: 28px;
+      overflow: hidden;
+      background: rgba(255,255,255,.97);
+      border: 1px solid rgba(226,232,240,.92);
+      box-shadow: 0 30px 100px rgba(15,23,42,.28);
+    }
+    .section-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 20px 22px;
+      background:
+        linear-gradient(180deg, rgba(15,23,42,.98), rgba(15,23,42,.94)),
+        radial-gradient(circle at top left, rgba(99,102,241,.18), transparent 30%);
+      color: #fff;
+    }
+    .section-modal-head .head-title {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -.03em;
+      line-height: 1.15;
+    }
+    .section-modal-head .head-subtitle {
+      margin-top: 4px;
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .section-modal-body {
+      padding: 20px 22px 22px;
+      display: grid;
+      gap: 16px;
+    }
+    .section-modal-body .maintenance-body {
+      margin-top: 0;
+      padding: 0;
+      border: 0;
+    }
     .locale-toolbar {
       display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
       margin-bottom: 12px;
@@ -556,7 +629,9 @@
     }
   </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+  <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
+  <script type="module" src="./js/nav-component.1e352d10a4ac.js?v=20260623-2"></script>
   <div id="loading-overlay">
     <div class="overlay-box">
       <div class="spinner"></div>
@@ -581,48 +656,10 @@
     </div>
   </div>
 
-  <div id="app" style="display:none;">
-    <div class="wrap">
-      <div class="topbar">
-        <div class="brand">
-          <div class="mark"><i class="fa-solid fa-graduation-cap"></i></div>
-          <div>
-            <div style="font-size:15px;">Vibe Coding Admin</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.72);font-weight:600;">課程管理 / 入口 / 停用 / 價格表</div>
-          </div>
-        </div>
-        <div class="top-actions">
-          <a class="btn btn-dark" href="dashboard.html"><i class="fa-solid fa-table-columns"></i> Dashboard</a>
-          <a class="btn btn-dark" href="#locale-editor"><i class="fa-solid fa-language"></i> 語系設定</a>
-        </div>
-      </div>
-
-      <div class="page-head">
-        <div class="hero">
-          <h1>課程管理入口</h1>
-          <p>這裡可以新增、修改、停用課程，並同步管理 `metadata_lessons` 與 `dealer_price_books`。主畫面只顯示清單，點擊任一課程會打開編輯對話框。</p>
-          <div class="hero-tags">
-            <span class="tag"><i class="fa-solid fa-database"></i> Firestore source of truth</span>
-            <span class="tag"><i class="fa-solid fa-file-lines"></i> 課程維護</span>
-            <span class="tag"><i class="fa-solid fa-tags"></i> dealer_price_books</span>
-            <span class="tag"><i class="fa-solid fa-circle-check"></i> Soft delete by default</span>
-            <span class="tag"><i class="fa-solid fa-language"></i> i18n multi-locale editor</span>
-          </div>
-        </div>
-        <div class="quick-card">
-          <div class="stat-grid">
-            <div class="stat"><div class="label">Total</div><div class="value" id="stat-total">—</div></div>
-            <div class="stat"><div class="label">Active</div><div class="value" id="stat-active">—</div></div>
-            <div class="stat"><div class="label">Hidden</div><div class="value" id="stat-hidden">—</div></div>
-          </div>
-          <div class="notice">
-            <strong>流程提示：</strong>先在清單點課程開啟對話框，再改主檔、多語內容與價格表。英文是主體，其他語言可在同一個對話框中新增。
-          </div>
-        </div>
-      </div>
-
+    <div id="app" style="display:none;">
+      <div class="wrap">
       <div class="toolbar">
-        <input id="search-input" class="search" type="search" placeholder="搜尋課程名稱、courseKey、docId..." />
+        <input id="search-input" class="search" type="search" placeholder="搜尋課程名稱、docId、category..." />
         <div class="pill-group">
           <button class="pill active" data-filter="all" onclick="window.setCourseFilter('all')">全部</button>
           <button class="pill" data-filter="active" onclick="window.setCourseFilter('active')">啟用</button>
@@ -688,13 +725,10 @@
                   <div id="locale-editor"></div>
                 </div>
 
-                <div class="field" style="display:none;">
-                  <label>track</label>
-                  <input id="lesson-track" placeholder="car / common" />
-                </div>
                 <div class="field">
                   <label>category</label>
-                  <input id="lesson-category" placeholder="common / car-starter / car-basic / car-advanced" />
+                  <select id="lesson-category"></select>
+                  <div class="hint" id="lesson-category-hint">來源：`metadata_settings.learning_paths.categoryLabels`</div>
                 </div>
                 <div class="field">
                   <label>level</label>
@@ -750,34 +784,40 @@
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
 
-              <details id="course-unit-editor" class="pricebook-maintenance" style="margin-top:14px;">
-                <summary>維護單元</summary>
-                <div class="maintenance-body">
-                  <div class="editor-grid" style="margin-bottom: 8px;">
-                    <div class="field">
-                      <label>單元檔名 / unitId</label>
-                      <input id="course-unit-input" type="text" placeholder="例如 start-01-unit-html5-basics.html" />
-                    </div>
-                    <div class="field">
-                      <label>單元顯示標題</label>
-                      <input id="course-unit-title-input" type="text" placeholder="例如 HTML5 Basics" />
-                    </div>
-                  </div>
-                  <div class="action-row" style="margin-top: 0; margin-bottom: 12px;">
-                    <div class="left"></div>
-                    <div class="right">
-                      <button class="btn btn-primary btn-small" onclick="window.addCourseUnitFromInput()"><i class="fa-solid fa-plus"></i> 新增 / 更新所選單元</button>
-                    </div>
-                  </div>
-                  <details class="unit-advanced">
-                    <summary>進階文字編輯</summary>
-                    <textarea id="lesson-course-units" class="textarea-list" placeholder="一行一個 course_units 檔名，例如&#10;start-01-unit-html5-basics.html&#10;start-01-unit-flexbox-layout.html"></textarea>
-                    <textarea id="lesson-course-unit-titles" class="textarea-list" placeholder="一行一個單元標題，順序需與上方單元一致，例如&#10;HTML5 Basics&#10;Flexbox Layout"></textarea>
-                    <div class="hint">點擊下方單元可回填到上方輸入框；修改後按「新增 / 更新單元」即可覆寫所選項目。這裡會同步維護 `course_units` / `course_unit_titles`，並保留 camelCase 別名供舊 runtime 相容。</div>
-                  </details>
+          <div id="course-unit-modal" class="section-modal" aria-hidden="true" onclick="if (event.target === this) window.closeCourseUnitModal()">
+            <div class="section-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="course-unit-modal-title">
+              <div class="section-modal-head">
+                <div>
+                  <div class="head-title" id="course-unit-modal-title">單元維護</div>
+                  <div class="head-subtitle">在這裡編輯單元清單與顯示標題。</div>
                 </div>
-              </details>
+                <button class="modal-close" onclick="window.closeCourseUnitModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
+              </div>
+              <div class="section-modal-body">
+                <div class="editor-grid" style="margin-bottom: 8px;">
+                  <div class="field">
+                    <label>單元檔名 / unitId</label>
+                    <input id="course-unit-input" type="text" placeholder="例如 start-01-unit-html5-basics.html" />
+                  </div>
+                  <div class="field">
+                    <label>單元顯示標題</label>
+                    <input id="course-unit-title-input" type="text" placeholder="例如 HTML5 Basics" />
+                  </div>
+                </div>
+                <div class="action-row" style="margin-top: 0; margin-bottom: 12px;">
+                  <div class="left"></div>
+                  <div class="right">
+                    <button class="btn btn-primary btn-small" onclick="window.addCourseUnitFromInput()"><i class="fa-solid fa-plus"></i> 新增 / 更新所選單元</button>
+                  </div>
+                </div>
+                <div style="display:none;">
+                  <textarea id="lesson-course-units"></textarea>
+                  <textarea id="lesson-course-unit-titles"></textarea>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -798,83 +838,82 @@
                       <th style="text-align:left;">PRICEBOOK</th>
                       <th style="text-align:left;">Distributor / Product</th>
                       <th style="text-align:left;">Status</th>
-                      <th style="text-align:right;">Action</th>
                     </tr>
                   </thead>
                   <tbody id="pricebook-table">
-                    <tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未載入</td></tr>
+                    <tr><td colspan="3" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未載入</td></tr>
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
 
-              <details id="pricebook-editor" class="pricebook-maintenance" style="margin-top:14px;">
-                <summary>維護 PRICEBOOK</summary>
-                <div class="maintenance-body">
-                  <div class="editor-grid">
-                    <div class="field">
-                      <label>distributorId</label>
-                      <input id="price-distributor-id" list="distributor-options" placeholder="default-usd" />
-                      <datalist id="distributor-options"></datalist>
-                    </div>
-                    <div class="field">
-                      <label>priceBookId</label>
-                      <input id="price-book-id" placeholder="自動產生：distributorId_docId" />
-                    </div>
-                    <div class="field">
-                      <label>docId</label>
-                      <input id="price-doc-id" placeholder="預設跟課程的 docId 一樣" />
-                    </div>
-                    <div class="field">
-                      <label>currency</label>
-                      <input id="price-currency" placeholder="TWD / USD" />
-                    </div>
-                    <div class="field">
-                      <label>salePrice</label>
-                      <input id="price-sale" type="number" min="0" step="0.01" placeholder="1200" />
-                    </div>
-                    <div class="field">
-                      <label>promoPrice</label>
-                      <input id="price-promo" type="number" min="0" step="0.01" placeholder="999" />
-                    </div>
-                    <div class="field">
-                      <label>version</label>
-                      <input id="price-version" placeholder="v1" />
-                    </div>
-                    <div class="field">
-                      <label>isActive</label>
-                      <div class="switch-row" style="padding-top: 10px;">
-                        <label class="switch"><input id="price-is-active" type="checkbox" checked /> 啟用價格表</label>
-                      </div>
-                    </div>
-                    <div class="field">
-                      <label>effectiveFrom</label>
-                      <input id="price-effective-from" type="datetime-local" />
-                    </div>
-                    <div class="field">
-                      <label>effectiveTo</label>
-                      <input id="price-effective-to" type="datetime-local" />
-                    </div>
-                    <div class="field">
-                      <label>promoEffectiveFrom</label>
-                      <input id="price-promo-from" type="datetime-local" />
-                    </div>
-                    <div class="field">
-                      <label>promoEffectiveTo</label>
-                      <input id="price-promo-to" type="datetime-local" />
+          <div id="pricebook-modal" class="section-modal" aria-hidden="true" onclick="if (event.target === this) window.closePriceBookModal()">
+            <div class="section-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pricebook-modal-title">
+              <div class="section-modal-head">
+                <div>
+                  <div class="head-title" id="pricebook-modal-title">維護 PRICEBOOK</div>
+                  <div class="head-subtitle">在這裡編輯經銷商價格表，不會影響課程清單。</div>
+                </div>
+                <button class="modal-close" onclick="window.closePriceBookModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
+              </div>
+              <div class="section-modal-body">
+                <div class="editor-grid">
+                  <div class="field">
+                    <label>distributorId</label>
+                    <input id="price-distributor-id" list="distributor-options" placeholder="default-usd" />
+                    <datalist id="distributor-options"></datalist>
+                  </div>
+                  <div class="field">
+                    <label>priceBookId</label>
+                    <input id="price-book-id" placeholder="自動產生：distributorId_docId" />
+                  </div>
+                  <div class="field">
+                    <label>docId</label>
+                    <input id="price-doc-id" placeholder="預設跟課程的 docId 一樣" />
+                  </div>
+                  <div class="field">
+                    <label>currency</label>
+                    <input id="price-currency" placeholder="TWD / USD" />
+                  </div>
+                  <div class="field">
+                    <label>salePrice</label>
+                    <input id="price-sale" type="number" min="0" step="0.01" placeholder="1200" />
+                  </div>
+                  <div class="field">
+                    <label>promoPrice</label>
+                    <input id="price-promo" type="number" min="0" step="0.01" placeholder="999" />
+                  </div>
+                  <div class="field">
+                    <label>version</label>
+                    <input id="price-version" placeholder="v1" />
+                  </div>
+                  <div class="field">
+                    <label>isActive</label>
+                    <div class="switch-row" style="padding-top: 10px;">
+                      <label class="switch"><input id="price-is-active" type="checkbox" checked /> 啟用價格表</label>
                     </div>
                   </div>
-
-                  <div class="action-row" style="margin-top: 0;">
-                    <div class="left">
-                      <button class="btn btn-soft btn-small" onclick="window.loadSelectedLessonPriceBooks()"><i class="fa-solid fa-rotate"></i> 重新整理</button>
-                      <span class="hint" id="pricebook-hint">先點選上方清單中的 PRICEBOOK 進入維護。</span>
-                    </div>
-                    <div class="right">
-                      <button class="btn btn-primary btn-small" onclick="window.saveSelectedPriceBook()"><i class="fa-solid fa-tag"></i> 儲存價格表</button>
-                    </div>
+                  <div class="field">
+                    <label>promoEffectiveFrom</label>
+                    <input id="price-promo-from" type="datetime-local" />
+                  </div>
+                  <div class="field">
+                    <label>promoEffectiveTo</label>
+                    <input id="price-promo-to" type="datetime-local" />
                   </div>
                 </div>
-              </details>
+
+                <div class="action-row" style="margin-top: 0;">
+                  <div class="left">
+                    <button class="btn btn-soft btn-small" onclick="window.loadSelectedLessonPriceBooks()"><i class="fa-solid fa-rotate"></i> 重新整理</button>
+                    <span class="hint" id="pricebook-hint">先點選上方清單中的 PRICEBOOK 進入維護。</span>
+                  </div>
+                  <div class="right">
+                    <button class="btn btn-primary btn-small" onclick="window.saveSelectedPriceBook()"><i class="fa-solid fa-tag"></i> 儲存價格表</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -925,6 +964,8 @@
       distributors: [],
       currentPriceBooks: [],
       locales: {},
+      categoryLabels: {},
+      categoryOptions: [],
       courseUnitTitles: [],
       activeLocale: "en",
       selectedCourseUnitIndex: -1,
@@ -961,36 +1002,78 @@
       return v;
     }
 
-    function normalizeTrack(value = "") {
-      const v = normalizeText(value).toLowerCase();
-      if (!v) return "common";
-      return v;
+    function normalizeCategoryLabelsMap(rawMap = {}) {
+      const out = {};
+      if (!rawMap || typeof rawMap !== "object" || Array.isArray(rawMap)) return out;
+      Object.entries(rawMap).forEach(([key, value]) => {
+        const normalizedKey = normalizeText(key).toLowerCase();
+        if (!normalizedKey) return;
+        if (typeof value === "string") {
+          const text = normalizeText(value);
+          out[normalizedKey] = { "zh-TW": text, en: text };
+          return;
+        }
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          out[normalizedKey] = { "zh-TW": "", en: "" };
+          return;
+        }
+        out[normalizedKey] = {
+          "zh-TW": normalizeText(value["zh-TW"] || value.zhTW || value.zh || value.tw || ""),
+          en: normalizeText(value.en || value["en-US"] || value["en-GB"] || value.enLabel || value.labelEn || "")
+        };
+      });
+      return out;
     }
 
-    function normalizeCategoryKey(value = "") {
-      const v = normalizeText(value).toLowerCase();
-      if (!v) return "";
-      if (v === "common") return "common";
-      if (/^(?:tw|en)-common$/i.test(v)) return "common";
-      if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
-      if (/^car-(starter|basic|advanced)$/i.test(v)) return v;
-      return "";
+    function categoryLabelText(entry = {}, locale = "zh-TW") {
+      if (!entry) return "";
+      if (typeof entry === "string") return normalizeText(entry);
+      const key = String(locale || "").toLowerCase().startsWith("en") ? "en" : "zh-TW";
+      return normalizeText(entry[key] || entry["zh-TW"] || entry.en || "");
     }
 
-    function inferCategoryKey(track = "", level = "") {
-      const normalizedTrack = normalizeTrack(track);
-      const normalizedLevel = normalizeLevel(level);
-      if (normalizedLevel === "common" || normalizedTrack === "common" || normalizedTrack === "prepare") return "common";
-      if (normalizedTrack === "car" && normalizedLevel !== "common") return `car-${normalizedLevel}`;
-      if (/^(starter|basic|advanced)$/i.test(normalizedTrack)) return `car-${normalizedTrack}`;
-      return normalizedLevel !== "common" ? `car-${normalizedLevel}` : "common";
+    function categoryOptionLabel(key = "", entry = {}) {
+      const labelZh = categoryLabelText(entry, "zh-TW");
+      const labelEn = categoryLabelText(entry, "en");
+      const rawKey = normalizeText(key);
+      if (labelZh && labelEn && labelZh !== labelEn) return `${labelZh} / ${labelEn}`;
+      return labelZh || labelEn || rawKey;
     }
 
-    function inferTrackFromCategory(category = "") {
-      const normalizedCategory = normalizeCategoryKey(category);
-      if (normalizedCategory === "common") return "common";
-      if (/^car-(starter|basic|advanced)$/i.test(normalizedCategory)) return "car";
-      return normalizeTrack(category);
+    function buildCategoryOptions(categoryLabelsMap = {}, currentValue = "") {
+      const normalizedMap = normalizeCategoryLabelsMap(categoryLabelsMap);
+      const options = Object.entries(normalizedMap).map(([key, entry]) => ({
+        key,
+        label: categoryOptionLabel(key, entry),
+        legacy: false
+      }));
+      const normalizedCurrent = normalizeText(currentValue).toLowerCase();
+      if (normalizedCurrent && !options.some((item) => item.key === normalizedCurrent)) {
+        options.push({
+          key: normalizedCurrent,
+          label: `${normalizedCurrent} (legacy)`,
+          legacy: true
+        });
+      }
+      return options;
+    }
+
+    function renderCategorySelect(selectedValue = "") {
+      const select = $("lesson-category");
+      const hint = $("lesson-category-hint");
+      if (!select) return;
+      const current = normalizeText(selectedValue || select.value || "").toLowerCase();
+      const options = Array.isArray(state.categoryOptions) ? state.categoryOptions : [];
+      select.innerHTML = [
+        '<option value="">請先從學習路徑字典選擇</option>',
+        ...options.map((item) => `<option value="${escapeHtml(item.key)}" ${item.key === current ? "selected" : ""}>${escapeHtml(item.label + (item.legacy ? " · legacy" : ""))}</option>`)
+      ].join("");
+      select.value = current || "";
+      if (hint) {
+        hint.textContent = options.length
+          ? "來源：`metadata_settings.learning_paths.categoryLabels`"
+          : "尚未載入分類字典，請先確認 Firestore 的 metadata_settings.learning_paths。";
+      }
     }
 
     function getCourseUnitValues() {
@@ -1048,7 +1131,7 @@
         const displayTitle = title || unitId;
         const subtitle = title && title !== unitId ? unitId : "尚未設定顯示名稱";
         return `
-          <tr class="unit-table-row ${isSelected ? "selected" : ""}" onclick="window.selectCourseUnit(${index})" title="點擊回填到單元輸入框">
+          <tr class="unit-table-row ${isSelected ? "selected" : ""}" onclick="window.selectCourseUnit(${index})" title="點擊打開單元維護 modal">
             <td>
               <div class="unit-cell-stack">
                 <div class="unit-row-index">${index + 1}</div>
@@ -1106,7 +1189,6 @@
 
     function lessonLabel(lesson) {
       const bits = [];
-      if (lesson.track) bits.push(String(lesson.track));
       if (lesson.level) bits.push(String(lesson.level));
       if (lesson.category) bits.push(String(lesson.category));
       return bits.join(" · ");
@@ -1156,7 +1238,7 @@
 
       if (!locales.en) {
         locales.en = cloneLocaleContent({
-          title: lesson.titleEn || lesson.title || "",
+          title: lesson.title || "",
           summary: lesson.summaryEn || lesson.summary || lesson.tagText || "",
           description: lesson.descriptionEn || lesson.description || "",
           lessonLabelText: lesson.i18n?.en?.lessonLabel || lesson.lessonLabelEn || lesson.lessonLabel || lesson.tagText || "",
@@ -1270,12 +1352,61 @@
     }
 
     function closeLessonModal() {
+      closeCourseUnitModal();
+      closePriceBookModal();
       document.body.classList.remove("modal-open");
       document.body.style.overflow = "";
     }
 
+    function openCourseUnitModal() {
+      const modal = $("course-unit-modal");
+      if (!modal) return;
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden", "false");
+      renderCourseUnitsEditor();
+      setTimeout(() => {
+        const input = $("course-unit-input");
+        if (input) {
+          try { input.focus({ preventScroll: true }); }
+          catch (_) { input.focus(); }
+        }
+      }, 0);
+    }
+
+    function closeCourseUnitModal() {
+      const modal = $("course-unit-modal");
+      if (!modal) return;
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    function openPriceBookModal() {
+      const modal = $("pricebook-modal");
+      if (!modal) return;
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden", "false");
+      setTimeout(() => {
+        const input = $("price-distributor-id");
+        if (input) {
+          try { input.focus({ preventScroll: true }); }
+          catch (_) { input.focus(); }
+        }
+      }, 0);
+    }
+
+    function closePriceBookModal() {
+      const modal = $("pricebook-modal");
+      if (!modal) return;
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
     window.closeLessonModal = closeLessonModal;
     window.openLessonModal = openLessonModal;
+    window.openCourseUnitModal = openCourseUnitModal;
+    window.closeCourseUnitModal = closeCourseUnitModal;
+    window.openPriceBookModal = openPriceBookModal;
+    window.closePriceBookModal = closePriceBookModal;
 
     window.selectCourseUnit = function(index) {
       const units = getCourseUnitValues();
@@ -1308,6 +1439,7 @@
         }
         renderCourseUnitsEditor();
         setLog(`已選取單元：${units[index]}`);
+        openCourseUnitModal();
       }
     };
     window.addCourseUnitFromInput = function() {
@@ -1418,9 +1550,12 @@
       const hidden = state.lessons.filter((item) => item.hiddenFromCatalog === true).length;
       const deprecated = state.lessons.filter((item) => item.isDeprecated === true).length;
       const active = total - hidden - deprecated;
-      $("stat-total").textContent = String(total);
-      $("stat-active").textContent = String(Math.max(active, 0));
-      $("stat-hidden").textContent = String(hidden + deprecated);
+      const totalEl = $("stat-total");
+      const activeEl = $("stat-active");
+      const hiddenEl = $("stat-hidden");
+      if (totalEl) totalEl.textContent = String(total);
+      if (activeEl) activeEl.textContent = String(Math.max(active, 0));
+      if (hiddenEl) hiddenEl.textContent = String(hidden + deprecated);
     }
 
     function renderLessons() {
@@ -1433,7 +1568,7 @@
           lesson.docId,
           lesson.courseKey,
           lesson.title,
-          lesson.titleEn,
+          lesson.category,
           lesson.contentRef
         ].join(" ").toLowerCase();
         const searchOk = !q || text.includes(q);
@@ -1460,8 +1595,7 @@
           <div class="course-item ${active ? "active" : ""}" onclick="window.selectLesson('${escapeHtml(String(lesson.id || lesson.docId || ""))}')">
             <div class="course-row">
               <div>
-                <div class="course-name">${escapeHtml(lesson.title || lesson.titleEn || lesson.id || "Untitled")}</div>
-                <div class="course-meta">${escapeHtml(lesson.id || "")}${lesson.courseKey ? ` · ${escapeHtml(lesson.courseKey)}` : ""}</div>
+                <div class="course-name">${escapeHtml(lesson.title || "No title")}</div>
               </div>
               <div style="font-size:18px;color:#cbd5e1;">${active ? '<i class="fa-solid fa-circle-dot" style="color:#6366f1"></i>' : '<i class="fa-regular fa-circle"></i>'}</div>
             </div>
@@ -1486,9 +1620,8 @@
       $("lesson-course-units").value = units.join("\n");
       $("lesson-course-unit-titles").value = unitTitles.join("\n");
       renderCourseUnitsEditor();
-      $("lesson-track").value = inferTrackFromCategory(target.category || target.track || "") || target.track || "";
       $("lesson-level").value = target.level || "";
-      $("lesson-category").value = normalizeCategoryKey(target.category || target.track || "") || inferCategoryKey(target.track || "", target.level || "");
+      renderCategorySelect(target.category || "");
       $("lesson-metadata-type").value = target.metadataType === "legacy_product" ? "product" : (target.metadataType || "course");
       $("lesson-order-weight").value = target.orderWeight ?? 0;
       $("lesson-hidden").checked = target.hiddenFromCatalog === true;
@@ -1506,15 +1639,13 @@
       $("price-promo").value = "";
       $("price-version").value = "v1";
       $("price-is-active").checked = true;
-      $("price-effective-from").value = "";
-      $("price-effective-to").value = "";
       $("price-promo-from").value = "";
       $("price-promo-to").value = "";
       $("price-distributor-id").value = "";
       $("pricebook-status").textContent = "尚未載入價格表";
       $("pricebook-hint").textContent = target.id ? "選定分銷商後可載入或建立價格表。" : "先儲存課程，再處理價格表會比較穩。";
-      const pricebookPanel = $("pricebook-editor");
-      if (pricebookPanel) pricebookPanel.open = false;
+      closeCourseUnitModal();
+      closePriceBookModal();
       renderLessons();
       loadCurrentLessonPriceBooks().catch((err) => setLog(`價格表載入失敗：${err.message}`));
     }
@@ -1529,8 +1660,6 @@
       $("price-promo").value = target.promoPrice ?? "";
       $("price-version").value = target.version || "v1";
       $("price-is-active").checked = target.isActive !== false;
-      $("price-effective-from").value = toDatetimeLocal(target.effectiveFrom || target.createdAt || "");
-      $("price-effective-to").value = toDatetimeLocal(target.effectiveTo || "");
       $("price-promo-from").value = toDatetimeLocal(target.promoEffectiveFrom || "");
       $("price-promo-to").value = toDatetimeLocal(target.promoEffectiveTo || "");
       $("pricebook-hint").textContent = target.id
@@ -1545,11 +1674,8 @@
       const title = normalizeText($("lesson-title").value);
       const summary = normalizeText($("lesson-summary").value);
       const description = normalizeText($("lesson-description").value);
-      const trackInput = normalizeText($("lesson-track").value);
       const levelInput = normalizeLevel($("lesson-level").value);
-      const categoryInput = normalizeText($("lesson-category").value);
-      const category = normalizeCategoryKey(categoryInput) || inferCategoryKey(trackInput, levelInput);
-      const track = inferTrackFromCategory(category) || normalizeTrack(trackInput);
+      const category = normalizeText($("lesson-category").value).toLowerCase();
 
       // 強制同步主檔內容至 state 的 zh-TW 語系中
       if (!state.locales["zh-TW"]) {
@@ -1589,22 +1715,20 @@
       const primaryLocale = i18n.en;
       const legacyLocale = i18n["zh-TW"] || primaryLocale;
       const metadataType = normalizeText($("lesson-metadata-type").value) || "course";
+      if (!category) {
+        throw new Error("請先從 category 選單選擇分類");
+      }
       return {
         id: docId,
         docId,
         courseKey,
-        title: title || legacyLocale.title || primaryLocale.title || "",
+        title: title || "",
         summary: summary || legacyLocale.summary || primaryLocale.summary || "",
         description: description || legacyLocale.description || primaryLocale.description || "",
         coreContent: legacyLocale.coreContent || primaryLocale.coreContent || [],
         lessonLabel: normalizeText(legacyLocale.lessonLabel || state.locales["zh-TW"]?.lessonLabelText || ""),
         lessonLabelEn: normalizeText(primaryLocale.lessonLabel || state.locales.en?.lessonLabelText || ""),
-        titleEn: primaryLocale.title || "",
-        summaryEn: primaryLocale.summary || "",
-        descriptionEn: primaryLocale.description || "",
-        coreContentEn: primaryLocale.coreContent || [],
         i18n,
-        track,
         level: levelInput,
         category,
         metadataType,
@@ -1655,7 +1779,7 @@
       state.currentPriceBooks = books;
       $("pricebook-status").textContent = `${books.length} 筆價格表`;
       if (!books.length) {
-        body.innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚無價格表</td></tr>';
+        body.innerHTML = '<tr><td colspan="3" style="padding:18px 14px; color:var(--muted); text-align:center;">尚無價格表</td></tr>';
         fillPriceBookForm(null);
         return books;
       }
@@ -1672,9 +1796,6 @@
               <div style="font-weight:800;">${status}</div>
               <div class="pricebook-meta">${escapeHtml(toDatetimeLocal(book.effectiveFrom) || "—")} → ${escapeHtml(toDatetimeLocal(book.effectiveTo) || "—")}</div>
             </td>
-            <td style="text-align:right;">
-              <button class="btn btn-muted btn-small" onclick="window.loadPriceBookIntoForm('${escapeHtml(book.id)}'); event.stopPropagation();">維護</button>
-            </td>
           </tr>
         `;
       }).join("");
@@ -1685,7 +1806,7 @@
     async function loadCurrentLessonPriceBooks() {
       const lesson = currentLesson();
       if (!lesson) {
-        $("pricebook-table").innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未選擇課程</td></tr>';
+        $("pricebook-table").innerHTML = '<tr><td colspan="3" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未選擇課程</td></tr>';
         return [];
       }
       return loadPriceBooksForLesson(lesson);
@@ -1824,8 +1945,6 @@
         promoPrice: $("price-promo").value === "" ? null : Number($("price-promo").value || 0),
         version: normalizeText($("price-version").value) || "v1",
         isActive: $("price-is-active").checked,
-        effectiveFrom: fromDatetimeLocal($("price-effective-from").value),
-        effectiveTo: fromDatetimeLocal($("price-effective-to").value),
         promoEffectiveFrom: fromDatetimeLocal($("price-promo-from").value),
         promoEffectiveTo: fromDatetimeLocal($("price-promo-to").value),
         updatedBy: ""
@@ -1847,6 +1966,7 @@
         setLog(`已儲存價格表：${payload.id}`);
         $("pricebook-status").textContent = "價格表已儲存";
         await loadCurrentLessonPriceBooks();
+        closePriceBookModal();
       } catch (err) {
         console.error("[admin-courses] saveSelectedPriceBook failed:", err);
         alert(`儲存價格表失敗：${err.message}`);
@@ -1857,8 +1977,7 @@
       const book = state.currentPriceBooks.find((item) => String(item.id || "") === String(priceBookId));
       if (!book) return;
       fillPriceBookForm(book);
-      const panel = $("pricebook-editor");
-      if (panel) panel.open = true;
+      openPriceBookModal();
       setLog(`已載入價格表：${book.id}`);
     };
 
@@ -1874,6 +1993,14 @@
 
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
+      if ($("pricebook-modal")?.classList.contains("show")) {
+        closePriceBookModal();
+        return;
+      }
+      if ($("course-unit-modal")?.classList.contains("show")) {
+        closeCourseUnitModal();
+        return;
+      }
       if (!document.body.classList.contains("modal-open")) return;
       closeLessonModal();
     });
@@ -1881,6 +2008,8 @@
     async function loadLessons() {
       const response = await getLessonsMetadata({});
       const lessons = Array.isArray(response?.data?.lessons) ? response.data.lessons : [];
+      state.categoryLabels = normalizeCategoryLabelsMap(response?.data?.categoryLabels || {});
+      state.categoryOptions = buildCategoryOptions(state.categoryLabels);
       state.lessons = lessons.sort((a, b) => {
         const aRank = lessonStatus(a) === "active" ? 0 : lessonStatus(a) === "hidden" ? 1 : 2;
         const bRank = lessonStatus(b) === "active" ? 0 : lessonStatus(b) === "hidden" ? 1 : 2;
@@ -1903,8 +2032,9 @@
       const userData = userDoc.exists() ? (userDoc.data() || {}) : {};
       $("auth-email").textContent = user.email || user.uid;
       $("auth-uid").textContent = user.uid;
-      $("auth-role").textContent = userData.role || "(missing)";
-      if (userData.role !== "admin") {
+      const resolvedRole = window.vibeRoleUtils?.isAdminEmail(user.email) ? "admin" : (userData.role || "");
+      $("auth-role").textContent = resolvedRole || "(missing)";
+      if (resolvedRole !== "admin") {
         throw new Error("此頁面僅限 Admin 帳號使用");
       }
       state.currentUserUid = user.uid;

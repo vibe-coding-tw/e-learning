@@ -129,8 +129,8 @@
 
 1. `nav-component.js` 先解析目前 locale，再從 `metadata_settings/learning_paths.categoryLabels` 取對應的 canonical path label。
 2. `learning-path.html` 必須讀取同一份 `categoryLabels`，並與 nav 共用相同的 label resolver。
-3. 若頁面尚未載入或無法取得 Firestore，前後端可以使用相同的 canonical fallback，但不得讓 nav 與 page title 各自套不同字串。
-4. `window.__vibeLocale` 可作為同頁共用 locale 緩存，避免 nav 與 learning-path 初始渲染時出現不同語系判斷。
+3. 若頁面尚未載入或無法取得 Firestore，前後端都應保持空白或未設定狀態，不得使用任何本地 fallback。
+4. `window.__vibeLocale` 可作為同頁共用 locale 狀態，但不得作為分類 label 的來源或快取。
 
 驗收重點：
 

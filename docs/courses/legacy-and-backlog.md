@@ -38,7 +38,7 @@
   - 用來硬塞固定對照表去湊出現有頁面
 - `public/learning-path.html` 的 distributor / pricing 解析應以 Firestore `users/{uid}.preferredDistributorId` 為主；未登入或缺資料時才回落到本機 localStorage 與 region 推導。
 - `learning-path` 與 checkout 已開始以 `metadata_lessons.id` / `docId` 作為 canonical lesson id；`courseId` 只做顯示與相容。
-- `learning-path.html` 的 H1 / `document.title` 與 `nav-component.js` 的 learning-path dropdown label 應共用 Firestore `metadata_settings.learning_paths.categoryLabels`，避免中文 / 英文版顯示不一致。
+- `learning-path.html` 的 H1 / `document.title` 與 `nav-component.js` 的 learning-path dropdown label 應共用 Firestore `metadata_settings.learning_paths.categoryLabels`，且不得再有本地 fallback、seed 或快取，避免中文 / 英文版顯示不一致。
 - 課程頁若看起來和舊版不一致，優先處理順序是：
   1. 先補齊 content template 的必要節點
   2. 再補齊 `course-shared.js` / `nav-component.js` 的注入與規格化
