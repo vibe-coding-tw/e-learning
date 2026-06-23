@@ -45,3 +45,5 @@ registerIndexExports({
     createOnUserCreatedTrigger,
     createMapReplyHandler
 });
+
+Object.assign(exports, require("functions-admin"));

@@ -620,35 +620,31 @@ async function loadPortalData(distributorId = '') {
 
 async function loadPriceBooks() {
     const role = String(state.portal?.role || '').trim().toLowerCase();
-    const distributorId = role === 'admin'
-        ? ''
-        : (getFormValue('portal-distributor-id-input') || state.selectedDistributorId || state.distributorId);
+    const distributorId = String(
+        state.selectedDistributorId
+        || state.distributorId
+        || getFormValue('portal-distributor-id-input')
+        || (role === 'admin' && Array.isArray(state.accessibleDistributors) ? (state.accessibleDistributors[0]?.id || '') : '')
+    ).trim();
     if (!distributorId) {
-        if (role === 'admin') {
-            el('portal-summary').textContent = '管理員模式：載入所有經銷商的價格表中...';
-        } else {
-            state.priceBooks = [];
-            renderPriceBooks([]);
-            el('portal-summary').textContent = '請先輸入經銷商 ID。';
-            return;
-        }
+        state.priceBooks = [];
+        renderPriceBooks([]);
+        el('portal-summary').textContent = role === 'admin'
+            ? '請先點選上方經銷商 tab。'
+            : '請先輸入經銷商 ID。';
+        return;
     }
 
-    el('portal-summary').textContent = role === 'admin'
-        ? '管理員模式：載入所有經銷商的價格表中...'
-        : `載入經銷商 ${distributorId} 的價格表中...`;
+    const distributorName = (state.accessibleDistributors || []).find((item) => String(item.id || '').trim() === distributorId)?.name || distributorId;
+    el('portal-summary').textContent = `載入經銷商 ${distributorName} 的價格表中...`;
     try {
         const fn = httpsCallable(functions, 'getDistributorPriceBooks');
-        const res = await fn(distributorId ? { distributorId } : {});
-        if (distributorId) {
-            state.distributorId = distributorId;
-            state.selectedDistributorId = distributorId;
-        }
+        const res = await fn({ distributorId });
+        state.distributorId = distributorId;
+        state.selectedDistributorId = distributorId;
         state.priceBooks = Array.isArray(res?.data?.items) ? res.data.items : [];
         renderPriceBooks(state.priceBooks);
-        setText('portal-summary', role === 'admin'
-            ? `管理員模式：共 ${state.priceBooks.length} 筆價格表。`
-            : `目前經銷商：${distributorId}，共 ${state.priceBooks.length} 筆價格表。`);
+        setText('portal-summary', `目前經銷商：${distributorName}，共 ${state.priceBooks.length} 筆價格表。`);
     } catch (e) {
         console.error('[DistributorPortal] load failed:', e);
         state.priceBooks = [];

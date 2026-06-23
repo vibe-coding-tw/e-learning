@@ -4,7 +4,6 @@ const path = require("path");
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { defineSecret } = require("firebase-functions/params");
-const { setGlobalOptions } = require("firebase-functions/v2");
 
 function bindLazyExports(modulePath, exportNames) {
     let cachedModule = null;
@@ -242,14 +241,6 @@ const {
 const { withAssignmentUrlAliases } = require("vibe-functions-core/dashboard-utils-core");
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
-
-setGlobalOptions({
-    region: "asia-east1",
-    maxInstances: 10,
-    minInstances: 0,
-    memory: 128,
-    concurrency: 80
-});
 
 const getStudentAssignmentTutorReport = onCall(async (request) => {
     const data = request?.data || {};

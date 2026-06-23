@@ -18,6 +18,8 @@ const normalizeCanonicalLearningPathKey = REPO_UTILS.normalizeCanonicalLearningP
     if (v === 'common' || v === 'car-starter' || v === 'car-basic' || v === 'car-advanced') return v;
     if (/^(?:tw|en)-common$/i.test(v)) return 'common';
     if (/^(?:tw|en)-car-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, '');
+    if (/^(?:tw|en)-drone-(starter|basic|advanced)$/i.test(v)) return v.replace(/^(?:tw|en)-/i, '');
+    if (/^drone-(starter|basic|advanced)$/i.test(v)) return v;
     if (/^start-\d{2}-unit-/i.test(v)) return 'car-starter';
     if (/^basic-\d{2}-unit-/i.test(v)) return 'car-basic';
     if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return 'car-advanced';

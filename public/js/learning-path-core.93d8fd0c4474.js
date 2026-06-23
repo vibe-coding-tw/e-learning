@@ -287,14 +287,6 @@
         };
 
         for (const [key, value] of Object.entries(sourceMap)) {
-            if (key === "zh-TW" || key === "en") {
-                if (value && typeof value === "object" && !Array.isArray(value)) {
-                    for (const [nestedKey, nestedValue] of Object.entries(value)) {
-                        assign(nestedKey, nestedValue);
-                    }
-                }
-                continue;
-            }
             assign(key, value);
         }
 
@@ -302,7 +294,7 @@
     }
 
     function deriveCategoryLabels(lessons = [], existingMap = {}, uiLocale = "zh-TW") {
-        const derived = normalizeCategoryLabelsMap(existingMap, uiLocale);
+        const derived = normalizeCategoryLabelsMap(existingMap);
         (Array.isArray(lessons) ? lessons : []).forEach((lesson) => {
             const key = categoryFromLesson(lesson);
             if (!key || derived[key]) return;
