@@ -396,8 +396,7 @@ let currentDashboardPermissions = {
     isPaidStudent: false,
     canViewAssignments: false,
     canViewSettings: false,
-    canViewUnitSettings: false,
-    canViewEarnings: false
+    canViewUnitSettings: false
 };
 
 // [NEW] Admin Super Mode state
@@ -785,8 +784,7 @@ function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor =
         isPaidStudent,
         canViewAssignments,
         canViewSettings: canViewGlobalSettings,
-        canViewUnitSettings,
-        canViewEarnings: isGlobalAdmin
+        canViewUnitSettings
     };
 }
 
@@ -800,10 +798,6 @@ function canCurrentUserViewSettingsTab() {
 
 function canCurrentUserViewUnitSettingsTab() {
     return !!currentDashboardPermissions.canViewUnitSettings;
-}
-
-function canCurrentUserViewEarningsTab() {
-    return !!currentDashboardPermissions.canViewEarnings;
 }
 
 function getPreferredDashboardTab(filterUnitId = null) {
@@ -873,7 +867,7 @@ function getRequestedTabFromUrl() {
     const requestedTab = rawTab === 'logistics'
         ? 'shipments'
         : (rawTab === 'admin' ? 'tutors' : rawTab); // backward compatibility
-    const allowedTabs = new Set(['overview', 'assignments', 'settings', 'earnings', 'tutors', 'shipments']);
+    const allowedTabs = new Set(['overview', 'assignments', 'settings', 'tutors', 'shipments']);
     return allowedTabs.has(requestedTab) ? requestedTab : '';
 }
 
@@ -1045,13 +1039,11 @@ function configureStudentTabsForUnitAccess() {
     const overviewTabBtn = document.getElementById('tab-btn-overview');
     const assignmentsTabBtn = document.getElementById('tab-btn-assignments');
     const settingsTabBtn = document.getElementById('tab-btn-settings');
-    const earningsTabBtn = document.getElementById('tab-btn-earnings');
     const adminTabBtn = document.getElementById('tab-btn-tutors');
 
     if (overviewTabBtn) overviewTabBtn.classList.add('hidden');
     if (assignmentsTabBtn) assignmentsTabBtn.classList.toggle('hidden', !canCurrentUserViewAssignmentsTab());
     if (settingsTabBtn) settingsTabBtn.classList.add('hidden');
-    if (earningsTabBtn) earningsTabBtn.classList.add('hidden');
     if (adminTabBtn) adminTabBtn.classList.add('hidden');
 }
 
@@ -1422,7 +1414,6 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const adminTabBtn = document.getElementById('tab-btn-tutors');
     const settingsTabBtn = document.getElementById('tab-btn-settings');
     const shipmentsTabBtn = document.getElementById('tab-btn-shipments');
-    const earningsTabBtn = document.getElementById('tab-btn-earnings');
 
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
@@ -1468,20 +1459,9 @@ function renderAdminDashboard(data, filterUnitId = null) {
     // Settings & Assignments switch according to AGENT.md.
     // Settings & Earnings are only accessible within a specific UNIT context
     const showSettingsTab = canCurrentUserViewSettingsTab();
-    const showEarningsTab = canCurrentUserViewEarningsTab();
-
     if (settingsTabBtn) {
         settingsTabBtn.classList.toggle('hidden', !showSettingsTab);
         settingsTabBtn.textContent = window.t('dash_tab_settings', '系統設定');
-    }
-
-    if (earningsTabBtn) {
-        earningsTabBtn.classList.toggle('hidden', !showEarningsTab);
-        if (!showEarningsTab) {
-            earningsTabBtn.style.display = 'none';
-        } else {
-            earningsTabBtn.style.display = '';
-        }
     }
 
     // Stats (Base on filtered students if unit is selected)
@@ -2266,11 +2246,11 @@ window.switchTab = function (tabName) {
     if (!tabName) return;
     
     // [V14.12] PERMISSION LEAK FIX: Explicitly block admin-only tabs for non-admins
-    if ((tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'settings' || tabName === 'earnings') && myRole !== 'admin') {
+    if ((tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'settings') && myRole !== 'admin') {
         console.warn(`[Security] Unauthorized tab access: ${tabName} blocked for ${myRole}.`);
         // Fallback: Redirect to assignments for tutors or overview for admins.
         tabName = getPreferredDashboardTab(getCurrentDashboardContext().filterUnitId);
-        if (tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'settings' || tabName === 'earnings') {
+        if (tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'settings') {
             tabName = 'assignments'; // Extreme safety fallback
         }
     }
@@ -2282,7 +2262,7 @@ window.switchTab = function (tabName) {
     const isUnitContext = !!filterUnitId;
 
     // Unit context hard rule: only assignments are visible tabs.
-    if (isUnitContext && (tabName === 'overview' || tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'earnings' || tabName === 'settings')) {
+    if (isUnitContext && (tabName === 'overview' || tabName === 'tutors' || tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics' || tabName === 'settings')) {
         tabName = getPreferredDashboardTab(filterUnitId);
     }
 
@@ -2299,15 +2279,6 @@ window.switchTab = function (tabName) {
             return;
         }
     }
-    if (tabName === 'earnings') {
-        if (!canCurrentUserViewEarningsTab()) {
-            tabName = getPreferredDashboardTab(filterUnitId);
-            if (tabName === 'earnings' && !canCurrentUserViewEarningsTab()) {
-                return;
-            }
-        }
-    }
-
     // [MODIFIED] Determine if current user is a student view context
     const isStudent = !currentDashboardPermissions.isAdmin && !currentDashboardPermissions.isQualifiedTutor;
     let paneName = tabName;
@@ -2330,10 +2301,6 @@ window.switchTab = function (tabName) {
     if (tabName === 'settings') {
         renderBusinessTab();
     }
-    if (tabName === 'earnings') {
-        renderEarningsTab(dashboardData);
-    }
-
     // Update buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.add('text-gray-500', 'hover:text-gray-700', 'border-transparent');
@@ -6396,175 +6363,6 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
-// --- Earnings ---
-window.renderEarningsTab = window.renderEarningsTab || function(data) {
-    const totalEarningsEl = document.getElementById('stat-total-earnings');
-    const promoCodeEl = document.getElementById('display-promo-code');
-    const tableBody = document.getElementById('earnings-table-body');
-    if (!totalEarningsEl || !promoCodeEl || !tableBody) return;
-
-    // 1. Display Referral Link (Unit-Specific)
-    const urlParams = new URLSearchParams(window.location.search);
-    const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
-    const inviteKit = buildReferralInviteKit(filterUnitId, data.myReferralLink);
-
-    if (!filterUnitId) {
-        promoCodeEl.innerHTML = `
-            <span class="text-gray-400 text-sm block mb-1">請先從上方切換單元</span>
-            <span class="text-[10px] text-gray-300">每一單元皆有專屬作業連結</span>
-        `;
-    } else if (!data.myReferralLink) {
-        promoCodeEl.innerHTML = `
-            <div class="space-y-3">
-                <div>
-                    <div class="text-[10px] uppercase tracking-wider text-gray-400">Tutor Email</div>
-                    <div class="font-mono text-indigo-700 text-sm">${escapeHtml(myEmail)}</div>
-                </div>
-                <div>
-                    <div class="text-[10px] uppercase tracking-wider text-gray-400">作業連結</div>
-                    <div class="text-orange-500 text-sm font-bold">尚未配置作業連結</div>
-                    <div class="text-[10px] text-gray-400">請聯繫管理員獲取該單元授權</div>
-                </div>
-            </div>
-        `;
-    } else {
-        promoCodeEl.innerHTML = `
-            <div class="space-y-3">
-                <div>
-                    <div class="text-[10px] uppercase tracking-wider text-gray-400">Tutor Email</div>
-                    <div class="font-mono text-indigo-700 text-sm break-all">${escapeHtml(myEmail)}</div>
-                </div>
-                <div>
-                    <div class="text-[10px] uppercase tracking-wider text-gray-400">作業連結</div>
-                    <a href="${escapeHtml(data.myReferralLink)}" target="_blank" rel="noopener noreferrer" class="font-mono text-blue-600 text-xs break-all hover:underline">${escapeHtml(data.myReferralLink)}</a>
-                </div>
-            </div>
-        `;
-    }
-
-    // 2. Display Earnings Ledger
-    const earnings = data.earnings || [];
-    let total = 0;
-
-    if (earnings.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-gray-400">尚無分潤紀錄</td></tr>';
-    } else {
-        tableBody.innerHTML = earnings.map(d => {
-            total += d.shareAmount;
-            const levelLabel = Number(d.level) <= 1 ? '直接' : `第 ${Number(d.level)} 層`;
-            return `
-                <tr class="hover:bg-gray-50 transition border-b border-gray-100">
-                    <td class="py-3 px-2 font-medium">${d.month || d.period || '-'}</td>
-                    <td class="py-3 px-2 text-gray-500 font-mono text-[10px]">${d.studentUid || '-'}</td>
-                    <td class="py-3 px-2 text-right">NT$ ${d.orderAmount.toLocaleString()}</td>
-                    <td class="py-3 px-2 text-right font-bold text-emerald-600">NT$ ${d.shareAmount.toLocaleString()}</td>
-                    <td class="py-3 px-2 text-right text-gray-400 text-xs">${levelLabel}</td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    totalEarningsEl.innerText = total.toLocaleString();
-
-    // 3. Render Revenue Simulator (Read-Only) for Admins
-    const simContainer = document.getElementById('earnings-revenue-simulator');
-    if (simContainer) {
-        if (myRole === 'admin') {
-            simContainer.innerHTML = window.buildRevenueSimulatorHtml ? window.buildRevenueSimulatorHtml() : '';
-            simContainer.classList.remove('hidden');
-            if (typeof window.runRevenueSimulation === 'function') {
-                window.runRevenueSimulation();
-            }
-        } else {
-            simContainer.innerHTML = '';
-            simContainer.classList.add('hidden');
-        }
-    }
-}
-
-window.renderReferralInviteKitSection = window.renderReferralInviteKitSection || function(data) {
-    const inviteKitEl = document.getElementById('promo-invite-kit-assignments');
-    if (!inviteKitEl) return;
-    inviteKitEl.innerHTML = '';
-    inviteKitEl.classList.add('hidden');
-};
-
-window.buildReferralInviteKit = window.buildReferralInviteKit || function(unitId, referralLink) {
-    if (!unitId) {
-        return { ready: false, message: '請先切換到特定課程單元，才能生成專屬招生邀請工具。' };
-    }
-
-    if (!referralLink) {
-        return { ready: false, message: '此單元尚未配置作業連結，請先確認導師授權或聯繫管理員。' };
-    }
-
-    const canonicalUnitId = resolveCanonicalUnitId(unitId);
-    const parentCourseId = findParentCourseIdByUnit(canonicalUnitId) || canonicalUnitId;
-    const lesson = (allLessons || []).find(item => item.courseId === parentCourseId) ||
-        (allLessons || []).find(item => Array.isArray(item.courseUnits) && item.courseUnits.includes(canonicalUnitId)) ||
-        null;
-
-    const courseId = getCanonicalLessonIdentity(lesson) || parentCourseId;
-    const courseName = lesson?.title || lesson?.courseName || formatUnitName(parentCourseId);
-    const unitName = formatUnitName(canonicalUnitId);
-    const coursePrice = parseInt(lesson?.price ?? 0, 10) || 0;
-    const isPhysical = lesson?.isPhysical === true;
-    const tutorName = auth.currentUser?.displayName || myEmail || '授課老師';
-
-    const inviteParams = new URLSearchParams({
-        action: 'addInviteItem',
-        courseId,
-        unitId: canonicalUnitId,
-        referralLink,
-        courseName,
-        coursePrice: String(coursePrice),
-        isPhysical: String(isPhysical)
-    });
-    const inviteUrl = `${PUBLIC_SITE_URL}/cart.html?${inviteParams.toString()}`;
-    const letterText =
-`親愛的同學您好：
-
-歡迎加入 Vibe Coding 的「${courseName}」課程學習。
-本次邀請學習單元為：${unitName}
-
-請直接點擊下方專屬報名連結，系統會自動：
-1. 在 Shopping Cart 加入此課程項目
-2. 綁定我的教學作業邀請權限
-3. 引導您完成登入與結帳
-
-專屬報名連結：
-${inviteUrl}
-
-完成付款後，系統會立即開通課程，並自動建立您與授課老師的輔導關係，之後作業批改與作業連結也會依此關係運作。
-
-如有任何問題，歡迎直接回覆我。
-
-${tutorName}
-Vibe Coding`;
-
-    const mailtoSubject = `Vibe Coding 課程報名通知｜${courseName}`;
-    const mailtoUrl = `mailto:?subject=${encodeURIComponent(mailtoSubject)}&body=${encodeURIComponent(letterText)}`;
-
-    return {
-        ready: true,
-        inviteUrl,
-        letterText,
-        mailtoUrl
-    };
-}
-
-window.buildPromoInviteKit = window.buildPromoInviteKit || window.buildReferralInviteKit;
-
-async function copyTextToClipboard(text, successMessage = '已複製') {
-    try {
-        await navigator.clipboard.writeText(text);
-        alert(successMessage);
-    } catch (error) {
-        console.error('Clipboard copy failed:', error);
-        alert('複製失敗，請手動複製內容。');
-    }
-}
-
 window.handleDecideApplication = async function (applicationId, status) {
     // [MODIFIED] No more confirm dialog as per user request
     let adminMessage = "";
