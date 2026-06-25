@@ -142,9 +142,10 @@ git commit -m "docs: update README"
 ## 10. 開發與部署流程
  
 - **本地優先驗證原則 (Local-First Validation)**：所有的修正、功能調整或代碼變更，**都必須先在本地端（Local / Emulator 環境）進行開發與完整功能驗證**，確保運行完全沒有任何問題（語法檢驗通過、邏輯正確、模擬器測試無誤）後，才可以執行部署到 Production。
+  - 啟動前先執行環境檢查：`bash scripts/check-local-env.sh`
   - 啟動 emulator：`npx firebase emulators:start --project e-learning-942f7`
   - 本地 functions：`http://127.0.0.1:15001`，本地 Firestore：`127.0.0.1:18080`
-  - 若修改 `shared-function-core/`，必須先重建 `.tgz`、複製到所有 codebase、執行 `npm install` 更新 `node_modules`，再用 `node -e "require('vibe-functions-core/...')"` 確認新 export 正確，最後才啟動 emulator。
+  - 若修改 `shared-function-core/`，執行 `bash scripts/sync-core.sh` 自動重建 `.tgz` 並同步到所有 codebase，再於各目錄執行 `npm install --package-lock-only` 更新 lockfile，最後用 `node -e "require('vibe-functions-core/...')"` 確認新 export 正確。
 - 任何功能更新、Bug 修復或設定調整完成後：
   1. 若有修改前端靜態資源 (JS/CSS)，必須先執行 `node scripts/fingerprint-static-assets.js` 更新資產指紋。
   2. `git add .`
@@ -152,7 +153,12 @@ git commit -m "docs: update README"
   4. 依循 Rule 6a，在 `git push` 前暫時關閉 Actions 功能，推送後重開。
   5. 部署至 Firebase：`firebase deploy --project e-learning-942f7` (或依需求指定 `--only`)
 - **服務快取失效策略**：
-  - 當更新外部 `content-repo` 課程 HTML 後，必須更新資料庫的 `contentVersion` 欄位以強制使所有實例的快取失效，重整前台內容。
+  - 當更新外部 `content-repo` 課程 HTML 後，執行 `bash scripts/update-content-version.sh` 自動將最新 commit SHA 寫入 Firestore emulator 與 `CONTENT_VERSION` 檔案，強制使所有實例的快取失效。
+- **Git pre-commit hook**：`.githooks/pre-commit` 會自動檢查關鍵檔案是否被誤刪，以及 `.tgz` 同步一致性。已設定 `git config core.hooksPath .githooks`。
+- **可用腳本一覽**：
+  - `scripts/sync-core.sh` — 重建 shared-function-core .tgz 並同步到所有 codebase
+  - `scripts/check-local-env.sh` — 驗證 local dev 環境完整性（檔案、emulator、設定、node_modules）
+  - `scripts/update-content-version.sh` — 更新 content-repo commit 到 Firestore emulator
 - 確保生產環境與最新程式碼同步。
 
 ---

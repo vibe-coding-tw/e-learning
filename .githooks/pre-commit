@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# pre-commit hook: 檢查關鍵檔案是否被意外刪除
+set -euo pipefail
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+DELETED=$(git diff --cached --name-status --diff-filter=D 2>/dev/null | awk '{print $2}')
+
+CRITICAL_FILES=(
+  "public/js/firebase-local.js"
+  "public/js/nav-component.js"
+  "public/js/course-shared.js"
+  "shared-function-core/index.js"
+  "shared-function-core/access-utils-core.js"
+  "shared-function-core/package.json"
+)
+
+for file in "${CRITICAL_FILES[@]}"; do
+  if echo "${DELETED}" | grep -Fx "${file}" >/dev/null; then
+    echo ""
+    echo "❌  pre-commit 拒絕提交：偵測到關鍵檔案被刪除"
+    echo "    檔案: ${file}"
+    echo "    如確定要刪除，請加入 --no-verify 跳過檢查"
+    echo ""
+    exit 1
+  fi
+done
+
+# 檢查 .tgz 一致：如果 shared-function-core 的 tgz 有變，提醒同步
+TGZ_CHANGED=$(git diff --cached --name-only 2>/dev/null | grep "shared-function-core/vibe-functions-core-1.0.0.tgz" || true)
+if [[ -n "${TGZ_CHANGED}" ]]; then
+  CODEBASES_WITH_OLD=()
+  REF_HASH=$(shasum -a 256 "${ROOT_DIR}/shared-function-core/vibe-functions-core-1.0.0.tgz" 2>/dev/null | cut -d' ' -f1 || echo "")
+  for codebase in functions functions-admin functions-autograde functions-payment; do
+    TGZ="${ROOT_DIR}/${codebase}/vibe-functions-core-1.0.0.tgz"
+    if [[ -f "${TGZ}" ]]; then
+      HASH=$(shasum -a 256 "${TGZ}" 2>/dev/null | cut -d' ' -f1 || echo "")
+      if [[ "${HASH}" != "${REF_HASH}" ]]; then
+        CODEBASES_WITH_OLD+=("${codebase}")
+      fi
+    fi
+  done
+  if [[ ${#CODEBASES_WITH_OLD[@]} -gt 0 ]]; then
+    echo ""
+    echo "⚠️   shared-function-core 的 .tgz 已變更，但以下 codebase 尚未同步："
+    for cb in "${CODEBASES_WITH_OLD[@]}"; do
+      echo "      - ${cb}"
+    done
+    echo "   執行 scripts/sync-core.sh 後重新 stage"
+    echo "   如確定跳過，請加入 --no-verify"
+    echo ""
+    exit 1
+  fi
+fi
