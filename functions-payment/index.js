@@ -531,5 +531,6 @@ module.exports = {
     checkPaymentAuthorization: exports.checkPaymentAuthorization,
     serveCourse: exports.serveCourse,
     paymentUpdateOrderFulfillmentStatus: exports.paymentUpdateOrderFulfillmentStatus,
-    paymentMarkOrderShipped: exports.paymentMarkOrderShipped
+    paymentMarkOrderShipped: exports.paymentMarkOrderShipped,
+    ...financeCallables
 };

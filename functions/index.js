@@ -36,21 +36,23 @@ exports.getContentRuntimeConfig = onCall(async () => {
     };
 });
 
-registerIndexExports({
-    target: exports,
-    proxyAutogradeCallable,
-    proxyAutogradeRequest,
-    proxyPaymentCallable,
-    proxyAdminCallable,
-    proxyAdminRequest,
-    onCall,
-    HttpsError,
-    createOnUserCreatedTrigger,
-    createMapReplyHandler
-});
+if (process.env.FUNCTIONS_EMULATOR) {
+    registerIndexExports({
+        target: exports,
+        proxyAutogradeCallable,
+        proxyAutogradeRequest,
+        proxyPaymentCallable,
+        proxyAdminCallable,
+        proxyAdminRequest,
+        onCall,
+        HttpsError,
+        createOnUserCreatedTrigger,
+        createMapReplyHandler
+    });
 
-registerAdminExports(
-    exports,
-    proxyAdminCallable,
-    proxyAdminRequest
-);
+    registerAdminExports(
+        exports,
+        proxyAdminCallable,
+        proxyAdminRequest
+    );
+}

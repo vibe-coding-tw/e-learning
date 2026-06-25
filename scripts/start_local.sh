@@ -11,6 +11,14 @@ LOGGING_HOST="${FIREBASE_EMULATOR_LOGGING:-127.0.0.1:14505}"
 LOG_FILE="${TMPDIR:-/tmp}/vibe-local-emulators.log"
 EMULATOR_PID=""
 
+ensure_deps() {
+  local dir="$1"
+  if [[ ! -d "${dir}/node_modules" ]]; then
+    echo "[start_local] installing dependencies in ${dir}"
+    (cd "${dir}" && npm install --ignore-scripts --no-audit --no-fund)
+  fi
+}
+
 wait_for_port() {
   local host="$1"
   local port="$2"
@@ -40,6 +48,12 @@ cleanup() {
 }
 
 trap cleanup EXIT INT TERM
+
+ensure_deps "$(dirname "$0")/.."
+ensure_deps "$(dirname "$0")/../functions"
+ensure_deps "$(dirname "$0")/../functions-admin"
+ensure_deps "$(dirname "$0")/../functions-payment"
+ensure_deps "$(dirname "$0")/../functions-autograde"
 
 echo "[start_local] starting Firebase emulators for ${PROJECT_ID}"
 firebase emulators:start --project "${PROJECT_ID}" --only auth,functions,firestore,hosting >"${LOG_FILE}" 2>&1 &

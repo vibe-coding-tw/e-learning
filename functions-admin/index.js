@@ -268,7 +268,7 @@ const orderNormalizationResolvers = {
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
-setGlobalOptions({ region: "asia-east1" });
+setGlobalOptions({ region: "asia-east1", maxInstances: 10, minInstances: 0, memory: "128MiB", concurrency: 80 });
 
 const getStudentAssignmentTutorReport = onCall(async (request) => {
     const data = request?.data || {};
