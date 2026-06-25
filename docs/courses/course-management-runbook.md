@@ -186,6 +186,11 @@
 
 本平台採用 Firestore 為唯一授權來源（Firestore First），任何單元的讀取或作業派發，在後端都會透過 `checkOrderAccessForUnit` 進行動態開通與權限驗證。
 
+目前「課程是否已開通」的設定總表請優先參考：
+
+- [`docs/courses/course-activation-settings.md`](./course-activation-settings.md)
+- [`docs/database.md`](../database.md)
+
 ### 7.1 系統開通/授權的四大途徑
 
 學員或使用者符合以下任一條件，系統即視為「已開通/授權」該單元：
@@ -199,7 +204,9 @@
    - `orders` 集合中存在該學員對應此課程且狀態為 `SUCCESS` 的訂單。
    - 訂單的 `expiryDate` 未過期（或未設定代表永久有效）。
 4. **導師測試開通 (Qualified Tutor)**：
-   - 使用者具備合格導師身分，且開啟 `tutorMode`。
+   - 使用者開啟 `tutorMode`，且在**目標單元**的 `users.tutorConfigs[unitId].authorized === true`。
+   - `tutorMode` 只是切換導師測試路徑，不代表全站授權。
+   - 管理員在後台的模擬路徑是獨立的測試機制，不代表一般學員的授權規則。
 
 ### 7.2 付款後自動開通與驗證流程 (Post-Payment Activation)
 
@@ -215,6 +222,29 @@
 3. **導師與推薦關係綁定 (Tutor Binding)**：
    - 檢查訂單中是否有帶入推薦關係或作業連結。
    - 若有，自動在學員 User 文件的 `unitAssignments` 寫入對應單元的導師 Email。
+
+### 7.3 開通判定時實際會看的欄位
+
+- `metadata_lessons.id` / `docId`
+- `metadata_lessons.courseUnits`
+- `metadata_lessons.category`
+- `metadata_lessons.level`
+- `dealer_price_books.docId`
+- `dealer_price_books.salePrice` / `promoPrice`
+- `orders.uid`
+- `orders.status`
+- `orders.expiryDate`
+- `orders.items`
+- `users.createdAt` / `users.joinedAt`
+- `users.paid`
+- `users.hasStarterAccess`
+- `users.lastPaidOrderId`
+
+注意：
+
+- `users.paid`、`users.hasStarterAccess`、`users.lastPaidOrderId` 屬於派生快取，不是主授權來源。
+- 真正的授權判斷仍以 `checkOrderAccessForUnit` / `checkPaymentAuthorization` 的共用邏輯為準。
+- 若課程卡片顯示不對，先確認前端送出的 `docId` / `pageId` / `fileName` 是否能對回 `metadata_lessons`。
 
 ---
 

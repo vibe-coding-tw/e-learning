@@ -1,5 +1,5 @@
 # Course UI Runtime Specification
-**Updated**: 2026-06-18
+**Updated**: 2026-06-25
 
 本文件定義 `/courses/**` 課程內容頁的正式 UI 規格、元件責任邊界、資料來源與驗收方式。
 
@@ -23,6 +23,8 @@
 - `course-shared.js` 不得使用 `metadata_lessons.courseUnits` 覆寫 `window.UNITS`、`#sidebar-nav` 或 `#index-unit-list`。
 - 左側 page menu 不得重複顯示上方 TAB 的單元清單。
 - `courseUnits` 表示跨單元結構，不表示單元內頁面。
+
+課程開通與 CTA 判定的對應設定，請另參考 [`docs/courses/course-activation-settings.md`](./course-activation-settings.md)。
 
 ## 2. Required Course Shell
 

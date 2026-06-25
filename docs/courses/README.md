@@ -1,5 +1,5 @@
 # Course Docs Index
-**Last updated**: 2026-06-14
+**Last updated**: 2026-06-25
 
 這個資料夾收納所有課程規劃、版本管理與上線流程文件。
 
@@ -36,6 +36,7 @@
 ## Course Management
 
 - [Course Management Runbook](./course-management-runbook.md)
+- [Course Activation Settings](./course-activation-settings.md)
 - [Course UI Runtime Spec](./course-ui-runtime-spec.md)
 - [Legacy and Backlog](./legacy-and-backlog.md)
 - [Platform Expansion Plan](./platform-expansion-plan.md)

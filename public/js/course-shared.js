@@ -232,6 +232,7 @@ function init() {
     if (staleFabHide) staleFabHide.remove();
     ensureUnitTabsTheme();
     upgradeLegacyUnitToMsLayout();
+    cleanUpPageNoise();
     normalizeCourseTopNav();
     normalizeCourseBreadcrumbs();
     ensureDynamicUnitTabsFromFirestore();
@@ -257,7 +258,6 @@ function init() {
                 console.warn('[CourseShared] Firebase init retry hook failed:', e);
             });
     }
-    initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
     ensureDashboardFabFallback();
     ensureMobileResponsiveLayout();
     normalizeStartButtonText();
@@ -1439,11 +1439,24 @@ function applyStartUnitModernTheme() {
                 max-width: 820px !important;
                 margin: 0 auto !important;
             }
+            .ms-btn, .ms-btn-ghost, .nav-btn-prev, .nav-btn-next {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 10px 20px !important;
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+                border: 1px solid transparent !important;
+                border-radius: 4px !important;
+                transition: background .12s, border-color .12s, color .12s !important;
+                text-decoration: none !important;
+                outline: none !important;
+            }
             .ms-btn, .nav-btn-next {
                 background: var(--ms-blue) !important;
                 border-color: var(--ms-blue) !important;
-                color:#fff !important;
-                border-radius: 2px !important;
+                color: #fff !important;
             }
             .ms-btn:hover, .nav-btn-next:hover {
                 background: var(--ms-blue-dark) !important;
@@ -1453,7 +1466,6 @@ function applyStartUnitModernTheme() {
                 background: #fff !important;
                 color: var(--ms-blue) !important;
                 border: 1px solid var(--ms-blue) !important;
-                border-radius: 2px !important;
             }
             .ms-btn-ghost:hover, .nav-btn-prev:hover {
                 background: var(--ms-blue-light) !important;
@@ -1652,6 +1664,11 @@ window.openDashboardModal = function(extraQuery = '') {
         params.set('tab', 'assignments');
         params.set('mode', 'iframe');
         params.set('hideTabs', '1');
+
+        const activeLocale = getActiveCourseLocale();
+        if (activeLocale) {
+            params.set('lang', activeLocale);
+        }
 
         const extraRaw = String(extraQuery || '').trim();
         if (extraRaw) {
@@ -3181,81 +3198,6 @@ window.submitAssignmentAction = async function () {
 /**
  * Robustly find parent courseId for a given unit fileName
  */
-/**
- * [V8.2] Initialize GitHub README rendering within the unit page.
- * Finds #assignment-guide and injects README above it.
- */
-async function initGithubReadme() {
-    const target = document.getElementById('assignment-guide');
-    if (!target) return;
-
-    // [V14.8.6] Reinforcement: Explicitly hide the guide in main unit body as requested
-    target.style.display = 'none';
-
-    // 1. Identify Unit ID
-    let unitId = "";
-    const meta = document.querySelector('meta[name="markdown-url"]');
-    if (meta) {
-        unitId = meta.getAttribute('data-unit-id') || "";
-    }
-    if (!unitId) {
-        // Fallback: Use filename
-        const path = window.location.pathname;
-        unitId = path.substring(path.lastIndexOf('/') + 1).replace('.html', '');
-    }
-
-    if (!unitId) return;
-
-    // 2. Load marked.js dynamically if not present
-    if (typeof window.marked === 'undefined') {
-        console.log("[CourseShared] Loading marked.js dynamically...");
-        const script = document.createElement('script');
-        script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
-        document.head.appendChild(script);
-        await new Promise((resolve) => {
-            script.onload = resolve;
-        });
-    }
-
-    // 3. Fetch README
-    const GITHUB_ORG = 'vibe-coding-template';
-    const repoUtils = window.repoSlugUtils || {};
-    const repoCandidates = typeof repoUtils.repoSlugCandidatesFromValue === 'function'
-        ? repoUtils.repoSlugCandidatesFromValue(unitId)
-        : [unitId].filter(Boolean);
-
-    try {
-        console.log("[CourseShared] Fetching README from Github Raw...");
-        let text = '';
-        let usedRepo = '';
-        for (const candidate of repoCandidates) {
-            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${candidate}/main/README.md`;
-            const resp = await fetch(rawUrl);
-            if (resp.ok) {
-                text = await resp.text();
-                usedRepo = candidate;
-                break;
-            }
-        }
-        if (!text) throw new Error(`README not found for any candidate repo: ${repoCandidates.join(', ')}`);
-        const html = window.marked.parse(text);
-
-        // 4. Inject - [V14.8.4] Only if specifically requested or in non-hide-mode
-        // User requested to HIDE README.md and assignment-guide in the main unit body.
-        // We will keep the fetch logic but skip the injection here.
-        /*
-        const mdContainer = document.createElement('div');
-        mdContainer.className = 'markdown-embed p-6 mt-12 mb-12 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden';
-        mdContainer.innerHTML = html;
-        target.parentNode.insertBefore(mdContainer, target);
-        */
-        
-        console.log(`[CourseShared] README loaded from ${usedRepo} but hidden in main body as requested.`);
-    } catch (e) {
-        console.warn("[CourseShared] Failed to load GitHub README:", e);
-    }
-}
-
 async function findCourseIdByUnit(fileName) {
     console.log(`[CourseShared] Resolving CourseId for: ${fileName}`);
     try {
@@ -3529,6 +3471,36 @@ function cleanUpCourseTitles() {
         });
     } catch (e) {
         console.warn('[CourseShared] cleanUpCourseTitles failed:', e);
+    }
+}
+
+function cleanUpPageNoise() {
+    try {
+        if (typeof document === 'undefined' || !document.body) return;
+        const walker = document.createTreeWalker(
+            document.body,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        const toRemove = [];
+        let node;
+        while (node = walker.nextNode()) {
+            const val = node.nodeValue || '';
+            if (val.trim().startsWith('PAGE:')) {
+                toRemove.push(node);
+            }
+        }
+        toRemove.forEach(n => {
+            if (n.parentNode) {
+                n.parentNode.removeChild(n);
+            }
+        });
+        if (toRemove.length > 0) {
+            console.log(`[CourseShared] Cleaned up ${toRemove.length} page noise nodes.`);
+        }
+    } catch (e) {
+        console.warn('[CourseShared] cleanUpPageNoise failed:', e);
     }
 }
 

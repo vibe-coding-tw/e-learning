@@ -138,9 +138,12 @@ function getUserTutorConfig(userData = {}, unitId) {
 
 function hasQualifiedTutorStatus(userData = {}, unitId = '') {
     const tutorConfigs = userData.tutorConfigs || {};
-    if (unitId) {
-        return !!(tutorConfigs[unitId] && tutorConfigs[unitId].authorized === true);
-    }
+    if (!unitId) return false;
+    return !!(tutorConfigs[unitId] && tutorConfigs[unitId].authorized === true);
+}
+
+function hasAnyQualifiedTutorStatus(userData = {}) {
+    const tutorConfigs = userData.tutorConfigs || {};
     return Object.values(tutorConfigs).some(config => config && config.authorized === true);
 }
 
@@ -323,6 +326,7 @@ module.exports = {
     queryTutorApplications,
     resolveAssignmentUrlMaps,
     resolveNameFromUserData,
+    hasAnyQualifiedTutorStatus,
     upsertTutorApplicationLegacyEntry,
     upsertTutorConfigForUser
 };

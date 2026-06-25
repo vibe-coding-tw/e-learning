@@ -380,7 +380,7 @@ function addDashboardUserEntry(usersMap, docId, userData = {}, requesterRole = '
 function buildTutorList(usersMap = {}) {
     return Object.entries(usersMap).reduce((list, [uid, data]) => {
         const role = data.role || 'user';
-        if (role === 'admin' || hasQualifiedTutorStatus(data)) {
+        if (role === 'admin' || hasAnyQualifiedTutorStatus(data)) {
             list.push({
                 uid,
                 email: data.email || 'No Email',
@@ -410,7 +410,7 @@ function buildStudentAssignmentTutorRows(usersMap = {}, lessons = []) {
     const rows = [];
     Object.entries(usersMap).forEach(([studentUid, studentData]) => {
         const role = studentData?.role || 'user';
-        if (role === 'admin' || hasQualifiedTutorStatus(studentData)) return;
+        if (role === 'admin' || hasAnyQualifiedTutorStatus(studentData)) return;
 
         const unitAssignments = studentData?.unitAssignments || {};
         Object.entries(unitAssignments).forEach(([rawUnitId, rawTutorEmail]) => {
@@ -510,9 +510,12 @@ function normalizeAssignmentTutorValue(value = '') {
 
 function hasQualifiedTutorStatus(userData = {}, unitId = '') {
     const tutorConfigs = userData.tutorConfigs || {};
-    if (unitId) {
-        return !!(tutorConfigs[unitId] && tutorConfigs[unitId].authorized === true);
-    }
+    if (!unitId) return false;
+    return !!(tutorConfigs[unitId] && tutorConfigs[unitId].authorized === true);
+}
+
+function hasAnyQualifiedTutorStatus(userData = {}) {
+    const tutorConfigs = userData.tutorConfigs || {};
     return Object.values(tutorConfigs).some(config => config && config.authorized === true);
 }
 
@@ -567,5 +570,6 @@ module.exports = {
     extractHiddenSectionContent,
     normalizeAssignmentTutorValue,
     hasQualifiedTutorStatus,
+    hasAnyQualifiedTutorStatus,
     getTutorAssignmentUrlFromConfig
 };

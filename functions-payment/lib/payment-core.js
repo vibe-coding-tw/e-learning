@@ -203,11 +203,13 @@ async function loadUserProfile(uid = "", email = "") {
     return null;
 }
 
-function isQualifiedTutorUser(userData = {}) {
-    return isAdminEmail(userData.email) || userData.role === "admin"
-        || userData.isQualifiedTutor === true
-        || userData.qualifiedTutor === true
-        || Object.keys(userData.tutorConfigs || {}).length > 0;
+function isQualifiedTutorUser(userData = {}, unitId = "") {
+    const targetUnitId = normalizeText(unitId);
+    if (!targetUnitId) return false;
+
+    const tutorConfigs = userData.tutorConfigs || {};
+    const unitConfig = tutorConfigs[targetUnitId];
+    return !!(unitConfig && unitConfig.authorized === true);
 }
 
 module.exports = {

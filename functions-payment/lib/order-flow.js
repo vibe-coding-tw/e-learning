@@ -26,6 +26,7 @@ const { resolveLessonPrice } = require("../lib/pricing-utils");
 const {
     isStarterCourseCategory,
     isStarterCourseReference,
+    isAdminEmail,
     resolveRegistrationTimestampMs
 } = require("vibe-functions-core/access-utils-core");
 const {
@@ -198,13 +199,18 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
     }
 
     const userProfile = await loadUserProfile(uid);
-    const authEmailProfile = authEmail ? { email: authEmail } : null;
+    const authEmailProfile = authEmail ? { email: authEmail, tutorConfigs: userProfile?.tutorConfigs || {} } : null;
     const tutorEligible = !!(
-        (userProfile && isQualifiedTutorUser(userProfile)) ||
-        (authEmailProfile && isQualifiedTutorUser(authEmailProfile))
+        (userProfile && isQualifiedTutorUser(userProfile, unitId)) ||
+        (authEmailProfile && isQualifiedTutorUser(authEmailProfile, unitId))
     );
     if (tutorMode && tutorEligible) {
         return { authorized: true, reason: "qualified-tutor", accessMode: "tutor" };
+    }
+
+    const requesterEmail = normalizeEmail(authEmail || userProfile?.email || "");
+    if (tutorMode && requesterEmail && isAdminEmail(requesterEmail)) {
+        return { authorized: true, reason: "admin-simulated", accessMode: "tutor" };
     }
 
     const ordersSnap = await db.collection("orders")

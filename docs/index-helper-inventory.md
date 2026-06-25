@@ -77,6 +77,7 @@
 - `assertTutorApplicationState(appData, { source, status })` - tutor application 狀態檢查。
 - `isAssignmentAuthorized(...)` - 作業授權檢查。
 - `hasQualifiedTutorStatus(userData, unitId)` - 是否具備單元授權 tutor 資格。
+- `hasAnyQualifiedTutorStatus(userData)` - 是否具備任一單元的 tutor 授權（僅供彙總/清單用途）。
 - `isTutorFullyQualifiedForCourse(userData, courseId, lessons)` - 是否具備課程層級 tutor 資格。
 
 ### 1.4 Tutor / Tutor Applications

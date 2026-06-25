@@ -41,7 +41,7 @@ Current ledger-facing callable surface:
 - `getRevenueSharePolicies` / `upsertRevenueSharePolicy` / `getInvestorProfiles` / `upsertInvestorProfile` / `upsertValuationSnapshot` / `upsertBalanceSheetSnapshot` / `issueInvestorEquity` / `recordInvestorFinanceEvent` / `settleAnnualInvestorDividends`: public callable proxies in `functions/index.js`, forwarded to `functions-admin/index.js`
 - `recordLedgerEvent` / `generateLedgerReport` / `exportLedgerReport` / `recordOrderRefundEvent`: public callable proxies in `functions/index.js`, forwarded to `functions-admin/index.js`
 - `resolveDistributorCheckoutQuote`: public callable proxy in `functions/index.js`, forwarded to `functions-admin/index.js`
-- `verifyReferralLink` / `verifyPromoCode` / `findClassroomInviteBinding` / `findClassroomInviteBindingHttp` / `precheckGithubClassroomAccess`: public proxies in `functions/index.js`, forwarded to `functions-admin/index.js`
+- `verifyReferralLink` / `findClassroomInviteBinding` / `findClassroomInviteBindingHttp` / `precheckGithubClassroomAccess`: public proxies in `functions/index.js`, forwarded to `functions-admin/index.js`
 - `recordLedgerEvent`: generic canonical event ingestion
 - `recordOrderRefundEvent`: admin refund / reversal entry point for orders
 - `generateLedgerReport`: materialize a period report from snapshots

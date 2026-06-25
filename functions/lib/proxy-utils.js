@@ -93,7 +93,7 @@ function proxyPaymentCallable(functionName) {
 }
 
 function proxyAdminCallable(functionName) {
-    return onCall(async (request) => callThroughProxy(functionName, request, "Failed to forward admin request.", "us-central1"));
+    return onCall(async (request) => callThroughProxy(functionName, request, "Failed to forward admin request.", "asia-east1"));
 }
 
 function proxyAdminRequest(functionName) {
@@ -112,7 +112,7 @@ function proxyAdminRequest(functionName) {
                 queryString.append(key, String(value));
             }
         });
-        const url = `${getProxyFunctionBaseUrl(functionName, "us-central1")}${queryString.toString() ? `?${queryString.toString()}` : ""}`;
+        const url = `${getProxyFunctionBaseUrl(functionName, "asia-east1")}${queryString.toString() ? `?${queryString.toString()}` : ""}`;
         const response = await fetch(url, {
             method: req.method || "GET",
             headers,

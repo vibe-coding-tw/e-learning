@@ -72,6 +72,7 @@ graph TD
 ## 5. Security & Validation
 - **Role Enforcement**: Only users with `role === 'admin'` can see or execute the `handleDecideApplication` logic.
 - **Context Locking**: Tutors are authorized on a **per-unit** basis, ensuring they only manage content they are qualified for.
+- **授權判定一致性**: 付款與課程開通流程只接受目標單元的 `users.tutorConfigs[unitId].authorized === true`；`tutorMode` 只是切換到導師測試路徑，不會自動放行其他單元。
 - **Traceability**: All recommendations are linked to the recommending tutor's UID for audit purposes.
 
 ## 6. Implementation Notes

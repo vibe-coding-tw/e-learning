@@ -57,6 +57,7 @@ const {
     hasPhysicalOrderItem,
     buildOrderItemsDescription
 } = require("./lib/order-display");
+const financeCallables = require("./lib/finance-callables");
 
 if (!admin.apps.length) {
     admin.initializeApp();
@@ -519,6 +520,8 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         });
     }
 });
+
+Object.assign(exports, financeCallables);
 
 module.exports = {
     initiatePayment: exports.initiatePayment,

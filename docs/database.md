@@ -27,6 +27,9 @@
 | `bindingUpdatedAt` | timestamp | 經銷商綁定最後更新時間。 |
 | `courseProgress` | map | 學習進度聚合資料。 |
 | `orders` | array | 主要為 Dashboard 聚合回傳欄位，非主要持久化來源（實際訂單以 `orders` 集合為準）。 |
+| `paid` | boolean | 付款快取旗標；通常由成功訂單同步寫入，非主授權來源。 |
+| `hasStarterAccess` | boolean | starter 課程快取旗標；通常由成功 starter 訂單同步寫入，非主授權來源。 |
+| `lastPaidOrderId` | string | 最近一次成功付款訂單編號，屬於快取欄位。 |
 | `payoutAccount` | string | 分潤收款帳號（可選；未填時分潤 credit 會累積但不會月結支付）。 |
 | `updatedAt` | timestamp | 最後更新時間。 |
 | `createdAt` / `joinedAt` | timestamp | 建立時間。 |
@@ -142,6 +145,7 @@
 > 所有執行期資料比對（包含邀請連結、課程授權、單元歸屬）都必須直接查 Firestore，禁止使用程式碼內相容名單或 fallback 白名單。
 > `metadata_lessons` 可同時承載課程與部分商品 metadata，但價格欄位只應視為相容/過渡資訊，正式價格來源是 `dealer_price_books`。
 > 課程 UI 邊界：`metadata_lessons.course_units` 是跨單元結構；左側 page menu 必須由目前單元 HTML 的 `window.UNITS` / `#sidebar-nav` 定義。完整規格見 `docs/course-ui-runtime-spec.md`。
+> 課程開通設定與判定順序，請另參考 [`docs/courses/course-activation-settings.md`](courses/course-activation-settings.md)。
 > 新課程的新增 / 修改 / 停用流程，請參考 [`docs/course-management-runbook.md`](course-management-runbook.md)。
 
 #### 價格遷移備註
