@@ -45,7 +45,7 @@
   3. 最後才考慮是否保留極窄的相容分支
 - 語言切換必須仍可從 top-nav 直接操作，且變更後應保留目前課程位置與 `lang` / `locale` 狀態。
 - top-nav 的課程名稱必須來自 Firestore course metadata 的 `title` / `titleEn`，不得顯示 sidebar 的目前單元名稱。
-- FAB 必須在課程頁可見，除非頁面屬於明確排除清單或正在進行 media mode。
+- FAB 必須在課程頁可見，除非頁面屬於明確排除清單或正在進行 media mode。Mobile 上頁面滾至底部 150px 內時 FAB 自動隱藏（避免擋住下一頁按鍵），往上滾再出現。
 - TAB 必須依 Firestore 與課程內容狀態顯示，不可因為 shell 缺節點就默默消失。
 - 麵包屑必須顯示當前課程與目前頁面位置，且在 starter / basic / advanced / prepare 之間保持一致的結構。
 - 上方 TAB 與左側 page menu 是不同層級：

@@ -1012,6 +1012,17 @@ function injectDashboardFAB() {
     `;
     fab.onclick = function () { openDashboardModal(courseParam); };
     document.body.appendChild(fab);
+    let scrollTimer;
+    const onScroll = () => {
+        cancelAnimationFrame(scrollTimer);
+        scrollTimer = requestAnimationFrame(() => {
+            const scrollBottom = window.scrollY + window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            fab.classList.toggle('fab-hidden', docHeight - scrollBottom < 150);
+        });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
 }
 
 function normalizeCourseTopNavBrandLink() {

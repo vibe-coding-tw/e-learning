@@ -997,6 +997,17 @@ function ensureDashboardFabFallback() {
                 }
             };
             document.body.appendChild(fab);
+            let scrollTimer;
+            const onScroll = () => {
+                cancelAnimationFrame(scrollTimer);
+                scrollTimer = requestAnimationFrame(() => {
+                    const scrollBottom = window.scrollY + window.innerHeight;
+                    const docHeight = document.documentElement.scrollHeight;
+                    fab.classList.toggle('fab-hidden', docHeight - scrollBottom < 150);
+                });
+            };
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
         };
 
         setTimeout(inject, 50);
@@ -1477,6 +1488,11 @@ function applyStartUnitModernTheme() {
             }
             #dashboard-fab:hover {
                 transform: translateY(-2px) scale(1.06) !important;
+            }
+            #dashboard-fab.fab-hidden {
+                opacity: 0 !important;
+                pointer-events: none !important;
+                transform: scale(0.8) !important;
             }
             @media (max-width: 768px) {
                 .ms-sidebar { display: none !important; }

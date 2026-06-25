@@ -1,5 +1,5 @@
 # Course UI Runtime Specification
-**Updated**: 2026-06-25
+**Updated**: 2026-06-25 (FAB mobile auto-hide)
 
 本文件定義 `/courses/**` 課程內容頁的正式 UI 規格、元件責任邊界、資料來源與驗收方式。
 
@@ -36,7 +36,7 @@
 | `.unit-tabs-wrapper` | 顯示同一課程內的跨單元 TAB；目前單元需有 active 狀態 |
 | `.ms-sidebar` | 顯示目前單元的 page menu，不得顯示跨單元列表 |
 | `.ms-breadcrumb` | 顯示目前課程與目前頁面位置 |
-| `#dashboard-fab` | 開啟目前單元的 dashboard；明確排除頁面或 media mode 除外 |
+| `#dashboard-fab` | 開啟目前單元的 dashboard；明確排除頁面或 media mode 除外。Mobile 上頁面滾至底部 150px 內時自動隱藏（避免擋住下一頁按鍵），往上滾再出現 |
 | 語言選單 | 可切換內容語系，並保留目前課程位置與必要 query state |
 
 缺少任一必要元件，都視為 course shell 未完整載入，不得以隱藏元件或縮減功能作為修復。
