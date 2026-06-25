@@ -17,6 +17,9 @@ const {
     registerIndexExports
 } = require('./lib/index-export-registry');
 const {
+    registerAdminExports
+} = require('./lib/index-export-admin');
+const {
     initializeFunctionsRuntime
 } = require('./lib/functions-bootstrap');
 const admin = require("firebase-admin");
@@ -46,4 +49,8 @@ registerIndexExports({
     createMapReplyHandler
 });
 
-Object.assign(exports, require("functions-admin"));
+registerAdminExports(
+    exports,
+    proxyAdminCallable,
+    proxyAdminRequest
+);

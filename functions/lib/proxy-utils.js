@@ -1,13 +1,13 @@
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 
-function getProxyFunctionBaseUrl(functionName) {
+function getProxyFunctionBaseUrl(functionName, region = "asia-east1") {
     const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || "e-learning-942f7";
     const isEmulator = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.FIREBASE_EMULATOR_HUB;
     if (isEmulator) {
         const emulatorHost = process.env.FUNCTIONS_EMULATOR_HOST || "127.0.0.1:15001";
-        return `http://${emulatorHost}/${projectId}/asia-east1/${functionName}`;
+        return `http://${emulatorHost}/${projectId}/${region}/${functionName}`;
     }
-    return `https://asia-east1-${projectId}.cloudfunctions.net/${functionName}`;
+    return `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
 }
 
 function normalizeHttpsErrorCode(code = "") {
@@ -42,8 +42,8 @@ function extractCallableError(payload) {
     return { code, message };
 }
 
-function callThroughProxy(functionName, request, failurePrefix) {
-    return fetch(getProxyFunctionBaseUrl(functionName), {
+function callThroughProxy(functionName, request, failurePrefix, region = "asia-east1") {
+    return fetch(getProxyFunctionBaseUrl(functionName, region), {
         method: "POST",
         headers: {
             "Authorization": request?.rawRequest?.headers?.authorization || request?.rawRequest?.headers?.Authorization || "",
@@ -93,7 +93,7 @@ function proxyPaymentCallable(functionName) {
 }
 
 function proxyAdminCallable(functionName) {
-    return onCall(async (request) => callThroughProxy(functionName, request, "Failed to forward admin request."));
+    return onCall(async (request) => callThroughProxy(functionName, request, "Failed to forward admin request.", "us-central1"));
 }
 
 function proxyAdminRequest(functionName) {
@@ -112,7 +112,7 @@ function proxyAdminRequest(functionName) {
                 queryString.append(key, String(value));
             }
         });
-        const url = `${getProxyFunctionBaseUrl(functionName)}${queryString.toString() ? `?${queryString.toString()}` : ""}`;
+        const url = `${getProxyFunctionBaseUrl(functionName, "us-central1")}${queryString.toString() ? `?${queryString.toString()}` : ""}`;
         const response = await fetch(url, {
             method: req.method || "GET",
             headers,

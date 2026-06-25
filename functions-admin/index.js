@@ -121,6 +121,54 @@ const {
     "normalizeLogisticsData",
     "normalizeOrderItems"
 ]);
+
+function resolveLessonForOrderItemRuntime(itemKey = "", lessons = []) {
+    if (!itemKey) return null;
+    const candidates = new Set([
+        String(itemKey).trim(),
+        String(itemKey).trim().replace(/\.html$/i, ""),
+        normalizeLookupValue(itemKey),
+        cleanUnitId(itemKey),
+        normalizeCourseFile(itemKey)
+    ].filter(Boolean));
+
+    return lessons.find((lesson) => {
+        const keys = getLessonLookupKeys(lesson);
+        for (const candidate of candidates) {
+            if (keys.has(candidate)) return true;
+        }
+        return false;
+    }) || findLessonByCourseRef(itemKey, lessons);
+}
+
+function orderExpiryToMillis(value) {
+    if (!value) return 0;
+    if (typeof value.toMillis === "function") return value.toMillis();
+    if (typeof value.toDate === "function") {
+        const date = value.toDate();
+        return date instanceof Date ? date.getTime() : 0;
+    }
+    if (value instanceof Date) return value.getTime();
+    if (typeof value === "number") return value;
+    const parsed = new Date(value).getTime();
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function isActivePaidOrder(orderData = {}) {
+    if (String(orderData.status || "").toUpperCase() !== "SUCCESS") return false;
+    const expiryMs = orderExpiryToMillis(orderData.expiryDate);
+    return !expiryMs || expiryMs > Date.now();
+}
+
+function hasActiveOrderForCourseSnapshot(ordersSnapshot = null, targetUnitId = "", lessons = [], resolvers = {}) {
+    const docs = Array.isArray(ordersSnapshot?.docs) ? ordersSnapshot.docs : [];
+    return docs.some((doc) => {
+        const orderData = typeof doc?.data === "function" ? (doc.data() || {}) : {};
+        if (!isActivePaidOrder(orderData)) return false;
+        const items = orderData.items || {};
+        return Object.keys(items).some((itemKey) => itemContainsUnit(itemKey, lessons, targetUnitId, resolvers));
+    });
+}
 const {
     ensureGithubOrgMembership
 } = bindLazyExports("vibe-functions-core/github-utils", [
@@ -216,6 +264,7 @@ const {
     normalizeLookupValue,
     normalizeCanonicalCourseKey,
     getCanonicalLessonIdentity,
+    getLessonLookupKeys,
     resolveCanonicalUnitId,
     canonicalizeLessonForDashboard,
     findParentCourseIdByUnit,
@@ -239,6 +288,13 @@ const {
     assertRequiredValue
 } = require("vibe-functions-core/access-utils-core");
 const { withAssignmentUrlAliases } = require("vibe-functions-core/dashboard-utils-core");
+
+const orderNormalizationResolvers = {
+    resolveLessonForOrderItem: resolveLessonForOrderItemRuntime,
+    resolveCanonicalUnitId: (value, lessons = []) => resolveCanonicalUnitId(value, lessons),
+    cleanUnitId,
+    normalizeLookupValue
+};
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
@@ -373,12 +429,12 @@ async function getRole(uid, fallbackEmail = "") {
         const userDoc = await db.collection("users").doc(uid).get();
         if (userDoc.exists) {
             const userData = userDoc.data() || {};
-            if (isAdminEmail(userData.email || fallbackEmail)) return "admin";
+            if (typeof isAdminEmail === "function" && isAdminEmail(userData.email || fallbackEmail)) return "admin";
             const role = userData.role;
             return role === "admin" ? "admin" : "user";
         }
         const authEmail = fallbackEmail || await lookupAuthUserEmailByUid(uid);
-        if (isAdminEmail(authEmail)) return "admin";
+        if (typeof isAdminEmail === "function" && isAdminEmail(authEmail)) return "admin";
     } catch (e) {
         console.error("[Role] Error in getRole:", e);
     }
@@ -392,7 +448,7 @@ function assertAdminRole(requesterRole, message = "僅限管理員執行此操�
 }
 
 function resolveAdminRole(userData = {}, fallbackEmail = "") {
-    if (isAdminEmail(userData.email || fallbackEmail)) return "admin";
+    if (typeof isAdminEmail === "function" && isAdminEmail(userData.email || fallbackEmail)) return "admin";
     return userData.role === "admin" ? "admin" : "user";
 }
 
@@ -3382,7 +3438,7 @@ const getDashboardData = onCall({ secrets: [CONTENT_REPO_TOKEN] }, async (reques
     const lessons = await loadLessonsWithOptionalDistributorOverride(data.distributorId || "");
     const physicalUnitIds = getPhysicalUnitIdSet(lessons);
 
-    if (!data.unitId && !data.courseId && requesterRole !== "admin" && !isAdminEmail(email)) {
+    if (!data.unitId && !data.courseId && requesterRole !== "admin" && !(typeof isAdminEmail === "function" && isAdminEmail(email))) {
         throw new HttpsError("permission-denied", "You must specify a unitId or courseId to view your dashboard.");
     }
 
@@ -4079,7 +4135,7 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
         .where("status", "==", "SUCCESS")
         .get();
 
-    const hasPaidCourse = !ordersSnapshot.empty && hasActiveOrderForCourse(ordersSnapshot, effectiveCourseId, lessons, orderNormalizationResolvers);
+    const hasPaidCourse = !ordersSnapshot.empty && hasActiveOrderForCourseSnapshot(ordersSnapshot, canonicalUnitId || effectiveCourseId, lessons, orderNormalizationResolvers);
     if (!hasPaidCourse) {
         return {
             authorized: false,

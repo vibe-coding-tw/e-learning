@@ -38,6 +38,7 @@
   - `status === "SUCCESS"`
   - `expiryDate > now`
 - `checkPaymentAuthorization` 與 `resolveAssignmentAccess` 必須共用同一套判定邏輯。
+- **`getLessonLookupKeys` 陷阱**：此函式定義於 `dashboard-utils-core.js` 但曾未 export，導致 `resolveLessonForOrderItemRuntime` 與 `findLessonByCourseRef` 崩潰。任何在 `dashboard-utils-core.js` 新增的工具函式若被其他模組使用，必須同時加入 `module.exports`。
 - **課程 Token 安全防護（IP 與 UID 雙重綁定）**：
   - 授權 Token 格式升級為 `pageId|scopePart|expiry|uid|clientIp|signature` 6 段式架構。
   - `serveCourse` 在驗證 Token 時，必須提取連線的 Client IP（處理標準化 IPv6 與 `x-forwarded-for` 標頭）並與 Token 中的 IP 比對，不符時以 `403` 拒絕，以防範付費 Token 被任意複製擴散。同時支援 legacy 4 段式 Token 的向下相容。
@@ -139,7 +140,11 @@ git commit -m "docs: update README"
 ---
 
 ## 10. 開發與部署流程
-
+ 
+- **本地優先驗證原則 (Local-First Validation)**：所有的修正、功能調整或代碼變更，**都必須先在本地端（Local / Emulator 環境）進行開發與完整功能驗證**，確保運行完全沒有任何問題（語法檢驗通過、邏輯正確、模擬器測試無誤）後，才可以執行部署到 Production。
+  - 啟動 emulator：`npx firebase emulators:start --project e-learning-942f7`
+  - 本地 functions：`http://127.0.0.1:15001`，本地 Firestore：`127.0.0.1:18080`
+  - 若修改 `shared-function-core/`，必須先重建 `.tgz`、複製到所有 codebase、執行 `npm install` 更新 `node_modules`，再用 `node -e "require('vibe-functions-core/...')"` 確認新 export 正確，最後才啟動 emulator。
 - 任何功能更新、Bug 修復或設定調整完成後：
   1. 若有修改前端靜態資源 (JS/CSS)，必須先執行 `node scripts/fingerprint-static-assets.js` 更新資產指紋。
   2. `git add .`

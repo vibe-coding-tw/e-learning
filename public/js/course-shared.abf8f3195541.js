@@ -622,22 +622,31 @@ function getCourseLocaleOptions() {
 }
 
 function getActiveCourseLocale() {
-    try {
-        const params = new URLSearchParams(window.location.search);
-        const queryLocale = String(params.get('locale') || params.get('lang') || '').trim();
-        if (queryLocale) return queryLocale;
-    } catch (_) {}
-    try {
-        const htmlLang = String(document.documentElement?.lang || '').trim();
-        if (htmlLang) return htmlLang;
-    } catch (_) {}
-    try {
-        const stored = String(localStorage.getItem('vibe_user_locale') || '').trim();
-        if (stored) return stored;
-    } catch (_) {}
-    const navLang = String(navigator.language || '').trim();
-    if (navLang) return navLang;
-    return getCourseRuntimeConfig().defaultLocale || 'zh-TW';
+    const getRaw = () => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const queryLocale = String(params.get('locale') || params.get('lang') || '').trim();
+            if (queryLocale) return queryLocale;
+        } catch (_) {}
+        try {
+            const stored = String(localStorage.getItem('vibe_user_locale') || '').trim();
+            if (stored) return stored;
+        } catch (_) {}
+        try {
+            const htmlLang = String(document.documentElement?.lang || '').trim();
+            if (htmlLang) return htmlLang;
+        } catch (_) {}
+        const navLang = String(navigator.language || '').trim();
+        if (navLang) return navLang;
+        return getCourseRuntimeConfig().defaultLocale || 'zh-TW';
+    };
+
+    const resolved = getRaw();
+    const lower = String(resolved || '').toLowerCase();
+    if (lower === 'tw' || lower.startsWith('tw-') || lower.startsWith('zh')) {
+        return 'zh-TW';
+    }
+    return resolved;
 }
 
 function isZhLikeCourseLocale(locale = '') {

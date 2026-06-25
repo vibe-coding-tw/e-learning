@@ -41,7 +41,7 @@ async function lookupAuthUserEmailByUid(uid = "") {
 }
 
 function assertAuthenticated(auth, message = "請先登入") {
-    if (!auth) throw new HttpsError("unauthenticated", message);
+    if (!auth || !auth.uid) throw new HttpsError("unauthenticated", message);
 }
 
 function assertRequiredValue(value, message = "缺少必要參數") {

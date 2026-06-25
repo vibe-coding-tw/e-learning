@@ -7,7 +7,6 @@ if (!admin.apps.length) {
 const {
     buildReferralLinkDocId,
     extractReferralAssignmentsFromOrder,
-    hasActiveOrderForCourse,
     isPhysicalMetadataLesson,
     itemContainsUnit
 } = require("vibe-functions-core/order-utils");
@@ -16,7 +15,6 @@ const {
 } = require("vibe-functions-core/tutor-utils");
 const {
     normalizeText,
-    getLessonLookupKeys,
     getCanonicalLessonIdentity,
     findLessonByCourseRef,
     resolveLessonForOrderItem,
@@ -76,6 +74,64 @@ async function syncUserPurchaseCacheFromOrder(db, orderId, orderData = {}, lesso
     await userRef.set(patch, { merge: true });
 }
 
+function toMillis(value) {
+    if (!value) return 0;
+    if (typeof value.toMillis === "function") return value.toMillis();
+    if (typeof value.toDate === "function") {
+        const date = value.toDate();
+        return date instanceof Date ? date.getTime() : 0;
+    }
+    if (value instanceof Date) return value.getTime();
+    if (typeof value === "number") return value;
+    const parsed = new Date(value).getTime();
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function isActivePaidOrder(orderData = {}) {
+    if (String(orderData.status || "").toUpperCase() !== "SUCCESS") return false;
+    const expiryMs = toMillis(orderData.expiryDate);
+    return !expiryMs || expiryMs > Date.now();
+}
+
+function resolveItemToLesson(itemKey = "", lessons = []) {
+    if (!itemKey) return null;
+    const key = String(itemKey).replace(/\.html$/i, "").toLowerCase().trim();
+    return lessons.find((l) => {
+        const id = String(l.id || l.docId || l.courseId || l.courseKey || "").toLowerCase().trim();
+        if (id === key) return true;
+        const idNoExt = id.replace(/\.html$/i, "");
+        if (idNoExt === key) return true;
+        if (Array.isArray(l.aliases)) {
+            if (l.aliases.some((a) => String(a).toLowerCase().trim() === key)) return true;
+        }
+        return false;
+    }) || null;
+}
+
+function hasActiveOrderForCourseSnapshot(ordersSnap = null, targetUnitId = "", lessons = [], resolvers = {}) {
+    const docs = Array.isArray(ordersSnap?.docs) ? ordersSnap.docs : [];
+    const result = docs.some((doc) => {
+        const orderData = typeof doc?.data === "function" ? (doc.data() || {}) : {};
+        if (!isActivePaidOrder(orderData)) {
+            console.log("[order-flow] order skipped (not active/paid)", { orderId: doc.id, status: orderData.status });
+            return false;
+        }
+        const items = orderData.items || {};
+        const itemKeys = Object.keys(items);
+        console.log("[order-flow] checking order", { orderId: doc.id, targetUnitId, status: orderData.status, itemKeys: JSON.stringify(itemKeys), itemsType: typeof items, isArray: Array.isArray(items) });
+        return itemKeys.some((itemKey) => {
+            const resolvedLesson = resolveItemToLesson(itemKey, lessons);
+            const lessonUnits = Array.isArray(resolvedLesson?.courseUnits) ? resolvedLesson.courseUnits : [];
+            console.log("[order-flow] itemContainsUnit", { itemKey, targetUnitId, resolvedLessonId: resolvedLesson?.id || resolvedLesson?.docId || "(null)", lessonUnits: JSON.stringify(lessonUnits) });
+            const match = itemContainsUnit(itemKey, lessons, targetUnitId, resolvers);
+            console.log("[order-flow] itemContainsUnit result", { itemKey, targetUnitId, match });
+            return match;
+        });
+    });
+    console.log("[order-flow] hasActiveOrderForCourseSnapshot", { orderCount: docs.length, targetUnitId, result });
+    return result;
+}
+
 async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], tutorMode = false, authEmail = "") {
     if (!uid || !courseId || !unitId) {
         return { authorized: false, reason: "missing-context" };
@@ -125,6 +181,7 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
         level === "starter" ||
         isStarterCourseCategory(level)
     );
+    console.log("[checkOrderAccessForUnit] check-order", { uid, courseId, unitId, lessonId, category });
     console.log("[checkOrderAccessForUnit] trial-debug", {
         uid,
         courseId,
@@ -155,13 +212,13 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
         .where("status", "==", "SUCCESS")
         .get();
 
-    if (hasActiveOrderForCourse(ordersSnap, courseId, lessons, {
+    if (hasActiveOrderForCourseSnapshot(ordersSnap, unitId || courseId, lessons, {
         findLessonByCourseRef,
         resolveCanonicalUnitId: (value) => cleanUnitId(value),
-        getLessonLookupKeys,
+        resolveLessonForOrderItem: resolveItemToLesson,
         itemContainsUnit: (itemKey, allLessons, targetUnitId) => itemContainsUnit(itemKey, allLessons, targetUnitId, {
             resolveCanonicalUnitId: (value) => cleanUnitId(value),
-            resolveLessonForOrderItem
+            resolveLessonForOrderItem: resolveItemToLesson
         })
     })) {
         return { authorized: true, reason: "active-order", accessMode: "paid" };

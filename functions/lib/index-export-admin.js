@@ -11,6 +11,7 @@ const registerAdminExports = (target, proxyAdminCallable, proxyAdminRequest) => 
 
     registerProxyExports(target, [
         ["upsertLessonMetadata", "upsertLessonMetadata"],
+        ["getLessonsMetadata", "getLessonsMetadata"],
         ["updateLessonI18n", "updateLessonI18n"],
         ["updateSystemConfig", "updateSystemConfig"],
         ["getSystemConfig", "getSystemConfig"],

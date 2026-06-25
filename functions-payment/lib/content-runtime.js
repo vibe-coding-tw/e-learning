@@ -25,6 +25,26 @@ const {
     resolveLessonForOrderItem
 } = dashboardUtils;
 
+function resolveLessonForOrderItemRuntime(itemKey = "", lessons = []) {
+    if (!itemKey) return null;
+    const candidates = new Set([
+        itemKey,
+        String(itemKey).replace(/\.html$/i, ""),
+        normalizeText(itemKey).replace(/\.html$/i, ""),
+        normalizeLegacyId(itemKey),
+        cleanUnitId(itemKey),
+        normalizeCourseVariantKey(itemKey)
+    ]);
+
+    return lessons.find((lesson) => {
+        const keys = getLessonLookupKeys(lesson);
+        for (const candidate of candidates) {
+            if (candidate && keys.has(candidate)) return true;
+        }
+        return false;
+    }) || findCourseByPageOrUnit(itemKey, itemKey, lessons);
+}
+
 function resolvePreferredLocales(runtimeConfig = null, req = null) {
     const queryLocale = normalizeLocale(req?.query?.lang || req?.query?.locale || "");
     const header = String(req?.headers?.["accept-language"] || "");
@@ -285,7 +305,7 @@ module.exports = {
     getLessonLookupKeys,
     getCanonicalLessonIdentity,
     findLessonByCourseRef,
-    resolveLessonForOrderItem,
+    resolveLessonForOrderItem: resolveLessonForOrderItemRuntime,
     cleanUnitId,
     normalizeCourseFile,
     normalizeCourseVariantKey,

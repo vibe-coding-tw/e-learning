@@ -29,6 +29,7 @@ function normalizeLocale(locale = '') {
     if (!raw) return '';
     if (/^zh[-_]tw$/i.test(raw)) return 'zh-TW';
     if (/^zh/i.test(raw)) return 'zh-TW';
+    if (/^tw/i.test(raw)) return 'zh-TW';
     if (/^en/i.test(raw)) return 'en';
     return raw;
 }
@@ -544,6 +545,7 @@ module.exports = {
     normalizeLookupValue,
     normalizeCanonicalCourseKey,
     getCanonicalLessonIdentity,
+    getLessonLookupKeys,
     resolveCanonicalUnitId,
     canonicalizeLessonForDashboard,
     withAssignmentUrlAliases,

@@ -240,7 +240,8 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
         lessonId: lesson?.id || lesson?.docId || lesson?.courseId || "",
         category: lesson?.category || "",
         level: lesson?.level || "",
-        units: Array.isArray(lesson?.courseUnits) ? lesson.courseUnits.length : 0
+        units: Array.isArray(lesson?.courseUnits) ? lesson.courseUnits.length : 0,
+        courseUnits: JSON.stringify(Array.isArray(lesson?.courseUnits) ? lesson.courseUnits : [])
     });
     if (!lesson && !pageId && !fileName) {
         return { authorized: false, reason: "missing-context" };

@@ -214,7 +214,12 @@ function itemContainsUnit(itemKey = "", lessons = [], targetUnitId = "", resolve
     const lesson = resolveLessonForOrderItem(itemKey, lessons);
     if (lesson) {
         const lessonUnits = Array.isArray(lesson.courseUnits) ? lesson.courseUnits : [];
-        return lessonUnits.some(unitId => normalizeCourseFile(unitId) === target);
+        if (lessonUnits.some(unitId => normalizeCourseFile(unitId) === target)) return true;
+
+        const lessonCourseId = normalizeCourseFile(lesson.courseId || lesson.courseKey || lesson.id || lesson.docId || "");
+        if (lessonCourseId && lessonCourseId === target) return true;
+
+        return false;
     }
 
     return normalizeCourseFile(itemKey) === target;

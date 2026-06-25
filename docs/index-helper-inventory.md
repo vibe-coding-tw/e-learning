@@ -133,7 +133,7 @@
 - `findParentCourseIdByUnit(unitId, lessons)` - 由 unit 找 parent course。
 - `findCourseByPageOrUnit(pageId, fileName, lessons)` - course 反查。
 - `findCourseByUnitId(unitId, lessons)` - 由 unitId 找 course。
-- `getLessonLookupKeys(lesson)` - lesson lookup keys。
+- `getLessonLookupKeys(lesson)` - lesson lookup keys。⚠️ 必須加入 `module.exports` 才能被跨 codebase 使用（dashboard-utils-core.js 的 export 遺漏曾導致崩潰）。
 - `findLessonByCourseRef(courseRef, lessons)` - courseRef 反查 lesson。
 - `resolveLessonForOrderItem(itemKey, lessons)` - 訂單項目對應 lesson。
 - `collectPurchasedUnitIds(items, lessons)` - 已購買 unitId 收集。

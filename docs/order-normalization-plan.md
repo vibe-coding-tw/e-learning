@@ -1,5 +1,5 @@
 # Order Normalization Dependency Injection Plan
-**Updated**: 2026-06-02
+**Updated**: 2026-06-24
 
 > 這份文件只描述 `functions/index.js` 中訂單 / referral normalization 邏輯的拆分計畫，不改任何對外契約。
 
@@ -62,6 +62,14 @@
 
 - `findMatchingOrderItemIdForReferral`
 - `itemContainsUnit`
+
+## 3.4 ⚠️ 已知陷阱
+
+1. **`getLessonLookupKeys` 必須 export**：此函式定義於 `shared-function-core/dashboard-utils-core.js`，但曾未加入 `module.exports`，導致所有從 `.tgz` 引用它的模組（`content-runtime.js`、`dashboard-utils.js`）在執行時崩潰。新增任何輔助函式時須一併檢查 exports。
+
+2. **`resolveLessonForOrderItem` 必須在 resolvers 頂層**：`itemContainsUnit` 從 `resolvers.resolveLessonForOrderItem` 讀取 resolver，若只放在巢狀的 `resolvers.itemContainsUnit` 內部則不被使用（等於永遠取不到 lesson）。
+
+3. **`.tgz` 快取問題**：Cloud Build 在部署時會快取 `node_modules`，即使覆蓋 `.tgz` 檔案，若 `package-lock.json` 的 integrity hash 未更新，仍使用舊版套件。更新共用函式庫後須確認 lockfile 重新產生。
 
 ## 4. Non-Goals
 

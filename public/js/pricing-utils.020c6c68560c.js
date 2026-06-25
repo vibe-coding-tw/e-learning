@@ -2,7 +2,7 @@
   function normalizeLocale(raw = "") {
     const v = String(raw || "").trim().toLowerCase();
     if (!v) return "en";
-    if (v.startsWith("zh")) return "zh-TW";
+    if (v.startsWith("zh") || v === "tw" || v.startsWith("tw-")) return "zh-TW";
     return "en";
   }
 

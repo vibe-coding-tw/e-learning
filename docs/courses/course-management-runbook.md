@@ -182,7 +182,43 @@
 
 ---
 
-## 6. Related Docs
+## 7. 課程授權與開通機制 (Course Authorization & Enablement)
+
+本平台採用 Firestore 為唯一授權來源（Firestore First），任何單元的讀取或作業派發，在後端都會透過 `checkOrderAccessForUnit` 進行動態開通與權限驗證。
+
+### 7.1 系統開通/授權的四大途徑
+
+學員或使用者符合以下任一條件，系統即視為「已開通/授權」該單元：
+
+1. **免費課程 (Free Course)**：
+   - 該單元對應之課程在 `dealer_price_books` 中設定的價格 `<= 0`。
+2. **新手 30 天體驗期 (Trial Access)**：
+   - 單元屬於入門級別（`level` 為 `starter`，或 `category` 為 `car-starter`，或 `docId` 以 `car-starter-` 開頭）。
+   - 學員帳號建立時間（Auth `creationTime` 或 User 文件的註冊時間）距離當前時間小於 **30 天**。
+3. **付費訂單開通 (Active Paid Order)**：
+   - `orders` 集合中存在該學員對應此課程且狀態為 `SUCCESS` 的訂單。
+   - 訂單的 `expiryDate` 未過期（或未設定代表永久有效）。
+4. **導師測試開通 (Qualified Tutor)**：
+   - 使用者具備合格導師身分，且開啟 `tutorMode`。
+
+### 7.2 付款後自動開通與驗證流程 (Post-Payment Activation)
+
+當金流通知成功付款（`paymentNotify`）時，系統會觸發以下自動開通流程：
+
+1. **數位內容驗證**：
+   - 後端解析訂單內項目，確認每門數位課程具備對應的 `courseUnits`。
+   - 透過 `checkOrderAccessForUnit` 模擬首次開通授權。
+   - 驗證成功後，在訂單寫入 `activationValidated: true`、`activationValidationStatus: "passed"`，並記錄 `activationCheckedItems`。
+   - 若發生異常（例如課程無單元定義），會標記為 `failed` 並寫入 `activationAlerts` 同步告警 Admin。
+2. **權限與購買快取同步 (Purchase Cache Sync)**：
+   - 調用 `syncUserPurchaseCacheFromOrder`，將購買狀態寫入 `users` 集合（例如 `hasStarterAccess = true`、`lastPaidOrderId` 等）。
+3. **導師與推薦關係綁定 (Tutor Binding)**：
+   - 檢查訂單中是否有帶入推薦關係或作業連結。
+   - 若有，自動在學員 User 文件的 `unitAssignments` 寫入對應單元的導師 Email。
+
+---
+
+## 8. Related Docs
 
 - [`docs/database.md`](../database.md)
 - [`docs/platform-expansion-plan.md`](./platform-expansion-plan.md)
