@@ -93,7 +93,7 @@ function normalizeLogisticsData(logisticsData = {}) {
         hasReceiverPhone: !!receiverPhone,
         hasShippingAddress: !!shippingAddress,
         hasStoreId: !!storeId,
-        isComplete: !!receiverName && !!receiverPhone && (!!shippingAddress || !!storeId || hasIntlAddress)
+        isComplete: !!(receiverName && receiverPhone && (shippingAddress || storeId || hasIntlAddress))
     };
 }
 
