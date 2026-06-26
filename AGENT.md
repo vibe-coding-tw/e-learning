@@ -192,4 +192,12 @@ git commit -m "docs: update README"
 - **Sub-modals** (`#course-unit-modal`, `#pricebook-modal`): Use `.section-modal` with `position: fixed; z-index: 90`, overlaying the full-screen main modal.
 - **Stat card colors**: 全部課程 slate, 啟用中 emerald, 已隱藏 orange, 已停用 red.
 
+## 13. Auto-Grade Assignment on Row Click
+
+- **Trigger**: Clicking any row in the Assignments table (for admin/tutor) calls `window.autoGradeAssignment(assignmentId)` instead of opening the grading modal.
+- **Backend**: `autoGradeSingleAssignment` callable function in `functions-autograde/index.js`. Accepts `assignmentId`. Fetches assignment doc, downloads grader script from Firebase Hosting (`/graders/{unitId}.sh`), clones the student repo, runs the grader script via bash, and updates the Firestore assignment document with `grade`, `status`, `tutorFeedback`, `learningState`, and a `submissionHistory` entry.
+- **Frontend**: Row gets `data-assignment-id` attribute. During grading, row is dimmed (opacity 0.5, pointer-events none). On success, assignments are re-rendered to show updated score. Uses `httpsCallable` to invoke `autoGradeSingleAssignment`.
+- **Skip condition**: If existing grade already >= 100, the function returns early without re-running the grader.
+- **Error handling**: On failure, displays error notification via `notify()`.
+
 > 最後更新：2026-06-26
