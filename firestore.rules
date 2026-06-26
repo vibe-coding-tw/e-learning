@@ -5,6 +5,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
     }
+    match /assignments/{assignmentId} {
+      allow read: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'tutor'] ||
+        request.auth.uid == resource.data.userId
+      );
+    }
     match /{document=**} {
       allow read, write: if false;
     }
