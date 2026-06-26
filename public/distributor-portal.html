@@ -25,6 +25,7 @@
         h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; }
         /* 移除右下角的懸浮按鈕 (FAB) */
         #dashboard-fab, .dashboard-fab { display: none !important; opacity: 0 !important; pointer-events: none !important; }
+        .filter-card.active { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
@@ -64,42 +65,40 @@
                             這裡是經銷商自己的定價入口。你可以維護自己的硬體售價、活動價、生效期間與版本，不需要進到總部 dashboard。
                         </p>
                     </div>
-                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">角色</div>
-                            <div id="portal-role" class="mt-2 text-lg font-black text-slate-900">—</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">經銷商</div>
-                            <div id="portal-distributor-id" class="mt-2 text-lg font-black text-slate-900">—</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">價格表數</div>
-                            <div id="portal-pricebook-count" class="mt-2 text-lg font-black text-slate-900">0</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">啟用中</div>
-                            <div id="portal-pricebook-active-count" class="mt-2 text-lg font-black text-emerald-700">0</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">專屬訂單</div>
-                            <div id="portal-order-count" class="mt-2 text-lg font-black text-slate-900">0</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">待出貨</div>
-                            <div id="portal-pending-shipment-count" class="mt-2 text-lg font-black text-amber-700">0</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Tutor 數</div>
-                            <div id="portal-tutor-count" class="mt-2 text-lg font-black text-slate-900">0</div>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">本期佣金</div>
-                            <div id="portal-settlement-paid-total" class="mt-2 text-lg font-black text-emerald-700">0</div>
-                        </div>
-                    </div>
                 </div>
             </section>
+
+
+            <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
+                <div class="px-6 pt-5 pb-4 bg-slate-50/30">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">經銷商分頁 (Distributors)</div>
+                            <div id="portal-distributor-tabs-summary" class="mt-1 text-sm text-slate-600">等待載入經銷商清單。</div>
+                        </div>
+                    </div>
+                    <div id="portal-distributor-tabs" class="mt-4 flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">專屬訂單</div>
+                    <div id="portal-order-count" class="mt-1 text-2xl font-black text-slate-900">0</div>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">待出貨</div>
+                    <div id="portal-pending-shipment-count" class="mt-1 text-2xl font-black text-amber-700">0</div>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Tutor 數</div>
+                    <div id="portal-tutor-count" class="mt-1 text-2xl font-black text-slate-900">0</div>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">本期佣金</div>
+                    <div id="portal-settlement-paid-total" class="mt-1 text-2xl font-black text-emerald-700">0</div>
+                </div>
+            </div>
 
             <section class="rounded-[2rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div class="px-6 py-6 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white">
@@ -112,23 +111,11 @@
                     </div>
                 </div>
 
-                <div class="px-6 pt-5 pb-4 border-b border-slate-100 bg-slate-50/30">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div>
-                            <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">經銷商分頁 (Distributors)</div>
-                            <div id="portal-distributor-tabs-summary" class="mt-1 text-sm text-slate-600">等待載入經銷商清單。</div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="window.distributorPortalOpenPriceBookModal('')" class="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition active:scale-95">
-                                新增價格表
-                            </button>
-                        </div>
-                    </div>
-                    <div id="portal-distributor-tabs" class="mt-4 flex flex-wrap gap-2"></div>
-                </div>
-
                 <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white">
                     <div class="flex flex-wrap items-center gap-3 flex-grow max-w-3xl">
+                        <button onclick="window.distributorPortalOpenPriceBookModal('')" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition active:scale-95 whitespace-nowrap">
+                            + 新增價格表
+                        </button>
                         <div class="relative flex-grow max-w-xs">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">🔍</span>
                             <input id="portal-pricebook-search-input" type="text" oninput="window.distributorPortalSearchPriceBooks()" placeholder="搜尋產品或價格表 ID..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
@@ -143,23 +130,19 @@
                 </div>
 
                 <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50/60">
-                    <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="filter-card active rounded-xl bg-white border border-slate-200 p-4 cursor-pointer transition hover:shadow-md" data-pricebook-filter="all" onclick="window.distributorPortalSetPriceBookFilter('all')">
                         <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">價格表數</div>
                         <div id="portal-pricebook-count-stat" class="mt-1 text-2xl font-black text-slate-900">0</div>
                     </div>
-                    <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="filter-card rounded-xl bg-white border border-slate-200 p-4 cursor-pointer transition hover:shadow-md" data-pricebook-filter="active" onclick="window.distributorPortalSetPriceBookFilter('active')">
                         <div class="text-[11px] uppercase tracking-widest font-bold text-emerald-500">啟用中</div>
                         <div id="portal-pricebook-active-count-stat" class="mt-1 text-2xl font-black text-emerald-600">0</div>
                     </div>
-                    <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="filter-card rounded-xl bg-white border border-slate-200 p-4 cursor-pointer transition hover:shadow-md" data-pricebook-filter="promo" onclick="window.distributorPortalSetPriceBookFilter('promo')">
                         <div class="text-[11px] uppercase tracking-widest font-bold text-amber-500">促銷中</div>
                         <div id="portal-pricebook-promo-count-stat" class="mt-1 text-2xl font-black text-amber-600">0</div>
                     </div>
-                    <div class="rounded-xl bg-white border border-slate-200 p-4">
-                        <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">最後更新</div>
-                        <div id="portal-pricebook-last-updated-stat" class="mt-1 text-base font-black text-blue-600">—</div>
-                    </div>
-                    <div class="rounded-xl bg-white border border-slate-200 p-4">
+                    <div class="filter-card rounded-xl bg-white border border-slate-200 p-4 cursor-pointer transition hover:shadow-md" onclick="window.distributorPortalSeedProducts()">
                         <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">可套用商品</div>
                         <div id="portal-seedable-product-count-stat" class="mt-1 text-2xl font-black text-slate-900">0</div>
                     </div>
@@ -184,7 +167,6 @@
                                     <th class="px-4 py-3">主價格 / 促銷價</th>
                                     <th class="px-4 py-3">版本 / 狀態</th>
                                     <th class="px-4 py-3">生效區間</th>
-                                    <th class="px-4 py-3 text-right">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="portal-pricebook-table-body" class="divide-y divide-slate-100 text-sm">

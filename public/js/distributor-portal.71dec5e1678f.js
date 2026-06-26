@@ -157,17 +157,14 @@ function updateSummary(items = []) {
     const activeCount = items.filter((item) => item && item.isActive !== false).length;
     const promoCount = items.filter((item) => item && item.isActive !== false && isPromoActive(item)).length;
     const lastUpdated = items[0]?.updatedAt || items[0]?.createdAt || null;
-    setText('portal-pricebook-count', String(items.length));
-    setText('portal-pricebook-active-count', String(activeCount));
-    setText('portal-pricebook-promo-count', String(promoCount));
     setText('portal-pricebook-count-stat', String(items.length));
     setText('portal-pricebook-active-count-stat', String(activeCount));
     setText('portal-pricebook-promo-count-stat', String(promoCount));
     setText('portal-last-updated', items.length ? formatDateTime(lastUpdated) : '—');
-    setText('portal-pricebook-last-updated-stat', items.length ? formatDateTime(lastUpdated) : '—');
     setText('portal-current-version', items[0]?.version || '—');
-    setText('portal-seedable-product-count', String(state.portal?.seedableProductCount || 0));
-    setText('portal-seedable-product-count-stat', String(state.portal?.seedableProductCount || 0));
+    const seedableCount = Math.max(0, (state.portal?.seedableProductCount || 0) - items.length);
+    setText('portal-seedable-product-count', String(seedableCount));
+    setText('portal-seedable-product-count-stat', String(seedableCount));
 }
 
 function getFilteredPriceBooks(items = []) {
@@ -324,13 +321,8 @@ function renderPriceBooks(items = []) {
                 </td>
                 <td class="px-4 py-4 align-top text-sm text-slate-600">
                     <div>主價格：${escapeHtml(formatDateTime(book.effectiveFrom))}</div>
-                    <div class="mt-1">主價格迄：${escapeHtml(formatDateTime(book.effectiveTo))}</div>
                     <div class="mt-1 text-[11px] text-slate-400">促銷：${escapeHtml(formatDateTime(book.promoEffectiveFrom))} ~ ${escapeHtml(formatDateTime(book.promoEffectiveTo))}</div>
                 </td>
-                <td class="px-4 py-4 align-top text-right">
-                    <button onclick="event.stopPropagation(); window.distributorPortalOpenPriceBookModal('${escapeHtml(id)}')" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
-                        編輯
-                    </button>
                 </td>
             </tr>
         `;
@@ -345,13 +337,17 @@ function renderPriceBooks(items = []) {
 }
 
 function updatePriceBookFilterButtons() {
-    const buttons = Array.from(document.querySelectorAll('[data-pricebook-filter]'));
+    const buttons = Array.from(document.querySelectorAll('[data-pricebook-filter]:not(.filter-card)'));
     buttons.forEach((button) => {
         const filter = String(button.dataset.pricebookFilter || 'all');
         const isActive = filter === String(state.priceBookFilter || 'all');
         button.className = isActive
             ? 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-950 text-white shadow-sm'
             : 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-slate-850';
+    });
+    document.querySelectorAll('.filter-card').forEach((card) => {
+        const filter = String(card.dataset.pricebookFilter || 'all');
+        card.classList.toggle('active', filter === String(state.priceBookFilter || 'all'));
     });
 }
 
@@ -593,8 +589,6 @@ async function loadPortalData(distributorId = '') {
     state.settlement = state.portal?.settlement || null;
 
     const role = String(state.portal?.role || 'user');
-    el('portal-role').textContent = role;
-    el('portal-distributor-id').textContent = state.distributorId || '—';
     const scopeNote = el('portal-scope-note');
     if (scopeNote) {
         scopeNote.textContent = state.distributorId
@@ -653,6 +647,30 @@ async function loadPriceBooks() {
         toast(`載入失敗：${e.message || 'unknown error'}`, 'error');
     }
 }
+
+window.distributorPortalSeedProducts = async function() {
+    const distributorId = state.selectedDistributorId || state.distributorId || '';
+    if (!distributorId) {
+        toast('請先選擇經銷商', 'warning');
+        return;
+    }
+    const seedableCount = Math.max(0, (state.portal?.seedableProductCount || 0) - (state.priceBooks?.length || 0));
+    if (seedableCount === 0) {
+        toast('沒有可匯入的商品', 'info');
+        return;
+    }
+    if (!confirm(`將 ${seedableCount} 筆商品匯入 ${distributorId} 的價格表（預設售價 0），是否繼續？`)) return;
+    try {
+        const fn = httpsCallable(functions, 'seedDistributorPriceBooksFromLessons');
+        const res = await fn({ distributorId, salePrice: 0 });
+        const r = res.data || {};
+        toast(`已建立 ${r.created || 0} 筆，更新 ${r.updated || 0} 筆，跳過 ${r.skipped || 0} 筆`, 'success');
+        await loadPriceBooks();
+    } catch (e) {
+        console.error('[DistributorPortal] seed failed:', e);
+        toast(`匯入失敗：${e.message || 'unknown error'}`, 'error');
+    }
+};
 
 async function loadDistributorContext(distributorId = '') {
     const targetDistributorId = String(distributorId || state.selectedDistributorId || state.distributorId || '').trim();

@@ -1323,6 +1323,7 @@ const seedDistributorPriceBooksFromLessons = onCall(async (request) => {
     const distributorData = distributorDoc.exists ? (distributorDoc.data() || {}) : {};
     const distributorCurrency = normalizeText(payload.currency || distributorData.defaultCurrency || userData.defaultCurrency || "TWD").toUpperCase() || "TWD";
     const overwrite = payload.overwrite === true;
+    const defaultSalePrice = payload.salePrice != null ? Number(payload.salePrice) : undefined;
 
     const lessons = await getLessonsForAdmin(payload.distributorId || "");
     const products = getSeedableDistributorProducts(lessons, distributorCurrency);
@@ -1351,7 +1352,7 @@ const seedDistributorPriceBooksFromLessons = onCall(async (request) => {
             sourceDocId: item.docId,
             distributorId,
             currency: item.currency || distributorCurrency,
-            salePrice: item.salePrice,
+            salePrice: defaultSalePrice ?? item.salePrice,
             ...(existingData.promoPrice != null && !overwrite ? { promoPrice: existingData.promoPrice } : {}),
             ...(existingData.promoEffectiveFrom != null && !overwrite ? { promoEffectiveFrom: existingData.promoEffectiveFrom } : {}),
             ...(existingData.promoEffectiveTo != null && !overwrite ? { promoEffectiveTo: existingData.promoEffectiveTo } : {}),
@@ -1788,6 +1789,7 @@ const getDistributorPortalData = onCall(async (request) => {
         tutorSummary: tutorData.summary,
         settlement: settlementData,
         seedableProductCount: seedableProducts.length,
+        totalLessons: lessons.length,
         user: {
             uid,
             email: auth.token?.email || userData.email || "",
