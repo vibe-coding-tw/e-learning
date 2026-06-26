@@ -2241,6 +2241,12 @@ function renderPaymentsChart(students) {
     });
 }
 
+function renderReferralInviteKitSection(data) {
+    const container = document.getElementById('promo-invite-kit-assignments');
+    if (!container) return;
+    container.classList.add('hidden');
+}
+
 // --- Tab Logic ---
 window.switchTab = function (tabName) {
     if (!tabName) return;
@@ -3458,30 +3464,6 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
         }
     };
 
-    window.autoGradeAssignment = async function (assignmentId) {
-        const row = document.querySelector(`[data-assignment-id="${assignmentId}"]`);
-        if (row) {
-            row.style.opacity = '0.5';
-            row.style.pointerEvents = 'none';
-        }
-        try {
-            const fn = httpsCallable(functions, 'autoGradeSingleAssignment');
-            const result = await fn({ assignmentId });
-            if (result?.data?.score !== undefined) {
-                notify(`自動批改完成：${result.data.score} 分`, result.data.score >= 70 ? 'success' : 'warning');
-            }
-            renderAssignments(dashboardData?.assignments || [], "", { showGuide: false });
-        } catch (e) {
-            console.error(e);
-            notify(`自動批改失敗：${e.message}`, 'error');
-        } finally {
-            if (row) {
-                row.style.opacity = '';
-                row.style.pointerEvents = '';
-            }
-        }
-    };
-
     window.submitTutorCoachingLogAction = async function () {
         const idInput = document.getElementById('grade-assignment-id');
         const hintLevel = document.getElementById('coach-hint-level').value;
@@ -3599,6 +3581,30 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
         }
     };
 }
+
+window.autoGradeAssignment = async function (assignmentId) {
+    const row = document.querySelector(`[data-assignment-id="${assignmentId}"]`);
+    if (row) {
+        row.style.opacity = '0.5';
+        row.style.pointerEvents = 'none';
+    }
+    try {
+        const fn = httpsCallable(functions, 'autoGradeSingleAssignment');
+        const result = await fn({ assignmentId });
+        if (result?.data?.score !== undefined) {
+            notify(`自動批改完成：${result.data.score} 分`, result.data.score >= 70 ? 'success' : 'warning');
+        }
+        renderAssignments(dashboardData?.assignments || [], "", { showGuide: false });
+    } catch (e) {
+        console.error(e);
+        notify(`自動批改失敗：${e.message}`, 'error');
+    } finally {
+        if (row) {
+            row.style.opacity = '';
+            row.style.pointerEvents = '';
+        }
+    }
+};
 
 window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecommendationInviteAction || async function () {
     const urlParams = new URLSearchParams(window.location.search);
