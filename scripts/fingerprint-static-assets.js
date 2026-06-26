@@ -6,6 +6,7 @@ const crypto = require('crypto');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
+const srcDir = path.join(rootDir, 'src');
 const privateCoursesDir = path.join(rootDir, 'functions', 'private_courses');
 
 function walkFiles(dir, out = []) {
@@ -44,12 +45,22 @@ function dehashAssetPath(assetPath) {
   return assetPath.replace(/\.([0-9a-f]{12})\.(js|css)$/i, '.$2');
 }
 
-function makeFingerprintAsset(sourceAbs) {
-  const ext = path.extname(sourceAbs); // .js/.css
-  const dir = path.dirname(sourceAbs);
+function findSource(resolvedAbs) {
+  if (fs.existsSync(resolvedAbs)) return resolvedAbs;
+  if (resolvedAbs.startsWith(publicDir)) {
+    const rel = path.relative(publicDir, resolvedAbs);
+    const srcCandidate = path.join(srcDir, rel);
+    if (fs.existsSync(srcCandidate)) return srcCandidate;
+  }
+  return null;
+}
+
+function makeFingerprintAsset(sourceAbs, outputDir) {
+  const ext = path.extname(sourceAbs);
   const baseNoExt = path.basename(sourceAbs, ext);
   const hash = hashFile(sourceAbs);
   const fpName = `${baseNoExt}.${hash}${ext}`;
+  const dir = outputDir || path.dirname(sourceAbs);
   const fpAbs = path.join(dir, fpName);
   fs.copyFileSync(sourceAbs, fpAbs);
 
@@ -96,11 +107,12 @@ function processHtmlFile(htmlAbs) {
     if (!/\.(js|css)$/i.test(refNoQuery)) continue;
 
     const sourcePath = dehashAssetPath(refNoQuery);
-    const sourceAbs = resolveAssetAbs(htmlAbs, sourcePath);
-    if (!sourceAbs.startsWith(publicDir)) continue;
-    if (!fs.existsSync(sourceAbs)) continue;
+    const resolvedAbs = resolveAssetAbs(htmlAbs, sourcePath);
+    if (!resolvedAbs.startsWith(publicDir)) continue;
+    const sourceAbs = findSource(resolvedAbs);
+    if (!sourceAbs) continue;
 
-    const fpAbs = makeFingerprintAsset(sourceAbs);
+    const fpAbs = makeFingerprintAsset(sourceAbs, path.dirname(resolvedAbs));
     const newRef = buildNewRef(htmlAbs, fpAbs, rawRef);
     const newAttr = `${attrName}=${quoteWrapped[0]}${newRef}${quoteWrapped[0]}`;
     replacements.push({ from: fullMatch, to: newAttr });
