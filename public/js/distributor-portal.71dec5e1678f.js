@@ -569,6 +569,7 @@ function showPriceBookModal(open = true) {
     if (!modal) return;
     modal.classList.toggle('hidden', !open);
     modal.style.display = open ? 'flex' : 'none';
+    modal.setAttribute('aria-hidden', String(!open));
     document.body.classList.toggle('modal-open', open);
 
     if (open) {
@@ -832,6 +833,7 @@ function showFulfillmentModal(open = true) {
     if (!modal) return;
     modal.classList.toggle('hidden', !open);
     modal.style.display = open ? 'flex' : 'none';
+    modal.setAttribute('aria-hidden', String(!open));
     document.body.classList.toggle('modal-open', open);
 }
 
