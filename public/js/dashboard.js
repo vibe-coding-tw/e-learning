@@ -2042,12 +2042,11 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
                 <div class="text-[10px] text-gray-400 truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail || '')}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2">
-                <!-- 顯示課程單元名稱（去除前綴）為主標題，特定作業任務為副標題 -->
                 <div class="font-bold text-gray-800 text-xs md:text-sm mb-0.5">
                     ${escapeHtml(window.formatUnitName(a.unitId))}
                 </div>
-                <div class="text-[10px] text-gray-400">
-                    ${escapeHtml(a.title || a.assignmentTitle || unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || "未指定任務")}
+                <div class="text-[10px] text-gray-400 font-mono">
+                    ${escapeHtml(a.unitId || '')}
                 </div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
