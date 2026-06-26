@@ -1258,6 +1258,29 @@ const upsertDistributorPriceBook = onCall(async (request) => {
     return { success: true, priceBookId, distributorId, docId };
 });
 
+const deleteDistributorPriceBook = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth);
+
+    const db = admin.firestore();
+    const userDoc = await db.collection("users").doc(auth.uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const payload = data || {};
+
+    const distributorId = normalizeText(payload.distributorId || userData.distributorId || userData.commercial?.distributorId || "");
+    const priceBookId = normalizeText(payload.priceBookId || "");
+    const docId = normalizeText(payload.docId || "");
+
+    assertRequiredValue(distributorId, "missing-distributor-id");
+    assertRequiredValue(priceBookId || docId, "missing-pricebook-id");
+    assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員刪除價格表", auth.token?.email || "");
+
+    const targetId = priceBookId || `${distributorId}_${docId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
+    await db.collection("dealer_price_books").doc(targetId).delete();
+
+    return { success: true, priceBookId: targetId };
+});
+
 const getLessonPriceBooks = onCall(async (request) => {
     const { auth, data } = request;
 
@@ -3868,6 +3891,7 @@ exports.updateLessonI18n = updateLessonI18n;
 exports.upsertLessonMetadata = upsertLessonMetadata;
 exports.upsertLessonPricing = upsertLessonPricing;
 exports.upsertDistributorPriceBook = upsertDistributorPriceBook;
+exports.deleteDistributorPriceBook = deleteDistributorPriceBook;
 exports.seedDistributorPriceBooksFromLessons = seedDistributorPriceBooksFromLessons;
 exports.updateUserRoutingPreference = updateUserRoutingPreference;
 exports.findClassroomInviteBinding = findClassroomInviteBinding;

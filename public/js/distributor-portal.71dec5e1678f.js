@@ -512,8 +512,6 @@ function clearForm() {
     setFormValue('portal-sale-price', '');
     setFormValue('portal-promo-price', '');
     setFormValue('portal-version', 'v1');
-    setFormValue('portal-effective-from', '');
-    setFormValue('portal-effective-to', '');
     setFormValue('portal-promo-effective-from', '');
     setFormValue('portal-promo-effective-to', '');
     setFormValue('portal-active', true);
@@ -555,8 +553,6 @@ function populateForm(book = {}) {
     setFormValue('portal-sale-price', book.salePrice != null ? book.salePrice : '');
     setFormValue('portal-promo-price', book.promoPrice != null ? book.promoPrice : '');
     setFormValue('portal-version', book.version || 'v1');
-    setFormValue('portal-effective-from', formatDateForInput(book.effectiveFrom));
-    setFormValue('portal-effective-to', formatDateForInput(book.effectiveTo));
     setFormValue('portal-promo-effective-from', formatDateForInput(book.promoEffectiveFrom));
     setFormValue('portal-promo-effective-to', formatDateForInput(book.promoEffectiveTo));
     setFormValue('portal-active', book.isActive !== false);
@@ -574,6 +570,18 @@ function showPriceBookModal(open = true) {
     modal.classList.toggle('hidden', !open);
     modal.style.display = open ? 'flex' : 'none';
     document.body.classList.toggle('modal-open', open);
+
+    if (open) {
+        setTimeout(() => {
+            const handler = (e) => {
+                if (e.key === 'Escape') {
+                    showPriceBookModal(false);
+                    document.removeEventListener('keydown', handler);
+                }
+            };
+            document.addEventListener('keydown', handler);
+        }, 0);
+    }
 }
 
 async function loadPortalData(distributorId = '') {
@@ -690,8 +698,6 @@ async function saveForm() {
     const promoRaw = getFormValue('portal-promo-price');
     const promoPrice = promoRaw === '' ? null : Number(promoRaw);
     const version = getFormValue('portal-version') || 'v1';
-    const effectiveFrom = getFormValue('portal-effective-from');
-    const effectiveTo = getFormValue('portal-effective-to');
     const promoEffectiveFrom = getFormValue('portal-promo-effective-from');
     const promoEffectiveTo = getFormValue('portal-promo-effective-to');
     const isActive = !!el('portal-active')?.checked;
@@ -735,8 +741,6 @@ async function saveForm() {
             ...(promoPrice != null ? { promoPrice } : {}),
             version,
             isActive,
-            ...(effectiveFrom ? { effectiveFrom: new Date(effectiveFrom).toISOString() } : {}),
-            ...(effectiveTo ? { effectiveTo: new Date(effectiveTo).toISOString() } : {}),
             ...(promoPrice != null && promoEffectiveFrom ? { promoEffectiveFrom: new Date(promoEffectiveFrom).toISOString() } : {}),
             ...(promoPrice != null && promoEffectiveTo ? { promoEffectiveTo: new Date(promoEffectiveTo).toISOString() } : {})
         };
@@ -747,21 +751,7 @@ async function saveForm() {
         toast(`已儲存經銷商價格表：${docId}`, 'success');
         await loadPriceBooks();
         state.selectedPriceBookId = res.data.priceBookId || priceBookId || '';
-        showPriceBookModal(true);
-        populateForm({
-            id: res.data.priceBookId || priceBookId || '',
-            distributorId,
-            docId,
-            currency,
-            salePrice,
-            promoPrice,
-            version,
-            effectiveFrom: effectiveFrom ? new Date(effectiveFrom).toISOString() : '',
-            effectiveTo: effectiveTo ? new Date(effectiveTo).toISOString() : '',
-            promoEffectiveFrom: promoEffectiveFrom ? new Date(promoEffectiveFrom).toISOString() : '',
-            promoEffectiveTo: promoEffectiveTo ? new Date(promoEffectiveTo).toISOString() : '',
-            isActive
-        });
+        showPriceBookModal(false);
     } catch (e) {
         console.error('[DistributorPortal] save failed:', e);
         toast(`儲存失敗：${e.message}`, 'error');
@@ -773,7 +763,26 @@ async function saveForm() {
     }
 }
 
-window.distributorPortalClearForm = clearForm;
+window.distributorPortalDeleteForm = async function () {
+    const distributorId = getFormValue('portal-distributor-id-input') || state.selectedDistributorId || state.distributorId;
+    const priceBookId = getFormValue('portal-pricebook-id');
+    const docId = getFormValue('portal-doc-id');
+    if (!priceBookId && !docId) {
+        toast('沒有可刪除的價格表 ID。', 'error');
+        return;
+    }
+    if (!confirm(`確定刪除價格表${priceBookId || docId}？此動作無法復原。`)) return;
+    try {
+        const fn = httpsCallable(functions, 'deleteDistributorPriceBook');
+        await fn({ distributorId, priceBookId, docId });
+        toast('價格表已刪除', 'success');
+        showPriceBookModal(false);
+        await loadPriceBooks();
+    } catch (e) {
+        console.error('[DistributorPortal] delete failed:', e);
+        toast(`刪除失敗：${e.message || 'unknown error'}`, 'error');
+    }
+};
 window.distributorPortalLoadPriceBooks = loadPriceBooks;
 window.distributorPortalSaveForm = saveForm;
 window.distributorPortalSelectDistributor = async function (distributorId = '') {
