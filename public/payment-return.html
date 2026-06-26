@@ -74,12 +74,11 @@
 
     <script type="module">
         // 1. 匯入 Firebase (僅用於監聽登入狀態以更新 UI，非必要可省略，但為了體驗一致性建議保留)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
+        import { app } from "./js/firebase-init.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-        import { firebaseConfig, connectFirebaseEmulators } from "./js/firebase-local.js?v=3";
+        import { connectFirebaseEmulators } from "./js/firebase-local.js?v=3";
 
-        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         connectFirebaseEmulators({ auth });
 
