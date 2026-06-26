@@ -1870,6 +1870,10 @@ async function initInvestorPortal() {
   const guestView = document.getElementById('guest-view');
   const adminSetupNote = document.getElementById('admin-setup-note');
   const uidDisplay = document.getElementById('user-uid-display');
+  uidDisplay?.addEventListener('click', () => {
+    navigator.clipboard.writeText(uidDisplay.innerText);
+    alert('Copied UID!');
+  });
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {

@@ -208,11 +208,6 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
         return { authorized: true, reason: "qualified-tutor", accessMode: "tutor" };
     }
 
-    const requesterEmail = normalizeEmail(authEmail || userProfile?.email || "");
-    if (tutorMode && requesterEmail && isAdminEmail(requesterEmail)) {
-        return { authorized: true, reason: "admin-simulated", accessMode: "tutor" };
-    }
-
     const ordersSnap = await db.collection("orders")
         .where("uid", "==", uid)
         .where("status", "==", "SUCCESS")

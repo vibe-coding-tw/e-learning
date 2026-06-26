@@ -32,7 +32,7 @@
 
 <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.d9c90b46d20b.js"></script>
+    <script type="module" src="./js/nav-component.3eedb220233a.js"></script>
     
 
     <main class="flex-grow pt-32 pb-20 hero-gradient">
@@ -123,16 +123,16 @@
                             <input type="hidden" id="store-address">
 
                             <div class="flex gap-2">
-                                <button onclick="openMap('UNIMARTC2C')"
+                                <button data-store-type="UNIMARTC2C"
                                     class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_711">選擇
                                     7-11</button>
-                                <button onclick="openMap('FAMIC2C')"
+                                <button data-store-type="FAMIC2C"
                                     class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_fami">選擇
                                     全家</button>
-                                <button onclick="openMap('HILIFEC2C')"
+                                <button data-store-type="HILIFEC2C"
                                     class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_hilife">選擇
                                     萊爾富</button>
-                                <button onclick="openMap('OKMARTC2C')"
+                                <button data-store-type="OKMARTC2C"
                                     class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700" data-i18n="btn_select_ok">選擇
                                     OK</button>
                             </div>
@@ -1012,6 +1012,12 @@
                 alert(window.t('alert_map_failed', "開啟電子地圖失敗，請稍後再試。"));
             }
         };
+
+        document.querySelectorAll('[data-store-type]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                openMap(btn.getAttribute('data-store-type'));
+            });
+        });
 
         // ===============================================
         // B-2. 老師作業連結 / 推薦連結邏輯

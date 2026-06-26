@@ -261,7 +261,13 @@ function renderDistributorTabs(distributors = []) {
 
 function renderPriceBooks(items = []) {
     const filteredItems = getFilteredPriceBooks(items);
-    updateSummary(filteredItems);
+    const search = String(state.priceBookSearch || '').trim().toLowerCase();
+    const searchFiltered = !search ? items : (Array.isArray(items) ? items : []).filter((book) => {
+        const haystack = [book.id, book.priceBookId, book.docId, book.distributorId, book.version, book.currency, book.salePrice, book.promoPrice]
+            .map((value) => String(value ?? '')).join(' ').toLowerCase();
+        return haystack.includes(search);
+    });
+    updateSummary(searchFiltered);
     updatePriceBookFilterButtons();
     const tbody = el('portal-pricebook-table-body');
     if (!tbody) return;

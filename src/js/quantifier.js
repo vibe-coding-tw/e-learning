@@ -109,4 +109,4 @@ class StudentQuantifier {
 }
 
 // Export as global instance for now (simplest for vanilla JS integration)
-window.quantifier = new StudentQuantifier();
+window.quantifier = window.quantifier || new StudentQuantifier();

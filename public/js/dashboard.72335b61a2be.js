@@ -374,6 +374,18 @@ const stats = {
     hours: document.getElementById('stat-hours'),
 };
 
+userUidDisplay?.addEventListener('click', () => {
+    navigator.clipboard.writeText(userUidDisplay.innerText);
+    alert('Copied UID!');
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    const tabName = btn.id?.replace('tab-btn-', '');
+    if (tabName) {
+        btn.addEventListener('click', () => switchTab(tabName));
+    }
+});
+
 // Removed singular assignmentTableBody in favor of plural class-based updates.
 
 // Admin UI
@@ -1989,7 +2001,7 @@ function resolveAssignmentStatusLabel(status) {
     return status || 'new';
 }
 
-window.renderAssignmentsTable = window.renderAssignmentsTable || function(assignments, canManageAssignments, context = 'unit-main', targetSelector = '.assignment-table-body') {
+window.renderAssignmentsTable = function(assignments, canManageAssignments, context = 'unit-main', targetSelector = '.assignment-table-body') {
     const tableBodies = document.querySelectorAll(targetSelector);
     if (tableBodies.length === 0) return;
     

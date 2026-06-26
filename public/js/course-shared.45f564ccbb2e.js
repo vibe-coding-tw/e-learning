@@ -2798,8 +2798,6 @@ function isAdminTutorModeActive() {
                 return true;
             }
         }
-        const currentEmail = String(sharedAuth?.currentUser?.email || window.__vibeCurrentAuthUser?.email || '').trim().toLowerCase();
-        if (currentEmail === 'rover.k.chen@gmail.com') return true;
         return false;
     } catch (_) {
         return false;

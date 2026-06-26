@@ -207,4 +207,28 @@ git commit -m "docs: update README"
 - **Skip condition**: If existing grade already >= 100, function returns early.
 - **Error handling**: Displays error notification via `notify()`.
 
+## 14. CSS Naming Conventions
+
+- **Framework**: Tailwind CSS (CDN via `cdn.tailwindcss.com`) — utility-first. Avoid writing custom CSS unless necessary.
+- **Custom classes** use lowercase-kebab-case:
+  - `*-modal` / `*-dialog` — overlay modal containers (e.g., `#pricebook-modal`, `.section-modal`, `.section-modal-dialog`)
+  - `lesson-card` — course/lesson card in learning-path
+  - `action-btn` — primary action button in lesson cards
+  - `filter-card` — filter toggle pill button
+  - `overlay-box` — colored informational section
+  - `modal-wrap` / `modal-chrome` / `modal-body-scroll` — full-screen modal layout (courses-management)
+  - `.editor-area` — full-screen editor container
+- **Modal structure**: Two-layer pattern: outer container (`*-modal`/`.section-modal`) with `aria-hidden` and `role="dialog"`, inner `*-dialog`/`.section-modal-dialog` with `role="dialog" aria-modal="true"`.
+- **Inline styles**: Avoid. Use Tailwind classes. Only use for dynamic runtime values (e.g., `transform`, `object-position`, `transition` duration).
+- **Specificity**: Prefer single class selectors. Use `data-*` attributes for state-driven styling (e.g., `[data-pricebook-filter]:not(.filter-card)`).
+- **Avoid `!important`** — use Tailwind's specificity or `data-*` attribute selectors instead.
+
+---
+
+This session's improvements:
+- #8: Added `||` guards to singleton `window.bleClient` and `window.quantifier` assignments
+- #11: Added §14 CSS naming conventions to AGENT.md (Tailwind-first, kebab-case custom classes)
+- #12: Converted inline `onclick` to `addEventListener` for dashboard tab buttons, copy-UID code elements (dashboard + investor-portal), cart convenience store buttons
+- Fixed `rover.k.chen@gmail.com` auto-activating all courses: removed hardcoded email force-tutor-mode in `getScopedTutorModeForUid` (3 locations) and removed `admin-simulated` backend bypass in `order-flow.js`
+
 > 最後更新：2026-06-26

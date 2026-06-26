@@ -374,6 +374,18 @@ const stats = {
     hours: document.getElementById('stat-hours'),
 };
 
+userUidDisplay?.addEventListener('click', () => {
+    navigator.clipboard.writeText(userUidDisplay.innerText);
+    alert('Copied UID!');
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    const tabName = btn.id?.replace('tab-btn-', '');
+    if (tabName) {
+        btn.addEventListener('click', () => switchTab(tabName));
+    }
+});
+
 // Removed singular assignmentTableBody in favor of plural class-based updates.
 
 // Admin UI

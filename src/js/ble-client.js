@@ -129,4 +129,4 @@ class BLEClient {
 }
 
 // Export global instance
-window.bleClient = new BLEClient();
+window.bleClient = window.bleClient || new BLEClient();
