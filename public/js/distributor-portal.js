@@ -156,13 +156,13 @@ function distributorLabel(distributor = {}) {
 function updateSummary(items = []) {
     const activeCount = items.filter((item) => item && item.isActive !== false).length;
     const promoCount = items.filter((item) => item && item.isActive !== false && isPromoActive(item)).length;
-    const lastUpdated = items[0]?.updatedAt || items[0]?.createdAt || null;
+    const lastUpdated = state.priceBooks[0]?.updatedAt || state.priceBooks[0]?.createdAt || null;
     setText('portal-pricebook-count-stat', String(items.length));
     setText('portal-pricebook-active-count-stat', String(activeCount));
     setText('portal-pricebook-promo-count-stat', String(promoCount));
     setText('portal-last-updated', items.length ? formatDateTime(lastUpdated) : '—');
     setText('portal-current-version', items[0]?.version || '—');
-    const seedableCount = Math.max(0, (state.portal?.seedableProductCount || 0) - items.length);
+    const seedableCount = Math.max(0, (state.portal?.seedableProductCount || 0) - state.priceBooks.length);
     setText('portal-seedable-product-count', String(seedableCount));
     setText('portal-seedable-product-count-stat', String(seedableCount));
 }
@@ -262,7 +262,7 @@ function renderDistributorTabs(distributors = []) {
 
 function renderPriceBooks(items = []) {
     const filteredItems = getFilteredPriceBooks(items);
-    updateSummary(items);
+    updateSummary(filteredItems);
     updatePriceBookFilterButtons();
     const tbody = el('portal-pricebook-table-body');
     if (!tbody) return;

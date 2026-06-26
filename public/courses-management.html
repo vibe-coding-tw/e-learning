@@ -113,6 +113,7 @@
     }
     .stat .label { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted-2); font-weight: 800; }
     .stat .value { font-size: 28px; font-weight: 900; margin-top: 6px; letter-spacing: -.04em; }
+    .filter-card.active { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
     .toolbar {
       display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
       margin: 0 0 18px;
@@ -173,14 +174,29 @@
       position: fixed;
       inset: 0;
       z-index: 80;
-      padding: 28px 18px;
-      background: rgba(2, 6, 23, .82);
-      overflow: auto;
-      align-items: center;
-      justify-content: flex-start;
+      padding: 0;
+      background: rgba(15, 23, 42, .6);
+      overflow: hidden;
+      align-items: stretch;
+      justify-content: stretch;
     }
-    body.modal-open .editor-area > * {
-      width: min(1280px, 100%);
+    .editor-area > .modal-wrap {
+      display: none;
+    }
+    body.modal-open .editor-area > .modal-wrap {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
+    .modal-body-scroll {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 24px;
     }
     .editor-card, .price-card, .log-card { padding: 18px; }
     .editor-grid {
@@ -227,41 +243,46 @@
     .btn-muted { background: #f8fafc; color: var(--muted); border: 1px solid var(--line); }
     .btn-small { padding: 9px 12px; border-radius: 12px; font-size: 12px; }
     .modal-chrome {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 4px 4px 18px;
-      color: #fff;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #0f172a;
+      background: #fff;
     }
-    .modal-chrome .title { font-size: 22px; font-weight: 900; letter-spacing: -.03em; }
-    .modal-chrome .subtitle { font-size: 13px; color: #cbd5e1; margin-top: 4px; }
+    .modal-chrome .title { font-size: 22px; font-weight: 900; letter-spacing: -.03em; color: #0f172a; }
+    .modal-chrome .subtitle { font-size: 13px; color: #94a3b8; margin-top: 4px; }
     .modal-close {
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.08);
-      color: #fff;
-      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #475569;
+      border-radius: 999px;
       padding: 10px 14px;
       cursor: pointer;
       font-weight: 800;
+      font-size: 13px;
     }
-    .modal-close:hover { background: rgba(255,255,255,.14); }
+    .modal-close:hover { background: #f8fafc; }
     .section-modal {
       position: fixed;
       inset: 0;
       z-index: 90;
       display: none;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
       overflow: auto;
       padding: 28px 16px;
-      background: rgba(2, 6, 23, .76);
-      backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, .6);
     }
     .section-modal.show { display: flex; }
     .section-modal-dialog {
       width: min(1280px, 100%);
-      border-radius: 28px;
+      border-radius: 2rem;
       overflow: hidden;
-      background: rgba(255,255,255,.97);
-      border: 1px solid rgba(226,232,240,.92);
+      background: #fff;
+      border: 1px solid #e2e8f0;
       box-shadow: 0 30px 100px rgba(15,23,42,.28);
     }
     .section-modal-head {
@@ -269,26 +290,26 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 14px;
-      padding: 20px 22px;
-      background:
-        linear-gradient(180deg, rgba(15,23,42,.98), rgba(15,23,42,.94)),
-        radial-gradient(circle at top left, rgba(99,102,241,.18), transparent 30%);
-      color: #fff;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #fff;
+      color: #0f172a;
     }
     .section-modal-head .head-title {
       font-size: 22px;
       font-weight: 900;
       letter-spacing: -.03em;
       line-height: 1.15;
+      color: #0f172a;
     }
     .section-modal-head .head-subtitle {
       margin-top: 4px;
-      color: #cbd5e1;
+      color: #94a3b8;
       font-size: 13px;
       line-height: 1.6;
     }
     .section-modal-body {
-      padding: 20px 22px 22px;
+      padding: 20px 24px 24px;
       display: grid;
       gap: 16px;
     }
@@ -669,6 +690,25 @@
         <button class="btn btn-ghost" onclick="window.createBlankLesson()"><i class="fa-solid fa-plus"></i> 新增課程</button>
       </div>
 
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="filter-card active rounded-xl border border-slate-200 bg-white p-4 shadow-sm cursor-pointer transition hover:shadow-md" data-filter="all" onclick="window.setCourseFilter('all')">
+          <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">全部課程</div>
+          <div id="stat-total" class="mt-1 text-2xl font-black text-slate-900">0</div>
+        </div>
+        <div class="filter-card rounded-xl border border-slate-200 bg-white p-4 shadow-sm cursor-pointer transition hover:shadow-md" data-filter="active" onclick="window.setCourseFilter('active')">
+          <div class="text-[11px] font-bold uppercase tracking-widest text-emerald-500">啟用中</div>
+          <div id="stat-active" class="mt-1 text-2xl font-black text-emerald-600">0</div>
+        </div>
+        <div class="filter-card rounded-xl border border-slate-200 bg-white p-4 shadow-sm cursor-pointer transition hover:shadow-md" data-filter="hidden" onclick="window.setCourseFilter('hidden')">
+          <div class="text-[11px] font-bold uppercase tracking-widest text-orange-500">已隱藏</div>
+          <div id="stat-hidden" class="mt-1 text-2xl font-black text-orange-600">0</div>
+        </div>
+        <div class="filter-card rounded-xl border border-slate-200 bg-white p-4 shadow-sm cursor-pointer transition hover:shadow-md" data-filter="deprecated" onclick="window.setCourseFilter('deprecated')">
+          <div class="text-[11px] font-bold uppercase tracking-widest text-red-500">已停用</div>
+          <div id="stat-deprecated" class="mt-1 text-2xl font-black text-red-600">0</div>
+        </div>
+      </div>
+
       <div class="grid">
         <div class="list-card">
           <div class="list-title">
@@ -681,7 +721,8 @@
         </div>
 
         <div class="editor-area">
-          <div class="modal-chrome">
+          <div class="modal-wrap">
+            <div class="modal-chrome">
             <div>
               <div class="title" id="modal-title">課程編輯</div>
               <div class="subtitle" id="modal-subtitle">點選清單中的課程後，在對話框中維護內容。</div>
@@ -689,6 +730,7 @@
             <button class="modal-close" onclick="window.closeLessonModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
           </div>
 
+          <div class="modal-body-scroll">
           <div id="tab-course-master">
             <div class="editor-card">
               <div class="card-title">
@@ -927,6 +969,7 @@
               <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
               <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -1545,24 +1588,24 @@
       if (el) el.textContent = message;
     }
 
-    function updateStats() {
-      const total = state.lessons.length;
-      const hidden = state.lessons.filter((item) => item.hiddenFromCatalog === true).length;
-      const deprecated = state.lessons.filter((item) => item.isDeprecated === true).length;
+    function updateStats(items) {
+      const total = items.length;
+      const hidden = items.filter((item) => item.hiddenFromCatalog === true).length;
+      const deprecated = items.filter((item) => item.isDeprecated === true).length;
       const active = total - hidden - deprecated;
       const totalEl = $("stat-total");
       const activeEl = $("stat-active");
       const hiddenEl = $("stat-hidden");
+      const deprecatedEl = $("stat-deprecated");
       if (totalEl) totalEl.textContent = String(total);
       if (activeEl) activeEl.textContent = String(Math.max(active, 0));
-      if (hiddenEl) hiddenEl.textContent = String(hidden + deprecated);
+      if (hiddenEl) hiddenEl.textContent = String(hidden);
+      if (deprecatedEl) deprecatedEl.textContent = String(deprecated);
     }
 
     function renderLessons() {
       const q = normalizeText($("search-input")?.value || "").toLowerCase();
-      const filtered = state.lessons.filter((lesson) => {
-        const status = lessonStatus(lesson);
-        const statusOk = state.currentFilter === "all" || status === state.currentFilter;
+      const searchFiltered = !q ? state.lessons : state.lessons.filter((lesson) => {
         const text = [
           lesson.id,
           lesson.docId,
@@ -1571,11 +1614,16 @@
           lesson.category,
           lesson.contentRef
         ].join(" ").toLowerCase();
-        const searchOk = !q || text.includes(q);
-        return statusOk && searchOk;
+        return text.includes(q);
+      });
+      const filtered = searchFiltered.filter((lesson) => {
+        const status = lessonStatus(lesson);
+        const statusOk = state.currentFilter === "all" || status === state.currentFilter;
+        return statusOk;
       });
 
       state.filteredLessons = filtered;
+      updateStats(searchFiltered);
       $("lesson-count").textContent = `${filtered.length} / ${state.lessons.length}`;
 
       const list = $("course-list");
@@ -1821,7 +1869,6 @@
         state.lessons.unshift(updatedLesson);
       }
       state.currentLessonId = id;
-      updateStats();
       renderLessons();
       fillLessonForm(updatedLesson);
     }
@@ -1829,6 +1876,7 @@
     window.setCourseFilter = function(filter) {
       state.currentFilter = filter;
       document.querySelectorAll('.pill').forEach((btn) => btn.classList.toggle('active', btn.dataset.filter === filter));
+      document.querySelectorAll('.filter-card').forEach((card) => card.classList.toggle('active', card.dataset.filter === filter));
       renderLessons();
     };
 
@@ -2016,7 +2064,6 @@
         if (aRank !== bRank) return aRank - bRank;
         return String(a.title || a.courseKey || a.id || "").localeCompare(String(b.title || b.courseKey || b.id || ""));
       });
-      updateStats();
       renderLessons();
       if (state.lessons.length > 0) {
         const first = state.lessons[0];
