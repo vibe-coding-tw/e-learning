@@ -197,12 +197,14 @@ git commit -m "docs: update README"
 - **Trigger**: Clicking any row in the Assignments table (for admin/tutor) calls `window.autoGradeAssignment(assignmentId)` instead of opening the grading modal.
 - **Backend**: `autoGradeSingleAssignment` callable function in `functions-autograde/index.js`. Accepts `assignmentId`. Fetches assignment doc, downloads grader script from Firebase Hosting (`/graders/{unitId}.sh`), clones the student repo, runs the grader script via bash, and updates the Firestore assignment document with `grade`, `status`, `tutorFeedback`, `learningState`, and a `submissionHistory` entry.
 - **Frontend**: Row gets `data-assignment-id` attribute. During grading, row is dimmed (opacity 0.5, pointer-events none). On success, assignments are re-rendered to show updated score. Uses `httpsCallable` to invoke `autoGradeSingleAssignment`.
-- **Dead code fix**: `window.autoGradeAssignment` was originally defined inside `setupGradingFunctions` which had an early `return` at line 3213 (dead code). Moved to module top level (after the closing `}` of `setupGradingFunctions`) so it's actually reachable.
-- **Broken references fix**: `openGradingModal` / `closeGradingModal` were also trapped in dead code but referenced in the ESC handler and tutor tab buttons. Replaced with `autoGradeAssignment` calls (ESC handler removed the dead modal check; intervention/blocker buttons now call autoGradeAssignment).
-- **`renderReferralInviteKitSection` stub**: Was called in `switchTab` but never defined, causing `ReferenceError`. Added as a stub function that hides the `#promo-invite-kit-assignments` container.
+- **Dead code fixes applied**:
+  - `window.autoGradeAssignment` was originally defined inside `setupGradingFunctions` which had an early `return` (dead code). Moved to module top level.
+  - `openGradingModal` / `closeGradingModal` references in ESC handler and tutor tab buttons replaced with `autoGradeAssignment` calls.
+  - The entire `setupGradingFunctions` block (~367 lines) and its no-op call removed.
+  - Dead grading modal HTML (`#grading-modal`) removed from `dashboard.html`.
+- **`renderReferralInviteKitSection` stub**: Was called in `switchTab` but never defined, causing `ReferenceError`. Added as a stub function that hides `#promo-invite-kit-assignments`.
 - **Student column**: Primary line shows `studentName` (fallback to email). Secondary gray line shows email.
-- **Dead HTML removed**: The entire grading modal (`#grading-modal`) with coaching form, recommendation UI, and submit buttons was removed from `dashboard.html` since it was only shown by the dead `openGradingModal` function.
-- **Skip condition**: If existing grade already >= 100, the function returns early without re-running the grader.
-- **Error handling**: On failure, displays error notification via `notify()`.
+- **Skip condition**: If existing grade already >= 100, function returns early.
+- **Error handling**: Displays error notification via `notify()`.
 
 > 最後更新：2026-06-26

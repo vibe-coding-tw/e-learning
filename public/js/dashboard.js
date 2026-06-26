@@ -628,7 +628,6 @@ async function loadDashboard() {
         if (isAdmin || isQualifiedTutor) {
             // Admin/Tutor View (Management)
             setupAdminFeatures();
-            setupGradingFunctions();
             setupSettingsFeature();
             renderAdminDashboard(data, filterUnitId);
 
@@ -3213,375 +3212,6 @@ window.handleAssignTutor = async function (studentUid, unitId, tutorEmail) {
     }
 };
 
-// --- Grading Logic ---
-window.setupGradingFunctions = window.setupGradingFunctions || function() {
-    // Manual grading removed; keep a safe no-op for legacy calls.
-    return;
-    const modal = document.getElementById('grading-modal');
-    if (!modal) return; // Guard if modal not found
-
-    const idInput = document.getElementById('grade-assignment-id');
-    const scoreInput = document.getElementById('grade-score');
-    const feedbackInput = document.getElementById('grade-feedback');
-    const submitBtn = document.getElementById('btn-submit-grade');
-    const historyContainer = document.getElementById('assignment-history');
-    const recommendationBox = document.getElementById('tutor-recommendation-box');
-    const recommendationDesc = document.getElementById('tutor-recommendation-desc');
-    const recommendationStatus = document.getElementById('tutor-recommendation-status');
-    const recommendationBtn = document.getElementById('btn-submit-recommendation');
-
-    function setTutorRecommendationState({
-        visible,
-        message = '',
-        messageClass = 'text-orange-700',
-        buttonLabel = '推薦此學生',
-        buttonDisabled = false
-    }) {
-        if (!recommendationBox || !recommendationStatus || !recommendationBtn) return;
-
-        recommendationBox.classList.toggle('hidden', !visible);
-        recommendationStatus.className = `mt-3 text-xs font-bold ${messageClass}`;
-        recommendationStatus.textContent = message;
-        recommendationBtn.textContent = buttonLabel;
-        recommendationBtn.disabled = buttonDisabled;
-        recommendationBtn.classList.toggle('opacity-50', buttonDisabled);
-        recommendationBtn.classList.toggle('cursor-not-allowed', buttonDisabled);
-    }
-
-    function refreshTutorRecommendationUI(assignment) {
-        if (!recommendationBox || !recommendationDesc) return;
-
-        if (!assignment) {
-            setTutorRecommendationState({ visible: false });
-            return;
-        }
-
-        const canonicalUnitId = resolveCanonicalUnitId(assignment.unitId);
-        const unitConfig = getUnitTutorConfig(canonicalUnitId);
-        const authorizedTutors = Array.isArray(unitConfig.authorizedTutors) ? unitConfig.authorizedTutors : [];
-        const pendingApps = dashboardData?.pendingApplications || [];
-        const studentEmail = assignment.studentEmail || assignment.userEmail || '';
-        const hasPendingRecommendation = pendingApps.some(app =>
-            app.status === 'pending' &&
-            unitIdsMatch(app.unitId, canonicalUnitId) &&
-            (app.userEmail === studentEmail || app.userId === assignment.userId)
-        );
-
-        recommendationDesc.textContent = `若 ${studentEmail || '該學生'} 在此單元表現成熟，可由授課老師直接送出推薦，交由管理員審核。`;
-
-        if (authorizedTutors.includes(studentEmail)) {
-            setTutorRecommendationState({
-                visible: true,
-                message: '此學生已是本單元合格導師。',
-                messageClass: 'text-green-700',
-                buttonLabel: '已具資格',
-                buttonDisabled: true
-            });
-            return;
-        }
-
-        if (hasPendingRecommendation) {
-            setTutorRecommendationState({
-                visible: true,
-                message: '此學生已有待審推薦，等待管理員審核中。',
-                messageClass: 'text-orange-700',
-                buttonLabel: '審核中',
-                buttonDisabled: true
-            });
-            return;
-        }
-
-        setTutorRecommendationState({
-            visible: true,
-            message: '推薦送出後，合格教師分頁會出現待審申請卡片。',
-            messageClass: 'text-orange-700',
-            buttonLabel: '推薦此學生',
-            buttonDisabled: false
-        });
-    }
-
-    window.openGradingModal = function (id) {
-        console.log(`[Grading] Opening modal for ID: ${id}`);
-        const modal = document.getElementById('grading-modal');
-        const idInput = document.getElementById('grade-assignment-id');
-        const scoreInput = document.getElementById('grade-score');
-        const feedbackInput = document.getElementById('grade-feedback');
-        const titleEl = document.getElementById('grading-assignment-title');
-        const historyContainer = document.getElementById('assignment-history');
-
-        if (!modal || !idInput || !scoreInput || !feedbackInput) {
-            console.error("[Grading] One or more grading modal elements are missing!");
-            alert("系統錯誤：找不到評分視窗元素，請重新整理頁面。");
-            return;
-        }
-
-        if (!dashboardData || !dashboardData.assignments) {
-            console.error("[Grading] dashboardData.assignments is missing!");
-            return;
-        }
-        const assignment = dashboardData.assignments.find(a => a.id === id);
-        if (!assignment) {
-            console.error(`[Grading] Assignment NOT FOUND for ID: ${id}. Candidates:`, dashboardData.assignments.map(a => a.id));
-            alert("找不到該作業資料，請重新整理頁面。");
-            return;
-        }
-        currentGradingAssignment = assignment;
-
-        if (titleEl) {
-            // 評分視窗標題同時顯示課程單元與作業任務名稱（去除前綴）
-            const unitName = window.formatUnitName(assignment.unitId);
-            const taskTitle = assignment.assignmentTitle || assignment.title || "評分作業";
-            titleEl.innerText = `${unitName} - ${taskTitle}`;
-        }
-
-        idInput.value = id;
-        scoreInput.value = assignment.grade || '';
-        feedbackInput.value = assignment.tutorFeedback || '';
-
-        // Render History
-        const historyMap = (assignment.submissionHistory || []).map(h => {
-            let safeTime = 'Unknown';
-            if (h.timestamp && h.timestamp._seconds) {
-                safeTime = new Date(h.timestamp._seconds * 1000).toLocaleString();
-            } else if (h.timestamp) {
-                safeTime = new Date(h.timestamp).toLocaleString();
-            }
-
-            return `
-        <div class="mb-2 pb-2 border-b border-gray-200 last:border-0" >
-                    <div class="flex justify-between text-xs text-gray-500">
-                        <span>${safeTime}</span>
-                        <span class="font-bold text-blue-600">${h.action || 'SUBMIT'}</span>
-                    </div>
-                    <div class="mt-1 text-gray-800 break-all whitespace-pre-wrap">${escapeHtml(h.content || h.url)}</div>
-                    ${h.note ? `<div class="text-xs text-gray-400 italic">Note: ${escapeHtml(h.note)}</div>` : ''}
-                    ${h.grader ? `<div class="text-xs text-orange-600 mt-1">Graded by Tutor</div>` : ''}
-                </div>
-        `;
-        }).join('');
-
-        historyContainer.innerHTML = historyMap || '<p class="text-gray-400 text-center">No history</p>';
-
-        // Populate Blocker info
-        const blockerBox = document.getElementById('student-blocker-info-box');
-        const blockerBadge = document.getElementById('student-blocker-type-badge');
-        const blockerText = document.getElementById('student-blocker-note-text');
-        if (blockerBox && blockerBadge && blockerText) {
-            const hasBlocker = assignment.learningState === 'blocked' || assignment.learningState === 'coaching';
-            if (hasBlocker && assignment.latestBlocker) {
-                const typeMap = { concept: '觀念不懂', debug: '程式 Bug', environment: '環境問題' };
-                blockerBadge.innerText = typeMap[assignment.latestBlocker.type] || '一般卡點';
-                blockerText.innerText = assignment.latestBlocker.note || '無說明';
-                blockerBox.classList.remove('hidden');
-                
-                // Pre-fill blocker type helper dropdown
-                const coachBlockerType = document.getElementById('coach-blocker-type');
-                if (coachBlockerType && assignment.latestBlocker.type) {
-                    coachBlockerType.value = assignment.latestBlocker.type;
-                }
-            } else {
-                blockerBox.classList.add('hidden');
-            }
-        }
-
-        // Populate Attempt info
-        const attemptBox = document.getElementById('student-attempt-info-box');
-        const attemptText = document.getElementById('student-attempt-text');
-        if (attemptBox && attemptText) {
-            if (assignment.attemptSummary) {
-                attemptText.innerText = assignment.attemptSummary;
-                attemptBox.classList.remove('hidden');
-            } else {
-                attemptBox.classList.add('hidden');
-            }
-        }
-
-        // Populate Coaching Form Inputs
-        const coachHintLevel = document.getElementById('coach-hint-level');
-        const coachNextAction = document.getElementById('coach-next-action');
-        const coachAdviceNote = document.getElementById('coach-advice-note');
-        if (coachHintLevel) coachHintLevel.value = assignment.hintLevelUsed !== undefined && assignment.hintLevelUsed !== null ? assignment.hintLevelUsed : '1';
-        if (coachNextAction) coachNextAction.value = assignment.nextAction || '';
-        if (coachAdviceNote) coachAdviceNote.value = assignment.tutorFeedback || '';
-
-        refreshTutorRecommendationUI(assignment);
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.classList.add('modal-open');
-
-        // Fallback programmatic hide
-        const nav = document.getElementById('main-nav') || document.querySelector('nav');
-        if (nav) nav.style.setProperty('display', 'none', 'important');
-    }
-
-    window.closeGradingModal = function () {
-        currentGradingAssignment = null;
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.classList.remove('modal-open');
-
-        // Restore navbar
-        const nav = document.getElementById('main-nav') || document.querySelector('nav');
-        if (nav) nav.style.display = '';
-    }
-
-    window.submitGrade = async function () {
-        const idInput = document.getElementById('grade-assignment-id');
-        const scoreInput = document.getElementById('grade-score');
-        const feedbackInput = document.getElementById('grade-feedback');
-        const submitBtn = document.getElementById('btn-submit-grade');
-
-        if (!idInput || !scoreInput || !feedbackInput || !submitBtn) {
-            alert('系統錯誤：找不到評分表單元素');
-            return;
-        }
-
-        const id = idInput.value;
-        const score = scoreInput.value;
-        const feedback = feedbackInput.value;
-
-        if (!score) {
-            alert('請輸入分數');
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = '送出中...';
-
-        try {
-            const gradeAssignment = httpsCallable(functions, 'gradeAssignment');
-            await gradeAssignment({ assignmentId: id, grade: score, feedback: feedback });
-            alert('評分成功！');
-            closeGradingModal();
-            loadDashboard(); // Refresh list
-        } catch (e) {
-            console.error(e);
-            alert('評分失敗：' + e.message);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '送出評分';
-        }
-    };
-
-    window.submitTutorCoachingLogAction = async function () {
-        const idInput = document.getElementById('grade-assignment-id');
-        const hintLevel = document.getElementById('coach-hint-level').value;
-        const blockerType = document.getElementById('coach-blocker-type').value;
-        const nextAction = document.getElementById('coach-next-action').value;
-        const advice = document.getElementById('coach-advice-note').value;
-        const submitBtn = document.getElementById('btn-submit-coaching');
-
-        if (!idInput || !submitBtn) {
-            alert('系統錯誤：找不到評分表單元素');
-            return;
-        }
-
-        const id = idInput.value;
-        if (!advice) {
-            alert('請輸入指導回饋指引！');
-            return;
-        }
-        if (!nextAction) {
-            alert('請指派下一步目標！');
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = '送出中...';
-
-        try {
-            const submitCoachingLog = httpsCallable(functions, 'submitTutorCoachingLog');
-            await submitCoachingLog({
-                assignmentId: id,
-                blockerType: blockerType,
-                hintLevel: parseInt(hintLevel),
-                tutorFeedback: advice,
-                nextAction: nextAction
-            });
-            alert('指導紀錄提交成功！');
-            closeGradingModal();
-            loadDashboard(); // Refresh list
-        } catch (e) {
-            console.error(e);
-            alert('提交指導紀錄失敗：' + e.message);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '送出指導紀錄 (切換為引導中)';
-        }
-    };
-
-    window.submitTutorRecommendation = async function () {
-        if (!currentGradingAssignment || !recommendationBtn) return;
-
-        recommendationBtn.disabled = true;
-        recommendationBtn.textContent = '送出推薦中...';
-        if (recommendationStatus) {
-            recommendationStatus.className = 'mt-3 text-xs font-bold text-orange-700';
-            recommendationStatus.textContent = '正在送出推薦...';
-        }
-
-        try {
-            const recommendTutorForUnit = httpsCallable(functions, 'recommendTutorForUnit');
-            const result = await recommendTutorForUnit({ assignmentId: currentGradingAssignment.id });
-
-            setTutorRecommendationState({
-                visible: true,
-                message: '已送出推薦通知，待學生先填寫作業連結後才會送審給管理員。',
-                messageClass: 'text-green-700',
-                buttonLabel: '已送出推薦',
-                buttonDisabled: true
-            });
-
-            dashboardData.pendingApplications = dashboardData.pendingApplications || [];
-            dashboardData.pendingApplications.unshift({
-                id: result?.data?.applicationId || `pending-${currentGradingAssignment.id}`,
-                userId: currentGradingAssignment.userId,
-                userEmail: currentGradingAssignment.studentEmail || currentGradingAssignment.userEmail,
-                unitId: resolveCanonicalUnitId(currentGradingAssignment.unitId),
-                status: 'awaiting_candidate_link'
-            });
-        } catch (e) {
-            console.error('Tutor recommendation failed:', e);
-            const msg = e?.message || '';
-
-            if (msg.includes('already a qualified tutor')) {
-                setTutorRecommendationState({
-                    visible: true,
-                    message: '此學生已是本單元合格導師。',
-                    messageClass: 'text-green-700',
-                    buttonLabel: '已具資格',
-                    buttonDisabled: true
-                });
-            } else if (msg.includes('waiting for assignment link')) {
-                setTutorRecommendationState({
-                    visible: true,
-                    message: '此學生已收到推薦，等待他先提交作業連結。',
-                    messageClass: 'text-orange-700',
-                    buttonLabel: '等待學生提交連結',
-                    buttonDisabled: true
-                });
-            } else if (msg.includes('pending application')) {
-                setTutorRecommendationState({
-                    visible: true,
-                    message: '此學生已有待審推薦，等待管理員審核中。',
-                    messageClass: 'text-orange-700',
-                    buttonLabel: '審核中',
-                    buttonDisabled: true
-                });
-            } else {
-                setTutorRecommendationState({
-                    visible: true,
-                    message: `推薦失敗：${msg}`,
-                    messageClass: 'text-red-600',
-                    buttonLabel: '重新推薦',
-                    buttonDisabled: false
-                });
-            }
-        }
-    };
-}
-
 window.autoGradeAssignment = async function (assignmentId) {
     const row = document.querySelector(`[data-assignment-id="${assignmentId}"]`);
     if (row) {
@@ -5057,14 +4687,7 @@ window.robustExtractGuideSegments = window.robustExtractGuideSegments || functio
 // --- Global Function Exports : Esc Key handling ---
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        // 1. Close Modal if open
-        const modal = document.getElementById('grading-modal');
-        if (modal && !modal.classList.contains('hidden')) {
-            window.closeGradingModal();
-            return;
-        }
-
-        // 2. Clear filters if present
+        // 1. Clear filters if present
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('courseId') || urlParams.get('unitId')) {
             console.log("[Esc] Redirecting to main dashboard...");
@@ -5155,9 +4778,7 @@ function renderTutorAlerts(data) {
     } else {
         html += interventions.map(item => {
             const timeStr = item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleString() : 'N/A';
-            const studentUid = String(item.studentUid || '').trim();
             const assignmentId = String(item.assignmentId || '').trim().replace(/\.html$/i, '');
-            const gradingKey = studentUid && assignmentId ? `${studentUid}_${assignmentId}` : '';
             return `
                 <div class="bg-red-55 border border-red-100 rounded-xl p-4 flex flex-col justify-between hover:shadow transition">
                     <div>
@@ -5173,9 +4794,9 @@ function renderTutorAlerts(data) {
                         </div>
                     </div>
                     <div class="flex justify-end">
-                        <button ${gradingKey ? `onclick='window.openGradingModal(${JSON.stringify(gradingKey)})'` : 'disabled aria-disabled="true" title="Missing student or assignment id"'} 
-                            class="px-4 py-1.5 ${gradingKey ? 'bg-red-600 hover:bg-red-700 active:scale-95' : 'bg-slate-300 cursor-not-allowed'} text-white rounded-lg font-bold text-xs shadow transition">
-                            🧑‍💻 ${gradingKey ? '開始引導' : '資料缺失'}
+                        <button ${assignmentId ? `onclick='window.autoGradeAssignment("${escapeHtml(assignmentId)}")'` : 'disabled aria-disabled="true" title="Missing student or assignment id"'} 
+                            class="px-4 py-1.5 ${assignmentId ? 'bg-red-600 hover:bg-red-700 active:scale-95' : 'bg-slate-300 cursor-not-allowed'} text-white rounded-lg font-bold text-xs shadow transition">
+                            🧑‍💻 ${assignmentId ? '開始引導' : '資料缺失'}
                         </button>
                     </div>
                 </div>
@@ -5217,9 +4838,9 @@ function renderTutorAlerts(data) {
                         </div>
                     </div>
                     <div class="flex justify-end">
-                        <button onclick="window.openGradingModal('${a.id}')"
+                        <button onclick="window.autoGradeAssignment('${a.id}')"
                             class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-xs shadow transition active:scale-95">
-                            💡 給予指導
+                            💡 自動批改
                         </button>
                     </div>
                 </div>
