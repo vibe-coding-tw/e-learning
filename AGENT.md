@@ -163,6 +163,24 @@ git commit -m "docs: update README"
 
 ---
 
-> 本文件是本專案 AI agent 的正式工作手冊，任何其他 agent 或訓練資料若要引用專案規則，請一律參考 `AGENT.md`。
-> 
-> 最後更新：2026-06-18
+---
+
+## 11. Distributor Portal UI Behavior
+
+- **Page layout (top→bottom)**: Header → Distributor tabs → Stat cards (專屬訂單/待出貨/Tutor數/本期佣金) → 經銷商定價維護 section
+- **Stat cards**: 4 total — 專屬訂單, 待出貨, Tutor數, 本期佣金. 可套用商品 card is in the filter card row within 定價維護 section.
+- **可套用商品 card**: onClick calls `window.distributorPortalSeedProducts()`, invokes `seedDistributorPriceBooksFromLessons` with `salePrice: 0`. Display formula: `seedableProductCount - priceBooks.length`. Prevent re-seed when count is 0.
+- **Price Book Modal (`#portal-pricebook-modal`)**:
+  - Form fields (in order): 經銷商ID, 價格表ID, docId, 幣別, 售價, 活動價, 促銷開始, 促銷結束, 版本, 啟用
+  - 主價格生效日/失效日 fields are **removed** from modal. `effectiveFrom`/`effectiveTo` still exist in the backend schema but are not exposed in UI.
+  - **Save** (`saveForm`): validates → calls `upsertDistributorPriceBook` → `showPriceBookModal(false)` (closes modal) → reloads price books. Does NOT repopulate the form.
+  - **Delete** (red button, replaces old "清空"): calls `deleteDistributorPriceBook` callable → `showPriceBookModal(false)` → reloads. Confirms first.
+  - **ESC key**: closes modal via `keydown` event listener registered on open, cleaned up on close.
+  - Clicking overlay or "關閉" button calls `showPriceBookModal(false)`.
+- **Price book list table**: No "操作" column (edit button removed). Entire `<tr>` row is clickable and opens modal via `distributorPortalOpenPriceBookModal(id)`.
+- **Price book list date display**: Shows 主價格 start date only. 主價格迄 line removed from row display.
+- **Filter cards**: `.filter-card` with `data-pricebook-filter` and `.filter-card.active` styling. Filter toggle uses `[data-pricebook-filter]:not(.filter-card)` selector for pill buttons and `.classList.toggle` for filter cards.
+- **新增價格表 button**: Located in 經銷商定價維護 section's search/filter row, before the search input.
+- **Distributor tabs**: Displayed in a standalone card section between header and stat cards. Each tab calls `window.distributorPortalSelectDistributor(id)`.
+
+> 最後更新：2026-06-26

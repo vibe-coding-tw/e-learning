@@ -125,8 +125,11 @@ One active price book per distributor per SKU is the default operating model.
 | `currency` | string | Currency code |
 | `salePrice` | number | Current sale price |
 | `promoPrice` | number | Active promo price |
-| `effectiveFrom` | timestamp | Start time |
-| `effectiveTo` | timestamp | End time |
+| `version` | string | Pricing version label (e.g. "v1") |
+| `effectiveFrom` | timestamp | Start time (legacy, not used in new modal UI) |
+| `effectiveTo` | timestamp | End time (legacy, not used in new modal UI) |
+| `promoEffectiveFrom` | timestamp | Promo period start |
+| `promoEffectiveTo` | timestamp | Promo period end |
 | `isActive` | boolean | Active flag |
 | `updatedBy` | string | Last editor |
 | `updatedAt` | timestamp | Last update time |
@@ -232,6 +235,40 @@ Validation:
 2. `promoPrice`, if present, must be less than or equal to `salePrice`.
 3. Updated records must be versioned and audited.
 4. A course or product without a matching `dealer_price_books` record is not sellable; `0` only means free when the price book exists explicitly.
+
+`DELETE /api/admin/distributors/:distributorId/price-books/:priceBookId`
+
+Deletes a price book entry (callable: `deleteDistributorPriceBook`).
+
+Request:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `distributorId` | string | Yes | Owning distributor |
+| `priceBookId` | string | No* | Price book document ID |
+| `docId` | string | No* | Product docId (used if `priceBookId` omitted) |
+
+*Either `priceBookId` or `docId` must be provided.
+
+`POST /api/admin/distributors/:distributorId/price-books/seed`
+
+Batch-imports lessons without price books into the distributor's price book list (callable: `seedDistributorPriceBooksFromLessons`).
+
+Request:
+
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `distributorId` | string | — | Owning distributor |
+| `salePrice` | number | lesson's resolved price | Override sale price for all imported items |
+| `overwrite` | boolean | `false` | Overwrite existing price books |
+| `priceBookPrefix` | string | `distributorId` | Prefix for generated price book IDs |
+
+Response (callable: `getDistributorPortalData`):
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `totalLessons` | number | Total number of lessons (for seedable count computation) |
+| `seedableProductCount` | number | Lessons with pricing data available for seeding |
 
 ### 6.2 Distributor resolution
 
