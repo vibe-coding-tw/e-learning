@@ -821,3 +821,115 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
         return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
+
+const { execSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+const https = require("https");
+
+function downloadFile(url, destPath) {
+    return new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(destPath);
+        https.get(url, (response) => {
+            if (response.statusCode !== 200) {
+                reject(new Error(`Failed to download file: ${response.statusCode}`));
+                return;
+            }
+            response.pipe(file);
+            file.on("finish", () => {
+                file.close();
+                resolve();
+            });
+        }).on("error", (err) => {
+            fs.unlink(destPath, () => {});
+            reject(err);
+        });
+    });
+}
+
+exports.autoGradeSingleAssignment = onCall({ secrets: [GITHUB_API_TOKEN] }, async (request) => {
+    const { data, auth } = request;
+    assertAuthenticated(auth);
+    const db = admin.firestore();
+    const assignmentId = data.assignmentId;
+    assertRequiredValue(assignmentId, "assignmentId");
+    await assertAdminOrAssignedTutor(db, auth.uid);
+    const sandboxDir = "/tmp/autograde_sandbox";
+    const hostingUrl = "https://e-learning-942f7.web.app";
+    const token = process.env.GITHUB_API_TOKEN || "";
+
+    const docSnap = await db.collection("assignments").doc(assignmentId).get();
+    if (!docSnap.exists) {
+        throw new HttpsError("not-found", "Assignment not found.");
+    }
+
+    const data_ = docSnap.data();
+    const repoUrl = data_.repositoryUrl;
+    const repoName = data_.repositoryName;
+    const unitId = data_.unitId;
+    const currentScore = data_.grade !== undefined && data_.grade !== null ? data_.grade : (data_.autoGrade?.score || 0);
+
+    if (currentScore >= 100) {
+        return { success: true, score: currentScore, message: "Already graded (score >= 100)." };
+    }
+
+    if (!repoUrl || !repoName || !unitId) {
+        throw new HttpsError("failed-precondition", "Assignment is missing repositoryUrl, repositoryName, or unitId.");
+    }
+
+    const graderName = unitId.replace(/\.html$/, "");
+    const graderUrl = `${hostingUrl}/graders/${graderName}.sh`;
+    const localGraderPath = path.join("/tmp", `${graderName}_autograde.sh`);
+
+    try {
+        await downloadFile(graderUrl, localGraderPath);
+        fs.chmodSync(localGraderPath, "755");
+
+        let cloneUrl = repoUrl;
+        if (token && repoUrl.startsWith("https://github.com/")) {
+            cloneUrl = repoUrl.replace("https://github.com/", `https://${token}@github.com/`);
+        }
+
+        if (fs.existsSync(sandboxDir)) {
+            fs.rmSync(sandboxDir, { recursive: true, force: true });
+        }
+        fs.mkdirSync(sandboxDir, { recursive: true });
+
+        const localRepoPath = path.join(sandboxDir, repoName);
+        execSync(`git clone ${cloneUrl} ${localRepoPath} --depth 1`, { stdio: "ignore", timeout: 60000 });
+        const scoreOutput = execSync(`bash ${localGraderPath}`, { cwd: localRepoPath, encoding: "utf8", timeout: 60000 }).trim();
+        const score = parseInt(scoreOutput, 10);
+        if (Number.isNaN(score)) {
+            throw new Error(`Invalid score output: "${scoreOutput}"`);
+        }
+
+        const now = admin.firestore.Timestamp.now();
+        const historyEntry = { timestamp: now, content: `Auto-grade: ${score}/100`, action: "AUTO_GRADE" };
+        const isPass = score >= 70;
+        const finalStatus = isPass ? "graded" : (data_.currentStatus || "submitted");
+        const learningState = isPass ? "resolved" : (data_.learningState || "blocked");
+
+        await db.collection("assignments").doc(assignmentId).update({
+            grade: score,
+            tutorFeedback: `自動評鑑分數為 ${score} 分。`,
+            teacherFeedback: `自動評鑑分數為 ${score} 分。`,
+            status: finalStatus,
+            currentStatus: finalStatus,
+            learningState: learningState,
+            updatedAt: now,
+            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
+        });
+
+        return { success: true, score };
+    } catch (err) {
+        console.error(`[autoGradeSingleAssignment] Error grading ${assignmentId}:`, err.message);
+        throw new HttpsError("internal", `Auto-grade failed: ${err.message}`);
+    } finally {
+        if (fs.existsSync(localGraderPath)) {
+            fs.unlinkSync(localGraderPath);
+        }
+        if (fs.existsSync(sandboxDir)) {
+            fs.rmSync(sandboxDir, { recursive: true, force: true });
+        }
+    }
+});

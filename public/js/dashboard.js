@@ -2027,7 +2027,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
         // Determine Row Onclick logic
         let rowOnClick = '';
         if (clickAction === 'modal') {
-            rowOnClick = `window.openGradingModal('${a.id}')`;
+            rowOnClick = `window.autoGradeAssignment('${a.id}')`;
         } else {
             // clickAction === 'url'
             rowOnClick = a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : `notify('${window.t('dash_assignment_no_link', 'This assignment has no link.')}', 'warning')`;
@@ -2035,6 +2035,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
         
         return `
         <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
+            data-assignment-id="${escapeHtml(a.id)}"
             onclick="${rowOnClick}">
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentName || a.studentEmail || a.userEmail)}</div>
@@ -3455,6 +3456,30 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = '送出評分';
+        }
+    };
+
+    window.autoGradeAssignment = async function (assignmentId) {
+        const row = document.querySelector(`[data-assignment-id="${assignmentId}"]`);
+        if (row) {
+            row.style.opacity = '0.5';
+            row.style.pointerEvents = 'none';
+        }
+        try {
+            const fn = httpsCallable(functions, 'autoGradeSingleAssignment');
+            const result = await fn({ assignmentId });
+            if (result?.data?.score !== undefined) {
+                notify(`自動批改完成：${result.data.score} 分`, result.data.score >= 70 ? 'success' : 'warning');
+            }
+            renderAssignments(dashboardData?.assignments || [], "", { showGuide: false });
+        } catch (e) {
+            console.error(e);
+            notify(`自動批改失敗：${e.message}`, 'error');
+        } finally {
+            if (row) {
+                row.style.opacity = '';
+                row.style.pointerEvents = '';
+            }
         }
     };
 

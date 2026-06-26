@@ -183,4 +183,13 @@ git commit -m "docs: update README"
 - **新增價格表 button**: Located in 經銷商定價維護 section's search/filter row, before the search input.
 - **Distributor tabs**: Displayed in a standalone card section between header and stat cards. Each tab calls `window.distributorPortalSelectDistributor(id)`.
 
+## 12. Courses Management Modal & Stat Cards
+
+- **編輯課程 Modal (`.editor-area > .modal-wrap`)**: Full-screen (`position: fixed; inset: 0;`), no padding/radius/shadow. Header (`.modal-chrome`) is `position: sticky; top: 0;` with white background. All tab content and `.action-row` are inside `.modal-body-scroll` (flex column, `overflow-y: auto`).
+- **Stat cards**: 4 filterable cards — 全部課程, 啟用中, 已隱藏, 已停用. Grid uses `grid-cols-4`.
+- **Stat card numbers**: Update based on search input only (via `updateStats(searchFiltered)`). Clicking a stat card does not change the numbers — only the list filter changes.
+- **Filter logic**: `renderLessons` computes `searchFiltered` (search only), then `filtered` (search + status). `updateStats(searchFiltered)` keeps numbers tied to search alone.
+- **Sub-modals** (`#course-unit-modal`, `#pricebook-modal`): Use `.section-modal` with `position: fixed; z-index: 90`, overlaying the full-screen main modal.
+- **Stat card colors**: 全部課程 slate, 啟用中 emerald, 已隱藏 orange, 已停用 red.
+
 > 最後更新：2026-06-26
