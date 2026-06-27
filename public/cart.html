@@ -78,8 +78,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1" for="preferred-distributor-select" data-i18n="routing_distributor_label">經銷商 Distributor</label>
                             <select id="preferred-distributor-select" class="w-full border border-gray-300 bg-white rounded-md p-2 text-sm text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                                 <option value="" data-i18n="routing_select_distributor_placeholder">-- 請先選擇地區 --</option>
-                                <option value="default-twd" selected>預設台幣經銷商</option>
-                                <option value="default-usd">預設美金經銷商</option>
                             </select>
                         </div>
                     </div>
@@ -319,11 +317,11 @@
 
         function bootstrapRoutingDefaults() {
             const defaultRegion = getPreferredRegion() || 'US';
-            const defaultDistributor = getPreferredDistributorId() || (defaultRegion === 'US' ? 'default-usd' : 'default-twd');
+            const defaultDistributor = getPreferredDistributorId();
             if (preferredRegionSelect && !preferredRegionSelect.value) {
                 preferredRegionSelect.value = defaultRegion;
             }
-            if (preferredDistributorSelect && !preferredDistributorSelect.value) {
+            if (preferredDistributorSelect && !preferredDistributorSelect.value && defaultDistributor) {
                 preferredDistributorSelect.value = defaultDistributor;
             }
             setRoutingPreferenceLocal(defaultRegion, defaultDistributor, { source: getPreferredRegionSource() || 'auto' });

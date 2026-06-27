@@ -1075,6 +1075,31 @@ const getDistributorRoutingOptions = onCall(async (request) => {
     };
 });
 
+const resolveDistributorCheckoutQuoteFn = onCall(async (request) => {
+    const { auth, data } = request;
+    const dbRef = admin.firestore();
+    const payload = data || {};
+    const { loadLessons, normalizeText } = require("vibe-functions-core/access-utils-core");
+    const { resolveDistributorCheckoutQuote: resolveQuote, findLessonByDocumentId } = require('./lib/distributor-pricing');
+    const lessons = await loadLessons(dbRef);
+    const normalizedDocId = normalizeText(payload.docId || payload.courseId || payload.itemId || "");
+    const matchedLesson =
+        findLessonByDocumentId(lessons, normalizedDocId) ||
+        findLessonByDocumentId(lessons, `${normalizedDocId}.html`);
+    const result = await resolveQuote(dbRef, {
+        lessons,
+        docId: matchedLesson?.id || matchedLesson?.courseId || normalizedDocId || "",
+        region: payload.region || "",
+        locale: payload.locale || "zh-TW",
+        tutorId: payload.tutorId || "",
+        promotionCode: payload.promotionCode || "",
+        customerId: payload.customerId || "",
+        distributorId: payload.distributorId || "",
+        priceBookId: payload.priceBookId || ""
+    });
+    return { success: true, result };
+});
+
 const updateUserRoutingPreference = onCall(async (request) => {
     const { auth, data } = request;
     assertAuthenticated(auth);
@@ -2276,6 +2301,7 @@ exports.getDashboardData = getDashboardData;
 exports.updateSystemConfig = updateSystemConfig;
 exports.getSystemConfig = getSystemConfig;
 exports.getDistributorRoutingOptions = getDistributorRoutingOptions;
+exports.resolveDistributorCheckoutQuote = resolveDistributorCheckoutQuoteFn;
 exports.getDistributorPriceBooks = getDistributorPriceBooks;
 exports.getLessonPriceBooks = getLessonPriceBooks;
 exports.getDistributorPortalData = getDistributorPortalData;

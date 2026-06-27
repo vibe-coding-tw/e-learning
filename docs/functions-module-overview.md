@@ -1,5 +1,5 @@
 # Functions Module Overview
-**Updated**: 2026-06-11
+**Updated**: 2026-06-27
 
 > 這份文件是 `functions/` 內部模組的快速地圖，方便理解哪些 helper 已經拆出去、各模組負責什麼，以及現在 `index.js` 還扮演什麼角色。
 
@@ -40,7 +40,7 @@ If a shared ledger layer is introduced later, it should live in a separate helpe
 Current ledger-facing callable surface:
 - `getRevenueSharePolicies` / `upsertRevenueSharePolicy` / `getInvestorProfiles` / `upsertInvestorProfile` / `upsertValuationSnapshot` / `upsertBalanceSheetSnapshot` / `issueInvestorEquity` / `recordInvestorFinanceEvent` / `settleAnnualInvestorDividends`: public callable proxies in `functions/index.js`, forwarded to `functions-admin/index.js`
 - `recordLedgerEvent` / `generateLedgerReport` / `exportLedgerReport` / `recordOrderRefundEvent`: public callable proxies in `functions/index.js`, forwarded to `functions-admin/index.js`
-- `resolveDistributorCheckoutQuote`: public callable proxy in `functions/index.js`, forwarded to `functions-admin/index.js`
+- `resolveDistributorCheckoutQuote`: callable in `functions-admin/index.js`
 - `verifyReferralLink` / `findClassroomInviteBinding` / `findClassroomInviteBindingHttp` / `precheckGithubClassroomAccess`: public proxies in `functions/index.js`, forwarded to `functions-admin/index.js`
 - `recordLedgerEvent`: generic canonical event ingestion
 - `recordOrderRefundEvent`: admin refund / reversal entry point for orders

@@ -80,8 +80,8 @@ async function resolveLessonsDistributorId() {
     if (preferredDistributorId) return preferredDistributorId;
 
     const preferredRegion = String(userData.preferredRegion || userData.region || '').trim().toUpperCase();
-    if (preferredRegion === 'TW') return 'default-twd';
-    if (preferredRegion === 'US') return 'default-usd';
+    if (preferredRegion === 'TW') return '';
+    if (preferredRegion === 'US') return '';
   } catch (error) {
     console.warn('[learning-path] Failed to resolve preferred distributor from Firestore:', error);
   }
