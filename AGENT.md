@@ -244,7 +244,7 @@ This session's improvements:
 
 | Issue | Root Cause | Fix |
 |-------|-----------|-----|
-| No image/icon fields in course editor | `normalizeLessonMetadataPatch` didn't handle `cardImageUrl`/`imageUrl`/`thumbnailUrl`/`bannerUrl`/`thumbnail`/`cardIcon`/`icon`; no UI inputs; form didn't serialize them | Add field handling in `functions-admin/lib/admin-utils.js:normalizeLessonMetadataPatch`; add `<input id="lesson-card-image">` and `<input id="lesson-card-icon">` in editor grid; populate in `fillLessonForm`, serialize in `serializeLessonForm` with `|| undefined` to avoid overwriting existing data on empty save |
+| No image field in course editor | `normalizeLessonMetadataPatch` didn't handle `cardImageUrl`/`imageUrl`/`thumbnailUrl`/`bannerUrl`/`thumbnail`/`cardIcon`/`icon`; no UI input; form didn't serialize it | Add field handling in `functions-admin/lib/admin-utils.js:normalizeLessonMetadataPatch`; add `<input id="lesson-card-image">` in editor grid; populate in `fillLessonForm`, serialize in `serializeLessonForm` with `|| undefined` to avoid overwriting existing data on empty save |
 
 ### Dashboard / Auto-Grade Fix Patterns
 
