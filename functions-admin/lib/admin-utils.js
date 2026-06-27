@@ -314,6 +314,13 @@ function normalizeLessonMetadataPatch(payload = {}) {
     if (hasOwn("isPhysical")) patch.isPhysical = payload.isPhysical === true;
     if (hasOwn("hiddenFromCatalog")) patch.hiddenFromCatalog = payload.hiddenFromCatalog === true;
     if (hasOwn("isDeprecated")) patch.isDeprecated = payload.isDeprecated === true;
+    if (hasOwn("cardImageUrl")) patch.cardImageUrl = normalizeText(payload.cardImageUrl || "");
+    if (hasOwn("imageUrl")) patch.imageUrl = normalizeText(payload.imageUrl || "");
+    if (hasOwn("thumbnailUrl")) patch.thumbnailUrl = normalizeText(payload.thumbnailUrl || "");
+    if (hasOwn("bannerUrl")) patch.bannerUrl = normalizeText(payload.bannerUrl || "");
+    if (hasOwn("thumbnail")) patch.thumbnail = normalizeText(payload.thumbnail || "");
+    if (hasOwn("cardIcon")) patch.cardIcon = normalizeText(payload.cardIcon || "");
+    if (hasOwn("icon")) patch.icon = normalizeText(payload.icon || "");
     if (payload.i18n && typeof payload.i18n === "object" && !Array.isArray(payload.i18n)) {
         const i18n = {};
         for (const [locale, localeData] of Object.entries(payload.i18n)) {

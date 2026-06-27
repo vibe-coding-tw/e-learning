@@ -767,6 +767,16 @@
                   <div id="locale-editor"></div>
                 </div>
 
+                <div class="field full">
+                  <label>cardImageUrl / 卡片圖片</label>
+                  <input id="lesson-card-image" placeholder="https://... 或 assets/..." />
+                  <div class="hint">前台卡片顯示用。優先順序：cardImageUrl → imageUrl → thumbnailUrl → bannerUrl</div>
+                </div>
+                <div class="field">
+                  <label>cardIcon / Emoji 圖示</label>
+                  <input id="lesson-card-icon" placeholder="🚀" />
+                </div>
+
                 <div class="field">
                   <label>category</label>
                   <select id="lesson-category"></select>
@@ -1671,6 +1681,8 @@
       renderCategorySelect(target.category || "");
       $("lesson-metadata-type").value = target.metadataType === "legacy_product" ? "product" : (target.metadataType || "course");
       $("lesson-order-weight").value = target.orderWeight ?? 0;
+      $("lesson-card-image").value = target.cardImageUrl || target.imageUrl || target.thumbnailUrl || target.bannerUrl || "";
+      $("lesson-card-icon").value = target.cardIcon || target.icon || "";
       $("lesson-hidden").checked = target.hiddenFromCatalog === true;
       $("lesson-deprecated").checked = target.isDeprecated === true;
       $("lesson-status").textContent = target.id ? `編輯：${target.id}` : "新增空白課程";
@@ -1786,7 +1798,9 @@
         orderWeight: Number($("lesson-order-weight").value || 0) || 0,
         isPhysical: metadataType === "product" || metadataType === "legacy_product",
         hiddenFromCatalog: $("lesson-hidden").checked,
-        isDeprecated: $("lesson-deprecated").checked
+        isDeprecated: $("lesson-deprecated").checked,
+        cardImageUrl: normalizeText($("lesson-card-image")?.value || "") || undefined,
+        cardIcon: normalizeText($("lesson-card-icon")?.value || "") || undefined
       };
     }
 

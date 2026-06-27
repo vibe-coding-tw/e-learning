@@ -240,6 +240,12 @@ This session's improvements:
 | Distributor `default-usd` not shown for US region | Backend `normalizeRoutingRegionCode("en")` → `"US"`, but frontend filter `"EN".includes("US")` is raw string compare → false | Add `normalizeDistributorRegionCode()` to cart.html mirroring backend normalization, use `dist.regions.some(r => normalize(r) === normalizedInitialRegion)` |
 | Seeding emulator data from production | Emulator export may miss some collections | Use `scripts/seed-distributors.js` which reads via Admin SDK (ADC/gcloud auth) and writes to emulator Firestore REST API |
 
+### Courses Management: Image Fields
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| No image/icon fields in course editor | `normalizeLessonMetadataPatch` didn't handle `cardImageUrl`/`imageUrl`/`thumbnailUrl`/`bannerUrl`/`thumbnail`/`cardIcon`/`icon`; no UI inputs; form didn't serialize them | Add field handling in `functions-admin/lib/admin-utils.js:normalizeLessonMetadataPatch`; add `<input id="lesson-card-image">` and `<input id="lesson-card-icon">` in editor grid; populate in `fillLessonForm`, serialize in `serializeLessonForm` with `|| undefined` to avoid overwriting existing data on empty save |
+
 ### Dashboard / Auto-Grade Fix Patterns
 
 | Issue | Root Cause | Fix |
