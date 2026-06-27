@@ -475,6 +475,13 @@
             if (routingSummaryReason) routingSummaryReason.textContent = reasonValue;
         }
 
+        function normalizeDistributorRegionCode(code) {
+            const c = String(code || '').toUpperCase().trim();
+            if (c === 'EN' || c === 'EN-US' || c === 'USD') return 'US';
+            if (c === 'TWD') return 'TW';
+            return c;
+        }
+
         function renderDistributorOptions(snapshot = {}) {
             if (!preferredRegionSelect || !preferredDistributorSelect) return;
             let regions = Array.isArray(snapshot.regions) ? snapshot.regions : [];
@@ -484,6 +491,7 @@
             const localRegion = getPreferredRegion();
             const localDistributorId = getPreferredDistributorId();
             const initialRegion = localRegion || userPreference.preferredRegion || snapshot.region || regions[0] || 'US';
+            const normalizedInitialRegion = normalizeDistributorRegionCode(initialRegion);
 
             const selectRegionText = window.t('routing_select_region_placeholder', '-- 請選擇地區 --');
             preferredRegionSelect.innerHTML = [`<option value="">${escapeHtml(selectRegionText)}</option>`]
@@ -494,7 +502,7 @@
             const selectDistributorText = window.t('routing_select_distributor_placeholder', '-- 請先選擇地區 --');
             let matchedDistributors = distributors.filter(dist => 
                 !initialRegion || !Array.isArray(dist.regions) || dist.regions.length === 0 ||
-                dist.regions.map(r => r.toUpperCase()).includes(initialRegion.toUpperCase())
+                dist.regions.some(r => normalizeDistributorRegionCode(r) === normalizedInitialRegion)
             );
 
             const availableDistributorIds = new Set(
@@ -1261,14 +1269,18 @@
             const loginBtn = document.getElementById('login-btn');
 
             if (user) {
-                userDisplay.textContent = window.t('user_hello', '您好, {user}').replace('{user}', user.displayName || user.email);
-                loginBtn.textContent = window.t('nav_logout', '登出');
-                loginBtn.onclick = handleLogout;
+                if (userDisplay) userDisplay.textContent = window.t('user_hello', '您好, {user}').replace('{user}', user.displayName || user.email);
+                if (loginBtn) {
+                    loginBtn.textContent = window.t('nav_logout', '登出');
+                    loginBtn.onclick = handleLogout;
+                }
                 loadRoutingOptions();
             } else {
-                userDisplay.textContent = window.t('user_guest', '訪客模式');
-                loginBtn.textContent = window.t('nav_login', '登入 / 註冊');
-                loginBtn.onclick = handleLogin;
+                if (userDisplay) userDisplay.textContent = window.t('user_guest', '訪客模式');
+                if (loginBtn) {
+                    loginBtn.textContent = window.t('nav_login', '登入 / 註冊');
+                    loginBtn.onclick = handleLogin;
+                }
                 loadRoutingOptions();
             }
         });

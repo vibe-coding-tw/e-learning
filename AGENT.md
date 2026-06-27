@@ -231,6 +231,15 @@ This session's improvements:
 - #12: Converted inline `onclick` to `addEventListener` for dashboard tab buttons, copy-UID code elements (dashboard + investor-portal), cart convenience store buttons
 - Fixed `rover.k.chen@gmail.com` auto-activating all courses: removed hardcoded email force-tutor-mode in `getScopedTutorModeForUid` (3 locations) and removed `admin-simulated` backend bypass in `order-flow.js`
 
+### Distributor & Cart Page Fix Patterns
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| No distributors show for US region | `distributors` / `metadata_settings` collections missing from emulator export | Run `node scripts/seed-distributors.js` to copy `distributors`, `region_distributor_rules`, `metadata_settings` from production to local emulator via REST API |
+| `cart.html:1264` TypeError on `userDisplay.textContent` | `nav-component.js` dynamically renders `#user-display`; `onAuthStateChanged` fires before nav renders | Add null guards: `if (userDisplay) userDisplay.textContent = ...` |
+| Distributor `default-usd` not shown for US region | Backend `normalizeRoutingRegionCode("en")` → `"US"`, but frontend filter `"EN".includes("US")` is raw string compare → false | Add `normalizeDistributorRegionCode()` to cart.html mirroring backend normalization, use `dist.regions.some(r => normalize(r) === normalizedInitialRegion)` |
+| Seeding emulator data from production | Emulator export may miss some collections | Use `scripts/seed-distributors.js` which reads via Admin SDK (ADC/gcloud auth) and writes to emulator Firestore REST API |
+
 ### Dashboard / Auto-Grade Fix Patterns
 
 | Issue | Root Cause | Fix |
