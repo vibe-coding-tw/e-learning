@@ -81,7 +81,6 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
     for (const locale of locales) {
         const localeCandidates = buildI18nFilenameCandidates(candidate, locale);
         for (const localeCandidate of localeCandidates) {
-            // Check if the candidate is one of the user guide files (students.html / tutors.html)
             const isGuide = localeCandidate === "tutors.html" || localeCandidate === "students.html";
             const targetLocale = locale === "en" ? "en" : "zh-TW";
             const pathPrefix = isGuide ? `public/${targetLocale}` : `courses/${locale}`;

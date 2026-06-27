@@ -231,4 +231,16 @@ This session's improvements:
 - #12: Converted inline `onclick` to `addEventListener` for dashboard tab buttons, copy-UID code elements (dashboard + investor-portal), cart convenience store buttons
 - Fixed `rover.k.chen@gmail.com` auto-activating all courses: removed hardcoded email force-tutor-mode in `getScopedTutorModeForUid` (3 locations) and removed `admin-simulated` backend bypass in `order-flow.js`
 
-> 最後更新：2026-06-26
+### Dashboard / Auto-Grade Fix Patterns
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Emulator: `__vibeFirebaseAdmin` undefined | GCF env `CONTENT_REPO_TOKEN` not propagated to `global.__vibeFirebaseAdmin` in emulator | Add direct `global.__vibeFirebaseAdmin = { accessToken: process.env.CONTENT_REPO_TOKEN }` after admin init |
+| Emulator: Secret not resolved | `defineSecret('CONTENT_REPO_TOKEN')` returns placeholder, not real value | In emulator, read `process.env.CONTENT_REPO_TOKEN` directly; call `config().then()` outside function handler |
+| Missing import: `buildAssignmentSubmissionRecord` | `dashboard-data.js` calls it but never imports from `shared-function-core` | Add destructured import or inline the function |
+| Missing import: `unitIdsMatch` | `dashboard-data.js` calls `unitIdsMatch()` but never imports it | Check both `src/js/dashboard-data.js` AND `functions-admin/lib/dashboard-data.js` for missing `require('./dashboard-utils-core')` destructured imports |
+| `onSnapshot` overwrites cached data with empty set | Security rules block client-side queries in emulator → `onSnapshot` returns 0 docs → clears `dashboardData.assignments` | Guard: `if (updatedAssignments.length > 0 \|\| !dashboardData.assignments?.length) { dashboardData.assignments = updatedAssignments; }`. Also use `dashboardData.assignments` as fallback source for re-render when snapshot is empty. |
+| `autoGradeAssignment` shows other units' assignments | Line `renderAssignments(dashboardData?.assignments \|\| [], ...)` passes ALL assignments without filtering by unit context | Apply `filterAssignmentsForCurrentView()` + `unitIdsMatch(unitId, filterUnitId)` filter before calling `renderAssignments` |
+| Updated source file not picked up | Dashboard loads fingerprinted `dashboard.<hash>.js`, not `dashboard.js` | Always copy `src/js/dashboard.js` → `public/js/dashboard.js`, then run `node scripts/fingerprint-static-assets.js` |
+
+> 最後更新：2026-06-27

@@ -7,6 +7,7 @@ const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https")
 const { setGlobalOptions } = require("firebase-functions/v2");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
+global.__vibeFirebaseAdmin = admin;
 const crypto = require("crypto");
 
 const {
@@ -57,7 +58,6 @@ const {
     hasPhysicalOrderItem,
     buildOrderItemsDescription
 } = require("./lib/order-display");
-const financeCallables = require("./lib/finance-callables");
 
 if (!admin.apps.length) {
     admin.initializeApp();
@@ -71,6 +71,7 @@ setGlobalOptions({
 });
 
 const db = admin.firestore();
+const financeCallables = require("./lib/finance-callables");
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
 exports.initiatePayment = onCall(async (request) => {

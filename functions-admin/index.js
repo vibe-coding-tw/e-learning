@@ -1,4 +1,5 @@
 const admin = require("firebase-admin");
+global.__vibeFirebaseAdmin = admin;
 const fs = require("fs");
 const path = require("path");
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
@@ -244,7 +245,7 @@ const { getLessonsMetadata, getDashboardData } = require("./lib/dashboard-data")
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
-setGlobalOptions({ region: "asia-east1", maxInstances: 10, minInstances: 0, memory: "128MiB", concurrency: 80 });
+setGlobalOptions({ region: "asia-east1" });
 
 const getStudentAssignmentTutorReport = onCall(async (request) => {
     const data = request?.data || {};

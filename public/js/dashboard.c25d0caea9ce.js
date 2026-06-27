@@ -711,8 +711,12 @@ function setupRealTimeAssignmentsListener({ isAdmin, isQualifiedTutor, filterUni
             });
 
             // Update local dashboardData assignments cache
+            // (only overwrite if non-empty or cache is still empty — avoids clearing
+            //  initial getDashboardData results when security rules block client queries)
             if (dashboardData) {
-                dashboardData.assignments = updatedAssignments;
+                if (updatedAssignments.length > 0 || !dashboardData.assignments?.length) {
+                    dashboardData.assignments = updatedAssignments;
+                }
             }
 
             // Re-render if the user is currently viewing the assignments tab
@@ -720,7 +724,8 @@ function setupRealTimeAssignmentsListener({ isAdmin, isQualifiedTutor, filterUni
             const activeTab = activeTabBtn ? String(activeTabBtn.id || '').replace('tab-btn-', '') : 'overview';
             if (activeTab === 'assignments') {
                 console.log("[Dashboard] Re-rendering assignments list in real-time...");
-                let displayAssignments = filterAssignmentsForCurrentView(updatedAssignments);
+                const sourceAssignments = dashboardData?.assignments || updatedAssignments;
+                let displayAssignments = filterAssignmentsForCurrentView(sourceAssignments);
                 if (filterUnitId) {
                     displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
                 } else if (filterCourseId) {
@@ -3235,7 +3240,14 @@ window.autoGradeAssignment = async function (assignmentId) {
         if (result?.data?.score !== undefined) {
             notify(`自動批改完成：${result.data.score} 分`, result.data.score >= 70 ? 'success' : 'warning');
         }
-        renderAssignments(dashboardData?.assignments || [], "", { showGuide: false });
+        const { filterUnitId: fUnitId, filterCourseId: fCourseId } = getCurrentDashboardContext();
+        let displayAssignments = filterAssignmentsForCurrentView(dashboardData?.assignments || []);
+        if (fUnitId) {
+            displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, fUnitId));
+        } else if (fCourseId) {
+            displayAssignments = displayAssignments.filter(a => a.courseId === fCourseId);
+        }
+        renderAssignments(displayAssignments, "", { showGuide: false });
     } catch (e) {
         console.error(e);
         notify(`自動批改失敗：${e.message}`, 'error');

@@ -64,6 +64,11 @@ function makeFingerprintAsset(sourceAbs, outputDir) {
   const fpAbs = path.join(dir, fpName);
   fs.copyFileSync(sourceAbs, fpAbs);
 
+  const plainPath = path.join(dir, `${baseNoExt}${ext}`);
+  if (plainPath !== sourceAbs) {
+    fs.copyFileSync(sourceAbs, plainPath);
+  }
+
   const oldPattern = new RegExp(`^${baseNoExt}\\.[0-9a-f]{12}\\${ext}$`, 'i');
   for (const name of fs.readdirSync(dir)) {
     if (!oldPattern.test(name)) continue;
