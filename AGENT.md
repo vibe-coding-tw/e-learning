@@ -246,6 +246,12 @@ This session's improvements:
 |-------|-----------|-----|
 | No image field in course editor | `normalizeLessonMetadataPatch` didn't handle `cardImageUrl`/`imageUrl`/`thumbnailUrl`/`bannerUrl`/`thumbnail`/`cardIcon`/`icon`; no UI input; form didn't serialize it | Add field handling in `functions-admin/lib/admin-utils.js:normalizeLessonMetadataPatch`; add `<input id="lesson-card-image">` in editor grid; populate in `fillLessonForm`, serialize in `serializeLessonForm` with `|| undefined` to avoid overwriting existing data on empty save |
 
+### Assignment Link Modal i18n
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Tutor assignment modal has no English | `injectAssignmentLinkModal()` uses hardcoded Chinese strings, no `window.t()` calls | Add 9 i18n keys (`tutor_confirm_title`/`desc`/`desc_blank_hint`/`email_label`/`placeholder`/`footnote`/`btn`/`cancel_btn`) in `src/js/i18n-helper.js` (zh-TW + en); refactor `injectAssignmentLinkModal()` in `src/js/course-shared.js` to use `window.t()` with `.replace('{email}', defaultTutorEmail)` |
+
 ### Dashboard / Auto-Grade Fix Patterns
 
 | Issue | Root Cause | Fix |

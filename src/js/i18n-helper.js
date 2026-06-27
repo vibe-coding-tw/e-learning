@@ -413,6 +413,16 @@
             "dash_tutor_invite_input_placeholder": "輸入導師 Email 或作業邀請連結...",
             "dash_tutor_invite_status_empty": "未變更綁定。如需綁定，請輸入代碼後點擊綁定。",
 
+            // Assignment Link Modal (course-shared.js)
+            "tutor_confirm_title": "確認 / 更換授課老師",
+            "tutor_confirm_desc": "請確認您目前的授課老師，或輸入新的授課老師 Email 更換。",
+            "tutor_confirm_desc_blank_hint": "留空將使用預設導師邀請連結。",
+            "tutor_email_label": "授課老師 Email",
+            "tutor_email_placeholder": "輸入授課老師 Email（留空使用預設導師）",
+            "tutor_email_footnote": "※ 請輸入授課老師的 Email 帳號；留空將使用預設導師（{email}）。",
+            "tutor_confirm_btn": "確認並前往作業",
+            "tutor_cancel_btn": "取消",
+
             // Extra Dashboard Labels (Student/Tutor View)
             "dash_tab_overview": "概覽 (Overview)",
             "dash_tab_tutors": "導師管理 (Tutor)",
@@ -791,6 +801,16 @@
             "dash_tutor_invite_btn_binding": "Binding...",
             "dash_tutor_invite_input_placeholder": "Enter tutor Email or assignment link...",
             "dash_tutor_invite_status_empty": "Unbound. Enter a code and click bind to proceed.",
+
+            // Assignment Link Modal (course-shared.js)
+            "tutor_confirm_title": "Confirm / Change Instructor",
+            "tutor_confirm_desc": "Confirm your current instructor, or enter a new instructor Email to change.",
+            "tutor_confirm_desc_blank_hint": "Leave blank to use the default tutor invitation link.",
+            "tutor_email_label": "Instructor Email",
+            "tutor_email_placeholder": "Enter instructor Email (leave blank for default tutor)",
+            "tutor_email_footnote": "※ Enter the instructor's Email address. Leave blank to use the default tutor ({email}).",
+            "tutor_confirm_btn": "Confirm & Go to Assignment",
+            "tutor_cancel_btn": "Cancel",
             
             // Extra Dashboard Labels (Student/Tutor View)
             "dash_tab_overview": "Overview",
