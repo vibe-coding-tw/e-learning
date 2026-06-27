@@ -133,7 +133,6 @@ function ensureCourseTopNavShell(file = '', metadataFamily = '') {
     if (topNav) return topNav;
 
     const activeLocale = getActiveCourseLocale();
-    const isEn = isEnLikeCourseLocale(activeLocale) || String(file || '').toLowerCase().startsWith('en-');
     const normalizedFile = normalizeLooseKey(file);
     const family = metadataFamily || getCourseFamilyForCoursePage(normalizedFile);
     const seemsCourseFile = /^(?:start-\d{2}-unit-|basic-\d{2}-unit-|(?:adv|advanced)-\d{2}-unit-|prepare-\d{2}-unit-|(?:tw|en|common|car-starter|car-basic|car-advanced)-)/i.test(normalizedFile);
@@ -189,8 +188,7 @@ function ensureCourseBreadcrumbShell(file = '', metadataFamily = '') {
     if (!path.startsWith('/courses/') && !seemsCourseFile && !family) return null;
 
     const activeLocale = getActiveCourseLocale();
-    const isEn = isEnLikeCourseLocale(activeLocale) || normalizedFile.startsWith('en-');
-    const overviewText = isEn ? 'Course Overview' : '課程總覽';
+    const overviewText = window.t('breadcrumb_overview');
 
     breadcrumb = document.createElement('div');
     breadcrumb.className = 'ms-breadcrumb';
@@ -215,10 +213,10 @@ function ensureCourseBreadcrumbShell(file = '', metadataFamily = '') {
 
     const bcCurrent = breadcrumb.querySelector('#bc-current');
     if (bcCurrent) {
-        if (family === 'starter') bcCurrent.textContent = isEn ? 'Course Overview' : '課程總覽';
-        else if (family === 'basic') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
-        else if (family === 'advanced') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
-        else if (family === 'prepare') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
+        if (family === 'starter') bcCurrent.textContent = window.t('breadcrumb_overview');
+        else if (family === 'basic') bcCurrent.textContent = window.t('breadcrumb_module_overview');
+        else if (family === 'advanced') bcCurrent.textContent = window.t('breadcrumb_module_overview');
+        else if (family === 'prepare') bcCurrent.textContent = window.t('breadcrumb_module_overview');
     }
 
     return breadcrumb;
@@ -922,7 +920,7 @@ function normalizeCourseBreadcrumbs() {
 
         let bcModuleLink = document.getElementById('bc-module-link');
         if (!bcModuleLink) {
-            breadcrumb.innerHTML = `<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">${isEn ? 'Course Overview' : '課程總覽'}</span>`;
+            breadcrumb.innerHTML = `<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">${window.t('breadcrumb_overview')}</span>`;
             bcModuleLink = document.getElementById('bc-module-link');
         }
 
@@ -1050,14 +1048,14 @@ function upgradeLegacyUnitToMsLayout() {
         sidebar.className = 'ms-sidebar';
         sidebar.innerHTML = `
             <div class="ms-sidebar-header">
-                <div class="module-label">單元</div>
+                <div class="module-label">${window.t('sidebar_unit_label')}</div>
                 <div class="module-title"></div>
-                <div class="meta"><i class="far fa-clock"></i> 約 45 分鐘 · ${legacySections.length + 1} 頁</div>
+                <div class="meta"><i class="far fa-clock"></i> ${window.t('sidebar_meta_format').replace('{minutes}', '45').replace('{pages}', legacySections.length + 1)}</div>
             </div>
             <nav class="ms-unit-list" id="sidebar-nav"></nav>
             <div class="sidebar-progress">
                 <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
-                <div class="progress-text" id="progress-text">0 / ${legacySections.length} 已完成</div>
+                <div class="progress-text" id="progress-text">${window.t('progress_format').replace('{done}', '0').replace('{total}', legacySections.length)}</div>
             </div>
         `;
         sidebar.querySelector('.module-title').textContent = pageTitle;
@@ -1068,7 +1066,7 @@ function upgradeLegacyUnitToMsLayout() {
             <div class="ms-breadcrumb">
                 <a href="#">Vibe Coding</a><span>›</span>
                 <a href="${courseHref}">${familyLabel}</a><span>›</span>
-                <span id="bc-current">${isEn ? 'Course Overview' : '課程總覽'}</span>
+                <span id="bc-current">${window.t('breadcrumb_overview')}</span>
             </div>
         `;
 
@@ -1079,10 +1077,10 @@ function upgradeLegacyUnitToMsLayout() {
             <div class="unit-content">
                 <h1>${pageTitle}</h1>
                 ${pageSubtitle ? `<p>${pageSubtitle}</p>` : ''}
-                <h2>${isEn ? 'Unit Contents' : '本單元內容'}</h2>
+                <h2>${window.t('heading_unit_contents')}</h2>
                 <div class="unit-card-list" id="index-unit-list"></div>
                 <div style="margin-top:32px;">
-                    <button class="ms-btn" onclick="goToUnit(1)">${isEn ? 'Start Unit' : '開始單元'} &nbsp;›</button>
+                    <button class="ms-btn" onclick="goToUnit(1)">${window.t('btn_start_unit')}</button>
                 </div>
             </div>
         `;
@@ -1091,7 +1089,7 @@ function upgradeLegacyUnitToMsLayout() {
         const unitTitles = [];
         legacySections.forEach((section, idx) => {
             const pageNo = idx + 1;
-            const title = (section.querySelector('.section-header-left h2')?.textContent || section.querySelector('h2')?.textContent || `單元 ${pageNo}`).trim();
+            const title = (section.querySelector('.section-header-left h2')?.textContent || section.querySelector('h2')?.textContent || `${window.t('label_unit')} ${pageNo}`).trim();
             unitTitles.push(title);
             const page = document.createElement('div');
             page.className = 'ms-unit-page';
@@ -1112,9 +1110,9 @@ function upgradeLegacyUnitToMsLayout() {
             const prevTarget = pageNo === 1 ? 0 : pageNo - 1;
             const nextTarget = pageNo === legacySections.length ? 0 : pageNo + 1;
             nav.innerHTML = `
-                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;上一頁</button>
+                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;${window.t('nav_prev_page')}</button>
                 <span class="unit-page-indicator">${pageNo} / ${legacySections.length}</span>
-                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? '返回總覽' : '下一頁'} &nbsp;›</button>
+                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? window.t('nav_back_overview') : window.t('nav_next_page')} &nbsp;›</button>
             `;
 
             page.appendChild(contentWrap);
@@ -1180,7 +1178,7 @@ function upgradeLegacyUnitToMsLayout() {
             });
 
             const bc = document.getElementById('bc-current');
-            if (bc) bc.textContent = unitNo === 0 ? (isEn ? 'Course Overview' : '課程總覽') : (unitTitles[unitNo - 1] || (isEn ? 'Unit' : '單元'));
+            if (bc) bc.textContent = unitNo === 0 ? window.t('breadcrumb_overview') : (unitTitles[unitNo - 1] || window.t('label_unit'));
             refreshStartUnitUiState();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -1191,7 +1189,7 @@ function upgradeLegacyUnitToMsLayout() {
             const fill = document.getElementById('progress-fill');
             const txt = document.getElementById('progress-text');
             if (fill) fill.style.width = `${Math.round((doneCount / Math.max(total, 1)) * 100)}%`;
-            if (txt) txt.textContent = `${doneCount} / ${total} 已完成`;
+            if (txt) txt.textContent = window.t('progress_format').replace('{done}', doneCount).replace('{total}', total);
         }
 
         window.goToUnit(unitTitles.length > 0 ? 1 : 0);
@@ -2442,13 +2440,13 @@ async function initFirebaseFeatures() {
                     blockerType: type,
                     blockerNote: note
                 });
-                alert(isEnLikeCourseLocale(getActiveCourseLocale()) ? "👍 Blocker reported. Your teacher will be notified!" : "👍 卡點已回報，導師將會收到通知！");
+                alert(window.t('alert_blocker_reported'));
                 location.reload();
             } catch (e) {
                 console.error(e);
-                alert(`${isEnLikeCourseLocale(getActiveCourseLocale()) ? 'Submission failed: ' : '提交失敗：'}${e.message}`);
+                alert(window.t('alert_submission_failed') + e.message);
                 btn.disabled = false;
-                btn.innerText = isEnLikeCourseLocale(getActiveCourseLocale()) ? "🚀 Submit blocker" : "🚀 提交卡點";
+                btn.innerText = window.t('btn_submit_blocker');
             }
         };
 
@@ -2501,13 +2499,13 @@ async function initFirebaseFeatures() {
                     assignmentId: unitId,
                     attemptSummary: summary
                 });
-                alert(isEnLikeCourseLocale(getActiveCourseLocale()) ? "📝 Attempt record submitted!" : "📝 嘗試紀錄提交成功！");
+                alert(window.t('alert_attempt_recorded'));
                 location.reload();
             } catch (e) {
                 console.error(e);
-                alert(`${isEnLikeCourseLocale(getActiveCourseLocale()) ? 'Submission failed: ' : '提交失敗：'}${e.message}`);
+                alert(window.t('alert_submission_failed') + e.message);
                 btn.disabled = false;
-                btn.innerText = isEnLikeCourseLocale(getActiveCourseLocale()) ? "Submit attempt summary" : "提交嘗試紀錄";
+                btn.innerText = window.t('btn_submit_attempt');
             }
         };
 
@@ -3184,20 +3182,14 @@ function cleanUpPageNoise() {
 function normalizeStartButtonText() {
     try {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        const activeLocale = getActiveCourseLocale();
-        const isEn = isEnLikeCourseLocale(activeLocale) || file.startsWith('en-');
 
         const buttons = document.querySelectorAll('button');
         buttons.forEach(btn => {
             const onclickAttr = btn.getAttribute('onclick') || '';
             // Only convert the start button that goes to unit 1, not the back buttons that return to unit 1.
             if (onclickAttr.includes('goToUnit(1)') && !btn.classList.contains('nav-btn-prev')) {
-                if (isEn) {
-                    btn.innerHTML = 'Start Unit &nbsp;›';
-                } else {
-                    btn.innerHTML = '開始單元 &nbsp;›';
+                    btn.innerHTML = window.t('btn_start_unit');
                 }
-            }
         });
     } catch (e) {
         console.warn('[CourseShared] normalizeStartButtonText failed:', e);

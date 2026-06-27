@@ -522,8 +522,6 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
     }
 });
 
-Object.assign(exports, financeCallables);
-
 module.exports = {
     initiatePayment: exports.initiatePayment,
     getLogisticsMapParams: exports.getLogisticsMapParams,

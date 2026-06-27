@@ -179,7 +179,7 @@ function updateCardAction(card, status) {
   const uiLocale = LP.detectUiLocale?.() || "en";
 
   if (!hasPriceData) {
-    btn.textContent = uiLocale.startsWith("en") ? "Not for sale" : "未定價";
+    btn.textContent = window.t('lp_not_for_sale');
     btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
     btn.disabled = true;
     return;
@@ -323,7 +323,7 @@ function renderLessons(lessons, pathKey) {
       ? window.__vibeResolveLocalizedFieldValue(lesson, "coreContent", uiLocale, isEn ? (lesson.coreContentEn || []) : (lesson.coreContent || []))
       : (isEn ? (lesson.coreContentEn || []) : (lesson.coreContent || []))).slice(0, 4);
     const contentList = LP.translateBulletList?.(localizedCoreContent, uiLocale) || localizedCoreContent;
-    const summary = LP.resolveLessonCardSummary?.(lesson, uiLocale) || (isEn ? "English translation pending." : "課程內容由本機資料載入。");
+    const summary = LP.resolveLessonCardSummary?.(lesson, uiLocale) || window.t('lp_summary_pending');
     const duration = String(lesson.duration || lesson.estimatedDuration || "");
     const displayLessonLabel = LP.resolveLessonLabel?.(lesson, uiLocale) || String(lesson.lessonLabel || lesson.tagText || "").trim();
     const icon = String(lesson.cardIcon || lesson.icon || "📘");
@@ -361,10 +361,10 @@ function renderLessons(lessons, pathKey) {
           <div class="min-w-0 text-xs text-slate-500 truncate">${displayKey}</div>
           ${duration ? `<span class="flex-shrink-0 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${duration}</span>` : ""}
         </div>
-        <h2 class="text-xl font-bold text-slate-800 mb-2">${displayTitle || lesson.id || lesson.docId || "Untitled Course"}</h2>
-        <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${displayLessonLabel || (isEn ? "Course Unit" : "課程單元")}</div>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">${displayTitle || lesson.id || lesson.docId || window.t('lp_untitled_course')}</h2>
+        <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${displayLessonLabel || window.t('lp_course_unit_badge')}</div>
         ${imageHtml}
-        <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary || "課程內容由系統資料動態載入。"}</div>
+        <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary || window.t('lp_content_loaded_from_system')}</div>
         <div class="text-sm text-slate-700 mb-4">
           <strong class="text-slate-900 block mb-1">${t.coreContentLabel}</strong>
           ${listHtml}
@@ -407,7 +407,7 @@ function renderLessons(lessons, pathKey) {
           uiLocale,
           isEn ? (lesson.summaryEn || lesson.descriptionEn || lesson.summary || lesson.description || lesson.tagText || "") : (lesson.summary || lesson.description || lesson.tagText || lesson.summaryEn || lesson.descriptionEn || "")
         )
-      : (isEn ? (lesson.summaryEn || lesson.descriptionEn || lesson.summary || lesson.description || lesson.tagText || "") : (lesson.summary || lesson.description || lesson.tagText || lesson.summaryEn || lesson.descriptionEn || "")) || (isEn ? "Product" : "產品"));
+      : (isEn ? (lesson.summaryEn || lesson.descriptionEn || lesson.summary || lesson.description || lesson.tagText || "") : (lesson.summary || lesson.description || lesson.tagText || lesson.summaryEn || lesson.descriptionEn || "")) || window.t('lp_product_badge'));
     const localizedCoreContent = toList(window.__vibeResolveLocalizedFieldValue
       ? window.__vibeResolveLocalizedFieldValue(
           lesson,
@@ -441,7 +441,7 @@ function renderLessons(lessons, pathKey) {
         data-classroom-url="${entryUrl}">
         <div class="min-w-0 text-xs text-slate-500 mb-2 truncate">${displayKey}</div>
         <h3 class="text-xl font-bold text-slate-800 mb-2">${displayTitle}</h3>
-        <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${isEn ? "Product" : "產品"}</div>
+        <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${window.t('lp_product_badge')}</div>
         ${imageHtml}
         <div class="text-sm text-slate-700 mb-3">${summary}</div>
         <div class="text-sm text-slate-700 mb-4">
@@ -475,9 +475,9 @@ function renderLessons(lessons, pathKey) {
           spec,
           "summary",
           uiLocale,
-          isEn ? (spec.summaryEn || spec.descriptionEn || "Computer Spec Recommendations") : (spec.summary || spec.description || "")
+          isEn ? (spec.summaryEn || spec.descriptionEn || window.t('lp_spec_summary_fallback')) : (spec.summary || spec.description || "")
         )
-      : (isEn ? (spec.summaryEn || spec.descriptionEn || "Computer Spec Recommendations") : (spec.summary || spec.description || "")));
+      : (isEn ? (spec.summaryEn || spec.descriptionEn || window.t('lp_spec_summary_fallback')) : (spec.summary || spec.description || "")));
     const localizedSpecContent = toList(window.__vibeResolveLocalizedFieldValue
       ? window.__vibeResolveLocalizedFieldValue(
           spec,

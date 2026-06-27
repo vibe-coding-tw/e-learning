@@ -282,6 +282,33 @@ async function resolveDistributorForCheckout(db, {
         }
 
         if (active.length > 1) {
+            const rulesSnap = await db.collection("region_distributor_rules").doc(regionCode.toUpperCase()).get();
+            if (rulesSnap.exists) {
+                const rules = rulesSnap.data() || {};
+                const defaultId = normalizeText(rules.defaultDistributorId);
+                const backupIds = Array.isArray(rules.backupDistributorIds) ? rules.backupDistributorIds : [];
+                const pick = (id) => active.find((d) => d.id === id) || null;
+                const defaultDist = defaultId ? pick(defaultId) : null;
+                if (defaultDist) {
+                    return {
+                        distributorId: defaultDist.id,
+                        distributor: defaultDist,
+                        state: "resolved",
+                        reason: "region-default"
+                    };
+                }
+                for (const bid of backupIds) {
+                    const backupDist = pick(normalizeText(bid));
+                    if (backupDist) {
+                        return {
+                            distributorId: backupDist.id,
+                            distributor: backupDist,
+                            state: "resolved",
+                            reason: "region-backup"
+                        };
+                    }
+                }
+            }
             active.sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)));
             return {
                 distributorId: "",

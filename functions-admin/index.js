@@ -148,21 +148,9 @@ const {
     sendAdminShipmentReminder,
 } = require("vibe-functions-core/email-service");
 const {
-    normalizeAmount,
-    normalizeCurrency
-} = require("vibe-functions-core/pricing-utils");
-const {
-    round2Amount
-} = require("vibe-functions-core/ledger-engine");
-const {
-    formatTaipeiDateTime: formatTaipeiDateTimeShared,
     runPendingAssignmentReminder,
     runPendingShipmentReminder
 } = require("./lib/shared-reminders");
-const {
-    toMillis,
-    previousYmPeriod
-} = require("./lib/date-utils");
 const {
     normalizeRoutingRegionCode,
     distributorMatchesRegion,
@@ -170,9 +158,7 @@ const {
     chooseRecommendedDistributor
 } = require("./lib/routing-utils");
 const {
-    getUserDistributorScope,
-    countAuthorizedTutorUnits,
-    loadDistributorScopedUsers
+    getUserDistributorScope
 } = require("./lib/distributor-utils");
 const {
     isStarterCourseReference,
@@ -191,22 +177,10 @@ const {
     normalizeLookupValue,
     normalizeCanonicalCourseKey,
     getCanonicalLessonIdentity,
-    getLessonLookupKeys,
     resolveCanonicalUnitId,
-    canonicalizeLessonForDashboard,
     findParentCourseIdByUnit,
-    findCourseByUnitId,
-    findCourseByPageOrUnit,
     findLessonByCourseRef,
-    ensureStudentStatsEntry,
-    ensureCourseProgressBucket,
-    appendCourseProgressActivity,
-    buildDashboardReferenceEntry,
-    addDashboardUserEntry,
-    buildTutorList,
     buildStudentAssignmentTutorRows,
-    buildDashboardSummary,
-    finalizeHardwareOrders,
     extractHiddenSectionContent,
     getTutorAssignmentUrlFromConfig
 } = require("./dashboard-utils");
@@ -1077,6 +1051,7 @@ const getDistributorRoutingOptions = onCall(async (request) => {
 
 const resolveDistributorCheckoutQuoteFn = onCall(async (request) => {
     const { auth, data } = request;
+    assertAuthenticated(auth);
     const dbRef = admin.firestore();
     const payload = data || {};
     const { loadLessons, normalizeText } = require("vibe-functions-core/access-utils-core");
@@ -1086,18 +1061,18 @@ const resolveDistributorCheckoutQuoteFn = onCall(async (request) => {
     const matchedLesson =
         findLessonByDocumentId(lessons, normalizedDocId) ||
         findLessonByDocumentId(lessons, `${normalizedDocId}.html`);
-    const result = await resolveQuote(dbRef, {
+    const quote = await resolveQuote(dbRef, {
         lessons,
         docId: matchedLesson?.id || matchedLesson?.courseId || normalizedDocId || "",
         region: payload.region || "",
-        locale: payload.locale || "zh-TW",
+        locale: payload.locale || "en",
         tutorId: payload.tutorId || "",
-        promotionCode: payload.promotionCode || "",
-        customerId: payload.customerId || "",
+        promotionCode: payload.promotionCode || payload.promoCode || "",
+        customerId: payload.customerId || auth.uid || "",
         distributorId: payload.distributorId || "",
         priceBookId: payload.priceBookId || ""
     });
-    return { success: true, result };
+    return { success: true, ...quote };
 });
 
 const updateUserRoutingPreference = onCall(async (request) => {

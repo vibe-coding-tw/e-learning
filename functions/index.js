@@ -1,4 +1,4 @@
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall } = require("firebase-functions/v2/https");
 
 const {
     proxyAutogradeCallable,
@@ -16,9 +16,6 @@ const {
 const {
     registerIndexExports
 } = require('./lib/index-export-registry');
-const {
-    registerAdminExports
-} = require('./lib/index-export-admin');
 const {
     initializeFunctionsRuntime
 } = require('./lib/functions-bootstrap');
@@ -45,14 +42,8 @@ if (process.env.FUNCTIONS_EMULATOR) {
         proxyAdminCallable,
         proxyAdminRequest,
         onCall,
-        HttpsError,
         createOnUserCreatedTrigger,
         createMapReplyHandler
     });
 
-    registerAdminExports(
-        exports,
-        proxyAdminCallable,
-        proxyAdminRequest
-    );
 }

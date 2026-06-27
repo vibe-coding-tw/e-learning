@@ -216,15 +216,15 @@ function updatePortalOverview() {
     const orderSummaryEl = el('portal-order-summary');
     if (orderSummaryEl) {
         orderSummaryEl.textContent = physicalOrders.length
-            ? `共 ${physicalOrders.length} 筆實體商品訂單，待出貨 ${pendingPhysicalCount} 筆。`
-            : '目前沒有可顯示的實體商品訂單。';
+            ? window.t('dp_order_summary', '共 {count} 筆實體商品訂單，待出貨 {pendingCount} 筆。').replace('{count}', String(physicalOrders.length)).replace('{pendingCount}', String(pendingPhysicalCount))
+            : window.t('dp_order_summary_empty', '目前沒有可顯示的實體商品訂單。');
     }
 
     const tutorSummaryEl = el('portal-tutor-summary');
     if (tutorSummaryEl) {
         tutorSummaryEl.textContent = tutorSummary.tutorCount
-            ? `共 ${tutorSummary.tutorCount} 位 Tutor，授權單元 ${tutorSummary.authorizedUnitCount || 0} 個。`
-            : '目前沒有可顯示的 Tutor 綁定資料。';
+            ? window.t('dp_tutor_summary', '共 {count} 位 Tutor，授權單元 {unitCount} 個。').replace('{count}', String(tutorSummary.tutorCount)).replace('{unitCount}', String(tutorSummary.authorizedUnitCount || 0))
+            : window.t('dp_tutor_summary_empty', '目前沒有可顯示的 Tutor 綁定資料。');
     }
 }
 
@@ -235,14 +235,14 @@ function renderDistributorTabs(distributors = []) {
 
     const items = Array.isArray(distributors) ? distributors : [];
     if (!items.length) {
-        tabs.innerHTML = '<div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">尚無可切換的經銷商。</div>';
-        summary.textContent = '目前沒有可顯示的經銷商。';
+        tabs.innerHTML = `<div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">${window.t('dp_no_distributors_tab', '尚無可切換的經銷商。')}</div>`;
+        summary.textContent = window.t('dp_no_distributors_summary', '目前沒有可顯示的經銷商。');
         return;
     }
 
     summary.textContent = items.length > 1
-        ? `共 ${items.length} 個經銷商，可點擊切換不同價格表。`
-        : `目前只有 ${distributorLabel(items[0])}。`;
+        ? window.t('dp_distributor_count_multi', '共 {count} 個經銷商，可點擊切換不同價格表。').replace('{count}', String(items.length))
+        : window.t('dp_distributor_count_single', '目前只有 {name}。').replace('{name}', distributorLabel(items[0]));
 
     tabs.innerHTML = items.map((distributor) => {
         const id = String(distributor.id || '').trim();
@@ -273,11 +273,11 @@ function renderPriceBooks(items = []) {
     if (!tbody) return;
 
     if (!filteredItems.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚未載入或沒有符合條件的價格表</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">${window.t('dp_empty_pricebook_filtered', '尚未載入或沒有符合條件的價格表')}</td></tr>`;
         const priceBooksSummary = el('portal-pricebook-tabs-summary');
-        if (priceBooksSummary) priceBooksSummary.textContent = '目前沒有可顯示的價格表。';
+        if (priceBooksSummary) priceBooksSummary.textContent = window.t('dp_no_pricebooks_summary', '目前沒有可顯示的價格表。');
         const title = el('portal-pricebook-tabs-title');
-        if (title) title.textContent = '尚未選擇價格表';
+        if (title) title.textContent = window.t('dp_no_pricebook_selected_title', '尚未選擇價格表');
         return;
     }
 
@@ -296,13 +296,13 @@ function renderPriceBooks(items = []) {
             ? `${Number(book.promoPrice || 0).toLocaleString()} ${escapeHtml(book.currency || 'TWD')}`
             : '—';
         const displayText = isPromoActive(book) && book.promoPrice != null && book.promoPrice !== ''
-            ? `${Number(book.promoPrice || 0).toLocaleString()} ${escapeHtml(book.currency || 'TWD')}（促銷）`
+            ? `${Number(book.promoPrice || 0).toLocaleString()} ${escapeHtml(book.currency || 'TWD')}${window.t('dp_promo_suffix', '（促銷）')}`
             : priceText;
         const promoBadge = isPromoActive(book)
-            ? '<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">促銷中</span>'
+            ? `<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">${window.t('dp_badge_promo_active', '促銷中')}</span>`
             : (book.promoPrice != null && book.promoPrice !== ''
-                ? '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">未生效</span>'
-                : '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">無促銷</span>');
+                ? `<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">${window.t('dp_badge_promo_inactive', '未生效')}</span>`
+                : `<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">${window.t('dp_badge_no_promo', '無促銷')}</span>`);
         return `
             <tr
                 class="cursor-pointer transition ${isActiveRow ? 'bg-slate-50/80' : 'hover:bg-slate-50/80'}"
@@ -311,22 +311,22 @@ function renderPriceBooks(items = []) {
                 <td class="px-4 py-4 align-top">
                     <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(id || '—')}</div>
                     <div class="mt-1 font-bold text-slate-900">${escapeHtml(book.docId || '—')}</div>
-                    <div class="mt-1 text-[11px] text-slate-400">更新：${escapeHtml(formatDateTime(book.updatedAt))}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">${window.t('dp_label_updated', '更新：')}${escapeHtml(formatDateTime(book.updatedAt))}</div>
                 </td>
                 <td class="px-4 py-4 align-top">
                     <div class="font-semibold text-slate-900">${escapeHtml(priceText)}</div>
-                    <div class="mt-1 text-[11px] text-slate-500">活動價：${escapeHtml(promoText)}</div>
+                    <div class="mt-1 text-[11px] text-slate-500">${window.t('dp_label_promo_price_prefix', '活動價：')}${escapeHtml(promoText)}</div>
                     <div class="mt-1 flex items-center gap-2">${promoBadge}</div>
                 </td>
                 <td class="px-4 py-4 align-top">
                     <div class="text-sm font-bold text-slate-900">${escapeHtml(book.version || 'v1')}</div>
                     <span class="mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${activeBadge}">
-                        ${book.isActive !== false ? '啟用中' : '停用'}
+                        ${book.isActive !== false ? window.t('dp_badge_active', '啟用中') : window.t('dp_badge_inactive', '停用')}
                     </span>
                 </td>
                 <td class="px-4 py-4 align-top text-sm text-slate-600">
-                    <div>主價格：${escapeHtml(formatDateTime(book.effectiveFrom))}</div>
-                    <div class="mt-1 text-[11px] text-slate-400">促銷：${escapeHtml(formatDateTime(book.promoEffectiveFrom))} ~ ${escapeHtml(formatDateTime(book.promoEffectiveTo))}</div>
+                    <div>${window.t('dp_label_main_price_prefix', '主價格：')}${escapeHtml(formatDateTime(book.effectiveFrom))}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">${window.t('dp_label_promo_period_prefix', '促銷：')}${escapeHtml(formatDateTime(book.promoEffectiveFrom))} ~ ${escapeHtml(formatDateTime(book.promoEffectiveTo))}</div>
                 </td>
                 </td>
             </tr>
@@ -335,10 +335,10 @@ function renderPriceBooks(items = []) {
 
     const priceBooksSummary = el('portal-pricebook-tabs-summary');
     if (priceBooksSummary) {
-        priceBooksSummary.textContent = `目前顯示 ${filteredItems.length} 筆價格表，點擊每一列即可開啟 modal 編輯。`;
+        priceBooksSummary.textContent = window.t('dp_summary_showing', '目前顯示 {count} 筆價格表，點擊每一列即可開啟 modal 編輯。').replace('{count}', String(filteredItems.length));
     }
     const title = el('portal-pricebook-tabs-title');
-    if (title) title.textContent = `${selected?.docId || selected?.id || '尚未選擇價格表'}`;
+    if (title) title.textContent = selected?.docId || selected?.id || window.t('dp_no_pricebook_selected_title', '尚未選擇價格表');
 }
 
 function updatePriceBookFilterButtons() {
@@ -370,7 +370,7 @@ window.distributorPortalSearchPriceBooks = function() {
 window.distributorPortalResolvePriceDisplay = function(book = {}) {
     const base = `${Number(book.salePrice || 0).toLocaleString()} ${book.currency || 'TWD'}`;
     if (isPromoActive(book) && book.promoPrice != null && book.promoPrice !== '') {
-        return `${Number(book.promoPrice || 0).toLocaleString()} ${book.currency || 'TWD'}（促銷）`;
+        return `${Number(book.promoPrice || 0).toLocaleString()} ${book.currency || 'TWD'}${window.t('dp_promo_suffix', '（促銷）')}`;
     }
     return base;
 };
@@ -383,7 +383,7 @@ function renderOrders(items = []) {
     const physicalOrders = items.filter(order => order.hasPhysical);
 
     if (!physicalOrders.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">目前無實體商品履約訂單</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">${window.t('dp_empty_orders', '目前無實體商品履約訂單')}</td></tr>`;
         return;
     }
 
@@ -396,44 +396,44 @@ function renderOrders(items = []) {
                 : 'bg-slate-100 text-slate-600 border-slate-200';
         const productNames = Array.isArray(order.items) && order.items.length ? order.items.join('、') : '—';
         const hasPhysicalBadge = order.hasPhysical
-            ? '<span class="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">含實體商品</span>'
-            : '<span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">純數位</span>';
+            ? `<span class="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">${window.t('status_physical', '含實體商品')}</span>`
+            : `<span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">${window.t('status_digital_only', '純數位')}</span>`;
 
         return `
             <tr
                 class="cursor-pointer transition hover:bg-slate-50/85"
                 onclick="window.distributorPortalOpenFulfillmentModal('${escapeHtml(order.id)}')"
-                title="點擊編輯出貨狀態"
+                title="${window.t('dp_title_click_edit', '點擊編輯出貨狀態')}"
             >
                 <td class="px-4 py-4 align-top">
                     <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(order.orderNumber || order.id || '—')}</div>
-                    <div class="mt-1 text-[11px] text-slate-400">訂單：${escapeHtml(order.id || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">${window.t('dp_label_order_prefix', '訂單：')}${escapeHtml(order.id || '—')}</div>
                 </td>
                 <td class="px-4 py-4 align-top">
                     <div class="font-semibold text-slate-900">${escapeHtml(formatMoney(order.amount || 0, order.currency || 'TWD'))}</div>
                     <div class="mt-1 text-[11px] text-slate-500 break-words">${escapeHtml(productNames)}</div>
                 </td>
                 <td class="px-4 py-4 align-top">
-                    <div class="text-sm text-slate-700">付款：${escapeHtml(formatDateTime(order.paidAt))}</div>
+                    <div class="text-sm text-slate-700">${window.t('dp_label_payment_prefix', '付款：')}${escapeHtml(formatDateTime(order.paidAt))}</div>
                     <div class="mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${fulfillmentBadge}">
                         ${escapeHtml(fulfillment)}
                     </div>
                     <div class="mt-2">${hasPhysicalBadge}</div>
                 </td>
                 <td class="px-4 py-4 align-top text-sm text-slate-600">
-                    <div>收件人：${escapeHtml(order.shippingContact?.name || '—')} / ${escapeHtml(order.shippingContact?.phone || '—')}</div>
-                    <div class="mt-1 break-words">地址：${escapeHtml(order.shippingAddress || '—')}</div>
+                    <div>${window.t('dp_label_shipping_recipient_prefix', '收件人：')}${escapeHtml(order.shippingContact?.name || '—')} / ${escapeHtml(order.shippingContact?.phone || '—')}</div>
+                    <div class="mt-1 break-words">${window.t('dp_label_shipping_address_prefix', '地址：')}${escapeHtml(order.shippingAddress || '—')}</div>
                     ${order.logistics?.carrier || order.logistics?.trackingNumber ? `
                         <div class="mt-2 rounded-lg bg-slate-100 p-2 text-xs">
-                            <div class="font-bold text-slate-700">物流追蹤</div>
+                            <div class="font-bold text-slate-700">${window.t('dp_label_logistics_tracking', '物流追蹤')}</div>
                             <div class="mt-0.5">${escapeHtml(order.logistics.carrier || '—')} / ${escapeHtml(order.logistics.trackingNumber || '—')}</div>
                         </div>
                     ` : ''}
                 </td>
                 <td class="px-4 py-4 align-top text-sm text-slate-600">
-                    <div>PriceBook：${escapeHtml(order.priceBookId || '—')}</div>
-                    <div class="mt-1">Version：${escapeHtml(order.pricingVersion || '—')}</div>
-                    <div class="mt-1 text-[11px] text-slate-400">物流：${escapeHtml(order.needsShipment ? '待處理' : '已完成/不需出貨')}</div>
+                    <div>${window.t('dp_label_pricebook_ref', 'PriceBook：')}${escapeHtml(order.priceBookId || '—')}</div>
+                    <div class="mt-1">${window.t('dp_label_version_ref', 'Version：')}${escapeHtml(order.pricingVersion || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">${window.t('dp_label_logistics_prefix', '物流：')}${escapeHtml(order.needsShipment ? window.t('dp_logistics_pending', '待處理') : window.t('dp_logistics_done', '已完成/不需出貨'))}</div>
                 </td>
             </tr>
         `;
@@ -445,7 +445,7 @@ function renderTutors(items = []) {
     if (!tbody) return;
 
     if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="py-10 text-center text-slate-400 italic">尚未載入 Tutor 綁定資料</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-slate-400 italic">${window.t('dp_empty_tutors', '尚未載入 Tutor 綁定資料')}</td></tr>`;
         return;
     }
 
@@ -458,15 +458,15 @@ function renderTutors(items = []) {
             <tr class="hover:bg-slate-50/80 transition">
                 <td class="px-4 py-4 align-top">
                     <div class="font-semibold text-slate-900">${escapeHtml(tutor.name || '—')}</div>
-                    <div class="mt-1 text-[11px] text-slate-400">Distributor：${escapeHtml(tutor.distributorId || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-400">${window.t('dp_label_distributor_ref', 'Distributor：')}${escapeHtml(tutor.distributorId || '—')}</div>
                 </td>
                 <td class="px-4 py-4 align-top">
                     <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(tutor.email || '—')}</div>
-                    <div class="mt-1 text-[11px] text-slate-500">Payout：${escapeHtml(tutor.payoutAccount || '—')}</div>
+                    <div class="mt-1 text-[11px] text-slate-500">${window.t('dp_label_payout_prefix', 'Payout：')}${escapeHtml(tutor.payoutAccount || '—')}</div>
                 </td>
                 <td class="px-4 py-4 align-top text-sm text-slate-700">
                     <div class="font-bold text-slate-900">${escapeHtml(String(tutor.authorizedUnitCount || 0))}</div>
-                    <div class="mt-1 text-[11px] text-slate-500">授權單元 / ${escapeHtml(String(tutor.tutorConfigCount || 0))} 組設定</div>
+                    <div class="mt-1 text-[11px] text-slate-500">${window.t('dp_authorized_units_format', '授權單元 / {count} 組設定').replace('{count}', escapeHtml(String(tutor.tutorConfigCount || 0)))}</div>
                 </td>
                 <td class="px-4 py-4 align-top">
                     <span class="inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${statusBadge}">
@@ -483,7 +483,7 @@ function renderSettlement(rows = []) {
     if (!tbody) return;
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚未載入月結報表</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">${window.t('dp_empty_settlement', '尚未載入月結報表')}</td></tr>`;
         return;
     }
 
@@ -521,9 +521,9 @@ function clearForm() {
     setFormValue('portal-promo-effective-to', '');
     setFormValue('portal-active', true);
     const scopeNote = el('portal-scope-note');
-    if (scopeNote) scopeNote.textContent = '表單已清空。';
+    if (scopeNote) scopeNote.textContent = window.t('dp_form_cleared', '表單已清空。');
     const stateEl = el('portal-form-state');
-    if (stateEl) stateEl.textContent = '準備新增價格表。';
+    if (stateEl) stateEl.textContent = window.t('dp_form_new_pricebook', '準備新增價格表。');
 }
 
 // 安全格式化日期時間供 datetime-local 輸入欄位使用，防止 _seconds / seconds JSON 解析錯誤
@@ -562,7 +562,7 @@ function populateForm(book = {}) {
     setFormValue('portal-promo-effective-to', formatDateForInput(book.promoEffectiveTo));
     setFormValue('portal-active', book.isActive !== false);
     const stateEl = el('portal-form-state');
-    if (stateEl) stateEl.textContent = `編輯中：${book.id || book.docId || '未命名價格表'}`;
+    if (stateEl) stateEl.textContent = window.t('dp_title_edit_pricebook', '編輯中：{name}').replace('{name}', book.id || book.docId || window.t('lp_untitled_course', '未命名課程'));
 }
 
 function renderDistributorContext() {
@@ -606,8 +606,8 @@ async function loadPortalData(distributorId = '') {
     const scopeNote = el('portal-scope-note');
     if (scopeNote) {
         scopeNote.textContent = state.distributorId
-            ? `目前登入帳號所屬經銷商：${state.distributorId}`
-            : '尚未設定經銷商歸屬。管理員可手動切換 distributorId。';
+            ? window.t('dp_scope_note_distributor', '目前登入帳號所屬經銷商：{id}').replace('{id}', state.distributorId)
+            : window.t('dp_scope_note_no_distributor', '尚未設定經銷商歸屬。管理員可手動切換 distributorId。');
     }
 
     const distributorInput = el('portal-distributor-id-input');
@@ -638,13 +638,13 @@ async function loadPriceBooks() {
         state.priceBooks = [];
         renderPriceBooks([]);
         el('portal-summary').textContent = role === 'admin'
-            ? '請先點選上方經銷商 tab。'
-            : '請先輸入經銷商 ID。';
+            ? window.t('dp_summary_no_distributor_admin', '請先點選上方經銷商 tab。')
+            : window.t('dp_summary_no_distributor_user', '請先輸入經銷商 ID。');
         return;
     }
 
     const distributorName = (state.accessibleDistributors || []).find((item) => String(item.id || '').trim() === distributorId)?.name || distributorId;
-    el('portal-summary').textContent = `載入經銷商 ${distributorName} 的價格表中...`;
+    el('portal-summary').textContent = window.t('dp_loading_pricebooks_for', '載入經銷商 {name} 的價格表中...').replace('{name}', distributorName);
     try {
         const fn = httpsCallable(functions, 'getDistributorPriceBooks');
         const res = await fn({ distributorId });
@@ -652,37 +652,37 @@ async function loadPriceBooks() {
         state.selectedDistributorId = distributorId;
         state.priceBooks = Array.isArray(res?.data?.items) ? res.data.items : [];
         renderPriceBooks(state.priceBooks);
-        setText('portal-summary', `目前經銷商：${distributorName}，共 ${state.priceBooks.length} 筆價格表。`);
+        setText('portal-summary', window.t('dp_summary_current_distributor', '目前經銷商：{name}，共 {count} 筆價格表。').replace('{name}', distributorName).replace('{count}', String(state.priceBooks.length)));
     } catch (e) {
         console.error('[DistributorPortal] load failed:', e);
         state.priceBooks = [];
         renderPriceBooks([]);
-        setText('portal-summary', `載入失敗：${e.message || 'unknown error'}`);
-        toast(`載入失敗：${e.message || 'unknown error'}`, 'error');
+        setText('portal-summary', window.t('load_failed', '載入失敗：{msg}').replace('{msg}', e.message || 'unknown error'));
+        toast(window.t('load_failed', '載入失敗：{msg}').replace('{msg}', e.message || 'unknown error'), 'error');
     }
 }
 
 window.distributorPortalSeedProducts = async function() {
     const distributorId = state.selectedDistributorId || state.distributorId || '';
     if (!distributorId) {
-        toast('請先選擇經銷商', 'warning');
+        toast(window.t('dp_toast_select_distributor_first', '請先選擇經銷商'), 'warning');
         return;
     }
     const seedableCount = Math.max(0, (state.portal?.seedableProductCount || 0) - (state.priceBooks?.length || 0));
     if (seedableCount === 0) {
-        toast('沒有可匯入的商品', 'info');
+        toast(window.t('dp_toast_no_products_to_seed', '沒有可匯入的商品'), 'info');
         return;
     }
-    if (!confirm(`將 ${seedableCount} 筆商品匯入 ${distributorId} 的價格表（預設售價 0），是否繼續？`)) return;
+    if (!confirm(window.t('dp_confirm_seed_products', '將 {count} 筆商品匯入 {distributor} 的價格表（預設售價 0），是否繼續？').replace('{count}', String(seedableCount)).replace('{distributor}', distributorId))) return;
     try {
         const fn = httpsCallable(functions, 'seedDistributorPriceBooksFromLessons');
         const res = await fn({ distributorId, salePrice: 0 });
         const r = res.data || {};
-        toast(`已建立 ${r.created || 0} 筆，更新 ${r.updated || 0} 筆，跳過 ${r.skipped || 0} 筆`, 'success');
+        toast(window.t('dp_toast_seed_result', '已建立 {created} 筆，更新 {updated} 筆，跳過 {skipped} 筆').replace('{created}', String(r.created || 0)).replace('{updated}', String(r.updated || 0)).replace('{skipped}', String(r.skipped || 0)), 'success');
         await loadPriceBooks();
     } catch (e) {
         console.error('[DistributorPortal] seed failed:', e);
-        toast(`匯入失敗：${e.message || 'unknown error'}`, 'error');
+        toast(window.t('dp_toast_seed_failed', '匯入失敗：{msg}').replace('{msg}', e.message || 'unknown error'), 'error');
     }
 };
 
@@ -709,23 +709,23 @@ async function saveForm() {
     const isActive = !!el('portal-active')?.checked;
 
     if (!distributorId || !docId) {
-        toast('請先輸入經銷商 ID 與 Document ID。', 'error');
+        toast(window.t('dp_toast_validation_distributor_doc', '請先輸入經銷商 ID 與 Document ID。'), 'error');
         return;
     }
     if (!Number.isFinite(salePrice) || salePrice < 0) {
-        toast('售價必須是非負數字。', 'error');
+        toast(window.t('alert_price_non_negative', '售價必須是非負數字。'), 'error');
         return;
     }
     if (promoPrice != null && (!Number.isFinite(promoPrice) || promoPrice < 0 || promoPrice > salePrice)) {
-        toast('活動價必須是非負數字，且不可大於售價。', 'error');
+        toast(window.t('alert_promo_price_invalid', '活動價必須是非負數字，且不可大於售價。'), 'error');
         return;
     }
     if (promoPrice != null && (!promoEffectiveFrom || !promoEffectiveTo)) {
-        toast('若有促銷價，請同時填寫促銷開始與促銷結束時間。', 'error');
+        toast(window.t('dp_toast_validation_promo_dates', '若有促銷價，請同時填寫促銷開始與促銷結束時間。'), 'error');
         return;
     }
     if (promoPrice != null && promoEffectiveFrom && promoEffectiveTo && new Date(promoEffectiveTo).getTime() < new Date(promoEffectiveFrom).getTime()) {
-        toast('促銷結束時間不可早於促銷開始時間。', 'error');
+        toast(window.t('dp_toast_validation_promo_dates_order', '促銷結束時間不可早於促銷開始時間。'), 'error');
         return;
     }
 
@@ -733,7 +733,7 @@ async function saveForm() {
     const originalText = btn?.textContent || '';
     if (btn) {
         btn.disabled = true;
-        btn.textContent = '儲存中...';
+        btn.textContent = window.t('btn_saving', '儲存中...');
     }
 
     try {
@@ -752,15 +752,15 @@ async function saveForm() {
         };
         const res = await fn(payload);
         if (!res?.data?.success) {
-            throw new Error(res?.data?.message || '儲存失敗');
+            throw new Error(res?.data?.message || window.t('dp_toast_save_failed', '儲存失敗：{msg}').replace('{msg}', ''));
         }
-        toast(`已儲存經銷商價格表：${docId}`, 'success');
+        toast(window.t('dp_toast_save_success', '已儲存經銷商價格表：{doc}').replace('{doc}', docId), 'success');
         await loadPriceBooks();
         state.selectedPriceBookId = res.data.priceBookId || priceBookId || '';
         showPriceBookModal(false);
     } catch (e) {
         console.error('[DistributorPortal] save failed:', e);
-        toast(`儲存失敗：${e.message}`, 'error');
+        toast(window.t('dp_toast_save_failed', '儲存失敗：{msg}').replace('{msg}', e.message), 'error');
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -774,19 +774,19 @@ window.distributorPortalDeleteForm = async function () {
     const priceBookId = getFormValue('portal-pricebook-id');
     const docId = getFormValue('portal-doc-id');
     if (!priceBookId && !docId) {
-        toast('沒有可刪除的價格表 ID。', 'error');
+        toast(window.t('dp_toast_no_delete_id', '沒有可刪除的價格表 ID。'), 'error');
         return;
     }
-    if (!confirm(`確定刪除價格表${priceBookId || docId}？此動作無法復原。`)) return;
+    if (!confirm(window.t('dp_confirm_delete_pricebook', '確定刪除價格表{id}？此動作無法復原。').replace('{id}', priceBookId || docId))) return;
     try {
         const fn = httpsCallable(functions, 'deleteDistributorPriceBook');
         await fn({ distributorId, priceBookId, docId });
-        toast('價格表已刪除', 'success');
+        toast(window.t('dp_toast_delete_success', '價格表已刪除'), 'success');
         showPriceBookModal(false);
         await loadPriceBooks();
     } catch (e) {
         console.error('[DistributorPortal] delete failed:', e);
-        toast(`刪除失敗：${e.message || 'unknown error'}`, 'error');
+        toast(window.t('dp_toast_delete_failed', '刪除失敗：{msg}').replace('{msg}', e.message || 'unknown error'), 'error');
     }
 };
 window.distributorPortalLoadPriceBooks = loadPriceBooks;
@@ -857,7 +857,7 @@ window.distributorPortalOpenFulfillmentModal = function (orderId) {
     const shippingName = order.shippingContact?.name || '—';
     const shippingPhone = order.shippingContact?.phone || '—';
     const shippingAddr = order.shippingAddress || '—';
-    setText('portal-fulfill-shipping', `${shippingName} / ${shippingPhone}\n地址：${shippingAddr}`);
+    setText('portal-fulfill-shipping', window.t('dp_fulfillment_shipping', '{name} / {phone}\n地址：{address}').replace('{name}', shippingName).replace('{phone}', shippingPhone).replace('{address}', shippingAddr));
 
     const status = String(order.fulfillmentStatus || 'PENDING').toUpperCase();
     setFormValue('portal-fulfill-status', status);

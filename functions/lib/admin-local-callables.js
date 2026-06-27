@@ -7,12 +7,12 @@ const { getUserDistributorScope } = require("vibe-functions-core/distributor-uti
 const {
     collectDistributorRegions,
     chooseRecommendedDistributor,
+    distributorMatchesRegion,
     normalizeRoutingRegionCode
 } = require("vibe-functions-core/routing-utils-core");
 const {
     resolveDistributorCheckoutQuote,
     findLessonByDocumentId,
-    normalizeRegionCode,
 } = require("./distributor-pricing");
 
 if (!admin.apps.length) {
@@ -29,8 +29,8 @@ async function loadDistributorRoutingOptions(request = {}) {
     const db = admin.firestore();
     const { auth, data } = request;
     const runtimeConfig = await getContentRuntimeConfig(db);
-    const defaultRegion = runtimeConfig.defaultRegion || "US";
-    const defaultDistributorId = runtimeConfig.defaultDistributorId || "default-usd";
+    const defaultRegion = runtimeConfig.defaultRegion || "";
+    const defaultDistributorId = runtimeConfig.defaultDistributorId || "";
 
     const userData = auth?.uid ? await loadUserData(db, auth.uid) : {};
     const requestedRegion = normalizeRoutingRegionCode(

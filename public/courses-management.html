@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>課程管理 — Vibe Coding Admin</title>
   <meta name="description" content="Vibe Coding 管理後台：課程新增、修改、停用與價格表管理" />
-  <script src="./js/i18n-helper.5744272790ea.js"></script>
+  <script src="./js/i18n-helper.d565bb57236b.js"></script>
   <script>
     (function() {
       const w = console.warn;
@@ -1495,7 +1495,7 @@
       const value = normalizeText(input?.value || "");
       const titleValue = normalizeText(titleInput?.value || "");
       if (!value) {
-        alert("請輸入單元檔名。");
+        alert(window.t('alert_enter_filename', '請輸入單元檔名。'));
         return;
       }
       const units = getCourseUnitValues();
@@ -1925,7 +1925,7 @@
     window.duplicateCurrentLesson = function() {
       const lesson = currentLesson();
       if (!lesson) {
-        alert("請先選擇一門課程。");
+        alert(window.t('alert_select_course_first', '請先選擇一門課程。'));
         return;
       }
       const nextDocId = generateLessonDocId();
@@ -1948,7 +1948,7 @@
     window.toggleSelectedLessonVisibility = async function() {
       const lesson = state.lessons.find((item) => String(item.id || item.docId || "") === String(state.currentLessonId)) || null;
       if (!lesson) {
-        alert("請先儲存課程後，再調整可見性。");
+        alert(window.t('alert_save_course_first', '請先儲存課程後，再調整可見性。'));
         return;
       }
       const hidden = lesson.hiddenFromCatalog === true;
@@ -1980,7 +1980,7 @@
         closeLessonModal();
       } catch (err) {
         console.error("[admin-courses] saveLessonMetadata failed:", err);
-        alert(`儲存課程失敗：${err.message}`);
+        alert(window.t('alert_save_course_failed', '儲存課程失敗：{msg}').replace('{msg}', err.message));
       }
     };
 
@@ -2008,7 +2008,7 @@
     window.saveSelectedPriceBook = async function() {
       const lesson = state.lessons.find((item) => String(item.id || item.docId || "") === String(state.currentLessonId)) || null;
       if (!lesson) {
-        alert("請先儲存課程後，再建立價格表。");
+        alert(window.t('alert_save_course_first', '請先儲存課程後，再建立價格表。'));
         return;
       }
       try {
@@ -2023,7 +2023,7 @@
         closePriceBookModal();
       } catch (err) {
         console.error("[admin-courses] saveSelectedPriceBook failed:", err);
-        alert(`儲存價格表失敗：${err.message}`);
+        alert(window.t('alert_save_price_failed', '儲存價格表失敗：{msg}').replace('{msg}', err.message));
       }
     };
 
@@ -2041,7 +2041,7 @@
         setLog("已重新整理價格表。");
       } catch (err) {
         console.error("[admin-courses] loadSelectedLessonPriceBooks failed:", err);
-        alert(`載入價格表失敗：${err.message}`);
+        alert(window.t('alert_load_price_failed', '載入價格表失敗：{msg}').replace('{msg}', err.message));
       }
     };
 

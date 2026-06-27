@@ -5,7 +5,10 @@ const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https")
 const { defineSecret } = require("firebase-functions/params");
 const { setGlobalOptions } = require("firebase-functions/v2");
 
-const { resolveAssignmentDocRefByUserAndUnit } = require("vibe-functions-core/github-utils");
+const {
+    resolveAssignmentDocRefByUserAndUnit,
+    ensureGithubOrgMembership
+} = require("vibe-functions-core/github-utils");
 const {
     addAssignmentHistoryEntry,
     backfillAutogradeGithubVariables,
@@ -41,6 +44,10 @@ const {
 const {
     getUserTutorConfig
 } = require("vibe-functions-core/tutor-utils");
+const { execSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+const https = require("https");
 const GitHubAPIHelper = require("./github-api-helper");
 
 const GITHUB_API_TOKEN = defineSecret("GITHUB_API_TOKEN");
@@ -823,11 +830,6 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
         return res.status(500).json({ success: false, error: "Internal server error" });
     }
 });
-
-const { execSync } = require("child_process");
-const fs = require("fs");
-const path = require("path");
-const https = require("https");
 
 function downloadFile(url, destPath) {
     return new Promise((resolve, reject) => {

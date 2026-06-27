@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Vibe Coding 購物車 — 檢視與結帳您的課程訂單">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.5744272790ea.js"></script>
+    <script src="./js/i18n-helper.d565bb57236b.js"></script>
     <script>
         (function() {
             const w = console.warn;
@@ -87,6 +87,17 @@
                         </button>
                         <span id="routing-preference-status" class="text-sm text-slate-600" data-i18n="routing_status_init">尚未套用偏好。</span>
                     </div>
+                    <div id="routing-summary" class="mt-3 pt-3 border-t border-indigo-200 text-xs text-slate-600 grid grid-cols-2 gap-x-4 gap-y-1">
+                        <span>Region:</span>
+                        <span id="routing-summary-region" class="font-medium">—</span>
+                        <span>Distributor:</span>
+                        <span id="routing-summary-distributor" class="font-medium">—</span>
+                        <span>Source:</span>
+                        <span id="routing-summary-source" class="font-medium">—</span>
+                        <span>Reason:</span>
+                        <span id="routing-summary-reason" class="font-medium">—</span>
+                    </div>
+                    <span id="routing-recommendation-badge" class="hidden mt-2 inline-block rounded-full bg-indigo-100 text-indigo-700 px-3 py-1 text-xs font-semibold"></span>
                 </div>
                 <div id="payment-form-container" class="hidden"></div>
 
@@ -279,28 +290,29 @@
             if (!name) return '';
             const key = String(name).trim();
             const map = {
-                '預設台幣經銷商': 'Default TWD Distributor',
-                '預設美金經銷商': 'Default USD Distributor',
-                'default-twd': 'Default TWD Distributor',
-                'default-usd': 'Default USD Distributor'
+                '預設台幣經銷商': 'dist_name_default_twd',
+                '預設美金經銷商': 'dist_name_default_usd',
+                'default-twd': 'dist_name_default_twd',
+                'default-usd': 'dist_name_default_usd'
             };
-            if (isEn && map[key]) return map[key];
-            return name;
+            const i18nKey = map[key];
+            return i18nKey ? window.t(i18nKey, name) : name;
         }
 
         function localizeRegionLabel(region) {
             if (!region) return '';
             const key = String(region).trim().toUpperCase();
             const map = {
-                'TW': isEn ? 'TW / Taiwan' : 'TW / 台灣',
-                'US': isEn ? 'US / United States' : 'US / 美國',
-                'CA': isEn ? 'CA / Canada' : 'CA / 加拿大',
-                'JP': isEn ? 'JP / Japan' : 'JP / 日本',
-                'SG': isEn ? 'SG / Singapore' : 'SG / 新加坡',
-                'HK': isEn ? 'HK / Hong Kong' : 'HK / 香港',
-                'MY': isEn ? 'MY / Malaysia' : 'MY / 馬來西亞'
+                'TW': 'region_label_tw',
+                'US': 'region_label_us',
+                'CA': 'region_label_ca',
+                'JP': 'region_label_jp',
+                'SG': 'region_label_sg',
+                'HK': 'region_label_hk',
+                'MY': 'region_label_my'
             };
-            return map[key] || region;
+            const i18nKey = map[key];
+            return i18nKey ? window.t(i18nKey, region) : region;
         }
 
         function removeFromCart(docId) {
@@ -328,7 +340,7 @@
         }
 
         function normalizeRegionCode(value = '') {
-            return String(value || '').trim().toUpperCase();
+            return normalizeDistributorRegionCode(value);
         }
 
         function getPreferredRegionSource() {
@@ -698,75 +710,6 @@
             return null;
         }
 
-        function extractAssignmentInviteCandidates(urlConfig) {
-            const out = [];
-            const seen = new Set();
-
-            function walk(node) {
-                if (!node) return;
-                if (typeof node === 'string') {
-                    const normalized = normalizeAssignmentInviteUrl(node);
-                    if (normalized && !seen.has(normalized)) {
-                        seen.add(normalized);
-                        out.push(normalized);
-                    }
-                    return;
-                }
-                if (typeof node !== 'object') return;
-                Object.values(node).forEach(walk);
-            }
-
-            walk(urlConfig);
-            return out;
-        }
-
-        function getCartItemUnitCandidates(itemId, item = {}, lessons = []) {
-            const seeds = [
-                normalizeId(item.unitId || ''),
-                normalizeId(item.sourceUnitId || ''),
-                normalizeId(itemId || '')
-            ].filter(Boolean);
-
-            const foundUnits = new Set(seeds);
-            const foundCourseIds = new Set();
-
-            for (const lesson of lessons) {
-                const courseId = normalizeId(lesson?.courseId || '');
-                const docId = normalizeId(lesson?.id || '');
-                const units = (Array.isArray(lesson?.courseUnits) ? lesson.courseUnits : []).map(u => normalizeId(u));
-                const hits = seeds.some(seed => seed === courseId || seed === docId || units.includes(seed));
-                if (!hits) continue;
-
-                if (courseId) foundCourseIds.add(courseId);
-                if (docId) foundCourseIds.add(docId);
-                units.forEach(u => u && foundUnits.add(u));
-            }
-
-            foundCourseIds.forEach(cid => foundUnits.add(cid));
-            return Array.from(foundUnits);
-        }
-
-        async function isKnownInviteForCartItem(inviteUrl, targetItemId) {
-            const normalizedInvite = normalizeAssignmentInviteUrl(inviteUrl);
-            if (!isAssignmentInviteUrl(normalizedInvite)) return false;
-
-            const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            const targetItem = cart[targetItemId] || {};
-            const lessons = await getLessonsList();
-            const unitCandidates = getCartItemUnitCandidates(targetItemId, targetItem, lessons);
-            if (unitCandidates.length === 0) return false;
-
-            for (const lesson of lessons) {
-                const urlMap = lesson?.assignmentUrlMap || lesson?.assignmentUrls || {};
-                for (const unitId of unitCandidates) {
-                    const cfg = urlMap[unitId] || urlMap[`${unitId}.html`] || null;
-                    const candidates = extractAssignmentInviteCandidates(cfg);
-                    if (candidates.includes(normalizedInvite)) return true;
-                }
-            }
-            return false;
-        }
-
         function addCartItem(docId, productName, productPrice, isPhysical, options = {}) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             if (cart[docId]) return false;
@@ -813,9 +756,7 @@
                 emptyMsg.style.display = 'block';
                 cartTotalElement.textContent = '0';
                 if (cartTotalNote) {
-                    cartTotalNote.textContent = isEn
-                        ? 'Prices already include tax and shipping. The checkout amount is the final payable total.'
-                        : '價格已含稅與運費，結帳金額即為實付總額。';
+                    cartTotalNote.textContent = window.t('cart_total_note_with_shipping', '價格已含稅與運費，結帳金額即為實付總額。');
                 }
                 checkoutBtn.disabled = true;
                 return;
@@ -880,14 +821,10 @@
 
             if (hasPhysical) {
                 if (cartTotalNote) {
-                    cartTotalNote.textContent = isEn
-                        ? 'Prices already include tax and shipping. The checkout amount is the final payable total.'
-                        : '價格已含稅與運費，結帳金額即為實付總額。';
+                    cartTotalNote.textContent = window.t('cart_total_note_with_shipping', '價格已含稅與運費，結帳金額即為實付總額。');
                 }
             } else if (cartTotalNote) {
-                cartTotalNote.textContent = isEn
-                    ? 'Prices already include tax. The checkout amount is the final payable total.'
-                    : '價格已含稅，結帳金額即為實付總額。';
+                cartTotalNote.textContent = window.t('cart_total_note_without_shipping', '價格已含稅，結帳金額即為實付總額。');
             }
 
             cartTotalElement.textContent = expectedCurrency
@@ -895,9 +832,7 @@
                 : `${totalAmount.toLocaleString()}`;
             checkoutBtn.disabled = (totalAmount === 0) || currencyMismatch;
             if (currencyMismatch) {
-                cartPrefillStatus.textContent = isEn
-                    ? 'This cart contains mixed currencies. Please split the checkout by distributor or price book.'
-                    : '購物車包含不同幣別的商品，請依經銷商或 price book 拆單結帳。';
+                cartPrefillStatus.textContent = window.t('cart_currency_mismatch', '購物車包含不同幣別的商品，請依經銷商或 price book 拆單結帳。');
                 cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-amber-50 border-amber-200 text-amber-700';
                 cartPrefillStatus.classList.remove('hidden');
             }
@@ -1395,9 +1330,7 @@
             const preferredDistributorId = getPreferredDistributorId();
 
             if (cartPrefillStatus) {
-                cartPrefillStatus.textContent = isEn
-                    ? 'Preparing checkout details...'
-                    : '正在檢查結帳資料...';
+                cartPrefillStatus.textContent = window.t('checkout_status_preparing', '正在檢查結帳資料...');
                 cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-blue-50 border-blue-200 text-blue-700';
                 cartPrefillStatus.classList.remove('hidden');
             }
@@ -1470,9 +1403,7 @@
             for (const [itemId, item] of cartEntries) {
                 const docId = normalizeId(item.sourceUnitId || item.unitId || itemId);
                 if (!docId) {
-                    alert(isEn
-                        ? 'Unable to resolve document identifier for one of the cart items.'
-                        : '購物車中有品項無法解析產品代號，請先整理購物車。');
+                    alert(window.t('alert_cart_item_no_doc_id', 'Unable to resolve document identifier for one of the cart items.'));
                     checkoutBtn.disabled = false;
                     checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
                     return;
@@ -1492,9 +1423,7 @@
 
                 const quoteData = quoteResponse?.data?.result || quoteResponse?.data || quoteResponse?.result || quoteResponse || {};
                 if (!quoteData || quoteData.state === 'ambiguous' || quoteData.success === false) {
-                    const msg = quoteData?.reason || quoteData?.message || (isEn
-                        ? 'Unable to resolve a distributor for this checkout.'
-                        : '無法解析此筆結帳所屬的經銷商，請先選擇經銷商或聯絡管理員。');
+                    const msg = quoteData?.reason || quoteData?.message || window.t('alert_distributor_unresolved', 'Unable to resolve a distributor for this checkout.');
                     alert(msg);
                     checkoutBtn.disabled = false;
                     checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
@@ -1511,9 +1440,7 @@
                 const quantity = parseInt(item.quantity) || 1;
 
                 if (!itemCurrency) {
-                    alert(isEn
-                        ? 'The distributor quote did not return a currency.'
-                        : '經銷商報價未回傳幣別，請稍後再試。');
+                    alert(window.t('alert_quote_no_currency', 'The distributor quote did not return a currency.'));
                     checkoutBtn.disabled = false;
                     checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
                     return;
@@ -1521,18 +1448,14 @@
 
                 if (!resolvedCurrency) resolvedCurrency = itemCurrency;
                 if (resolvedCurrency && itemCurrency !== resolvedCurrency) {
-                    alert(isEn
-                        ? 'Mixed currencies are not supported in a single checkout.'
-                        : '單筆結帳不支援混合幣別，請先整理購物車。');
+                    alert(window.t('alert_mixed_currencies', 'Mixed currencies are not supported in a single checkout.'));
                     checkoutBtn.disabled = false;
                     checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
                     return;
                 }
 
                 if (resolvedDistributorId && quoteData.distributorId && resolvedDistributorId !== quoteData.distributorId) {
-                    alert(isEn
-                        ? 'This cart contains items from multiple distributors. Please split the checkout.'
-                        : '購物車包含不同經銷商的品項，請拆單結帳。');
+                    alert(window.t('alert_multiple_distributors', 'This cart contains items from multiple distributors. Please split the checkout.'));
                     checkoutBtn.disabled = false;
                     checkoutBtn.textContent = window.t('checkout_btn_pay', '💳 前往付款');
                     return;
@@ -1571,9 +1494,7 @@
             }
 
             if (resolvedDistributorId) {
-                cartPrefillStatus.textContent = isEn
-                    ? `Distributor resolved: ${resolvedDistributorId}`
-                    : `已解析經銷商：${resolvedDistributorId}`;
+                cartPrefillStatus.textContent = window.t('checkout_status_distributor_resolved', '已解析經銷商：{id}').replace('{id}', resolvedDistributorId);
                 cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-green-50 border-green-200 text-green-700';
                 cartPrefillStatus.classList.remove('hidden');
             }
@@ -1635,20 +1556,17 @@
                 if (resData && (resData.gateway === "STRIPE" || resData.paymentParams || resData.sessionUrl)) {
                     if (resData.gateway === "STRIPE") {
                         console.log("Stripe Checkout URL received, redirecting...");
-                        checkoutBtn.textContent = '🚀 Redirecting to Stripe...';
+                        checkoutBtn.textContent = window.t('checkout_btn_stripe_redirect', '🚀 Redirecting to Stripe...');
                         if (cartPrefillStatus) {
-                            cartPrefillStatus.textContent = isEn
-                                ? 'Redirecting to Stripe checkout...'
-                                : '正在前往 Stripe 付款頁面...';
+                            cartPrefillStatus.textContent = window.t('checkout_status_stripe_redirect', '正在前往 Stripe 付款頁面...');
                         }
+                        localStorage.setItem('vibe_user_last_success_region', getPreferredRegion());
                         window.location.href = resData.sessionUrl;
                     } else if (resData.paymentParams) {
                         console.log("取得綠界參數成功，正在跳轉...");
                         checkoutBtn.textContent = window.t('checkout_btn_redirect', '🚀 前往付款頁面...');
                         if (cartPrefillStatus) {
-                            cartPrefillStatus.textContent = isEn
-                                ? 'Redirecting to ECPay checkout...'
-                                : '正在前往綠界付款頁面...';
+                            cartPrefillStatus.textContent = window.t('checkout_status_ecpay_redirect', '正在前往綠界付款頁面...');
                         }
                         submitECPayForm(resData.paymentParams, resData.apiUrl);
                     } else {

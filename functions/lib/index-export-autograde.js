@@ -2,7 +2,7 @@ const admin = require("firebase-admin");
 const { registerProxyExports } = require('./index-export-utils');
 const { gradeAssignment } = require("./assignment-flow");
 
-const registerAutogradeExports = ({ target, proxyAutogradeCallable, proxyAutogradeRequest, onCall, HttpsError }) => {
+const registerAutogradeExports = ({ target, proxyAutogradeCallable, proxyAutogradeRequest, onCall }) => {
     registerProxyExports(target, [
         ["submitAssignment", "autogradeSubmitAssignment"],
         ["submitStudentBlocker", "autogradeSubmitStudentBlocker"],

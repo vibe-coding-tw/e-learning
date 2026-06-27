@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Vibe Coding 投資人入口 — 檢視營運數據與課程分析">
     <title>Investor Portal - Vibe Coding</title>
-    <script src="./js/i18n-helper.5744272790ea.js"></script>
+    <script src="./js/i18n-helper.d565bb57236b.js"></script>
     <script src="./js/admin-role-utils.249594355052.js"></script>
     <script>
         (function () {
@@ -204,13 +204,13 @@
             accessDenied.classList.remove('hidden');
 
             if (reason === 'GUEST') {
-                if (deniedTitle) deniedTitle.innerText = '👋 您好！閣下尚未登入';
-                if (deniedMsg) deniedMsg.innerText = '本頁面為投資人入口，請登入以查看您的資訊。';
+                if (deniedTitle) deniedTitle.innerText = window.t('dash_hello_guest', '👋 您好！閣下尚未登入');
+                if (deniedMsg) deniedMsg.innerText = window.t('investor_denied_guest_msg', '本頁面為投資人入口，請登入以查看您的資訊。');
                 if (guestView) guestView.classList.remove('hidden');
                 if (adminSetupNote) adminSetupNote.classList.add('hidden');
             } else {
-                if (deniedTitle) deniedTitle.innerText = '⛔ 權限不足';
-                if (deniedMsg) deniedMsg.innerText = '只有管理員或投資人可以訪問此頁面。';
+                if (deniedTitle) deniedTitle.innerText = window.t('dash_denied_title', '⛔ 權限不足');
+                if (deniedMsg) deniedMsg.innerText = window.t('investor_denied_msg', '只有管理員或投資人可以訪問此頁面。');
                 if (guestView) guestView.classList.add('hidden');
                 if (adminSetupNote) adminSetupNote.classList.remove('hidden');
                 if (auth.currentUser && userUidDisplay) {

@@ -11,7 +11,6 @@ const registerIndexExports = ({
     proxyAdminCallable,
     proxyAdminRequest,
     onCall,
-    HttpsError,
     createOnUserCreatedTrigger,
     createMapReplyHandler
 }) => {
@@ -21,8 +20,7 @@ const registerIndexExports = ({
         target,
         proxyAutogradeCallable,
         proxyAutogradeRequest,
-        onCall,
-        HttpsError
+        onCall
     });
     registerTriggersExports(target, createOnUserCreatedTrigger, createMapReplyHandler);
 };

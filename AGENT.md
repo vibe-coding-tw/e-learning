@@ -145,7 +145,8 @@ git commit -m "docs: update README"
   - 啟動前先執行環境檢查：`bash scripts/check-local-env.sh`
   - 啟動 emulator：`npx firebase emulators:start --project e-learning-942f7`
   - 本地 functions：`http://127.0.0.1:15001`，本地 Firestore：`127.0.0.1:18080`
-   - 若修改 `shared-function-core/`，執行 `bash scripts/sync-core.sh` 自動更新所有 codebase 的 lockfile（使用 `file:../shared-function-core` 目錄引用，不再使用 `.tgz`），最後用 `node -e "require('vibe-functions-core/...')"` 確認新 export 正確。
+   - 若修改 `shared-function-core/`，執行 `bash scripts/sync-core.sh` 自動執行 `npm pack`、重新安裝 .tgz 到所有 codebase。最後用 `node -e "require('vibe-functions-core/...')"` 確認新 export 正確。
+   - 若在 emulator 環境下測試，執行 `touch functions-admin/index.js` 觸發 functions 重載（emulator 不會自動偵測 `shared-function-core/` 變更）。
 - 任何功能更新、Bug 修復或設定調整完成後：
   1. 若有修改前端靜態資源 (JS/CSS)，必須先執行 `node scripts/fingerprint-static-assets.js` 更新資產指紋。
   2. `git add .`
@@ -156,7 +157,7 @@ git commit -m "docs: update README"
   - 當更新外部 `content-repo` 課程 HTML 後，執行 `bash scripts/update-content-version.sh` 自動將最新 commit SHA 寫入 Firestore emulator 與 `CONTENT_VERSION` 檔案，強制使所有實例的快取失效。
 - **Git pre-commit hook**：`.githooks/pre-commit` 會自動檢查關鍵檔案是否被誤刪。已設定 `git config core.hooksPath .githooks`。
 - **可用腳本一覽**：
-  - `scripts/sync-core.sh` — 更新所有 codebase 的 vibe-functions-core lockfile（使用 `file:../shared-function-core` 目錄引用）
+  - `scripts/sync-core.sh` — 更新所有 codebase 的 vibe-functions-core .tgz（`npm pack` + 重新安裝）
   - `scripts/check-local-env.sh` — 驗證 local dev 環境完整性（檔案、emulator、設定、node_modules）
   - `scripts/update-content-version.sh` — 更新 content-repo commit 到 Firestore emulator
 - 確保生產環境與最新程式碼同步。
@@ -263,5 +264,24 @@ This session's improvements:
 | `onSnapshot` overwrites cached data with empty set | Security rules block client-side queries in emulator → `onSnapshot` returns 0 docs → clears `dashboardData.assignments` | Guard: `if (updatedAssignments.length > 0 \|\| !dashboardData.assignments?.length) { dashboardData.assignments = updatedAssignments; }`. Also use `dashboardData.assignments` as fallback source for re-render when snapshot is empty. |
 | `autoGradeAssignment` shows other units' assignments | Line `renderAssignments(dashboardData?.assignments \|\| [], ...)` passes ALL assignments without filtering by unit context | Apply `filterAssignmentsForCurrentView()` + `unitIdsMatch(unitId, filterUnitId)` filter before calling `renderAssignments` |
 | Updated source file not picked up | Dashboard loads fingerprinted `dashboard.<hash>.js`, not `dashboard.js` | Always copy `src/js/dashboard.js` → `public/js/dashboard.js`, then run `node scripts/fingerprint-static-assets.js` |
+
+### Dashboard.js i18n Conversion (Phase B3)
+
+Done in this session:
+- Added ~80 new i18n keys to `i18n-helper.js` covering alerts, status labels, button text, form messages, guide loading, logistics/tracking, enrollment status, tutor management, and pricing
+- Converted 156 hardcoded strings in `dashboard.js` to `window.t()` calls:
+  - All `alert()`, `confirm()`, `prompt()` calls with hardcoded strings
+  - All `btn.textContent` / `msg.textContent` / `state.textContent` status messages
+  - All `notify()` and `setDashboardLog()` calls
+  - innerHTML labels in hardware orders table (recipient/phone/address/amount/store/logistics)
+  - innerHTML enrollment status labels (paid/free trial/expired/not activated)
+  - innerHTML guide loading section (tutor-guide/assignment-guide/course-page)
+  - innerHTML tutor management section (remove/no tutors/error title)
+  - Title attributes for video/doc hours
+  - Student greeting, locale status, version display, form editing labels
+- Added `fallback_not_provided`, `fallback_unknown_time`, `fallback_no_logistics`, `fallback_no_store_name` keys for template fallback values
+- Added `label_recipient`, `label_phone`, `label_address`, `label_amount`, `label_store` for shipping table labels
+- Added `status_paid_until`, `status_free_trial_until`, `status_trial_expired`, `status_free_course`, `status_not_activated` for enrollment display
+- Fingerprint re-run after changes
 
 > 最後更新：2026-06-27
