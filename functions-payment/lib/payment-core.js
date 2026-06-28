@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { HttpsError } = require("firebase-functions/v2/https");
+const logger = require("firebase-functions/logger");
 const { normalizeText, isAdminEmail, lookupAuthUserEmailByUid } = require("vibe-functions-core/access-utils-core");
 const { normalizeAmount } = require("./pricing-utils");
 const { getUserDistributorScope } = require("vibe-functions-core/distributor-utils-core");
@@ -54,7 +55,7 @@ function getRole(uid, fallbackEmail = "") {
             return "user";
         });
     }).catch((err) => {
-        console.error("[payment] Error in getRole:", err);
+        logger.error("[payment] Error in getRole:", err);
         return "user";
     });
 }

@@ -1,4 +1,5 @@
 const { Octokit } = require("@octokit/rest");
+const logger = require("firebase-functions/logger");
 
 class GitHubAPIHelper {
     constructor(token) {
@@ -24,7 +25,7 @@ class GitHubAPIHelper {
     }
 
     _logAndThrow(logMessage, error, thrownMessagePrefix) {
-        console.error(`${logMessage}:`, error);
+        logger.error(`${logMessage}:`, error);
         throw new Error(`${thrownMessagePrefix}: ${error.message}`);
     }
 
@@ -127,7 +128,7 @@ class GitHubAPIHelper {
             return response.data;
         } catch (error) {
             if (error.status === 409 || error.status === 422) {
-                console.log(`[GitHubAPIHelper] File ${path} already exists or conflict on ${orgName}/${repoName}. Skipping...`);
+                logger.info(`[GitHubAPIHelper] File ${path} already exists or conflict on ${orgName}/${repoName}. Skipping...`);
                 return null;
             }
             this._logAndThrow(`Error creating file ${path} on ${orgName}/${repoName}`, error, "Failed to create file");

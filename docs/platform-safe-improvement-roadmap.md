@@ -38,7 +38,7 @@
 ### P1
 
 1. **前端 source / artifact 邊界再收斂**
-   - 釐清 `src/js` 與 `public/js` 的單一編輯來源
+    - ~~釐清 `src/js` 與 `public/js` 的單一編輯來源~~（已完成：`public/js/` 為唯一 source，`src/js/` 已移除）
    - 保持 fingerprint 流程，但減少手工維護雙份檔案的機會
 2. **後端模組切分前置**
    - 先把共用 helper 繼續往 `functions/lib/` 拆

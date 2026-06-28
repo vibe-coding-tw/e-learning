@@ -13,6 +13,8 @@ const { hasQualifiedTutorStatus, hasAnyQualifiedTutorStatus, hasAnyQualifiedTuto
 const { resolveLessonPrice } = require("./distributor-pricing");
 const { isAssignmentAuthorized } = require("./assignment-flow");
 
+const logger = require("firebase-functions/logger");
+
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
 function normalizeLearningPathCategoryLabels(sourceMap = {}) {
@@ -54,7 +56,7 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
     if (!runtimeConfig?.enabled) return null;
     const contentRepoToken = CONTENT_REPO_TOKEN.value();
     if (!contentRepoToken) {
-        console.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
+        logger.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
         return null;
     }
     const repoOwner = runtimeConfig.repoOwner;
@@ -79,7 +81,7 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
                 const content = Buffer.from(encoded, "base64").toString("utf8");
                 return { content, source: "external", locale, file: localeCandidate };
             } catch (err) {
-                console.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
+                logger.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
             }
         }
     }
@@ -157,7 +159,7 @@ exports.getLessonsMetadata = onCall({ region: "asia-east1" }, async (request) =>
                 const userData = userDoc.exists ? (userDoc.data() || {}) : {};
                 distributorId = normalizeText(userData.preferredDistributorId || userData.distributorId || userData.commercial?.distributorId || "");
             } catch (err) {
-                console.warn("[getLessonsMetadata] failed to resolve user distributor:", err.message || err);
+                logger.warn("[getLessonsMetadata] failed to resolve user distributor:", err.message || err);
             }
         }
         distributorId = distributorId || "default-usd";
@@ -167,7 +169,7 @@ exports.getLessonsMetadata = onCall({ region: "asia-east1" }, async (request) =>
         const categoryLabels = normalizeLearningPathCategoryLabels(rawCategoryLabels);
         return { lessons, distributorId, categoryLabels };
     } catch (err) {
-        console.error("[admin/getLessonsMetadata] failed:", err);
+        logger.error("[admin/getLessonsMetadata] failed:", err);
         throw new HttpsError("internal", err.message || "Failed to load lessons metadata");
     }
 });
@@ -201,7 +203,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                 myApplicationsMapping[app.unitId] = { status: app.status, appliedAt: app.appliedAt, applicationId: doc.id };
             });
         } catch (appErr) {
-            console.warn("[getDashboardData] Failed to fetch user applications:", appErr.message);
+            logger.warn("[getDashboardData] Failed to fetch user applications:", appErr.message);
         }
         const myTutorConfigs = userData.tutorConfigs || {};
         let tutorTerms = "";
@@ -209,7 +211,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
             const termsDoc = await getDb().collection("metadata_settings").doc("tutor_terms").get();
             tutorTerms = termsDoc.exists ? (termsDoc.data().content || "") : "尚未設定合格教師權利義務細則。";
         } catch (e) {
-            console.warn("[getDashboardData] Failed to fetch tutor terms:", e);
+            logger.warn("[getDashboardData] Failed to fetch tutor terms:", e);
         }
         let allPendingApplications = [];
         if (requesterRole === "admin" && data.tutorMode !== false) {
@@ -275,7 +277,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                     courseGuideIndex[mappedId] = cfg;
                     if (mappedId !== docId) courseGuideIndex[docId] = cfg;
                 }
-            } catch (err) { console.error(`Error processing config for course ${docId}:`, err); }
+            } catch (err) { logger.error(`Error processing config for course ${docId}:`, err); }
         });
         const requestedUnitId = data.unitId ? resolveCanonicalUnitId(data.unitId, lessons) : null;
         const requestedCourseId = data.courseId || (requestedUnitId ? findParentCourseIdByUnit(requestedUnitId, lessons) : null);
@@ -323,7 +325,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                 }
                 const ledgerSnap = await getDb().collection("profit_ledger").where("tutorEmail", "==", email).limit(500).get();
                 result.earnings = ledgerSnap.docs.map((doc) => { const row = { id: doc.id, ...doc.data() }; row.month = row.month || row.period || "-"; return row; }).sort((a, b) => String(b.month || "").localeCompare(String(a.month || "")));
-            } catch (err) { console.error("Error fetching profit data for dashboard:", err); }
+            } catch (err) { logger.error("Error fetching profit data for dashboard:", err); }
         }
         let usersMap = {};
         if (isManagementView) {
@@ -343,7 +345,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                         syncCount++;
                     }
                     if (syncCount > 0) { await batch.commit(); usersSnapshotForMap = await getDb().collection("users").get(); }
-                } catch (syncErr) { console.error("[getDashboardData] Internal User Sync failed:", syncErr); }
+                } catch (syncErr) { logger.error("[getDashboardData] Internal User Sync failed:", syncErr); }
             }
             usersSnapshotForMap.forEach((doc) => { addDashboardUserEntry(usersMap, doc.id, doc.data(), requesterRole); });
         } else {
@@ -389,7 +391,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                         });
                     }
                 });
-            } catch (orderErr) { console.error("Error fetching orders for dashboard:", orderErr); }
+            } catch (orderErr) { logger.error("Error fetching orders for dashboard:", orderErr); }
         }
         if (!isManagementView) {
             try {
@@ -404,7 +406,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                         if (!studentStats[uid].orders.includes(cid)) studentStats[uid].orders.push(cid);
                     });
                 });
-            } catch (myOrderErr) { console.error("Error fetching student's own orders for dashboard:", myOrderErr); }
+            } catch (myOrderErr) { logger.error("Error fetching student's own orders for dashboard:", myOrderErr); }
         }
         const shouldIncludeAllRegisteredUsers = isManagementView && requesterRole === "admin" && !data.unitId && !data.courseId;
         if (isManagementView) {
@@ -484,7 +486,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                     if (requesterRole !== "admin" && intData.ownerTutorEmail && intData.ownerTutorEmail !== email) return;
                     interventions.push(buildDashboardReferenceEntry(usersMap, studentUid, { id: doc.id, ...intData }));
                 });
-            } catch (intErr) { console.warn("[getDashboardData] Failed to fetch assignment_interventions:", intErr.message); }
+            } catch (intErr) { logger.warn("[getDashboardData] Failed to fetch assignment_interventions:", intErr.message); }
         }
         result.interventions = interventions;
         result.summary = buildDashboardSummary(result.students);
@@ -505,7 +507,7 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                 result.hardwareOrders = shipmentSummary.hardwareOrders;
                 result.pendingShipments = shipmentSummary.pendingShipments;
                 result.pendingShipmentsCount = shipmentSummary.pendingShipmentsCount;
-            } catch (shipErr) { console.error("Error aggregating shipments:", shipErr); }
+            } catch (shipErr) { logger.error("Error aggregating shipments:", shipErr); }
         }
         if (requesterRole === "admin") {
             try {
@@ -517,12 +519,12 @@ exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO
                     result.defaultDistributorId = cData.defaultDistributorId || "default-usd";
                     result.defaultLocale = cData.defaultLocale || "en";
                 }
-            } catch (err) { console.warn("[getDashboardData] Failed to fetch content_runtime version:", err.message); }
+            } catch (err) { logger.warn("[getDashboardData] Failed to fetch content_runtime version:", err.message); }
         }
         result.lessons = lessons.map((lesson) => canonicalizeLessonForDashboard(lesson, lessons));
         return result;
     } catch (error) {
-        console.error("Dashboard Data Error:", error);
+        logger.error("Dashboard Data Error:", error);
         throw new HttpsError(error?.code || "internal", error?.message || "Failed to fetch dashboard data.");
     }
 });

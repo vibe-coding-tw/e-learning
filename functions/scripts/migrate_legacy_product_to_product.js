@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Migration complete — dry-run confirmed 0 docs with metadataType === "legacy_product" in production.
+// This script can be archived if the migration is finalized.
 const admin = require("firebase-admin");
 
 const DRY_RUN = process.argv.includes("--dry-run");

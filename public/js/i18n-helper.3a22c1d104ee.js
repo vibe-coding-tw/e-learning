@@ -1211,7 +1211,16 @@
             "cm_pricebook_no_data": "尚未載入價格表",
             "cm_count_format": "{filtered} / {total}",
             "cm_unit_status_selected": "Selected",
-            "cm_unit_status_available": "Available"
+            "cm_unit_status_available": "Available",
+
+            // meta descriptions
+            "meta_desc_auth": "Vibe Coding 課程授權驗證 — 驗證您的帳號以開始學習",
+            "meta_desc_dashboard": "Vibe Coding 課程儀表板 — 管理學生作業、批改與課程進度",
+            "meta_desc_investor": "Vibe Coding 投資人入口 — 檢視營運數據與課程分析",
+            "meta_desc_distributor": "Vibe Coding 經銷商入口 — 管理價格表與訂單出貨狀態",
+            "meta_desc_payment_return": "Vibe Coding 付款結果 — 檢視您的訂單付款狀態",
+            "meta_desc_cart": "Vibe Coding 購物車 — 檢視與結帳您的課程訂單",
+            "meta_desc_courses_management": "Vibe Coding 管理後台：課程新增、修改、停用與價格表管理"
         },
         "en": {
             // Document title fallback
@@ -2246,7 +2255,16 @@
             "cm_pricebook_no_data": "No price books loaded",
             "cm_count_format": "{filtered} / {total}",
             "cm_unit_status_selected": "Selected",
-            "cm_unit_status_available": "Available"
+            "cm_unit_status_available": "Available",
+
+            // meta descriptions
+            "meta_desc_auth": "Vibe Coding Course Authorization — Verify your account to start learning",
+            "meta_desc_dashboard": "Vibe Coding Dashboard — Manage student assignments, grading, and course progress",
+            "meta_desc_investor": "Vibe Coding Investor Portal — View operational metrics and course analytics",
+            "meta_desc_distributor": "Vibe Coding Distributor Portal — Manage price books and order fulfillment",
+            "meta_desc_payment_return": "Vibe Coding Payment Result — View your order payment status",
+            "meta_desc_cart": "Vibe Coding Shopping Cart — Review and checkout your course orders",
+            "meta_desc_courses_management": "Vibe Coding Admin Panel — Course creation, editing, and price book management"
         }
     };
 
@@ -2323,6 +2341,16 @@
             const trans = localeDict[key];
             if (trans !== undefined) {
                 el.alt = trans;
+            }
+        });
+
+        // 翻譯 meta content 屬性
+        const metaElements = document.querySelectorAll("meta[data-i18n-meta]");
+        metaElements.forEach((el) => {
+            const key = el.dataset.i18nMeta;
+            const trans = localeDict[key];
+            if (trans !== undefined) {
+                el.content = trans;
             }
         });
     };

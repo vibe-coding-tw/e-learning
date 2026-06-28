@@ -6,7 +6,6 @@ const crypto = require('crypto');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
-const srcDir = path.join(rootDir, 'src');
 const privateCoursesDir = path.join(rootDir, 'functions', 'private_courses');
 
 function walkFiles(dir, out = []) {
@@ -47,11 +46,6 @@ function dehashAssetPath(assetPath) {
 
 function findSource(resolvedAbs) {
   if (fs.existsSync(resolvedAbs)) return resolvedAbs;
-  if (resolvedAbs.startsWith(publicDir)) {
-    const rel = path.relative(publicDir, resolvedAbs);
-    const srcCandidate = path.join(srcDir, rel);
-    if (fs.existsSync(srcCandidate)) return srcCandidate;
-  }
   return null;
 }
 

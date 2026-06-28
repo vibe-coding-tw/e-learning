@@ -1,3 +1,5 @@
+const { normalizeLegacyId } = require('./id-utils');
+
 function normalizeText(value = "") {
     return String(value || "").trim();
 }
@@ -21,10 +23,6 @@ function normalizeLookupValue(value = '') {
         .split('?')[0]
         .replace(/\.html$/i, '')
         .toLowerCase();
-}
-
-function normalizeLegacyId(value = '') {
-    return String(value || '').replace(/\.html$/i, '').toLowerCase();
 }
 
 function isPhysicalMetadataLesson(lesson = {}) {

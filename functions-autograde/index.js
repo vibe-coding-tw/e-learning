@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { setGlobalOptions } = require("firebase-functions/v2");
+const logger = require("firebase-functions/logger");
 
 const {
     resolveAssignmentDocRefByUserAndUnit,
@@ -169,7 +170,7 @@ async function submitAssignmentHandler(request) {
 
         return { success: true, message: currentStatus === "started" ? "紀錄已更新" : "作業繳交成功！" };
     } catch (e) {
-        console.error("Submit Assignment Error:", e);
+        logger.error("Submit Assignment Error:", e);
         if (e instanceof HttpsError) throw e;
         throw new HttpsError("internal", "操作失敗，請稍後再試");
     }
@@ -254,23 +255,23 @@ async function createStudentRepositoryHandler(request) {
         let lastCreateErr = null;
         for (const candidateTemplateRepo of templateRepoCandidatesList) {
             try {
-                console.log(`[createStudentRepository] Creating repo ${newRepoName} from template ${candidateTemplateRepo} in org ${targetOrg}...`);
+                logger.info(`[createStudentRepository] Creating repo ${newRepoName} from template ${candidateTemplateRepo} in org ${targetOrg}...`);
                 studentRepo = await ghHelper.createRepoFromTemplate(targetOrg, candidateTemplateRepo, newRepoName, true);
                 templateRepo = candidateTemplateRepo;
                 break;
             } catch (err) {
                 lastCreateErr = err;
-                console.warn(`[createStudentRepository] Template repo not usable: ${candidateTemplateRepo}`, err?.message || err);
+                logger.warn(`[createStudentRepository] Template repo not usable: ${candidateTemplateRepo}`, err?.message || err);
             }
         }
         if (!studentRepo) {
             throw lastCreateErr || new HttpsError('failed-precondition', '無法從樣板倉庫建立作業 repo');
         }
 
-        console.log(`[createStudentRepository] Adding collaborator ${githubUsername} with push permission...`);
+        logger.info(`[createStudentRepository] Adding collaborator ${githubUsername} with push permission...`);
         await ghHelper.addCollaborator(targetOrg, newRepoName, githubUsername, 'push');
 
-        console.log(`[createStudentRepository] Fetching main branch SHA (with retry)...`);
+        logger.info(`[createStudentRepository] Fetching main branch SHA (with retry)...`);
         let mainRef = null;
         let retries = 5;
         while (retries > 0) {
@@ -280,7 +281,7 @@ async function createStudentRepositoryHandler(request) {
             } catch (err) {
                 retries--;
                 if (retries === 0) throw err;
-                console.log(`[createStudentRepository] Main branch not ready yet, retrying in 2 seconds... (${retries} retries left)`);
+                logger.info(`[createStudentRepository] Main branch not ready yet, retrying in 2 seconds... (${retries} retries left)`);
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
@@ -289,25 +290,25 @@ async function createStudentRepositoryHandler(request) {
         let needPlaceholder = false;
 
         try {
-            console.log(`[createStudentRepository] Fetching commit details for ${mainSha} to determine branch base...`);
+            logger.info(`[createStudentRepository] Fetching commit details for ${mainSha} to determine branch base...`);
             const commitDetails = await ghHelper.getCommit(targetOrg, newRepoName, mainSha);
             if (commitDetails.parents && commitDetails.parents.length > 0) {
                 feedbackSha = commitDetails.parents[0].sha;
-                console.log(`[createStudentRepository] Found parent commit ${feedbackSha}. Using it as feedback branch base.`);
+                logger.info(`[createStudentRepository] Found parent commit ${feedbackSha}. Using it as feedback branch base.`);
             } else {
                 needPlaceholder = true;
-                console.log(`[createStudentRepository] No parent commit found. Will write a placeholder file to force diff.`);
+                logger.info(`[createStudentRepository] No parent commit found. Will write a placeholder file to force diff.`);
             }
         } catch (commitErr) {
-            console.warn(`[createStudentRepository] Failed to get commit details, falling back to placeholder file:`, commitErr);
+            logger.warn(`[createStudentRepository] Failed to get commit details, falling back to placeholder file:`, commitErr);
             needPlaceholder = true;
         }
 
-        console.log(`[createStudentRepository] Creating feedback branch at ${feedbackSha}...`);
+        logger.info(`[createStudentRepository] Creating feedback branch at ${feedbackSha}...`);
         await ghHelper.createRef(targetOrg, newRepoName, 'refs/heads/feedback', feedbackSha);
 
         if (needPlaceholder) {
-            console.log(`[createStudentRepository] Creating placeholder file .github/classroom/feedback.md on main branch...`);
+            logger.info(`[createStudentRepository] Creating placeholder file .github/classroom/feedback.md on main branch...`);
             const fileContent = `# Feedback\n\n這是您的作業回饋專區。請在此 PR 中進行討論與發問。`;
             await ghHelper.createFile(
                 targetOrg,
@@ -319,7 +320,7 @@ async function createStudentRepositoryHandler(request) {
             );
         }
 
-        console.log(`[createStudentRepository] Opening Feedback PR...`);
+        logger.info(`[createStudentRepository] Opening Feedback PR...`);
         const feedbackPR = await ghHelper.createPullRequest(
             targetOrg,
             newRepoName,
@@ -358,7 +359,7 @@ async function createStudentRepositoryHandler(request) {
             feedbackPullRequestUrl: feedbackPR.html_url
         };
     } catch (error) {
-        console.error("[createStudentRepository] Failed with error:", error);
+        logger.error("[createStudentRepository] Failed with error:", error);
         throw new HttpsError('internal', error.message || '作業倉庫建立失敗');
     }
 }
@@ -707,7 +708,7 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
                     payload
                 );
             } catch (notifyErr) {
-                console.error("[ingestGithubAutograde] Failed to send alert for missing identifier:", notifyErr);
+                logger.error("[ingestGithubAutograde] Failed to send alert for missing identifier:", notifyErr);
             }
             return res.status(400).json({
                 success: false,
@@ -719,7 +720,7 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
             try {
                 await sendAutogradeFailureAlertEmail(process.env.ADMIN_EMAIL || process.env.MAIL_USER, "Invalid score value", payload);
             } catch (notifyErr) {
-                console.error("[ingestGithubAutograde] Failed to send alert for invalid score:", notifyErr);
+                logger.error("[ingestGithubAutograde] Failed to send alert for invalid score:", notifyErr);
             }
             return res.status(400).json({ success: false, error: "Invalid score value." });
         }
@@ -730,7 +731,7 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
             try {
                 await sendAutogradeFailureAlertEmail(process.env.ADMIN_EMAIL || process.env.MAIL_USER, `Assignment not found: ${resolvedDocId}`, payload);
             } catch (notifyErr) {
-                console.error("[ingestGithubAutograde] Failed to send alert for missing assignment doc:", notifyErr);
+                logger.error("[ingestGithubAutograde] Failed to send alert for missing assignment doc:", notifyErr);
             }
             return res.status(404).json({ success: false, error: "Assignment not found." });
         }
@@ -761,7 +762,7 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
             }
 
             if (!isAllowedOrg) {
-                console.warn(`[ingestGithubAutograde] Rejecting webhook from unauthorized organization: ${repoOwner}`);
+                logger.warn(`[ingestGithubAutograde] Rejecting webhook from unauthorized organization: ${repoOwner}`);
                 return res.status(403).json({ success: false, error: "Unauthorized repository organization" });
             }
         }
@@ -800,7 +801,7 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
                 assignmentId
             }, GITHUB_ORG_ADMIN_TOKEN);
         } catch (varErr) {
-            console.warn("[ingestGithubAutograde] Variable backfill error:", varErr);
+            logger.warn("[ingestGithubAutograde] Variable backfill error:", varErr);
         }
 
         try {
@@ -812,12 +813,12 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
                 updatePayload
             });
         } catch (notifyErr) {
-            console.error("[ingestGithubAutograde] Notification send failed:", notifyErr);
+            logger.error("[ingestGithubAutograde] Notification send failed:", notifyErr);
         }
 
         return res.status(200).json({ success: true, assignmentId: resolvedDocId });
     } catch (error) {
-        console.error("ingestGithubAutograde Error:", error);
+        logger.error("ingestGithubAutograde Error:", error);
         try {
             await sendAutogradeFailureAlertEmail(
                 process.env.ADMIN_EMAIL || process.env.MAIL_USER,
@@ -825,7 +826,7 @@ exports.autogradeIngestGithubAutograde = onRequest(async (req, res) => {
                 (req.body && typeof req.body === "object") ? req.body : {}
             );
         } catch (notifyErr) {
-            console.error("[ingestGithubAutograde] Failed to send alert for internal error:", notifyErr);
+            logger.error("[ingestGithubAutograde] Failed to send alert for internal error:", notifyErr);
         }
         return res.status(500).json({ success: false, error: "Internal server error" });
     }
@@ -926,7 +927,7 @@ exports.autoGradeSingleAssignment = onCall({ secrets: [GITHUB_API_TOKEN] }, asyn
 
         return { success: true, score };
     } catch (err) {
-        console.error(`[autoGradeSingleAssignment] Error grading ${assignmentId}:`, err.message);
+        logger.error(`[autoGradeSingleAssignment] Error grading ${assignmentId}:`, err.message);
         throw new HttpsError("internal", `Auto-grade failed: ${err.message}`);
     } finally {
         if (fs.existsSync(localGraderPath)) {

@@ -45,9 +45,10 @@ function normalizeCourseVariantKey(value = '') {
     if (/^start-\d{2}-unit-/i.test(bare)) return bare.replace(/^start-\d{2}-unit-/i, 'car-starter-');
     if (/^basic-\d{2}-unit-/i.test(bare)) return bare.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
     if (/^(?:adv|advanced)-\d{2}-unit-/i.test(bare)) return bare.replace(/^(?:adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
-    if (/^\d{2}-unit-/i.test(bare)) return bare.replace(/^\d{2}-unit-/i, 'common-');
+    if (/^\d{2}-(?:unit|lesson|master)-/i.test(bare)) return bare.replace(/^\d{2}-(?:unit|lesson|master)-/i, 'common-');
     if (/^prepare-\d+-(.+)$/i.test(bare)) return bare.replace(/^prepare-\d+-/, 'common-');
-    return bare;
+    if (/^prepare-/i.test(bare)) return bare.replace(/^prepare-/i, 'common-');
+    return bare.replace(/-master-/i, '-unit-');
 }
 
 function cleanUnitId(unitId) {

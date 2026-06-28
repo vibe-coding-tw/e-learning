@@ -6,6 +6,7 @@ const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https")
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { defineSecret } = require("firebase-functions/params");
 const { setGlobalOptions } = require("firebase-functions/v2");
+const logger = require("firebase-functions/logger");
 
 function bindLazyExports(modulePath, exportNames) {
     let cachedModule = null;
@@ -344,7 +345,7 @@ const bindTutorToUnit = onCall(async (request) => {
                     const cId = resolveCanonicalUnitId(uId, lessons);
                     await upsertStudentUnitAssignment(uid, cId, tutorEmail, "selfBinding_cascade", true);
                 }
-                console.log(`[bindTutorToUnit] Cascade-assigned ${uid} -> ${tutorEmail} for ${course.courseUnits.length} units in ${effectiveCourseId}`);
+                logger.info(`[bindTutorToUnit] Cascade-assigned ${uid} -> ${tutorEmail} for ${course.courseUnits.length} units in ${effectiveCourseId}`);
             }
         }
 
@@ -359,7 +360,7 @@ const bindTutorToUnit = onCall(async (request) => {
 
         return { success: true, tutorEmail };
     } catch (error) {
-        console.error("bindTutorToUnit failed:", error);
+        logger.error("bindTutorToUnit failed:", error);
         if (error instanceof HttpsError) throw error;
         throw new HttpsError("internal", error.message);
     }
@@ -438,7 +439,7 @@ const bindTutorByPromotionCode = onCall(async (request) => {
             throw new HttpsError("failed-precondition", "此導師尚未設定該單元作業連結，請通知管理員設定。");
         }
         if (isDefaultTutorSelection && !assignmentUrl) {
-            console.warn(`[bindTutorByPromotionCode] Default tutor selected for ${canonicalUnitId}, but no assignmentUrl was configured. Proceeding without referral link.`);
+            logger.warn(`[bindTutorByPromotionCode] Default tutor selected for ${canonicalUnitId}, but no assignmentUrl was configured. Proceeding without referral link.`);
         }
 
         const tutorRef = dbRef.collection("users").doc(tutorDoc.id);
@@ -474,7 +475,7 @@ const bindTutorByPromotionCode = onCall(async (request) => {
             assignmentUrl
         };
     } catch (error) {
-        console.error("bindTutorByPromotionCode failed:", error);
+        logger.error("bindTutorByPromotionCode failed:", error);
         if (error instanceof HttpsError) throw error;
         throw new HttpsError("internal", error.message);
     }
@@ -539,7 +540,7 @@ const updateLessonI18n = onCall(async (request) => {
     if (typeof lessonLabelEn === "string") updatePayload["i18n.en.lessonLabel"] = normalizeText(lessonLabelEn);
 
     await lessonDocRef.set(updatePayload, { merge: true });
-    console.log(`[updateLessonI18n] Updated i18n fields for courseId=${courseId} by uid=${auth.uid}`);
+    logger.info(`[updateLessonI18n] Updated i18n fields for courseId=${courseId} by uid=${auth.uid}`);
 
     return { success: true, courseId };
 });
@@ -568,7 +569,7 @@ const upsertLessonMetadata = onCall(async (request) => {
     }
 
     await docRef.set(patch, { merge: true });
-    console.log(`[upsertLessonMetadata] Upserted lesson metadata for docId=${patch.docId} by uid=${auth.uid}`);
+    logger.info(`[upsertLessonMetadata] Upserted lesson metadata for docId=${patch.docId} by uid=${auth.uid}`);
 
     return {
         success: true,
@@ -616,7 +617,7 @@ const updateSystemConfig = onCall(async (request) => {
         updates.updatedBy = auth.uid;
 
         await db.collection("metadata_settings").doc("content_runtime").set(updates, { merge: true });
-        console.log(`[updateSystemConfig] Updated config to ${JSON.stringify(updates)} by uid=${auth.uid}`);
+        logger.info(`[updateSystemConfig] Updated config to ${JSON.stringify(updates)} by uid=${auth.uid}`);
 
     }
 
@@ -720,7 +721,7 @@ const upsertLessonPricing = onCall(async (request) => {
         }, { merge: true })
     ]);
 
-    console.log(`[upsertLessonPricing] Updated default price books for docId=${cleanProductId} by uid=${auth.uid}`);
+    logger.info(`[upsertLessonPricing] Updated default price books for docId=${cleanProductId} by uid=${auth.uid}`);
     return {
         success: true,
         courseId: cleanProductId,
@@ -1096,13 +1097,13 @@ const updateUserRoutingPreference = onCall(async (request) => {
     if (preferredDistributorId) {
         const distributorDoc = await dbRef.collection("distributors").doc(preferredDistributorId).get();
         if (!distributorDoc.exists) {
-            console.warn("[updateUserRoutingPreference] skip missing distributor", { uid: auth.uid, preferredDistributorId });
+            logger.warn("[updateUserRoutingPreference] skip missing distributor", { uid: auth.uid, preferredDistributorId });
             safePreferredDistributorId = "";
         } else {
             const distributorData = distributorDoc.data() || {};
             const requestedRegion = preferredRegion || payload.region || distributorData.regions?.[0] || "";
             if (!distributorMatchesRegion(distributorData, requestedRegion)) {
-                console.warn("[updateUserRoutingPreference] skip mismatched distributor/region", {
+                logger.warn("[updateUserRoutingPreference] skip mismatched distributor/region", {
                     uid: auth.uid,
                     preferredDistributorId,
                     preferredRegion: requestedRegion
@@ -1248,7 +1249,7 @@ const logActivity = onCall(async (request) => {
         });
         return { success: true };
     } catch (error) {
-        console.error("Activity Log Error:", error);
+        logger.error("Activity Log Error:", error);
         throw new HttpsError("internal", "Failed to log activity.");
     }
 });
@@ -1260,7 +1261,7 @@ exports.remindAdminPendingAssignments = onSchedule({
     try {
         await runPendingAssignmentReminderTask();
     } catch (error) {
-        console.error("Error in remindAdminPendingAssignments:", error);
+        logger.error("Error in remindAdminPendingAssignments:", error);
     }
 });
 
@@ -1271,7 +1272,7 @@ exports.remindAdminPendingShipments = onSchedule({
     try {
         await runPendingShipmentReminderTask();
     } catch (error) {
-        console.error("Error in remindAdminPendingShipments:", error);
+        logger.error("Error in remindAdminPendingShipments:", error);
     }
 });
 
@@ -1332,7 +1333,7 @@ const verifyReferralLink = onCall(async (request) => {
 
         return { success: false, message: "目前僅支援以作業連結作為推薦識別，請輸入老師提供的連結。" };
     } catch (e) {
-        console.error(`[Referral] Error: ${e.message}`);
+        logger.error(`[Referral] Error: ${e.message}`);
         throw new HttpsError("internal", e.message);
     }
 });
@@ -1380,7 +1381,7 @@ const findClassroomInviteBindingHttp = onRequest(async (req, res) => {
         const result = await lookupClassroomInviteBindingAdmin(inputRaw);
         return res.json(result);
     } catch (error) {
-        console.error("[findClassroomInviteBindingHttp] failed:", error);
+        logger.error("[findClassroomInviteBindingHttp] failed:", error);
         return res.status(500).json({ error: error.message || "internal error" });
     }
 });
@@ -1422,7 +1423,7 @@ const precheckGithubClassroomAccess = onCall(async (request) => {
             settingsUrl: "https://github.com/settings/organizations"
         };
     } catch (error) {
-        console.error("[precheckGithubClassroomAccess] failed:", error);
+        logger.error("[precheckGithubClassroomAccess] failed:", error);
         return {
             success: false,
             precheckEnabled: true,
@@ -1478,7 +1479,7 @@ const updateUserRelationships = onCall(async (request) => {
     if (courseDevEmail !== undefined) updatePayload.courseDevEmail = courseDevEmail ? normalizeEmail(courseDevEmail) : "";
 
     await db.collection("users").doc(targetUid).set(updatePayload, { merge: true });
-    console.log(`[updateUserRelationships] ✅ Updated user relationships for targetUid=${targetUid} by uid=${auth.uid}`);
+    logger.info(`[updateUserRelationships] ✅ Updated user relationships for targetUid=${targetUid} by uid=${auth.uid}`);
 
     return { success: true };
 });
@@ -1550,11 +1551,11 @@ const saveTutorConfigs = onCall(async (request) => {
     const lessons = await loadLessonsWithOptionalDistributorOverride(data?.distributorId || "");
 
     if (role === "admin") {
-        console.log(`[saveTutorConfigs] Admin ${email} saving configs to users collection...`);
+        logger.info(`[saveTutorConfigs] Admin ${email} saving configs to users collection...`);
     }
 
     if (unitIds.length > 0) {
-        console.log(`[saveTutorConfigs] Syncing assignment URLs to user documents for ${courseId}...`);
+        logger.info(`[saveTutorConfigs] Syncing assignment URLs to user documents for ${courseId}...`);
         for (const [rawUnitId, tutorsMap] of Object.entries(effectiveAssignmentUrlMaps)) {
             const unitId = resolveCanonicalUnitId(rawUnitId, lessons) || rawUnitId;
             for (const [tEmail, url] of Object.entries(tutorsMap || {})) {
@@ -1568,16 +1569,16 @@ const saveTutorConfigs = onCall(async (request) => {
                         syncReferralUrl: url,
                         syncReferralLinkFn: syncReferralLink
                     });
-                    console.log(`[saveTutorConfigs] ✅ Synced ${unitId} (from ${rawUnitId}) for ${tEmail}`);
+                    logger.info(`[saveTutorConfigs] ✅ Synced ${unitId} (from ${rawUnitId}) for ${tEmail}`);
                 } catch (err) {
-                    console.warn(`[saveTutorConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
+                    logger.warn(`[saveTutorConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
                 }
             }
         }
     }
 
     if (configs.tutorConfigs) {
-        console.log("[saveTutorConfigs] Syncing custom tutorConfigs to user documents...");
+        logger.info("[saveTutorConfigs] Syncing custom tutorConfigs to user documents...");
         for (const [rawUnitId, configObj] of Object.entries(configs.tutorConfigs)) {
             const unitId = resolveCanonicalUnitId(rawUnitId, lessons) || rawUnitId;
             const tEmail = configObj.email || email;
@@ -1597,9 +1598,9 @@ const saveTutorConfigs = onCall(async (request) => {
                     syncReferralLinkFn: syncReferralLink
                 });
 
-                console.log(`[saveTutorConfigs] ✅ Saved custom config for ${unitId} (from ${rawUnitId}) and tutor ${tEmail}`);
+                logger.info(`[saveTutorConfigs] ✅ Saved custom config for ${unitId} (from ${rawUnitId}) and tutor ${tEmail}`);
             } catch (err) {
-                console.warn(`[saveTutorConfigs] Failed to save custom config for ${tEmail} on ${unitId}: ${err.message}`);
+                logger.warn(`[saveTutorConfigs] Failed to save custom config for ${tEmail} on ${unitId}: ${err.message}`);
             }
         }
     }
@@ -1675,7 +1676,7 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
     if (!runtimeConfig?.enabled) return null;
     const contentRepoToken = CONTENT_REPO_TOKEN.value();
     if (!contentRepoToken) {
-        console.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
+        logger.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
         return null;
     }
 
@@ -1709,7 +1710,7 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
                 const content = Buffer.from(encoded, "base64").toString("utf8");
                 return { content, source: "external", locale, file: localeCandidate };
             } catch (err) {
-                console.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
+                logger.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
             }
         }
     }
@@ -1857,7 +1858,7 @@ const resolveAssignmentAccess = onCall(async (request) => {
                 }
             }
         } catch (tutorErr) {
-            console.warn(`[resolveAssignmentAccess] Failed to fetch tutor ${assignedTutorEmail} config:`, tutorErr.message);
+            logger.warn(`[resolveAssignmentAccess] Failed to fetch tutor ${assignedTutorEmail} config:`, tutorErr.message);
         }
     }
 
@@ -1906,7 +1907,7 @@ const resolveAssignmentAccess = onCall(async (request) => {
             };
         }
     } catch (e) {
-        console.warn("[resolveAssignmentAccess] Failed to lookup personal repo:", e.message);
+        logger.warn("[resolveAssignmentAccess] Failed to lookup personal repo:", e.message);
     }
 
     let githubUsername = null;
@@ -1916,7 +1917,7 @@ const resolveAssignmentAccess = onCall(async (request) => {
             githubUsername = studentDoc.data().githubUsername || null;
         }
     } catch (studentErr) {
-        console.warn(`[resolveAssignmentAccess] Failed to fetch student ${auth.uid} githubUsername:`, studentErr.message);
+        logger.warn(`[resolveAssignmentAccess] Failed to fetch student ${auth.uid} githubUsername:`, studentErr.message);
     }
 
     const resolvedAssignmentUrl = personalRepoUrl || assignmentUrl || null;
@@ -1961,7 +1962,7 @@ const authorizeTutorForCourse = onCall(async (request) => {
                     tutorName = resolveNameFromUserData(tutorDoc.data() || {}, tutorEmail, "");
                 }
             } catch (err) {
-                console.log(`[Role] Metadata skip: ${err.message}`);
+                logger.info(`[Role] Metadata skip: ${err.message}`);
             }
 
             try {
@@ -1973,7 +1974,7 @@ const authorizeTutorForCourse = onCall(async (request) => {
                     qualifiedAt: nowIsoTimestamp()
                 }));
             } catch (authSyncErr) {
-                console.warn(`[Role] Failed to sync user doc for ${tutorEmail}: ${authSyncErr.message}`);
+                logger.warn(`[Role] Failed to sync user doc for ${tutorEmail}: ${authSyncErr.message}`);
             }
 
             try {
@@ -1986,7 +1987,7 @@ const authorizeTutorForCourse = onCall(async (request) => {
                 const assignmentUrl = getUserTutorConfig(tutorData, canonicalCourseId)?.assignmentUrl || null;
                 await sendTutorAuthorizationEmail(tutorEmail, unitName, canonicalCourseId, assignmentUrl);
             } catch (authExtraErr) {
-                console.error("[Auth] Failed to generate promo code or send email:", authExtraErr);
+                logger.error("[Auth] Failed to generate promo code or send email:", authExtraErr);
             }
         } else if (action === "remove") {
             try {
@@ -1998,7 +1999,7 @@ const authorizeTutorForCourse = onCall(async (request) => {
                 updatePatch[`tutorConfigs.${canonicalCourseId}`] = admin.firestore.FieldValue.delete();
                 await admin.firestore().collection("users").doc(tutorUid).set(updatePatch, { merge: true });
             } catch (authSyncErr) {
-                console.warn(`[Role] Failed to sync user doc removal for ${tutorEmail}: ${authSyncErr.message}`);
+                logger.warn(`[Role] Failed to sync user doc removal for ${tutorEmail}: ${authSyncErr.message}`);
             }
             return { success: true };
         }

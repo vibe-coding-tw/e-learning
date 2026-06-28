@@ -6,6 +6,7 @@ if (process.env.NODE_ENV !== "production" || !process.env.ECPAY_MERCHANT_ID) {
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const { defineSecret } = require("firebase-functions/params");
+const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 global.__vibeFirebaseAdmin = admin;
 const crypto = require("crypto");
@@ -173,7 +174,7 @@ exports.initiatePayment = onCall(async (request) => {
     });
 
     const paymentCheckMacSource = buildCheckMacSourceString(paymentParams, HASH_KEY, HASH_IV);
-    console.log("[initiatePayment] payment payload snapshot", JSON.stringify({
+    logger.info("[initiatePayment] payment payload snapshot", JSON.stringify({
         orderId,
         amount: finalAmount,
         currency: detectedCurrency,
@@ -234,7 +235,7 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
     const lesson = findCourseByPageOrUnit(pageId, fileName, lessons)
         || findLessonByCourseRef(pageId, lessons)
         || findLessonByCourseRef(fileName, lessons);
-    console.log("[checkPaymentAuthorization] lookup", {
+    logger.info("[checkPaymentAuthorization] lookup", {
         uid: auth.uid,
         docId,
         pageId,
@@ -259,7 +260,7 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
         tutorMode,
         auth.token?.email || ""
     );
-    console.log("[checkPaymentAuthorization] access", {
+    logger.info("[checkPaymentAuthorization] access", {
         uid: auth.uid,
         docId,
         courseId,
@@ -346,7 +347,7 @@ exports.paymentNotify = onRequest(async (req, res) => {
 
         return res.status(200).send("1|OK");
     } catch (error) {
-        console.error("[paymentNotify] failed:", error);
+        logger.error("[paymentNotify] failed:", error);
         return res.status(500).send("0|ERROR");
     }
 });
@@ -422,13 +423,13 @@ exports.paymentMarkOrderShipped = onCall(async (request) => {
                 }
             }
         } catch (notifyErr) {
-            console.error(`[paymentMarkOrderShipped] Failed to send shipped email for ${orderId}:`, notifyErr);
+            logger.error(`[paymentMarkOrderShipped] Failed to send shipped email for ${orderId}:`, notifyErr);
         }
 
-        console.log(`Order ${orderId} marked as SHIPPED by ${uid}`);
+        logger.info(`Order ${orderId} marked as SHIPPED by ${uid}`);
         return { success: true };
     } catch (error) {
-        console.error("Error in paymentMarkOrderShipped:", error);
+        logger.error("Error in paymentMarkOrderShipped:", error);
         if (error instanceof HttpsError) throw error;
         throw new HttpsError("internal", error.message);
     }
@@ -469,7 +470,7 @@ exports.stripeWebhook = onRequest(async (req, res) => {
         });
         return res.status(200).json({ received: true });
     } catch (error) {
-        console.error("[stripeWebhook] failed:", error);
+        logger.error("[stripeWebhook] failed:", error);
         return res.status(500).json({ received: false, error: error.message || String(error) });
     }
 });
@@ -510,7 +511,7 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         res.setHeader("X-Content-Type-Options", "nosniff");
         return res.send(contentRuntime.injectCourseRuntimeShell(result.html));
     } catch (error) {
-        console.error("[serveCourse] failed:", error);
+        logger.error("[serveCourse] failed:", error);
         return res.status(500).json({
             authorized: true,
             reason: "content-fetch-failed",

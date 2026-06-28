@@ -493,13 +493,15 @@
     function normalizeLegacyUnitFilename(file = "") {
         const v = String(file || "").trim();
         if (!v) return "";
-        if (/^(?:tw|en)-(common|car-(starter|basic|advanced))-/i.test(v)) return v.replace(/^(?:tw|en)-/i, "");
-        if (/^start-\d{2}-unit-/i.test(v)) return v.replace(/^start-\d{2}-unit-/i, "car-starter-");
-        if (/^basic-\d{2}-unit-/i.test(v)) return v.replace(/^basic-\d{2}-unit-/i, "car-basic-");
-        if (/^(?:adv|advanced)-\d{2}-unit-/i.test(v)) return v.replace(/^(?:adv|advanced)-\d{2}-unit-/i, "car-advanced-");
-        if (/^\d{2}-unit-/i.test(v)) return v.replace(/^\d{2}-unit-/i, "common-");
-        if (/^prepare-\d+-(.+)$/i.test(v)) return v.replace(/^prepare-\d+-/i, "common-");
-        return v;
+        const bare = v.replace(/\.html$/i, '').replace(/^(?:tw|en)-/i, '').toLowerCase();
+
+        if (/^start-\d{2}-unit-/i.test(bare)) return bare.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+        if (/^basic-\d{2}-unit-/i.test(bare)) return bare.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
+        if (/^(?:adv|advanced)-\d{2}-unit-/i.test(bare)) return bare.replace(/^(?:adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
+        if (/^\d{2}-(?:unit|lesson|master)-/i.test(bare)) return bare.replace(/^\d{2}-(?:unit|lesson|master)-/i, 'common-');
+        if (/^prepare-\d+-(.+)$/i.test(bare)) return bare.replace(/^prepare-\d+-/, 'common-');
+        if (/^prepare-/i.test(bare)) return bare.replace(/^prepare-/i, 'common-');
+        return bare.replace(/-master-/i, '-unit-');
     }
 
     function resolveUnitFile(lesson = {}) {

@@ -2,6 +2,7 @@ const {
     countAuthorizedTutorUnits,
     getUserDistributorScope
 } = require("vibe-functions-core/distributor-utils-core");
+const logger = require("firebase-functions/logger");
 
 async function loadDistributorScopedUsers(dbRef, distributorId = "") {
     const normalizedDistributorId = String(distributorId || "").trim();
@@ -18,7 +19,7 @@ async function loadDistributorScopedUsers(dbRef, distributorId = "") {
         try {
             return await query.get();
         } catch (e) {
-            console.warn("[DistributorPortal] scoped user query failed:", e.message || e);
+            logger.warn("[DistributorPortal] scoped user query failed:", e.message || e);
             return null;
         }
     }));

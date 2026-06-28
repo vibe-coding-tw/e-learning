@@ -23,6 +23,7 @@ const {
     resolveLessonForOrderItem
 } = require("../dashboard-utils");
 const { HttpsError } = require("firebase-functions/v2/https");
+const logger = require("firebase-functions/logger");
 
 const orderNormalizationResolvers = {
     resolveLessonForOrderItem,
@@ -79,10 +80,10 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const assignedPromotionCode = userData.unitAssignmentMeta?.[lookupUnitId]?.promotionCode || null;
 
     if (isPhysicalProduct) {
-        console.log(`[resolveAccess] ENFORCING Purchase Flow for Physical Product: ${effectiveCourseId}`);
+        logger.info(`[resolveAccess] ENFORCING Purchase Flow for Physical Product: ${effectiveCourseId}`);
     } else {
         if (tutorMode && isAdminRole) {
-            console.log(`[resolveAccess] SUCCESS: Admin Simulation Bypass for ${uid}`);
+            logger.info(`[resolveAccess] SUCCESS: Admin Simulation Bypass for ${uid}`);
             return {
                 authorized: true,
                 simulated: true,
@@ -97,7 +98,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         const shouldSkipTutorBypass = isAdminRole && !tutorMode;
         if (!shouldSkipTutorBypass) {
             if (effectiveCourseId && isTutorFullyQualifiedForCourse(userData, effectiveCourseId, lessons)) {
-                console.log(`[resolveAccess] SUCCESS: Fully Qualified Tutor Bypass for ${uid} on ${effectiveCourseId}`);
+                logger.info(`[resolveAccess] SUCCESS: Fully Qualified Tutor Bypass for ${uid} on ${effectiveCourseId}`);
                 return {
                     authorized: true,
                     accessMode: "fully_qualified_tutor",
@@ -149,7 +150,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     }
 
     if (!effectiveCourseId) {
-        console.warn(`[resolveAccess] FAIL: Missing context for UID:${uid} Page:${courseId} Unit:${unitId}`);
+        logger.warn(`[resolveAccess] FAIL: Missing context for UID:${uid} Page:${courseId} Unit:${unitId}`);
         return { authorized: false, reason: "missing-context", canonicalUnitId, effectiveCourseId };
     }
 

@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const { HttpsError } = require("firebase-functions/v2/https");
+const logger = require("firebase-functions/logger");
 const { normalizeEmail, isAdminEmail, lookupAuthUserEmailByUid, assertRequiredValue } = require("vibe-functions-core/access-utils-core");
 const { normalizeText, normalizeCourseFile, normalizeLookupValue, cleanUnitId, getCanonicalLessonIdentity, getLessonLookupKeys, resolveCanonicalUnitId, findCourseByUnitId, findCourseByPageOrUnit, findLessonByCourseRef, findParentCourseIdByUnit } = require("../dashboard-utils");
 const { withAssignmentUrlAliases } = require("vibe-functions-core/dashboard-utils-core");
@@ -81,7 +82,7 @@ async function getRole(uid, fallbackEmail = "") {
         const authEmail = fallbackEmail || await lookupAuthUserEmailByUid(uid);
         if (typeof isAdminEmail === "function" && isAdminEmail(authEmail)) return "admin";
     } catch (e) {
-        console.error("[Role] Error in getRole:", e);
+        logger.error("[Role] Error in getRole:", e);
     }
     return "user";
 }
@@ -480,7 +481,7 @@ async function resolveStudentAssignmentAccessAdmin(dbRef, uid, courseId, unitId,
     const assignedTutorEmail = userData.unitAssignments?.[lookupUnitId] || null;
     const assignedPromotionCode = userData.unitAssignmentMeta?.[lookupUnitId]?.promotionCode || null;
     if (isPhysicalProduct) {
-        console.log(`[resolveAccess] ENFORCING Purchase Flow for Physical Product: ${effectiveCourseId}`);
+        logger.info(`[resolveAccess] ENFORCING Purchase Flow for Physical Product: ${effectiveCourseId}`);
     } else {
         if (tutorMode && isAdminRole) {
             return { authorized: true, simulated: true, accessMode: "admin_simulated", canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode };

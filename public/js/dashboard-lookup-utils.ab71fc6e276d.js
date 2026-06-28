@@ -8,17 +8,20 @@
     }
 
     function normalizeLegacyCourseKey(value = "") {
-        let v = normalizeRouteLooseKey(value);
-        if (!v) return '';
+        const filePart = String(value || "").split('/').pop().split('?')[0];
+        if (!filePart) return '';
+        const bare = String(filePart)
+            .replace(/\.html$/i, '')
+            .replace(/^(?:tw|en)-/i, '')
+            .toLowerCase();
 
-        v = v.replace(/^(?:tw|en)-/i, '');
-        v = v.replace(/^prepare-/i, 'common-');
-        v = v.replace(/^(start)-\d{2}-unit-/i, 'car-starter-');
-        v = v.replace(/^(basic)-\d{2}-unit-/i, 'car-basic-');
-        v = v.replace(/^(adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
-        v = v.replace(/^\d{2}-(?:unit|lesson|master)-/i, 'common-');
-        v = v.replace(/-master-/i, '-unit-');
-        return v;
+        if (/^start-\d{2}-unit-/i.test(bare)) return bare.replace(/^start-\d{2}-unit-/i, 'car-starter-');
+        if (/^basic-\d{2}-unit-/i.test(bare)) return bare.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
+        if (/^(?:adv|advanced)-\d{2}-unit-/i.test(bare)) return bare.replace(/^(?:adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
+        if (/^\d{2}-(?:unit|lesson|master)-/i.test(bare)) return bare.replace(/^\d{2}-(?:unit|lesson|master)-/i, 'common-');
+        if (/^prepare-\d+-(.+)$/i.test(bare)) return bare.replace(/^prepare-\d+-/, 'common-');
+        if (/^prepare-/i.test(bare)) return bare.replace(/^prepare-/i, 'common-');
+        return bare.replace(/-master-/i, '-unit-');
     }
 
     function isPhysicalMetadataLesson(lesson = {}) {

@@ -2,6 +2,7 @@ const admin = require("firebase-admin");
 const { defineSecret } = require("firebase-functions/params");
 
 const { buildI18nFilenameCandidates, normalizeLegacyId, unitIdsMatch } = require("vibe-functions-core/id-utils");
+const logger = require("firebase-functions/logger");
 const { getContentRuntimeConfig } = require("vibe-functions-core/runtime-state");
 const { loadLessons, normalizeText } = require("vibe-functions-core/access-utils-core");
 const dashboardUtils = require("vibe-functions-core/dashboard-utils-core");
@@ -66,7 +67,7 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
     if (!runtimeConfig?.enabled) return null;
     const contentRepoToken = CONTENT_REPO_TOKEN.value();
     if (!contentRepoToken) {
-        console.warn("[content-runtime] CONTENT_REPO_TOKEN missing.");
+        logger.warn("[content-runtime] CONTENT_REPO_TOKEN missing.");
         return null;
     }
 
@@ -116,7 +117,7 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
             const content = Buffer.from(encoded, "base64").toString("utf8");
             return { content, source: "external", locale: contentPath.split("/")[1] || "", file: contentPath };
         } catch (err) {
-            console.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
+            logger.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
         }
     }
 
@@ -289,7 +290,7 @@ function injectCourseRuntimeShell(html = "") {
             obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + "px";
         }
     };
-    console.log("[Firebase] Course runtime bootstrap initialized");
+    logger.info("[Firebase] Course runtime bootstrap initialized");
 </script>
 `;
 

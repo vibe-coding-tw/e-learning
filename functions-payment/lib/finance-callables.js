@@ -2,6 +2,7 @@ const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
+const logger = require("firebase-functions/logger");
 
 const {
     assertAuthenticated,
@@ -466,7 +467,7 @@ async function calculateMonthlySharing() {
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-    console.log(`Starting profit sharing calculation for: ${lastMonth.toISOString()} to ${endOfLastMonth.toISOString()}`);
+    logger.info(`Starting profit sharing calculation for: ${lastMonth.toISOString()} to ${endOfLastMonth.toISOString()}`);
 
     const policyCache = new Map();
     const userByEmailCache = new Map();
@@ -705,7 +706,7 @@ async function calculateMonthlySharing() {
                         autoGenerateReports: false
                     });
                 } catch (ledgerErr) {
-                    console.warn(`[calculateMonthlySharing] commission payment skipped for ${idempotencyKey}:`, ledgerErr.message || ledgerErr);
+                    logger.warn(`[calculateMonthlySharing] commission payment skipped for ${idempotencyKey}:`, ledgerErr.message || ledgerErr);
                 }
             }
 
@@ -754,14 +755,14 @@ async function calculateMonthlySharing() {
                 generateLedgerReport({ db, period: targetPeriod, reportType: "profit_and_loss", createdByUid: "system" }),
                 generateLedgerReport({ db, period: targetPeriod, reportType: "balance_sheet", createdByUid: "system" })
             ]);
-            console.log(`[calculateMonthlySharing] ✅ Ledger reports generated for period=${targetPeriod}`);
+            logger.info(`[calculateMonthlySharing] ✅ Ledger reports generated for period=${targetPeriod}`);
         } catch (reportErr) {
-            console.warn(`[calculateMonthlySharing] Ledger report generation skipped for period=${targetPeriod}:`, reportErr.message || reportErr);
+            logger.warn(`[calculateMonthlySharing] Ledger report generation skipped for period=${targetPeriod}:`, reportErr.message || reportErr);
         }
 
-        console.log(`Profit sharing completed. createdCredits=${creditTrail.length}, ledgerRows=${auditTrail.length}, balances=${balanceAgg.size}`);
+        logger.info(`Profit sharing completed. createdCredits=${creditTrail.length}, ledgerRows=${auditTrail.length}, balances=${balanceAgg.size}`);
     } catch (error) {
-        console.error("Error in calculateMonthlySharing:", error);
+        logger.error("Error in calculateMonthlySharing:", error);
     }
 }
 
@@ -776,9 +777,9 @@ async function calculateAnnualInvestorDividends() {
             configCache: new Map(),
             createdByUid: "system"
         });
-        console.log(`[calculateAnnualInvestorDividends] Completed for year=${targetYear} settlements=${result.settlementCount}`);
+        logger.info(`[calculateAnnualInvestorDividends] Completed for year=${targetYear} settlements=${result.settlementCount}`);
     } catch (error) {
-        console.error("Error in calculateAnnualInvestorDividends:", error);
+        logger.error("Error in calculateAnnualInvestorDividends:", error);
     }
 }
 

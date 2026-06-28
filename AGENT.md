@@ -251,7 +251,7 @@ This session's improvements:
 
 | Issue | Root Cause | Fix |
 |-------|-----------|-----|
-| Tutor assignment modal has no English | `injectAssignmentLinkModal()` uses hardcoded Chinese strings, no `window.t()` calls | Add 9 i18n keys (`tutor_confirm_title`/`desc`/`desc_blank_hint`/`email_label`/`placeholder`/`footnote`/`btn`/`cancel_btn`) in `src/js/i18n-helper.js` (zh-TW + en); refactor `injectAssignmentLinkModal()` in `src/js/course-shared.js` to use `window.t()` with `.replace('{email}', defaultTutorEmail)` |
+| Tutor assignment modal has no English | `injectAssignmentLinkModal()` uses hardcoded Chinese strings, no `window.t()` calls | Add 9 i18n keys (`tutor_confirm_title`/`desc`/`desc_blank_hint`/`email_label`/`placeholder`/`footnote`/`btn`/`cancel_btn`) in `public/js/i18n-helper.js` (zh-TW + en); refactor `injectAssignmentLinkModal()` in `public/js/course-shared.js` to use `window.t()` with `.replace('{email}', defaultTutorEmail)` |
 
 ### Dashboard / Auto-Grade Fix Patterns
 
@@ -260,10 +260,10 @@ This session's improvements:
 | Emulator: `__vibeFirebaseAdmin` undefined | GCF env `CONTENT_REPO_TOKEN` not propagated to `global.__vibeFirebaseAdmin` in emulator | Add direct `global.__vibeFirebaseAdmin = { accessToken: process.env.CONTENT_REPO_TOKEN }` after admin init |
 | Emulator: Secret not resolved | `defineSecret('CONTENT_REPO_TOKEN')` returns placeholder, not real value | In emulator, read `process.env.CONTENT_REPO_TOKEN` directly; call `config().then()` outside function handler |
 | Missing import: `buildAssignmentSubmissionRecord` | `dashboard-data.js` calls it but never imports from `shared-function-core` | Add destructured import or inline the function |
-| Missing import: `unitIdsMatch` | `dashboard-data.js` calls `unitIdsMatch()` but never imports it | Check both `src/js/dashboard-data.js` AND `functions-admin/lib/dashboard-data.js` for missing `require('./dashboard-utils-core')` destructured imports |
+| Missing import: `unitIdsMatch` | `dashboard-data.js` calls `unitIdsMatch()` but never imports it | Check `functions-admin/lib/dashboard-data.js` for missing `require('./dashboard-utils-core')` destructured imports |
 | `onSnapshot` overwrites cached data with empty set | Security rules block client-side queries in emulator → `onSnapshot` returns 0 docs → clears `dashboardData.assignments` | Guard: `if (updatedAssignments.length > 0 \|\| !dashboardData.assignments?.length) { dashboardData.assignments = updatedAssignments; }`. Also use `dashboardData.assignments` as fallback source for re-render when snapshot is empty. |
 | `autoGradeAssignment` shows other units' assignments | Line `renderAssignments(dashboardData?.assignments \|\| [], ...)` passes ALL assignments without filtering by unit context | Apply `filterAssignmentsForCurrentView()` + `unitIdsMatch(unitId, filterUnitId)` filter before calling `renderAssignments` |
-| Updated source file not picked up | Dashboard loads fingerprinted `dashboard.<hash>.js`, not `dashboard.js` | Always copy `src/js/dashboard.js` → `public/js/dashboard.js`, then run `node scripts/fingerprint-static-assets.js` |
+| Updated source file not picked up | Dashboard loads fingerprinted `dashboard.<hash>.js`, not `dashboard.js` | Edit `public/js/dashboard.js`, then run `node scripts/fingerprint-static-assets.js` |
 
 ### Dashboard.js i18n Conversion (Phase B3)
 

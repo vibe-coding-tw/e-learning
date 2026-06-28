@@ -10,6 +10,7 @@ const {
     isPhysicalMetadataLesson,
     itemContainsUnit
 } = require("vibe-functions-core/order-utils");
+const logger = require("firebase-functions/logger");
 const {
     normalizeEmail
 } = require("vibe-functions-core/tutor-utils");
@@ -114,22 +115,16 @@ function hasActiveOrderForCourseSnapshot(ordersSnap = null, targetUnitId = "", l
     const result = docs.some((doc) => {
         const orderData = typeof doc?.data === "function" ? (doc.data() || {}) : {};
         if (!isActivePaidOrder(orderData)) {
-            console.log("[order-flow] order skipped (not active/paid)", { orderId: doc.id, status: orderData.status });
+            logger.info("[order-flow] order skipped (not active/paid)", { orderId: doc.id, status: orderData.status });
             return false;
         }
         const items = orderData.items || {};
         const itemKeys = Object.keys(items);
-        console.log("[order-flow] checking order", { orderId: doc.id, targetUnitId, status: orderData.status, itemKeys: JSON.stringify(itemKeys), itemsType: typeof items, isArray: Array.isArray(items) });
         return itemKeys.some((itemKey) => {
-            const resolvedLesson = resolveItemToLesson(itemKey, lessons);
-            const lessonUnits = Array.isArray(resolvedLesson?.courseUnits) ? resolvedLesson.courseUnits : [];
-            console.log("[order-flow] itemContainsUnit", { itemKey, targetUnitId, resolvedLessonId: resolvedLesson?.id || resolvedLesson?.docId || "(null)", lessonUnits: JSON.stringify(lessonUnits) });
             const match = itemContainsUnit(itemKey, lessons, targetUnitId, resolvers);
-            console.log("[order-flow] itemContainsUnit result", { itemKey, targetUnitId, match });
             return match;
         });
     });
-    console.log("[order-flow] hasActiveOrderForCourseSnapshot", { orderCount: docs.length, targetUnitId, result });
     return result;
 }
 
@@ -182,16 +177,7 @@ async function checkOrderAccessForUnit(db, uid, courseId, unitId, lessons = [], 
         level === "starter" ||
         isStarterCourseCategory(level)
     );
-    console.log("[checkOrderAccessForUnit] check-order", { uid, courseId, unitId, lessonId, category });
-    console.log("[checkOrderAccessForUnit] trial-debug", {
-        uid,
-        courseId,
-        unitId,
-        lessonId,
-        category,
-        level,
-        registeredAtMs,
-        ageDays: registeredAtMs ? ((Date.now() - registeredAtMs) / THIRTY_DAYS_MS) : null,
+    logger.info("[checkOrderAccessForUnit] check-order", { uid, courseId, unitId, lessonId, category, level, registeredAtMs, ageDays: registeredAtMs ? ((Date.now() - registeredAtMs) / THIRTY_DAYS_MS) : null,
         isStarterLesson
     });
     if (isStarterLesson && registeredAtMs && (Date.now() - registeredAtMs) < THIRTY_DAYS_MS) {
@@ -300,7 +286,7 @@ async function activateOrderPermissionsAndNotify(db, orderId, hooks = {}) {
     try {
         await syncUserPurchaseCacheFromOrder(db, orderId, orderData, lessons);
     } catch (cacheErr) {
-        console.warn(`[payment] purchase cache sync skipped for order ${orderId}:`, cacheErr.message || cacheErr);
+        logger.warn(`[payment] purchase cache sync skipped for order ${orderId}:`, cacheErr.message || cacheErr);
     }
 
     try {
@@ -327,7 +313,7 @@ async function activateOrderPermissionsAndNotify(db, orderId, hooks = {}) {
             autoGenerateReports: true
         });
     } catch (ledgerErr) {
-        console.warn(`[payment] ledger event skipped for order ${orderId}:`, ledgerErr.message || ledgerErr);
+        logger.warn(`[payment] ledger event skipped for order ${orderId}:`, ledgerErr.message || ledgerErr);
     }
 
     try {
@@ -347,7 +333,7 @@ async function activateOrderPermissionsAndNotify(db, orderId, hooks = {}) {
             createdByUid: "system"
         });
     } catch (investorErr) {
-        console.warn(`[payment] investor credit skipped for order ${orderId}:`, investorErr.message || investorErr);
+        logger.warn(`[payment] investor credit skipped for order ${orderId}:`, investorErr.message || investorErr);
     }
 
     try {
@@ -380,7 +366,7 @@ async function activateOrderPermissionsAndNotify(db, orderId, hooks = {}) {
             }
         }
     } catch (referralErr) {
-        console.warn(`[payment] referral backfill skipped for order ${orderId}:`, referralErr.message || referralErr);
+        logger.warn(`[payment] referral backfill skipped for order ${orderId}:`, referralErr.message || referralErr);
     }
 
     if (hooks.sendPaymentSuccessEmail) {
@@ -394,7 +380,7 @@ async function activateOrderPermissionsAndNotify(db, orderId, hooks = {}) {
                 const lesson = resolveLessonForOrderItem(itemKey, lessons);
                 return lesson?.isPhysical === true;
             })).catch((err) => {
-                console.warn("[payment] sendPaymentSuccessEmail failed:", err.message || err);
+                logger.warn("[payment] sendPaymentSuccessEmail failed:", err.message || err);
             });
         }
     }
