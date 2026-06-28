@@ -20,16 +20,13 @@ let currentPathKey = "common";
 let currentLessonsRequestId = 0;
 
 function getLocalPreferredDistributorId() {
-  return localStorage.getItem('vibe_user_preferred_distributor')
-                     || localStorage.getItem('preferredDistributorId')
-                     || '';
+  return localStorage.getItem('vibe_user_preferred_distributor') || '';
 }
 
 function persistLocalPreferredDistributorId(distributorId = '') {
   const normalized = String(distributorId || '').trim();
   if (!normalized) return;
   localStorage.setItem('vibe_user_preferred_distributor', normalized);
-  localStorage.setItem('preferredDistributorId', normalized);
 }
 
 function getScopedTutorModeForUid(uid = "") {
@@ -37,27 +34,7 @@ function getScopedTutorModeForUid(uid = "") {
   if (!cleanUid) return false;
   try {
     const scopedKey = `adminTutorMode:${cleanUid}`;
-    const scopedValue = localStorage.getItem(scopedKey);
-    if (scopedValue !== null) return scopedValue === "true";
-
-    const legacyValue = localStorage.getItem("adminTutorMode");
-    if (legacyValue !== null) {
-      localStorage.setItem(scopedKey, legacyValue);
-      localStorage.removeItem("adminTutorMode");
-      return legacyValue === "true";
-    }
-
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i) || "";
-      if (!key.startsWith("adminTutorMode:")) continue;
-      const value = localStorage.getItem(key);
-      if (value === "true") {
-        localStorage.setItem(scopedKey, "true");
-        return true;
-      }
-    }
-
-    return false;
+    return localStorage.getItem(scopedKey) === "true";
   } catch (_) {
     return false;
   }
@@ -560,7 +537,7 @@ init().catch((error) => {
   console.warn('[learning-path] init failed:', error);
 });
 window.addEventListener('storage', (event) => {
-  if (event.key === 'vibe_user_preferred_distributor' || event.key === 'preferredDistributorId') {
+  if (event.key === 'vibe_user_preferred_distributor') {
     loadLessonsForCurrentDistributor().catch((error) => {
       console.warn('[learning-path] Failed to refresh lessons after distributor change:', error);
     });

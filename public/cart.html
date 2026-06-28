@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Vibe Coding 購物車 — 檢視與結帳您的課程訂單">
     <title>Vibe Coding 待結帳項目</title>
-    <script src="./js/i18n-helper.d565bb57236b.js"></script>
+    <script src="./js/i18n-helper.a2df40443728.js"></script>
     <script>
         (function() {
             const w = console.warn;
@@ -32,7 +32,7 @@
 
 <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen" data-i18n-doc-title="doc_title_cart">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.3eedb220233a.js"></script>
+    <script type="module" src="./js/nav-component.b14f210da6d7.js"></script>
     
 
     <main class="flex-grow pt-32 pb-20 hero-gradient">
@@ -59,7 +59,7 @@
                     <span id="cart-total-label" data-i18n="cart_total_label">總金額:</span>
                     <span id="cart-total" class="font-mono">0</span>
                 </div>
-                <p id="cart-total-note" class="mt-2 text-sm text-slate-500">價格已含稅與運費，結帳金額即為實付總額。</p>
+                <p id="cart-total-note" class="mt-2 text-sm text-slate-500" data-i18n="cart_total_note_with_shipping">價格已含稅與運費，結帳金額即為實付總額。</p>
                 <div id="routing-preference-section" class="hidden mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg animate-fade-in">
                     <div class="flex items-center justify-between gap-3 mb-3">
                         <h3 class="text-lg font-bold text-gray-800" data-i18n="routing_title">地區與經銷商偏好</h3>
@@ -200,7 +200,7 @@
 
     <div id="footer-placeholder" data-root="."></div>
     <script src="./js/footer-component.aefa6a662d57.js"></script>
-    <script src="./js/pricing-utils.020c6c68560c.js"></script>
+    <script src="./js/pricing-utils.539cfe4ef05c.js"></script>
 
 
 
@@ -269,7 +269,7 @@
             formatPrice(priceEntry = {}, locale = "zh-TW") {
                 const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
                 const currency = String(priceEntry?.currency || "").toUpperCase();
-                if (!amount) return String(locale || "").startsWith("en") ? "Free" : "免費";
+                if (!amount) return window.t('cart_price_free', 'Free');
                 if (!currency) {
                     try {
                         return new Intl.NumberFormat(String(locale || "").startsWith("en") ? "en-US" : "zh-TW").format(amount);
@@ -371,10 +371,7 @@
 
         function getPreferredRegion() {
             const storedRegion = normalizeRegionCode(
-                localStorage.getItem('vibe_user_region')
-                || localStorage.getItem('preferredRegion')
-                || localStorage.getItem('vibe_user_preferred_region')
-                || ''
+                localStorage.getItem('vibe_user_region') || ''
             );
             if (storedRegion) return storedRegion;
 
@@ -391,9 +388,7 @@
 
         function getPreferredDistributorId() {
             return String(
-                localStorage.getItem('vibe_user_preferred_distributor')
-                || localStorage.getItem('preferredDistributorId')
-                || ''
+                localStorage.getItem('vibe_user_preferred_distributor') || ''
             ).trim();
         }
 
@@ -402,19 +397,14 @@
             const normalizedDistributorId = String(distributorId || '').trim();
             if (normalizedRegion) {
                 localStorage.setItem('vibe_user_region', normalizedRegion);
-                localStorage.setItem('preferredRegion', normalizedRegion);
-                localStorage.setItem('vibe_user_preferred_region', normalizedRegion);
                 if (options.source) {
                     localStorage.setItem('vibe_user_region_source', String(options.source).trim().toLowerCase());
                 }
             }
             if (normalizedDistributorId) {
                 localStorage.setItem('vibe_user_preferred_distributor', normalizedDistributorId);
-                localStorage.setItem('preferredDistributorId', normalizedDistributorId);
             } else {
-                // Clear stale distributor preference when the user changes region.
                 localStorage.removeItem('vibe_user_preferred_distributor');
-                localStorage.removeItem('preferredDistributorId');
             }
         }
 
@@ -927,7 +917,7 @@
 
                 const data = response.data;
                 if (!data || !data.params) {
-                    throw new Error('無法取得物流參數');
+                    throw new Error(window.t('error_logistics_params', '無法取得物流參數'));
                 }
 
                 const params = data.params;
@@ -1075,7 +1065,7 @@
                         itemId: finalItemId
                     };
                 } else {
-                    throw new Error(result.data.message || '無效的代碼');
+                    throw new Error(result.data.message || window.t('error_invalid_code', '無效的代碼'));
                 }
             } catch (err) {
                 if (statusElement) {
@@ -1508,8 +1498,8 @@
                     });
                     setRoutingPreferenceLocal(checkoutRegion || getPreferredRegion() || '', resolvedDistributorId || getPreferredDistributorId() || '', { source: 'checkout' });
                     setRoutingStatus(resolvedDistributorId
-                        ? `已記住偏好經銷商：${resolvedDistributorId}`
-                        : '已記住地區偏好。', 'success');
+                        ? window.t('routing_remember_distributor', '已記住偏好經銷商：{id}').replace('{id}', resolvedDistributorId)
+                        : window.t('routing_remember_region', '已記住地區偏好。'), 'success');
                 } catch (error) {
                     console.warn('Failed to persist routing preference from checkout:', error);
                 }
@@ -1525,8 +1515,8 @@
                 : window.t('checkout_btn_ecpay', '🔒 正在連接綠界金流...');
             if (cartPrefillStatus) {
                 cartPrefillStatus.textContent = checkoutGateway === 'STRIPE'
-                    ? '正在建立 Stripe 付款頁面...'
-                    : '正在建立綠界付款單...';
+                    ? window.t('checkout_creating_stripe', '正在建立 Stripe 付款頁面...')
+                    : window.t('checkout_creating_ecpay', '正在建立綠界付款單...');
                 cartPrefillStatus.className = 'rounded-lg border px-4 py-3 mb-4 text-sm bg-blue-50 border-blue-200 text-blue-700';
                 cartPrefillStatus.classList.remove('hidden');
             }
@@ -1570,12 +1560,12 @@
                         }
                         submitECPayForm(resData.paymentParams, resData.apiUrl);
                     } else {
-                        throw new Error('無法取得交易參數。');
+                        throw new Error(window.t('error_transaction_params', '無法取得交易參數。'));
                     }
                 } else {
                     console.error('[Checkout] Unexpected payment response shape:', response);
                     const receivedKeys = Object.keys(resData || data || {}).join(', ') || 'none';
-                    throw new Error(`金流伺服器回傳格式不正確（收到欄位：${receivedKeys}）。`);
+                    throw new Error(window.t('error_payment_response_format', '金流伺服器回傳格式不正確（收到欄位：{fields}）。').replace('{fields}', receivedKeys));
                 }
 
             } catch (error) {

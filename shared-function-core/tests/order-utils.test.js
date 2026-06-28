@@ -12,6 +12,8 @@ import {
   buildShippingContact,
   buildShippingAddress,
   buildReferralLinkDocId,
+  collectPurchasedUnitIds,
+  findMatchingOrderItemIdForReferral,
   hasActiveOrderForCourse,
   itemContainsUnit,
 } from '../order-utils';
@@ -56,10 +58,6 @@ describe('isPhysicalMetadataLesson', () => {
     expect(isPhysicalMetadataLesson({ metadataType: 'product' })).toBe(true);
   });
 
-  it('returns true for legacy_product type', () => {
-    expect(isPhysicalMetadataLesson({ metadataType: 'legacy_product' })).toBe(true);
-  });
-
   it('returns false for course type', () => {
     expect(isPhysicalMetadataLesson({ metadataType: 'course' })).toBe(false);
   });
@@ -73,7 +71,7 @@ describe('getPhysicalUnitIdSet', () => {
   it('collects ids from physical lessons', () => {
     const lessons = [
       { id: 'prod-1', metadataType: 'product' },
-      { id: 'prod-2', metadataType: 'legacy_product' },
+      { id: 'prod-2', metadataType: 'product' },
       { id: 'course-1', metadataType: 'course' },
     ];
     const set = getPhysicalUnitIdSet(lessons);
@@ -220,6 +218,14 @@ describe('itemContainsUnit', () => {
     };
     expect(itemContainsUnit('course-1', lessons, 'unit-99', resolvers)).toBe(false);
   });
+
+  it('matches lesson courseId when item resolves to a lesson', () => {
+    const lesson = { id: 'course-2', courseId: 'course-2.html', courseUnits: [] };
+    const resolvers = {
+      resolveLessonForOrderItem: () => lesson,
+    };
+    expect(itemContainsUnit('legacy-course-2', [lesson], 'course-2.html', resolvers)).toBe(true);
+  });
 });
 
 describe('hasActiveOrderForCourse', () => {
@@ -239,5 +245,47 @@ describe('hasActiveOrderForCourse', () => {
       resolveLessonForOrderItem: () => null,
     };
     expect(hasActiveOrderForCourse({ 'other': {} }, lessons, 'unit-1', resolvers)).toBe(false);
+  });
+});
+
+describe('collectPurchasedUnitIds', () => {
+  it('expands lesson courseUnits through the canonical resolver', () => {
+    const lessons = [
+      { id: 'course-1', courseUnits: ['unit-1.html', 'unit-2.html'] },
+    ];
+    const resolvers = {
+      resolveLessonForOrderItem: (itemKey) => lessons.find(l => l.id === itemKey),
+      resolveCanonicalUnitId: (unitId) => unitId.replace(/\.html$/i, ''),
+    };
+    const result = collectPurchasedUnitIds({ 'course-1': {} }, lessons, resolvers);
+    expect(result.has('unit-1')).toBe(true);
+    expect(result.has('unit-2')).toBe(true);
+  });
+
+  it('falls back to the item key when no lesson resolves', () => {
+    const result = collectPurchasedUnitIds({ 'unit-3.html': {} }, [], {
+      resolveCanonicalUnitId: (unitId) => unitId.replace(/\.html$/i, ''),
+    });
+    expect(result.has('unit-3')).toBe(true);
+  });
+});
+
+describe('findMatchingOrderItemIdForReferral', () => {
+  it('matches a unit inside a resolved lesson', () => {
+    const lessons = [
+      { id: 'course-1', courseUnits: ['unit-1', 'unit-2.html'] },
+    ];
+    const resolvers = {
+      resolveLessonForOrderItem: (itemKey) => lessons.find(l => l.id === itemKey),
+    };
+    expect(findMatchingOrderItemIdForReferral({ 'course-1': {} }, 'unit-2.html', lessons, resolvers)).toBe('course-1');
+  });
+
+  it('matches the item key directly after normalizing .html', () => {
+    expect(findMatchingOrderItemIdForReferral({ 'unit-3.html': {} }, 'unit-3', [], {})).toBe('unit-3.html');
+  });
+
+  it('returns null for empty target', () => {
+    expect(findMatchingOrderItemIdForReferral({ 'unit-3.html': {} }, '', [], {})).toBeNull();
   });
 });

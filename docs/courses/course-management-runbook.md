@@ -33,7 +33,7 @@
 | `category` | 是 | Firestore `metadata_lessons` | 課程分類 canonical key，供 catalog、路由與學習路徑使用；建議使用 `common`、`car-starter`、`car-basic`、`car-advanced` |
 | `orderWeight` | 是 | Firestore `metadata_lessons` | 課程排序權重，作為 catalog 與列表排序依據 |
 | `course_units` | 是 | Firestore `metadata_lessons` | 外部課程單元檔案名稱清單，只表示課程結構 |
-| `metadataType` | 是 | Firestore `metadata_lessons` | `course` / `product`；為主型別欄位，`legacy_product` 僅保留相容讀取 |
+| `metadataType` | 是 | Firestore `metadata_lessons` | `course` / `product`；為主型別欄位。 |
 | `docId` | 否 | Firestore `metadata_lessons` | 商品型 metadata 才需要；新流程請以 `docId` / Document ID 為主 |
 | `isPhysical` | 否 | Firestore `metadata_lessons` | 相容欄位；一般由 `metadataType` 推導，`course=false`、`product=true` |
 | `hiddenFromCatalog` | 否 | Firestore `metadata_lessons` | 是否從前台列表隱藏 |

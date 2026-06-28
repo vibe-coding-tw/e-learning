@@ -16,6 +16,12 @@
 - **快取優化**：`serveCourse` 雙層快取（記憶體 Map + Firestore `content_cache` 共享快取）已完成部署，防止 GitHub API Rate Limit。
 - **安全防護**：課程 Token 綁定學員登入 UID 與 Client IP 機制已完成，防堵付費 Token 外洩。
 - **儀表板更新**：`dashboard.js` 串接 Firestore `onSnapshot` 實體長連接，作業狀態即時同步更新。
+- **Legacy 清理完成（2026-06-28）**：
+  - `EN_TITLE_OVERRIDES` 硬編碼 map 已移除（English title 改走 `metadata_lessons.titleEn`）。
+  - `adminTutorMode` 未加 scope 的舊 key 遷移邏輯已移除（只保留 `adminTutorMode:{uid}` scoped key）。
+  - `preferredDistributorId` 無前綴的舊 localStorage key 已移除（只保留 `vibe_user_preferred_distributor`）。
+  - Region localStorage key 已收斂為單一 `vibe_user_region`。
+  - `metadataType === "legacy_product"` 的 runtime 判斷已移除（production 已無 `legacy_product` 記錄，migration 確認 0 筆需轉換）。
 
 ### 仍保留的相容層
 - `mapLegacyMasterToCanonical()` 仍保留給舊網址 redirect 與明確的 legacy token scope。

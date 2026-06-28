@@ -139,49 +139,6 @@
             .trim();
     }
 
-    const EN_TITLE_OVERRIDES = {
-        "common-developer-identity": "Developer Identity",
-        "common-vscode-online": "VS Code Online",
-        "common-vscode-setup": "Development Environment (VS Code Setup)",
-        "common-agent-mode": "AI Agent Workflow",
-        "common-vibe-coding": "Vibe Coding Practice",
-        "common-web-agents": "Web-Based AI Agent Practice",
-        "common-github-classroom": "GitHub Classroom & Vibe Coding Practice",
-        "common-wifi-setup": "WiFi Configuration",
-        "common-motor-ramping": "Motor Ramping Control",
-        "car-starter-web-app": "Web App Fundamentals",
-        "car-starter-web-ble": "Web BLE Integration",
-        "car-starter-remote-control": "Remote Control Interface",
-        "car-starter-touch-events": "Touch Event Handling",
-        "car-starter-joystick-lab": "Joystick Lab",
-        "basic-01-master-environment": "Development Environment Setup",
-        "basic-02-master-ota-architecture": "OTA Update Architecture",
-        "basic-03-master-io-mapping": "IO Pin Mapping",
-        "basic-04-master-pwm-control": "PWM Motor Control",
-        "basic-05-master-ble-gatt": "BLE GATT Protocol",
-        "basic-06-master-http-web": "HTTP and Web Communication",
-        "basic-07-master-wifi-modes": "WiFi Modes and Web Server",
-        "basic-08-master-joystick-math": "Joystick Math Model",
-        "basic-09-master-multitasking": "Multitasking",
-        "basic-10-master-fsm": "Finite State Machines",
-        "adv-01-master-s3-cam": "ESP32-S3 Camera",
-        "adv-02-master-video": "Image Streaming",
-        "adv-03-master-ble-advanced": "Advanced BLE Communication",
-        "adv-04-master-sensors": "Sensor Integration",
-        "adv-05-master-cv": "Computer Vision Basics",
-        "adv-06-master-cv-advanced": "Advanced Computer Vision",
-        "adv-07-master-ui-framework": "UI Framework Design",
-        "adv-08-master-image-processing": "Image Processing Practice",
-        "adv-09-master-ai-recognition": "AI Recognition Applications",
-        "adv-10-master-diff-drive": "Differential Drive Control",
-        "adv-11-master-photoelectric": "Photoelectric Sensors",
-        "adv-12-master-pid": "PID Control",
-        "adv-13-master-robustness": "System Robustness",
-        "adv-14-master-debugging-art": "The Art of Debugging",
-        "adv-15-master-architecture": "System Architecture Design",
-        "spec-recommend-lite": "Computer Spec Recommendation (Basic)",
-        "spec-recommend-pro": "Computer Spec Recommendation (Advanced)"
-    };
 
     function normalizeCanonicalCourseKey(value = "") {
         const raw = String(value || "").trim().replace(/\.html$/i, "").replace(/^(?:tw|en)-/i, "").toLowerCase();
@@ -196,7 +153,7 @@
 
     function isPhysicalMetadataLesson(lesson = {}) {
         const metadataType = String(lesson?.metadataType || "").toLowerCase();
-        return metadataType === "product" || metadataType === "legacy_product";
+        return metadataType === "product";
     }
 
     function normalizeTrack(raw = "") {
@@ -323,7 +280,7 @@
         }
         const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
         const currency = String(priceEntry?.currency || "").toUpperCase();
-        if (!amount) return String(locale || "").startsWith("en") ? "Free" : "免費";
+        if (!amount) return window.t('cart_price_free', 'Free');
         if (!currency) {
             try {
                 return new Intl.NumberFormat(String(locale || "").startsWith("en") ? "en-US" : "zh-TW").format(amount);
@@ -527,7 +484,6 @@
             ""
         );
         if (!key) return "";
-        if (EN_TITLE_OVERRIDES[key]) return EN_TITLE_OVERRIDES[key];
         const rawTitle = String(lesson.title || "").trim();
         const englishInParens = rawTitle.match(/\(([^)]+)\)\s*$/);
         if (englishInParens && englishInParens[1]) return englishInParens[1].trim();

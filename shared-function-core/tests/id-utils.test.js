@@ -111,6 +111,11 @@ describe('unitIdsMatch', () => {
     expect(unitIdsMatch('lesson', 'lesson.html')).toBe(true);
   });
 
+  it('handles uppercase .HTML extension', () => {
+    expect(unitIdsMatch('lesson.HTML', 'lesson')).toBe(true);
+    expect(unitIdsMatch('lesson', 'lesson.HTML')).toBe(true);
+  });
+
   it('returns false for null/undefined inputs', () => {
     expect(unitIdsMatch(null, 'hello')).toBe(false);
     expect(unitIdsMatch('hello', undefined)).toBe(false);

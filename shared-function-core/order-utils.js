@@ -29,7 +29,7 @@ function normalizeLegacyId(value = '') {
 
 function isPhysicalMetadataLesson(lesson = {}) {
     const metadataType = normalizeText(lesson.metadataType || '').toLowerCase();
-    return metadataType === 'product' || metadataType === 'legacy_product';
+    return metadataType === 'product';
 }
 
 function getPhysicalUnitIdSet(lessons = []) {

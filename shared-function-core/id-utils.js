@@ -59,8 +59,8 @@ function buildI18nFilenameCandidates(candidateFileName, locale = "") {
 
 function unitIdsMatch(idA, idB) {
     if (!idA || !idB) return false;
-    const cleanA = idA.toString().replace('.html', '').toLowerCase();
-    const cleanB = idB.toString().replace('.html', '').toLowerCase();
+    const cleanA = normalizeLegacyId(idA);
+    const cleanB = normalizeLegacyId(idB);
     return cleanA === cleanB;
 }
 

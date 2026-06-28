@@ -119,7 +119,7 @@
 | `category` | string | 課程分類 canonical key；課程線建議使用 `common`、`car-starter`、`car-basic`、`car-advanced`。 |
 | `isPhysical` | boolean | 是否為實體商品；相容欄位，實務上由 `metadataType` 推導。 |
 | `orderWeight` | number | 排序權重。 |
-| `metadataType` | string | 元資料類型：`course` / `product`；主型別欄位，`legacy_product` 僅作相容。 |
+| `metadataType` | string | 元資料類型：`course` / `product`；主型別欄位。 |
 | `docId` | string | 商品型 metadata 的 canonical document ID。 |
 | `pricing` | map | 多地區定價主欄位。建議使用 `tw` / `en`，各值格式為 `{ amount, currency }`。 |
 | `priceByLocale` | map | 語系定價相容別名。僅供歷史資料或 migration 使用，不應作為新的定價依據。 |
@@ -186,7 +186,7 @@
 | `level` | string | 課程層級，例如 `starter`、`basic`、`advanced`。 |
 | `category` | string | 課程分類 canonical key，作為主分類與學習路徑對應鍵。 |
 | `orderWeight` | number | 課程排序權重，作為主檔排列與 catalog 順序依據。 |
-| `metadataType` | string | `course` / `product`；`legacy_product` 僅作相容。 |
+| `metadataType` | string | `course` / `product`；主型別欄位。 |
 | `hiddenFromCatalog` | boolean | 是否從前台列表隱藏。 |
 | `isDeprecated` | boolean | 是否為已廢止舊資料（保留對帳/歷史用途）。 |
 
@@ -240,7 +240,7 @@
 
 執行期 canonical identity 規則：
 - 課程型 metadata：優先使用 Firestore document ID（`id` / `docId`）
-- 商品型 metadata（`metadataType=product`，相容讀取時可接受 `legacy_product` / `isPhysical=true`）：優先使用 `docId` / document ID
+- 商品型 metadata（`metadataType=product` 或 `isPhysical=true`）：優先使用 `docId` / document ID
 - `courseId` 僅保留作為頁面入口 / 歷史相容欄位，不得再作為任何課程單元路由或授權的執行期主鍵；執行期唯一來源為 `courseUnits`
 - `category` 是課程分類的優先鍵；若缺席才 fallback 到舊資料的相容讀取邏輯
 - `contentRef` / 頁面路由仍可保留 `tw-*` 檔名；若後續檔名規則完全標準化，才考慮改由 docId 推導並移除 `contentRef`

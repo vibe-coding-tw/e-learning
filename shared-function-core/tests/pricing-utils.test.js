@@ -164,6 +164,12 @@ describe('resolveCartPrice', () => {
     expect(result.amount).toBe(100);
     expect(result.source).toBe('cart:legacy');
   });
+
+  it('normalizes explicit lowercase currency codes', () => {
+    const result = resolveCartPrice({ price: 250, price_currency: 'usd' });
+    expect(result.currency).toBe('USD');
+    expect(result.source).toBe('cart:snapshot');
+  });
 });
 
 describe('formatPrice', () => {
@@ -187,5 +193,11 @@ describe('formatPrice', () => {
 
   it('handles plain number input', () => {
     expect(formatPrice(0)).toBe('免費');
+  });
+
+  it('falls back to plain formatted amount when currency is unknown', () => {
+    const result = formatPrice({ amount: 1234, currency: 'XBT' }, 'en-US');
+    expect(result).toMatch(/XBT/);
+    expect(result).toMatch(/1,234/);
   });
 });

@@ -152,4 +152,18 @@ function main() {
   console.log('fingerprint complete');
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  buildNewRef,
+  dehashAssetPath,
+  findSource,
+  isLocalAssetRef,
+  makeFingerprintAsset,
+  processHtmlFile,
+  resolveAssetAbs,
+  stripQueryAndHash,
+  toPosix,
+};

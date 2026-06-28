@@ -421,7 +421,7 @@ This spec covers:
 - [x] Add `level` to `metadata_lessons`
 - [x] Add `entryUnitId` to `metadata_lessons`
 - [x] Add `contentRef` to `metadata_lessons`
-- [x] Normalize known non-canonical metadata records into explicit product types (`metadataType=product`, with `legacy_product` retained only for compatibility reads)
+- [x] Normalize known non-canonical metadata records into explicit product types (`metadataType=product`).
 - [x] Add `locale` to `users`
 - [x] Add `region` to `users`
 - [x] Add `region` to `orders`

@@ -133,7 +133,6 @@ function ensureCourseTopNavShell(file = '', metadataFamily = '') {
     if (topNav) return topNav;
 
     const activeLocale = getActiveCourseLocale();
-    const isEn = isEnLikeCourseLocale(activeLocale) || String(file || '').toLowerCase().startsWith('en-');
     const normalizedFile = normalizeLooseKey(file);
     const family = metadataFamily || getCourseFamilyForCoursePage(normalizedFile);
     const seemsCourseFile = /^(?:start-\d{2}-unit-|basic-\d{2}-unit-|(?:adv|advanced)-\d{2}-unit-|prepare-\d{2}-unit-|(?:tw|en|common|car-starter|car-basic|car-advanced)-)/i.test(normalizedFile);
@@ -189,8 +188,7 @@ function ensureCourseBreadcrumbShell(file = '', metadataFamily = '') {
     if (!path.startsWith('/courses/') && !seemsCourseFile && !family) return null;
 
     const activeLocale = getActiveCourseLocale();
-    const isEn = isEnLikeCourseLocale(activeLocale) || normalizedFile.startsWith('en-');
-    const overviewText = isEn ? 'Course Overview' : '課程總覽';
+    const overviewText = window.t('breadcrumb_overview');
 
     breadcrumb = document.createElement('div');
     breadcrumb.className = 'ms-breadcrumb';
@@ -215,10 +213,10 @@ function ensureCourseBreadcrumbShell(file = '', metadataFamily = '') {
 
     const bcCurrent = breadcrumb.querySelector('#bc-current');
     if (bcCurrent) {
-        if (family === 'starter') bcCurrent.textContent = isEn ? 'Course Overview' : '課程總覽';
-        else if (family === 'basic') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
-        else if (family === 'advanced') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
-        else if (family === 'prepare') bcCurrent.textContent = isEn ? 'Module Overview' : '課程總覽';
+        if (family === 'starter') bcCurrent.textContent = window.t('breadcrumb_overview');
+        else if (family === 'basic') bcCurrent.textContent = window.t('breadcrumb_module_overview');
+        else if (family === 'advanced') bcCurrent.textContent = window.t('breadcrumb_module_overview');
+        else if (family === 'prepare') bcCurrent.textContent = window.t('breadcrumb_module_overview');
     }
 
     return breadcrumb;
@@ -922,7 +920,7 @@ function normalizeCourseBreadcrumbs() {
 
         let bcModuleLink = document.getElementById('bc-module-link');
         if (!bcModuleLink) {
-            breadcrumb.innerHTML = `<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">${isEn ? 'Course Overview' : '課程總覽'}</span>`;
+            breadcrumb.innerHTML = `<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">${window.t('breadcrumb_overview')}</span>`;
             bcModuleLink = document.getElementById('bc-module-link');
         }
 
@@ -1029,7 +1027,7 @@ function upgradeLegacyUnitToMsLayout() {
         const legacySections = legacyMain ? Array.from(legacyMain.querySelectorAll('.module-section')) : [];
         if (!legacyMain || legacySections.length === 0) return;
 
-        const pageTitle = (document.querySelector('header h1')?.textContent || document.title || '課程單元').trim();
+        const pageTitle = (document.querySelector('header h1')?.textContent || document.title || window.t('page_title_fallback', '課程單元')).trim();
         const pageSubtitle = (document.querySelector('header p')?.textContent || '').trim();
         const learningPathKey = getLearningPathCategoryKeyForFamily(family);
         const familyLabel = getLearningPathLabelFromSettings(family, isEn ? 'en' : 'zh-TW');
@@ -1050,14 +1048,14 @@ function upgradeLegacyUnitToMsLayout() {
         sidebar.className = 'ms-sidebar';
         sidebar.innerHTML = `
             <div class="ms-sidebar-header">
-                <div class="module-label">單元</div>
+                <div class="module-label">${window.t('sidebar_unit_label')}</div>
                 <div class="module-title"></div>
-                <div class="meta"><i class="far fa-clock"></i> 約 45 分鐘 · ${legacySections.length + 1} 頁</div>
+                <div class="meta"><i class="far fa-clock"></i> ${window.t('sidebar_meta_format').replace('{minutes}', '45').replace('{pages}', legacySections.length + 1)}</div>
             </div>
             <nav class="ms-unit-list" id="sidebar-nav"></nav>
             <div class="sidebar-progress">
                 <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
-                <div class="progress-text" id="progress-text">0 / ${legacySections.length} 已完成</div>
+                <div class="progress-text" id="progress-text">${window.t('progress_format').replace('{done}', '0').replace('{total}', legacySections.length)}</div>
             </div>
         `;
         sidebar.querySelector('.module-title').textContent = pageTitle;
@@ -1068,7 +1066,7 @@ function upgradeLegacyUnitToMsLayout() {
             <div class="ms-breadcrumb">
                 <a href="#">Vibe Coding</a><span>›</span>
                 <a href="${courseHref}">${familyLabel}</a><span>›</span>
-                <span id="bc-current">${isEn ? 'Course Overview' : '課程總覽'}</span>
+                <span id="bc-current">${window.t('breadcrumb_overview')}</span>
             </div>
         `;
 
@@ -1079,10 +1077,10 @@ function upgradeLegacyUnitToMsLayout() {
             <div class="unit-content">
                 <h1>${pageTitle}</h1>
                 ${pageSubtitle ? `<p>${pageSubtitle}</p>` : ''}
-                <h2>${isEn ? 'Unit Contents' : '本單元內容'}</h2>
+                <h2>${window.t('heading_unit_contents')}</h2>
                 <div class="unit-card-list" id="index-unit-list"></div>
                 <div style="margin-top:32px;">
-                    <button class="ms-btn" onclick="goToUnit(1)">${isEn ? 'Start Unit' : '開始單元'} &nbsp;›</button>
+                    <button class="ms-btn" onclick="goToUnit(1)">${window.t('btn_start_unit')}</button>
                 </div>
             </div>
         `;
@@ -1091,7 +1089,7 @@ function upgradeLegacyUnitToMsLayout() {
         const unitTitles = [];
         legacySections.forEach((section, idx) => {
             const pageNo = idx + 1;
-            const title = (section.querySelector('.section-header-left h2')?.textContent || section.querySelector('h2')?.textContent || `單元 ${pageNo}`).trim();
+            const title = (section.querySelector('.section-header-left h2')?.textContent || section.querySelector('h2')?.textContent || `${window.t('label_unit')} ${pageNo}`).trim();
             unitTitles.push(title);
             const page = document.createElement('div');
             page.className = 'ms-unit-page';
@@ -1112,9 +1110,9 @@ function upgradeLegacyUnitToMsLayout() {
             const prevTarget = pageNo === 1 ? 0 : pageNo - 1;
             const nextTarget = pageNo === legacySections.length ? 0 : pageNo + 1;
             nav.innerHTML = `
-                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;上一頁</button>
+                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;${window.t('nav_prev_page')}</button>
                 <span class="unit-page-indicator">${pageNo} / ${legacySections.length}</span>
-                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? '返回總覽' : '下一頁'} &nbsp;›</button>
+                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? window.t('nav_back_overview') : window.t('nav_next_page')} &nbsp;›</button>
             `;
 
             page.appendChild(contentWrap);
@@ -1180,7 +1178,7 @@ function upgradeLegacyUnitToMsLayout() {
             });
 
             const bc = document.getElementById('bc-current');
-            if (bc) bc.textContent = unitNo === 0 ? (isEn ? 'Course Overview' : '課程總覽') : (unitTitles[unitNo - 1] || (isEn ? 'Unit' : '單元'));
+            if (bc) bc.textContent = unitNo === 0 ? window.t('breadcrumb_overview') : (unitTitles[unitNo - 1] || window.t('label_unit'));
             refreshStartUnitUiState();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -1191,7 +1189,7 @@ function upgradeLegacyUnitToMsLayout() {
             const fill = document.getElementById('progress-fill');
             const txt = document.getElementById('progress-text');
             if (fill) fill.style.width = `${Math.round((doneCount / Math.max(total, 1)) * 100)}%`;
-            if (txt) txt.textContent = `${doneCount} / ${total} 已完成`;
+            if (txt) txt.textContent = window.t('progress_format').replace('{done}', doneCount).replace('{total}', total);
         }
 
         window.goToUnit(unitTitles.length > 0 ? 1 : 0);
@@ -2334,7 +2332,7 @@ async function initFirebaseFeatures() {
         window.firebaseSubmitAssignment = async (data) => {
              const user = auth.currentUser;
              if (!user) {
-                 alert("請先登入 (Please Login First)");
+                 alert(window.t('alert_login_first', '請先登入 (Please Login First)'));
                  return { success: false, error: "Not Logged In" };
              }
              
@@ -2343,7 +2341,7 @@ async function initFirebaseFeatures() {
                  return result.data;
              } catch (error) {
                  console.error("Submission Error:", error);
-                 alert("提交失敗: " + error.message);
+                 alert(window.t('alert_submit_failed_prefix', '提交失敗：') + error.message);
                  throw error;
              }
         };
@@ -2442,13 +2440,13 @@ async function initFirebaseFeatures() {
                     blockerType: type,
                     blockerNote: note
                 });
-                alert(isEnLikeCourseLocale(getActiveCourseLocale()) ? "👍 Blocker reported. Your teacher will be notified!" : "👍 卡點已回報，導師將會收到通知！");
+                alert(window.t('alert_blocker_reported'));
                 location.reload();
             } catch (e) {
                 console.error(e);
-                alert(`${isEnLikeCourseLocale(getActiveCourseLocale()) ? 'Submission failed: ' : '提交失敗：'}${e.message}`);
+                alert(window.t('alert_submission_failed') + e.message);
                 btn.disabled = false;
-                btn.innerText = isEnLikeCourseLocale(getActiveCourseLocale()) ? "🚀 Submit blocker" : "🚀 提交卡點";
+                btn.innerText = window.t('btn_submit_blocker');
             }
         };
 
@@ -2501,13 +2499,13 @@ async function initFirebaseFeatures() {
                     assignmentId: unitId,
                     attemptSummary: summary
                 });
-                alert(isEnLikeCourseLocale(getActiveCourseLocale()) ? "📝 Attempt record submitted!" : "📝 嘗試紀錄提交成功！");
+                alert(window.t('alert_attempt_recorded'));
                 location.reload();
             } catch (e) {
                 console.error(e);
-                alert(`${isEnLikeCourseLocale(getActiveCourseLocale()) ? 'Submission failed: ' : '提交失敗：'}${e.message}`);
+                alert(window.t('alert_submission_failed') + e.message);
                 btn.disabled = false;
-                btn.innerText = isEnLikeCourseLocale(getActiveCourseLocale()) ? "Submit attempt summary" : "提交嘗試紀錄";
+                btn.innerText = window.t('btn_submit_attempt');
             }
         };
 
@@ -2672,7 +2670,7 @@ window.submitBindTutorAction = async function () {
     const title = document.getElementById('link-assignment-title').value;
 
     btn.disabled = true;
-    btn.innerHTML = '正在驗證代碼...';
+    btn.innerHTML = window.t('btn_verifying_code', '正在驗證代碼...');
 
     try {
         const bindTutorByPromotionCode = httpsCallable(getFunctions(undefined, 'asia-east1'), 'bindTutorByPromotionCode');
@@ -2683,15 +2681,15 @@ window.submitBindTutorAction = async function () {
             // 綁定導師成功後，直接進入原生 API 作業倉庫流程
             openSubmissionModal(assignmentId, title, { skipTutorPrompt: true });
         } else {
-            alert("❌ 綁定失敗：" + (result.data.message || "未知錯誤"));
+            alert(window.t('alert_bind_failed', '❌ 綁定失敗：') + (result.data.message || window.t('unknown_error', '未知錯誤')));
         }
     } catch (e) {
         console.error("Binding error:", e);
-        alert("❌ 錯誤：" + e.message);
+        alert(window.t('alert_error_prefix', '❌ 錯誤：') + e.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = `
-            <span>確認並前往作業</span>
+            <span>${window.t('tutor_confirm_btn', '確認並前往作業')}</span>
             <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
         `;
     }
@@ -2723,7 +2721,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
 
             if (!resolvedCourseId) {
                 console.warn('[CourseShared] resolveAssignmentAccess returned no usable courseId:', assignmentAccess);
-                alert("已登入，但系統暫時找不到此單元對應的課程資料。請重新整理後再試；若仍無法進入，表示後端課程 metadata 缺少 courseUnits 對應。");
+                alert(window.t('alert_no_course_data', '已登入，但系統暫時找不到此單元對應的課程資料。請重新整理後再試；若仍無法進入，表示後端課程 metadata 缺少 courseUnits 對應。'));
                 return;
             }
 
@@ -2749,7 +2747,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
 
             // 未通過導師確認流程，直接執行原生 API 流程
             if (!isAuthorized) {
-                alert("尚未取得此單元之付款或導師指派授權。");
+                alert(window.t('alert_no_permission', '尚未取得此單元之付款或導師指派授權。'));
                 return;
             }
 
@@ -2771,7 +2769,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
             alert(window.t ? window.t("alert_login_required", "請先登入後再前往 GitHub 作業。請按右上角登入後再試一次。") : "請先登入後再前往 GitHub 作業。請按右上角登入後再試一次。");
             return;
         }
-        alert("暫時無法確認您的作業入口，請稍後再試。");
+        alert(window.t('alert_no_entry', '暫時無法確認您的作業入口，請稍後再試。'));
         return;
     }
 };
@@ -2782,24 +2780,7 @@ function isAdminTutorModeActive() {
         const uid = sharedAuth?.currentUser?.uid || window.__vibeCurrentAuthUser?.uid;
         if (!uid) return false;
         const scopedKey = `adminTutorMode:${uid}`;
-        const scopedValue = localStorage.getItem(scopedKey);
-        if (scopedValue !== null) return scopedValue === 'true';
-        const legacyValue = localStorage.getItem('adminTutorMode');
-        if (legacyValue !== null) {
-            localStorage.setItem(scopedKey, legacyValue);
-            localStorage.removeItem('adminTutorMode');
-            return legacyValue === 'true';
-        }
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i) || '';
-            if (!key.startsWith('adminTutorMode:')) continue;
-            const value = localStorage.getItem(key);
-            if (value === 'true') {
-                localStorage.setItem(scopedKey, 'true');
-                return true;
-            }
-        }
-        return false;
+        return localStorage.getItem(scopedKey) === 'true';
     } catch (_) {
         return false;
     }
@@ -2811,9 +2792,9 @@ function buildSubmitFailureMessage(rawMessage = '', submitUrl = '') {
     const maybeOrgInviteIssue =
         /付款授權|payment|repository access issue|no longer have access|no access|invitation|組織邀請|organization/i.test(message);
     if (isAssignmentSubmission && maybeOrgInviteIssue) {
-        return `繳交失敗：${message || '尚未完成授權'}\n\n請先完成以下步驟後再提交：\n1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n2. 接受待處理的作業 Repository 邀請 (Collaborator Invitation)\n3. 回到本頁重新提交`;
+        return window.t('submit_failed_org_invite', '繳交失敗：{msg}\n\n請先完成以下步驟後再提交：\n1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n2. 接受待處理的作業 Repository 邀請 (Collaborator Invitation)\n3. 回到本頁重新提交').replace('{msg}', message || window.t('unknown_error', '尚未完成授權'));
     }
-    return `繳交失敗: ${message || 'Unknown error'}`;
+    return window.t('submit_failed_prefix', '繳交失敗：') + (message || 'Unknown error');
 }
 
 window.closeSubmissionModal = function () { return; };
@@ -2828,7 +2809,7 @@ window.submitAssignmentAction = async function () {
     const note = document.getElementById('sub-note').value;
 
     if (!url) {
-        alert("請輸入作業連結！");
+        alert(window.t('alert_enter_link', '請輸入作業連結！'));
         return;
     }
 
@@ -2839,7 +2820,7 @@ window.submitAssignmentAction = async function () {
     const unitId = fileName;
 
     btn.disabled = true;
-    btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> 提交中...`;
+    btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> ${window.t('btn_submitting', '提交中...')}`;
 
     try {
         if (typeof window.firebaseSubmitAssignment !== 'function') {
@@ -2856,7 +2837,7 @@ window.submitAssignmentAction = async function () {
         });
 
         if (result.success) {
-            alert("作業繳交成功！老師將會收到通知。");
+            alert(window.t('alert_submit_success', '作業繳交成功！老師將會收到通知。'));
             closeSubmissionModal();
         } else {
             alert(buildSubmitFailureMessage(result.message, url));
@@ -3184,20 +3165,14 @@ function cleanUpPageNoise() {
 function normalizeStartButtonText() {
     try {
         const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
-        const activeLocale = getActiveCourseLocale();
-        const isEn = isEnLikeCourseLocale(activeLocale) || file.startsWith('en-');
 
         const buttons = document.querySelectorAll('button');
         buttons.forEach(btn => {
             const onclickAttr = btn.getAttribute('onclick') || '';
             // Only convert the start button that goes to unit 1, not the back buttons that return to unit 1.
             if (onclickAttr.includes('goToUnit(1)') && !btn.classList.contains('nav-btn-prev')) {
-                if (isEn) {
-                    btn.innerHTML = 'Start Unit &nbsp;›';
-                } else {
-                    btn.innerHTML = '開始單元 &nbsp;›';
+                    btn.innerHTML = window.t('btn_start_unit');
                 }
-            }
         });
     } catch (e) {
         console.warn('[CourseShared] normalizeStartButtonText failed:', e);
@@ -3419,7 +3394,7 @@ window.executeNativeCreation = async function(githubUsername) {
                 window.open(result.data.repositoryUrl, '_blank');
             }, 1500);
         } else {
-            throw new Error("無法取得作業 Repository 連結。");
+            throw new Error(window.t('error_no_repo_link', '無法取得作業 Repository 連結。'));
         }
     } catch (err) {
         console.error("Repository creation failed:", err);

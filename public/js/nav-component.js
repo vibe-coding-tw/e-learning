@@ -153,7 +153,7 @@ function isZhLikeLocale(locale = "") {
 
 function isPhysicalMetadataLesson(lesson = {}) {
     const metadataType = String(lesson?.metadataType || "").toLowerCase();
-    return metadataType === "product" || metadataType === "legacy_product";
+    return metadataType === "product";
 }
 
 async function ensureContentRuntimeConfig() {

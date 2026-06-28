@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>課程管理 — Vibe Coding Admin</title>
   <meta name="description" content="Vibe Coding 管理後台：課程新增、修改、停用與價格表管理" />
-  <script src="./js/i18n-helper.d565bb57236b.js"></script>
+  <script src="./js/i18n-helper.a2df40443728.js"></script>
   <script>
     (function() {
       const w = console.warn;
@@ -650,61 +650,61 @@
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col" data-i18n-doc-title="cm_doc_title">
   <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-  <script type="module" src="./js/nav-component.3eedb220233a.js"></script>
+  <script type="module" src="./js/nav-component.b14f210da6d7.js"></script>
   <div id="loading-overlay">
     <div class="overlay-box">
       <div class="spinner"></div>
-      <div style="font-weight:900;font-size:18px;margin-bottom:6px;">驗證中...</div>
-      <div style="color:#94a3b8;font-size:14px;line-height:1.7;">正在檢查 Admin 權限與載入課程資料。</div>
+      <div style="font-weight:900;font-size:18px;margin-bottom:6px;" data-i18n="cm_loading_title">驗證中...</div>
+      <div style="color:#94a3b8;font-size:14px;line-height:1.7;" data-i18n="cm_loading_desc">正在檢查 Admin 權限與載入課程資料。</div>
     </div>
   </div>
 
   <div id="auth-error">
     <div class="overlay-box">
-      <div style="font-size:22px;font-weight:900;margin-bottom:8px;">存取被拒</div>
-      <div style="color:#cbd5e1;font-size:14px;line-height:1.8;margin-bottom:18px;">此頁面僅限 Admin 帳號使用。</div>
+      <div style="font-size:22px;font-weight:900;margin-bottom:8px;" data-i18n="cm_auth_denied_title">存取被拒</div>
+      <div style="color:#cbd5e1;font-size:14px;line-height:1.8;margin-bottom:18px;" data-i18n="cm_auth_denied_msg">此頁面僅限 Admin 帳號使用。</div>
       <div class="auth-meta">
-        <div><strong>目前登入帳號</strong></div>
+        <div><strong data-i18n="cm_current_account">目前登入帳號</strong></div>
         <div>Email: <span id="auth-email">—</span></div>
         <div>UID:</div>
         <code id="auth-uid">—</code>
         <div>Firestore role: <span id="auth-role">—</span></div>
-        <div class="muted">若你確定自己是 admin，請確認 `users/{uid}.role` 是否已設為 `admin`。</div>
+        <div class="muted" data-i18n="cm_auth_denied_hint">若你確定自己是 admin，請確認 `users/{uid}.role` 是否已設為 `admin`。</div>
       </div>
-      <a class="btn btn-dark" href="dashboard.html"><i class="fa-solid fa-arrow-left"></i> 返回 Dashboard</a>
+      <a class="btn btn-dark" href="dashboard.html"><i class="fa-solid fa-arrow-left"></i> <span data-i18n="cm_back_dashboard">返回 Dashboard</span></a>
     </div>
   </div>
 
     <div id="app" style="display:none;">
       <div class="wrap">
       <div class="toolbar">
-        <input id="search-input" class="search" type="search" placeholder="搜尋課程名稱、docId、category..." />
+        <input id="search-input" class="search" type="search" data-i18n-placeholder="cm_search_placeholder" placeholder="搜尋課程名稱、docId、category..." />
         <div class="pill-group">
-          <button class="pill active" data-filter="all" onclick="window.setCourseFilter('all')">全部</button>
-          <button class="pill" data-filter="active" onclick="window.setCourseFilter('active')">啟用</button>
-          <button class="pill" data-filter="hidden" onclick="window.setCourseFilter('hidden')">已隱藏</button>
-          <button class="pill" data-filter="deprecated" onclick="window.setCourseFilter('deprecated')">已停用</button>
+          <button class="pill active" data-filter="all" onclick="window.setCourseFilter('all')" data-i18n="cm_filter_all">全部</button>
+          <button class="pill" data-filter="active" onclick="window.setCourseFilter('active')" data-i18n="cm_filter_active">啟用</button>
+          <button class="pill" data-filter="hidden" onclick="window.setCourseFilter('hidden')" data-i18n="cm_filter_hidden">已隱藏</button>
+          <button class="pill" data-filter="deprecated" onclick="window.setCourseFilter('deprecated')" data-i18n="cm_filter_deprecated">已停用</button>
         </div>
-        <button class="btn btn-ghost" onclick="window.createBlankLesson()"><i class="fa-solid fa-plus"></i> 新增課程</button>
+        <button class="btn btn-ghost" onclick="window.createBlankLesson()"><i class="fa-solid fa-plus"></i> <span data-i18n="cm_btn_add_course">新增課程</span></button>
       </div>
 
       <div class="grid grid-cols-4 gap-4 mb-6">
         <div class="filter-card active rounded-xl border border-slate-200 bg-white p-4 shadow-sm cursor-pointer transition hover:shadow-md" data-filter="all" onclick="window.setCourseFilter('all')">
-          <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">全部課程</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400" data-i18n="cm_stat_all">全部課程</div>
           <div id="stat-total" class="mt-1 text-2xl font-black text-slate-900">0</div>
         </div>
         <div class="filter-card rounded-xl border border-slate-200 bg-white p-4 shadow-sm cursor-pointer transition hover:shadow-md" data-filter="active" onclick="window.setCourseFilter('active')">
-          <div class="text-[11px] font-bold uppercase tracking-widest text-emerald-500">啟用中</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-emerald-500" data-i18n="cm_stat_active">啟用中</div>
           <div id="stat-active" class="mt-1 text-2xl font-black text-emerald-600">0</div>
         </div>
         <div class="filter-card rounded-xl border border-slate-200 bg-white p-4 shadow-sm cursor-pointer transition hover:shadow-md" data-filter="hidden" onclick="window.setCourseFilter('hidden')">
-          <div class="text-[11px] font-bold uppercase tracking-widest text-orange-500">已隱藏</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-orange-500" data-i18n="cm_stat_hidden">已隱藏</div>
           <div id="stat-hidden" class="mt-1 text-2xl font-black text-orange-600">0</div>
         </div>
         <div class="filter-card rounded-xl border border-slate-200 bg-white p-4 shadow-sm cursor-pointer transition hover:shadow-md" data-filter="deprecated" onclick="window.setCourseFilter('deprecated')">
-          <div class="text-[11px] font-bold uppercase tracking-widest text-red-500">已停用</div>
+          <div class="text-[11px] font-bold uppercase tracking-widest text-red-500" data-i18n="cm_stat_deprecated">已停用</div>
           <div id="stat-deprecated" class="mt-1 text-2xl font-black text-red-600">0</div>
         </div>
       </div>
@@ -712,11 +712,11 @@
       <div class="grid">
         <div class="list-card">
           <div class="list-title">
-            <h2>課程清單</h2>
+            <h2 data-i18n="cm_course_list_title">課程清單</h2>
             <span id="lesson-count">0 items</span>
           </div>
           <div id="course-list" class="course-list">
-            <div class="empty-state">載入中...</div>
+            <div class="empty-state" data-i18n="cm_loading">載入中...</div>
           </div>
         </div>
 
@@ -724,10 +724,10 @@
           <div class="modal-wrap">
             <div class="modal-chrome">
             <div>
-              <div class="title" id="modal-title">課程編輯</div>
-              <div class="subtitle" id="modal-subtitle">點選清單中的課程後，在對話框中維護內容。</div>
+              <div class="title" id="modal-title" data-i18n="cm_modal_title">課程編輯</div>
+              <div class="subtitle" id="modal-subtitle" data-i18n="cm_modal_subtitle">點選清單中的課程後，在對話框中維護內容。</div>
             </div>
-            <button class="modal-close" onclick="window.closeLessonModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
+            <button class="modal-close" onclick="window.closeLessonModal()"><i class="fa-solid fa-xmark"></i> <span data-i18n="cm_modal_close">關閉</span></button>
           </div>
 
           <div class="modal-body-scroll">
@@ -735,15 +735,15 @@
             <div class="editor-card">
               <div class="card-title">
                 <div>
-                  <h2>課程維護</h2>
-                  <span>修改 `metadata_lessons` 的 canonical 欄位與內容路徑</span>
+                  <h2 data-i18n="cm_course_maint_title">課程維護</h2>
+                  <span data-i18n="cm_course_maint_desc">修改 `metadata_lessons` 的 canonical 欄位與內容路徑</span>
                 </div>
-                <div id="lesson-status" style="color:var(--muted);font-size:12px;">尚未選擇課程</div>
+                <div id="lesson-status" style="color:var(--muted);font-size:12px;" data-i18n="cm_no_course_selected">尚未選擇課程</div>
               </div>
 
               <div class="editor-grid">
                 <div class="field full">
-                  <label>可見性 / 狀態</label>
+                  <label data-i18n="cm_field_visibility">可見性 / 狀態</label>
                   <div class="switch-row">
                     <label class="switch"><input id="lesson-hidden" type="checkbox" /> hiddenFromCatalog</label>
                     <label class="switch"><input id="lesson-deprecated" type="checkbox" /> isDeprecated</label>
@@ -751,16 +751,16 @@
                 </div>
 
                 <div class="field full" style="display: none;">
-                  <label>title (課程名稱)</label>
-                  <input id="lesson-title" oninput="window.updateLocaleField('zh-TW', 'title', this.value)" placeholder="例如：Web App 基礎開發" />
+                  <label data-i18n="cm_field_title">title (課程名稱)</label>
+                  <input id="lesson-title" oninput="window.updateLocaleField('zh-TW', 'title', this.value)" data-i18n-placeholder="cm_field_title_ph" placeholder="例如：Web App 基礎開發" />
                 </div>
                 <div class="field full" style="display: none;">
-                  <label>summary (課程簡介)</label>
-                  <textarea id="lesson-summary" oninput="window.updateLocaleField('zh-TW', 'summary', this.value)" placeholder="例如：本課程介紹 Web App 開發基礎。"></textarea>
+                  <label data-i18n="cm_field_summary">summary (課程簡介)</label>
+                  <textarea id="lesson-summary" oninput="window.updateLocaleField('zh-TW', 'summary', this.value)" data-i18n-placeholder="cm_field_summary_ph" placeholder="例如：本課程介紹 Web App 開發基礎。"></textarea>
                 </div>
                 <div class="field full" style="display: none;">
-                  <label>description (詳細描述)</label>
-                  <textarea id="lesson-description" oninput="window.updateLocaleField('zh-TW', 'description', this.value)" placeholder="例如：詳細的課程大綱與學習目標。"></textarea>
+                  <label data-i18n="cm_field_description">description (詳細描述)</label>
+                  <textarea id="lesson-description" oninput="window.updateLocaleField('zh-TW', 'description', this.value)" data-i18n-placeholder="cm_field_desc_ph" placeholder="例如：詳細的課程大綱與學習目標。"></textarea>
                 </div>
 
                 <div class="full" style="margin-top: 14px; margin-bottom: 14px;">
@@ -768,40 +768,40 @@
                 </div>
 
                 <div class="field full">
-                  <label>cardImageUrl / 卡片圖片</label>
+                  <label data-i18n="cm_field_card_image">cardImageUrl / 卡片圖片</label>
                   <input id="lesson-card-image" placeholder="https://... 或 assets/..." />
-                  <div class="hint">前台卡片顯示用。優先順序：cardImageUrl → imageUrl → thumbnailUrl → bannerUrl</div>
+                  <div class="hint" data-i18n="cm_field_card_image_hint">前台卡片顯示用。優先順序：cardImageUrl → imageUrl → thumbnailUrl → bannerUrl</div>
                 </div>
                 <div class="field">
-                  <label>category</label>
+                  <label data-i18n="cm_field_category">category</label>
                   <select id="lesson-category"></select>
                   <div class="hint" id="lesson-category-hint">來源：`metadata_settings.learning_paths.categoryLabels`</div>
                 </div>
                 <div class="field">
-                  <label>level</label>
-                  <input id="lesson-level" placeholder="starter / basic / advanced" />
+                  <label data-i18n="cm_field_level">level</label>
+                  <input id="lesson-level" data-i18n-placeholder="cm_field_level_ph" placeholder="starter / basic / advanced" />
                 </div>
                 <div class="field">
-                  <label>orderWeight</label>
+                  <label data-i18n="cm_field_order_weight">orderWeight</label>
                   <input id="lesson-order-weight" type="number" step="1" placeholder="0" />
                 </div>
                 <div class="field">
-                  <label>metadataType</label>
+                  <label data-i18n="cm_field_metadata_type">metadataType</label>
                   <select id="lesson-metadata-type">
                     <option value="course">course - 線上課程</option>
                     <option value="product">product - 實體商品</option>
                   </select>
-                  <div class="hint">`isPhysical` 會依 `metadataType` 自動推導：`course = false`，`product = true`。舊的 `legacy_product` 會在載入時自動視為 `product`。</div>
+                  <div class="hint" data-i18n="cm_field_metadata_type_hint">`isPhysical` 會依 `metadataType` 自動推導：`course = false`，`product = true`。</div>
                 </div>
                 <div class="field readonly" style="display:none;">
-                  <label>Document ID / docId</label>
-                  <input id="doc-id" placeholder="自動產生 UUID-like ID" readonly />
-                  <div class="hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
+                  <label data-i18n="cm_field_doc_id">Document ID / docId</label>
+                  <input id="doc-id" data-i18n-placeholder="cm_field_doc_id_ph" placeholder="自動產生 UUID-like ID" readonly />
+                  <div class="hint" data-i18n="cm_field_doc_id_hint">Document ID 建立後不再直接修改；若要更換 ID，請另存成新課程。</div>
                 </div>
 	                <div class="field" style="display:none;">
-	                  <label>courseKey</label>
-	                  <input id="lesson-course-key" placeholder="car-starter-web-app" />
-	                  <div class="hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
+	                  <label data-i18n="cm_field_course_key">courseKey</label>
+	                  <input id="lesson-course-key" data-i18n-placeholder="cm_field_course_key_ph" placeholder="car-starter-web-app" />
+	                  <div class="hint" data-i18n="cm_field_course_key_hint">locale-neutral 主鍵，不要再綁語系前綴。</div>
 	                </div>
 	              </div>
 	            </div>
@@ -811,19 +811,19 @@
             <div class="price-card">
               <div class="card-title">
                 <div>
-                  <h2>單元維護</h2>
-                  <span>只維護課程單元清單，不會覆寫單元內 sidebar 或 `window.UNITS`。</span>
+                  <h2 data-i18n="cm_unit_maint_title">單元維護</h2>
+                  <span data-i18n="cm_unit_maint_desc">只維護課程單元清單，不會覆寫單元內 sidebar 或 `window.UNITS`。</span>
                 </div>
-                <div style="color:var(--muted);font-size:12px;" id="course-unit-status">尚未載入</div>
+                <div style="color:var(--muted);font-size:12px;" id="course-unit-status" data-i18n="cm_not_loaded">尚未載入</div>
               </div>
               <div class="pricebook-list" style="margin-top:14px;">
                 <table class="unit-list" style="width:100%;">
                   <thead class="unit-table-head">
                     <tr>
-                      <th style="text-align:left;">UNIT</th>
-                      <th style="text-align:left;">Display Title</th>
-                      <th style="text-align:left;">Status</th>
-                      <th style="text-align:right;">Action</th>
+                      <th style="text-align:left;" data-i18n="cm_unit_header_unit">UNIT</th>
+                      <th style="text-align:left;" data-i18n="cm_unit_header_title">Display Title</th>
+                      <th style="text-align:left;" data-i18n="cm_unit_header_status">Status</th>
+                      <th style="text-align:right;" data-i18n="cm_unit_header_action">Action</th>
                     </tr>
                   </thead>
                   <tbody id="course-unit-list" class="unit-list">
@@ -838,26 +838,26 @@
             <div class="section-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="course-unit-modal-title">
               <div class="section-modal-head">
                 <div>
-                  <div class="head-title" id="course-unit-modal-title">單元維護</div>
-                  <div class="head-subtitle">在這裡編輯單元清單與顯示標題。</div>
+                  <div class="head-title" id="course-unit-modal-title" data-i18n="cm_unit_modal_title">單元維護</div>
+                  <div class="head-subtitle" data-i18n="cm_unit_modal_subtitle">在這裡編輯單元清單與顯示標題。</div>
                 </div>
-                <button class="modal-close" onclick="window.closeCourseUnitModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
+                <button class="modal-close" onclick="window.closeCourseUnitModal()"><i class="fa-solid fa-xmark"></i> <span data-i18n="cm_modal_close">關閉</span></button>
               </div>
               <div class="section-modal-body">
                 <div class="editor-grid" style="margin-bottom: 8px;">
                   <div class="field">
-                    <label>單元檔名 / unitId</label>
-                    <input id="course-unit-input" type="text" placeholder="例如 start-01-unit-html5-basics.html" />
+                    <label data-i18n="cm_unit_field_filename">單元檔名 / unitId</label>
+                    <input id="course-unit-input" type="text" data-i18n-placeholder="cm_unit_field_filename_ph" placeholder="例如 start-01-unit-html5-basics.html" />
                   </div>
                   <div class="field">
-                    <label>單元顯示標題</label>
-                    <input id="course-unit-title-input" type="text" placeholder="例如 HTML5 Basics" />
+                    <label data-i18n="cm_unit_field_display_title">單元顯示標題</label>
+                    <input id="course-unit-title-input" type="text" data-i18n-placeholder="cm_unit_field_title_ph" placeholder="例如 HTML5 Basics" />
                   </div>
                 </div>
                 <div class="action-row" style="margin-top: 0; margin-bottom: 12px;">
                   <div class="left"></div>
                   <div class="right">
-                    <button class="btn btn-primary btn-small" onclick="window.addCourseUnitFromInput()"><i class="fa-solid fa-plus"></i> 新增 / 更新所選單元</button>
+                    <button class="btn btn-primary btn-small" onclick="window.addCourseUnitFromInput()"><i class="fa-solid fa-plus"></i> <span data-i18n="cm_btn_add_update_unit">新增 / 更新所選單元</span></button>
                   </div>
                 </div>
                 <div style="display:none;">
@@ -872,19 +872,19 @@
             <div class="price-card">
               <div class="card-title">
                 <div>
-                  <h3 style="margin:0;font-size:18px;">PRICEBOOK</h3>
-                  <span>先看清單，點擊後再進入維護</span>
+                  <h3 style="margin:0;font-size:18px;" data-i18n="cm_pricebook_title">PRICEBOOK</h3>
+                  <span data-i18n="cm_pricebook_desc">先看清單，點擊後再進入維護</span>
                 </div>
-                <div id="pricebook-status" style="color:var(--muted);font-size:12px;">尚未載入</div>
+                <div id="pricebook-status" style="color:var(--muted);font-size:12px;" data-i18n="cm_not_loaded">尚未載入</div>
               </div>
 
               <div class="pricebook-list" style="margin-top:14px;">
                 <table>
                   <thead>
                     <tr style="background:#f8fafc; color:#475569; font-size:12px; text-transform:uppercase; letter-spacing:.08em;">
-                      <th style="text-align:left;">PRICEBOOK</th>
-                      <th style="text-align:left;">Distributor / Product</th>
-                      <th style="text-align:left;">Status</th>
+                      <th style="text-align:left;" data-i18n="cm_pricebook_header_pricebook">PRICEBOOK</th>
+                      <th style="text-align:left;" data-i18n="cm_pricebook_header_distributor">Distributor / Product</th>
+                      <th style="text-align:left;" data-i18n="cm_pricebook_header_status">Status</th>
                     </tr>
                   </thead>
                   <tbody id="pricebook-table">
@@ -899,10 +899,10 @@
             <div class="section-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pricebook-modal-title">
               <div class="section-modal-head">
                 <div>
-                  <div class="head-title" id="pricebook-modal-title">維護 PRICEBOOK</div>
-                  <div class="head-subtitle">在這裡編輯經銷商價格表，不會影響課程清單。</div>
+                  <div class="head-title" id="pricebook-modal-title" data-i18n="cm_pricebook_modal_title">維護 PRICEBOOK</div>
+                  <div class="head-subtitle" data-i18n="cm_pricebook_modal_subtitle">在這裡編輯經銷商價格表，不會影響課程清單。</div>
                 </div>
-                <button class="modal-close" onclick="window.closePriceBookModal()"><i class="fa-solid fa-xmark"></i> 關閉</button>
+                <button class="modal-close" onclick="window.closePriceBookModal()"><i class="fa-solid fa-xmark"></i> <span data-i18n="cm_modal_close">關閉</span></button>
               </div>
               <div class="section-modal-body">
                 <div class="editor-grid">
@@ -938,7 +938,7 @@
                   <div class="field">
                     <label>isActive</label>
                     <div class="switch-row" style="padding-top: 10px;">
-                      <label class="switch"><input id="price-is-active" type="checkbox" checked /> 啟用價格表</label>
+                      <label class="switch"><input id="price-is-active" type="checkbox" checked /> <span data-i18n="cm_enable_pricebook">啟用價格表</span></label>
                     </div>
                   </div>
                   <div class="field">
@@ -953,11 +953,11 @@
 
                 <div class="action-row" style="margin-top: 0;">
                   <div class="left">
-                    <button class="btn btn-soft btn-small" onclick="window.loadSelectedLessonPriceBooks()"><i class="fa-solid fa-rotate"></i> 重新整理</button>
-                    <span class="hint" id="pricebook-hint">先點選上方清單中的 PRICEBOOK 進入維護。</span>
+                    <button class="btn btn-soft btn-small" onclick="window.loadSelectedLessonPriceBooks()"><i class="fa-solid fa-rotate"></i> <span data-i18n="cm_btn_refresh">重新整理</span></button>
+                    <span class="hint" id="pricebook-hint" data-i18n="cm_pricebook_hint">先點選上方清單中的 PRICEBOOK 進入維護。</span>
                   </div>
                   <div class="right">
-                    <button class="btn btn-primary btn-small" onclick="window.saveSelectedPriceBook()"><i class="fa-solid fa-tag"></i> 儲存價格表</button>
+                    <button class="btn btn-primary btn-small" onclick="window.saveSelectedPriceBook()"><i class="fa-solid fa-tag"></i> <span data-i18n="cm_btn_save_pricebook">儲存價格表</span></button>
                   </div>
                 </div>
               </div>
@@ -966,13 +966,13 @@
 
           <div class="action-row">
             <div class="left">
-              <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> 複製</button>
-              <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> 清空</button>
-              <a class="btn btn-muted btn-small" href="#locale-editor"><i class="fa-solid fa-language"></i> 語系設定</a>
+              <button class="btn btn-ghost btn-small" onclick="window.duplicateCurrentLesson()"><i class="fa-solid fa-copy"></i> <span data-i18n="cm_btn_duplicate">複製</span></button>
+              <button class="btn btn-muted btn-small" onclick="window.resetLessonForm()"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="cm_btn_reset">清空</span></button>
+              <a class="btn btn-muted btn-small" href="#locale-editor"><i class="fa-solid fa-language"></i> <span data-i18n="cm_btn_locale">語系設定</span></a>
             </div>
             <div class="right">
-              <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> 停用 / 恢復</button>
-              <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> 儲存課程</button>
+              <button class="btn btn-danger btn-small" onclick="window.toggleSelectedLessonVisibility()"><i class="fa-solid fa-eye-slash"></i> <span data-i18n="cm_btn_toggle_visibility">停用 / 恢復</span></button>
+              <button class="btn btn-primary btn-small" onclick="window.saveLessonMetadata()"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="cm_btn_save_course">儲存課程</span></button>
             </div>
           </div>
           </div>
@@ -1112,14 +1112,14 @@
       const current = normalizeText(selectedValue || select.value || "").toLowerCase();
       const options = Array.isArray(state.categoryOptions) ? state.categoryOptions : [];
       select.innerHTML = [
-        '<option value="">請先從學習路徑字典選擇</option>',
+        '<option value="">' + window.t('cm_cat_select_prompt', '請先從學習路徑字典選擇') + '</option>',
         ...options.map((item) => `<option value="${escapeHtml(item.key)}" ${item.key === current ? "selected" : ""}>${escapeHtml(item.label + (item.legacy ? " · legacy" : ""))}</option>`)
       ].join("");
       select.value = current || "";
       if (hint) {
         hint.textContent = options.length
-          ? "來源：`metadata_settings.learning_paths.categoryLabels`"
-          : "尚未載入分類字典，請先確認 Firestore 的 metadata_settings.learning_paths。";
+          ? window.t('cm_field_category_hint', '來源：`metadata_settings.learning_paths.categoryLabels`')
+          : window.t('cm_field_category_hint_empty', '尚未載入分類字典，請先確認 Firestore 的 metadata_settings.learning_paths。');
       }
     }
 
@@ -1165,18 +1165,18 @@
           ? units[state.selectedCourseUnitIndex]
           : "";
         status.textContent = units.length
-          ? `${units.length} 個單元${selected ? ` · 已選取：${selected}` : ""}`
-          : "尚未設定";
+          ? `${units.length} ${window.t('cm_unit_maint_units', '個單元')}${selected ? ` · ${window.t('cm_selected', '已選取')}：${selected}` : ""}`
+          : window.t('cm_unit_empty_status', '尚未設定');
       }
       if (!units.length) {
-        host.innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未加入任何單元。請先從上方新增或貼上清單。</td></tr>';
+        host.innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">' + window.t('cm_unit_empty', '尚未加入任何單元。請先從上方新增或貼上清單。') + '</td></tr>';
         return;
       }
       host.innerHTML = units.map((unitId, index) => {
         const title = normalizeText(titles[index] || unitId);
         const isSelected = state.selectedCourseUnitIndex === index;
         const displayTitle = title || unitId;
-        const subtitle = title && title !== unitId ? unitId : "尚未設定顯示名稱";
+        const subtitle = title && title !== unitId ? unitId : window.t('cm_unit_no_title', '尚未設定顯示名稱');
         return `
           <tr class="unit-table-row ${isSelected ? "selected" : ""}" onclick="window.selectCourseUnit(${index})" title="點擊打開單元維護 modal">
             <td>
@@ -1316,7 +1316,7 @@
       ];
 
       if (!ordered.length) {
-        host.innerHTML = '<div class="locale-empty">尚未建立任何語言內容。請先新增 `en` 或其他 locale。</div>';
+        host.innerHTML = '<div class="locale-empty">' + window.t('cm_locale_empty', '尚未建立任何語言內容。請先新增 `en` 或其他 locale。') + '</div>';
         return;
       }
 
@@ -1330,7 +1330,7 @@
             `).join("")}
           </div>
           <div class="locale-card-actions">
-            <button class="btn btn-muted btn-small" onclick="window.addLocalePrompt()"><i class="fa-solid fa-plus"></i> 新增語言</button>
+            <button class="btn btn-muted btn-small" onclick="window.addLocalePrompt()"><i class="fa-solid fa-plus"></i> ${window.t('cm_locale_add_btn', '新增語言')}</button>
           </div>
         </div>
         <div class="locale-grid">
@@ -1340,10 +1340,10 @@
                 <div class="locale-card-head">
                   <div>
                     <strong>${escapeHtml(locale)}</strong>
-                    <small>${locale === 'en' ? '主體語言' : '附加語言'}</small>
+                    <small>${locale === 'en' ? window.t('cm_locale_primary', '主體語言') : window.t('cm_locale_secondary', '附加語言')}</small>
                   </div>
                   <div class="locale-card-actions">
-                    ${locale === 'en' ? '' : `<button class="btn btn-muted btn-small" onclick="window.removeLocale('${escapeHtml(locale)}')">移除</button>`}
+                    ${locale === 'en' ? '' : `<button class="btn btn-muted btn-small" onclick="window.removeLocale('${escapeHtml(locale)}')">${window.t('cm_btn_remove', '移除')}</button>`}
                   </div>
                 </div>
                 <div class="editor-grid">
@@ -1365,8 +1365,8 @@
                   </div>
                   <div class="field full">
                     <label>coreContent</label>
-                    <textarea class="textarea-list" oninput="window.updateLocaleField('${escapeHtml(locale)}', 'coreContentText', this.value)" placeholder="一行一個 bullet">${escapeHtml(data.coreContentText || '')}</textarea>
-                    <div class="hint">會在儲存時轉成陣列並寫入 metadata_lessons.i18n.${escapeHtml(locale)}.coreContent。</div>
+                    <textarea class="textarea-list" oninput="window.updateLocaleField('${escapeHtml(locale)}', 'coreContentText', this.value)" placeholder="${window.t('cm_core_content_ph', '一行一個 bullet')}">${escapeHtml(data.coreContentText || '')}</textarea>
+                    <div class="hint">${window.t('cm_field_lesson_locale_hint', '會在儲存時轉成陣列並寫入 metadata_lessons.i18n.{locale}.coreContent').replace('{locale}', escapeHtml(locale))}</div>
                   </div>
                 </div>
               </div>
@@ -1381,10 +1381,12 @@
       const persisted = state.lessons.find((item) => String(item.id || item.docId || "") === String(state.currentLessonId)) || null;
       const title = $("modal-title");
       const subtitle = $("modal-subtitle");
-      if (title) title.textContent = persisted ? `編輯課程：${lesson.id || lesson.docId || ""}` : "新增課程";
+      if (title) title.textContent = persisted
+        ? window.t('cm_modal_title_edit', '編輯課程：{id}').replace('{id}', lesson.id || lesson.docId || "")
+        : window.t('cm_modal_title_add', '新增課程');
       if (subtitle) subtitle.textContent = persisted
-        ? "在這個對話框裡維護主檔、i18n、價格表。"
-        : "建立一門新課程，Document ID 會自動產生且不可直接修改。";
+        ? window.t('cm_modal_subtitle_edit', '在這個對話框裡維護主檔、i18n、價格表。')
+        : window.t('cm_modal_subtitle_new', '建立一門新課程，Document ID 會自動產生且不可直接修改。');
     }
 
     function openLessonModal() {
@@ -1468,7 +1470,7 @@
         if (input) input.value = "";
         if (titleInput) titleInput.value = "";
         renderCourseUnitsEditor();
-        setLog("已取消選取單元");
+        setLog(window.t('cm_log_deselect', '已取消選取單元'));
       } else {
         // Select
         state.selectedCourseUnitIndex = index;
@@ -1485,7 +1487,7 @@
           titleInput.value = normalizeText(titles[index] || units[index]);
         }
         renderCourseUnitsEditor();
-        setLog(`已選取單元：${units[index]}`);
+        setLog(window.t('cm_log_select', '已選取單元：{id}').replace('{id}', units[index]));
         openCourseUnitModal();
       }
     };
@@ -1517,7 +1519,9 @@
       state.selectedCourseUnitIndex = nextSelectedIndex;
       setCourseUnitValues(units);
       setCourseUnitTitleValues(titles);
-      setLog(selectedIndex >= 0 ? `已更新所選單元：${value}` : `已新增單元：${value}`);
+      setLog(selectedIndex >= 0
+        ? window.t('cm_log_unit_updated', '已更新所選單元：{id}').replace('{id}', value)
+        : window.t('cm_log_unit_added', '已新增單元：{id}').replace('{id}', value));
     };
     window.moveCourseUnit = function(index, direction) {
       const units = getCourseUnitValues();
@@ -1544,7 +1548,7 @@
       }
       setCourseUnitValues(units);
       setCourseUnitTitleValues(titles);
-      setLog(`已移除單元：${removed}`);
+      setLog(window.t('cm_log_unit_removed', '已移除單元：{id}').replace('{id}', removed));
     };
     window.setActiveLocale = function(locale) {
       state.activeLocale = normalizeLocaleKey(locale) || "en";
@@ -1571,7 +1575,7 @@
       }
     };
     window.addLocalePrompt = function() {
-      const locale = normalizeLocaleKey(prompt("請輸入 locale，例如 zh-TW、ja、fr：") || "");
+      const locale = normalizeLocaleKey(prompt(window.t('cm_prompt_locale', '請輸入 locale，例如 zh-TW、ja、fr：')) || "");
       if (!locale) return;
       if (!state.locales[locale]) {
         state.locales[locale] = cloneLocaleContent();
@@ -1628,11 +1632,11 @@
 
       state.filteredLessons = filtered;
       updateStats(searchFiltered);
-      $("lesson-count").textContent = `${filtered.length} / ${state.lessons.length}`;
+      $("lesson-count").textContent = window.t('cm_count_format', '{filtered} / {total}').replace('{filtered}', filtered.length).replace('{total}', state.lessons.length);
 
       const list = $("course-list");
       if (!filtered.length) {
-        list.innerHTML = '<div class="empty-state">找不到符合條件的課程</div>';
+        list.innerHTML = '<div class="empty-state">' + window.t('cm_no_filter_results', '找不到符合條件的課程') + '</div>';
         return;
       }
 
@@ -1642,7 +1646,7 @@
         const badges = [];
         badges.push(`<span class="badge ${status === "active" ? "green" : status === "hidden" ? "orange" : "red"}">${status}</span>`);
         if (lesson.metadataType) badges.push(`<span class="badge blue">${escapeHtml(lesson.metadataType)}</span>`);
-        if (lesson.metadataType === "product" || lesson.metadataType === "legacy_product") badges.push('<span class="badge">physical</span>');
+        if (lesson.metadataType === "product") badges.push('<span class="badge">physical</span>');
         return `
           <div class="course-item ${active ? "active" : ""}" onclick="window.selectLesson('${escapeHtml(String(lesson.id || lesson.docId || ""))}')">
             <div class="course-row">
@@ -1674,12 +1678,14 @@
       renderCourseUnitsEditor();
       $("lesson-level").value = target.level || "";
       renderCategorySelect(target.category || "");
-      $("lesson-metadata-type").value = target.metadataType === "legacy_product" ? "product" : (target.metadataType || "course");
+      $("lesson-metadata-type").value = target.metadataType || "course";
       $("lesson-order-weight").value = target.orderWeight ?? 0;
       $("lesson-card-image").value = target.cardImageUrl || target.imageUrl || target.thumbnailUrl || target.bannerUrl || "";
       $("lesson-hidden").checked = target.hiddenFromCatalog === true;
       $("lesson-deprecated").checked = target.isDeprecated === true;
-      $("lesson-status").textContent = target.id ? `編輯：${target.id}` : "新增空白課程";
+      $("lesson-status").textContent = target.id
+        ? window.t('cm_edit_status', '編輯：{id}').replace('{id}', target.id)
+        : window.t('cm_edit_status_blank', '新增空白課程');
       state.locales = inferLessonLocales(target);
       state.activeLocale = "en";
       state.selectedCourseUnitIndex = -1;
@@ -1695,12 +1701,14 @@
       $("price-promo-from").value = "";
       $("price-promo-to").value = "";
       $("price-distributor-id").value = "";
-      $("pricebook-status").textContent = "尚未載入價格表";
-      $("pricebook-hint").textContent = target.id ? "選定分銷商後可載入或建立價格表。" : "先儲存課程，再處理價格表會比較穩。";
+      $("pricebook-status").textContent = window.t('cm_pricebook_no_data', '尚未載入價格表');
+      $("pricebook-hint").textContent = target.id
+        ? window.t('cm_pricebook_hint_ready', '選定分銷商後可載入或建立價格表。')
+        : window.t('cm_pricebook_hint_save_first', '先儲存課程，再處理價格表會比較穩。');
       closeCourseUnitModal();
       closePriceBookModal();
       renderLessons();
-      loadCurrentLessonPriceBooks().catch((err) => setLog(`價格表載入失敗：${err.message}`));
+      loadCurrentLessonPriceBooks().catch((err) => setLog(window.t('cm_log_pricebook_load_fail', '價格表載入失敗：{msg}').replace('{msg}', err.message)));
     }
 
     function fillPriceBookForm(book = null) {
@@ -1716,8 +1724,8 @@
       $("price-promo-from").value = toDatetimeLocal(target.promoEffectiveFrom || "");
       $("price-promo-to").value = toDatetimeLocal(target.promoEffectiveTo || "");
       $("pricebook-hint").textContent = target.id
-        ? `已載入價格表：${target.id}`
-        : "可從左側課程選單重新載入價格表。";
+        ? window.t('cm_pricebook_loaded', '已載入價格表：{id}').replace('{id}', target.id)
+        : window.t('cm_pricebook_no_load', '可從左側課程選單重新載入價格表。');
     }
 
     function serializeLessonForm() {
@@ -1769,7 +1777,7 @@
       const legacyLocale = i18n["zh-TW"] || primaryLocale;
       const metadataType = normalizeText($("lesson-metadata-type").value) || "course";
       if (!category) {
-        throw new Error("請先從 category 選單選擇分類");
+        throw new Error(window.t('cm_category_required', '請先從 category 選單選擇分類'));
       }
       return {
         id: docId,
@@ -1790,7 +1798,7 @@
         courseUnits: course_units,
         courseUnitTitles: course_unit_titles,
         orderWeight: Number($("lesson-order-weight").value || 0) || 0,
-        isPhysical: metadataType === "product" || metadataType === "legacy_product",
+        isPhysical: metadataType === "product",
         hiddenFromCatalog: $("lesson-hidden").checked,
         isDeprecated: $("lesson-deprecated").checked,
         cardImageUrl: normalizeText($("lesson-card-image")?.value || "") || undefined
@@ -1811,14 +1819,14 @@
         state.distributors = [];
         const dt = $("distributor-options");
         if (dt) dt.innerHTML = "";
-        setLog(`經銷商清單載入失敗：${err?.message || err}`);
+        setLog(window.t('cm_log_distributor_load_fail', '經銷商清單載入失敗：{msg}').replace('{msg}', err?.message || err));
       }
     }
 
     async function loadPriceBooksForLesson(lesson = currentLesson()) {
       const body = $("pricebook-table");
       if (!lesson) {
-        body.innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">先選擇一門課程</td></tr>';
+        body.innerHTML = '<tr><td colspan="4" style="padding:18px 14px; color:var(--muted); text-align:center;">' + window.t('cm_pricebook_table_no_lesson', '先選擇一門課程') + '</td></tr>';
         return [];
       }
 
@@ -1831,14 +1839,14 @@
         ? response.data.items.map((item) => ({ id: item.id || "", ...item }))
         : [];
       state.currentPriceBooks = books;
-      $("pricebook-status").textContent = `${books.length} 筆價格表`;
+      $("pricebook-status").textContent = window.t('cm_pricebook_count', '{count} 筆價格表').replace('{count}', books.length);
       if (!books.length) {
-        body.innerHTML = '<tr><td colspan="3" style="padding:18px 14px; color:var(--muted); text-align:center;">尚無價格表</td></tr>';
+        body.innerHTML = '<tr><td colspan="3" style="padding:18px 14px; color:var(--muted); text-align:center;">' + window.t('cm_pricebook_empty', '尚無價格表') + '</td></tr>';
         fillPriceBookForm(null);
         return books;
       }
       body.innerHTML = books.map((book) => {
-        const status = book.isActive === false ? "停用" : "啟用";
+        const status = book.isActive === false ? window.t('cm_pricebook_status_inactive', '停用') : window.t('cm_pricebook_status_active', '啟用');
         return `
           <tr style="border-top:1px solid var(--line);" onclick="window.loadPriceBookIntoForm('${escapeHtml(book.id)}')">
             <td style="font-family:JetBrains Mono, monospace;font-size:12px;color:#334155;">${escapeHtml(book.id)}</td>
@@ -1860,7 +1868,7 @@
     async function loadCurrentLessonPriceBooks() {
       const lesson = currentLesson();
       if (!lesson) {
-        $("pricebook-table").innerHTML = '<tr><td colspan="3" style="padding:18px 14px; color:var(--muted); text-align:center;">尚未選擇課程</td></tr>';
+        $("pricebook-table").innerHTML = '<tr><td colspan="3" style="padding:18px 14px; color:var(--muted); text-align:center;">' + window.t('cm_pricebook_table_no_selection', '尚未選擇課程') + '</td></tr>';
         return [];
       }
       return loadPriceBooksForLesson(lesson);
@@ -1905,17 +1913,17 @@
         hiddenFromCatalog: false,
         isDeprecated: false
       });
-      $("lesson-status").textContent = "新增課程";
+      $("lesson-status").textContent = window.t('cm_status_edit_new', '新增課程');
       syncModalHeader();
       openLessonModal();
-      setLog("已建立空白課程表單。Document ID 已自動產生。");
+      setLog(window.t('cm_log_create_blank', '已建立空白課程表單。Document ID 已自動產生。'));
     };
 
     window.resetLessonForm = function() {
       const selected = currentLesson();
       if (selected) {
         fillLessonForm(selected);
-        setLog(`已重置為目前選定課程：${selected.id || selected.docId || ""}`);
+        setLog(window.t('cm_log_reset', '已重置為目前選定課程：{id}').replace('{id}', selected.id || selected.docId || ""));
         openLessonModal();
       } else {
         window.createBlankLesson();
@@ -1939,10 +1947,10 @@
         hiddenFromCatalog: true,
         isDeprecated: false
       });
-      $("lesson-status").textContent = "複製模式";
+      $("lesson-status").textContent = window.t('cm_status_edit_mode', '複製模式');
       syncModalHeader();
       openLessonModal();
-      setLog("已複製目前課程成為新表單，Document ID 已重新產生。");
+      setLog(window.t('cm_log_duplicate', '已複製目前課程成為新表單，Document ID 已重新產生。'));
     };
 
     window.toggleSelectedLessonVisibility = async function() {
@@ -1960,7 +1968,10 @@
       };
       await upsertLessonMetadata(patch);
       mergeLessonToState({ ...lesson, ...patch });
-      setLog(`${lesson.id} 已更新可見性：hiddenFromCatalog=${!hidden}, isDeprecated=${!deprecated}`);
+      setLog(window.t('cm_log_visibility', '{id} 已更新可見性：hiddenFromCatalog={hidden}, isDeprecated={deprecated}')
+        .replace('{id}', lesson.id)
+        .replace('{hidden}', !hidden)
+        .replace('{deprecated}', !deprecated));
     };
 
     window.saveLessonMetadata = async function() {
@@ -1974,8 +1985,8 @@
         await upsertLessonMetadata(patch);
         const merged = existing ? { ...existing, ...patch } : patch;
         mergeLessonToState(merged);
-        setLog(`已儲存課程維護：${docId}`);
-        $("lesson-status").textContent = `已儲存：${docId}`;
+        setLog(window.t('cm_log_saved', '已儲存課程維護：{id}').replace('{id}', docId));
+        $("lesson-status").textContent = window.t('cm_log_saved_status', '已儲存：{id}').replace('{id}', docId);
         await loadCurrentLessonPriceBooks();
         closeLessonModal();
       } catch (err) {
@@ -1986,7 +1997,7 @@
 
     function buildPriceBookPayload(lesson) {
       const distributorId = normalizeText($("price-distributor-id").value);
-      if (!distributorId) throw new Error("請輸入 distributorId");
+      if (!distributorId) throw new Error(window.t('cm_distributor_id_required', '請輸入 distributorId'));
       const docId = normalizeText($("price-doc-id").value || lesson.id || lesson.docId || "");
       const priceBookId = normalizeText($("price-book-id").value) || `${distributorId}_${docId}`.toLowerCase().replace(/[^a-z0-9_-]/gi, "-");
       return {
@@ -2017,8 +2028,8 @@
         if (existing && existing.createdAt) payload.createdAt = existing.createdAt;
         payload.updatedBy = state.currentUserUid || "";
         await upsertDistributorPriceBook(payload);
-        setLog(`已儲存價格表：${payload.id}`);
-        $("pricebook-status").textContent = "價格表已儲存";
+        setLog(window.t('cm_log_pricebook_saved', '已儲存價格表：{id}').replace('{id}', payload.id));
+        $("pricebook-status").textContent = window.t('cm_log_pricebook_saved_status', '價格表已儲存');
         await loadCurrentLessonPriceBooks();
         closePriceBookModal();
       } catch (err) {
@@ -2032,13 +2043,13 @@
       if (!book) return;
       fillPriceBookForm(book);
       openPriceBookModal();
-      setLog(`已載入價格表：${book.id}`);
+      setLog(window.t('cm_log_pricebook_loaded', '已載入價格表：{id}').replace('{id}', book.id));
     };
 
     window.loadSelectedLessonPriceBooks = async function() {
       try {
         await loadCurrentLessonPriceBooks();
-        setLog("已重新整理價格表。");
+        setLog(window.t('cm_log_pricebook_refreshed', '已重新整理價格表。'));
       } catch (err) {
         console.error("[admin-courses] loadSelectedLessonPriceBooks failed:", err);
         alert(window.t('alert_load_price_failed', '載入價格表失敗：{msg}').replace('{msg}', err.message));
@@ -2088,17 +2099,17 @@
       const resolvedRole = window.vibeRoleUtils?.isAdminEmail(user.email) ? "admin" : (userData.role || "");
       $("auth-role").textContent = resolvedRole || "(missing)";
       if (resolvedRole !== "admin") {
-        throw new Error("此頁面僅限 Admin 帳號使用");
+        throw new Error(window.t('cm_auth_denied_msg', '此頁面僅限 Admin 帳號使用'));
       }
       state.currentUserUid = user.uid;
       $("loading-overlay").style.display = "none";
       $("app").style.display = "block";
-      $("course-list").innerHTML = '<div class="empty-state">載入中...</div>';
-      $("lesson-status").textContent = "載入中...";
-      $("pricebook-status").textContent = "載入中...";
+      $("course-list").innerHTML = '<div class="empty-state">' + window.t('cm_loading', '載入中...') + '</div>';
+      $("lesson-status").textContent = window.t('cm_loading', '載入中...');
+      $("pricebook-status").textContent = window.t('cm_loading_pricebook', '載入中...');
       await Promise.all([loadDistributors(), loadLessons()]);
       state.isReady = true;
-      setLog("管理頁已載入，請從左側選擇課程開始編輯。");
+      setLog(window.t('cm_log_loaded', '管理頁已載入，請從左側選擇課程開始編輯。'));
     }
 
     $("search-input").addEventListener("input", renderLessons);

@@ -110,7 +110,7 @@
     const normalizedLocale = normalizeLocale(locale);
     const amount = normalizeAmount(priceEntry.amount ?? priceEntry);
     const currency = normalizeCurrency(priceEntry.currency, "");
-    if (amount <= 0) return normalizedLocale === "en" ? "Free" : "免費";
+    if (amount <= 0) return window.t('cart_price_free', 'Free');
 
     if (!currency) {
       try {

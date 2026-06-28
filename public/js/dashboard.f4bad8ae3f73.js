@@ -32,7 +32,7 @@ const isAdminEmail = window.vibeRoleUtils?.isAdminEmail || function (value = "")
 };
 const isPhysicalMetadataLesson = window.dashboardLookupUtils?.isPhysicalMetadataLesson || function (lesson = {}) {
     const metadataType = String(lesson?.metadataType || "").toLowerCase();
-    return metadataType === "product" || metadataType === "legacy_product";
+    return metadataType === "product";
 };
 const { normalizeCanonicalRepoSlug, legacyRepoSlugFromCanonical } = window.repoSlugUtils || {};
 
@@ -424,15 +424,7 @@ function readAdminTutorModeForUid(uid = '') {
     if (!cleanUid) return false;
     try {
         const scopedKey = getAdminTutorModeStorageKey(cleanUid);
-        const scopedValue = localStorage.getItem(scopedKey);
-        if (scopedValue !== null) return scopedValue === 'true';
-
-        const legacyValue = localStorage.getItem(ADMIN_TUTOR_MODE_STORAGE_KEY);
-        if (legacyValue !== null) {
-            localStorage.setItem(scopedKey, legacyValue);
-            localStorage.removeItem(ADMIN_TUTOR_MODE_STORAGE_KEY);
-            return legacyValue === 'true';
-        }
+        return localStorage.getItem(scopedKey) === 'true';
     } catch (_) {}
     return false;
 }
@@ -442,7 +434,6 @@ function writeAdminTutorModeForUid(uid = '', enabled = false) {
     if (!cleanUid) return false;
     try {
         localStorage.setItem(getAdminTutorModeStorageKey(cleanUid), enabled ? 'true' : 'false');
-        localStorage.removeItem(ADMIN_TUTOR_MODE_STORAGE_KEY);
     } catch (_) {}
     return enabled === true;
 }
