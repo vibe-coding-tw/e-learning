@@ -1629,9 +1629,7 @@ async function vibeFetchLessons() {
         const functions = window.getFunctions(window.vibeApp, 'asia-east1');
         const getLessonsFunc = window.httpsCallable(functions, 'getLessonsMetadata');
         
-        const distributorId = localStorage.getItem('vibe_user_preferred_distributor')
-                           || localStorage.getItem('preferredDistributorId')
-                           || '';
+        const distributorId = localStorage.getItem('vibe_user_preferred_distributor') || '';
         const result = await getLessonsFunc({ distributorId });
         
         if (result.data && result.data.lessons) {

@@ -167,6 +167,7 @@
     window.dashboardLookupUtils = {
         normalizeRouteLooseKey,
         normalizeDashboardLooseKey,
+        normalizeLegacyCourseKey,
         getLessonLookupKeys,
         getCanonicalLessonIdentity,
         resolveLessonByAnyKey,

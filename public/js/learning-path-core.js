@@ -491,10 +491,11 @@
     }
 
     function normalizeLegacyUnitFilename(file = "") {
+        const shared = window.dashboardLookupUtils?.normalizeLegacyCourseKey;
+        if (shared) return shared(file);
         const v = String(file || "").trim();
         if (!v) return "";
         const bare = v.replace(/\.html$/i, '').replace(/^(?:tw|en)-/i, '').toLowerCase();
-
         if (/^start-\d{2}-unit-/i.test(bare)) return bare.replace(/^start-\d{2}-unit-/i, 'car-starter-');
         if (/^basic-\d{2}-unit-/i.test(bare)) return bare.replace(/^basic-\d{2}-unit-/i, 'car-basic-');
         if (/^(?:adv|advanced)-\d{2}-unit-/i.test(bare)) return bare.replace(/^(?:adv|advanced)-\d{2}-unit-/i, 'car-advanced-');
