@@ -245,9 +245,9 @@ function init() {
     initAnimations();
     injectAssignmentLinkModal();
     enhanceAssignmentEntryButtons();
-    const firebaseInitPromise = initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
-    if (firebaseInitPromise && typeof firebaseInitPromise.then === 'function') {
-        firebaseInitPromise
+    window.__vibeFirebaseInitPromise = initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
+    if (window.__vibeFirebaseInitPromise && typeof window.__vibeFirebaseInitPromise.then === 'function') {
+        window.__vibeFirebaseInitPromise
             .then(() => {
                 ensureDynamicUnitTabsFromFirestore();
                 toggleUnitTabsVisibility();
@@ -2695,6 +2695,12 @@ window.submitBindTutorAction = async function () {
 window.openSubmissionModal = async function (assignmentId, title, options = {}) {
     const pathParts = window.location.pathname.split('/');
     const fileName = pathParts[pathParts.length - 1];
+
+    // Wait for Firebase Auth to finish initializing before checking user
+    if (window.__vibeFirebaseInitPromise) {
+        await window.__vibeFirebaseInitPromise.catch(() => {});
+    }
+
     const sharedAuth = getCourseSharedAuth();
     const currentUser = sharedAuth?.currentUser || window.__vibeCurrentAuthUser || await (window.__vibeAuthReadyPromise || Promise.resolve(null)).catch(() => null);
     if (!currentUser) {
