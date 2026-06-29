@@ -3,6 +3,7 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const logger = require("firebase-functions/logger");
 
 const sandboxDir = "/tmp/cron_sandbox";
 
@@ -36,7 +37,7 @@ function downloadFile(url, destPath) {
  * 批次下載評分腳本並對近期的作業進行自動評分。
  */
 async function runCronGrading() {
-    console.log("=== STARTING SCHEDULED CRON GRADING RUN ===");
+    logger.info("=== STARTING SCHEDULED CRON GRADING RUN ===");
     const db = admin.firestore();
     
     // 建立沙盒目錄
@@ -55,11 +56,11 @@ async function runCronGrading() {
             .get();
             
         if (snap.empty) {
-            console.log("No assignments updated in the last 30 days.");
+            logger.info("No assignments updated in the last 30 days.");
             return;
         }
 
-        console.log(`Analyzing ${snap.size} recent assignments...`);
+        logger.info(`Analyzing ${snap.size} recent assignments...`);
         const token = process.env.GITHUB_API_TOKEN || "";
         const hostingUrl = "https://e-learning-942f7.web.app";
 
@@ -82,7 +83,7 @@ async function runCronGrading() {
             }
 
             const graderName = unitId.replace(/\.html$/, "");
-            console.log(`\n[Cron Grader] Evaluating: ${docId} (Unit: ${unitId}, Repo: ${repoName})`);
+            logger.info(`\n[Cron Grader] Evaluating: ${docId} (Unit: ${unitId}, Repo: ${repoName})`);
 
             // 下載對應的評分腳本
             const graderUrl = `${hostingUrl}/graders/${graderName}.sh`;
@@ -116,7 +117,7 @@ async function runCronGrading() {
                     throw new Error(`Invalid score output: "${scoreOutput}"`);
                 }
 
-                console.log(`  👉 Computed Score: ${score}/100`);
+                logger.info(`  👉 Computed Score: ${score}/100`);
 
                 // 若分數有變動才寫入，減少 Firestore 寫入成本
                 if (score !== currentScore) {
@@ -142,13 +143,13 @@ async function runCronGrading() {
                     };
 
                     await db.collection("assignments").doc(docId).update(updatePayload);
-                    console.log(`  ✅ Updated assignment ${docId} with new score ${score}`);
+                    logger.info(`  ✅ Updated assignment ${docId} with new score ${score}`);
                 } else {
-                    console.log("  Score unchanged. Skipping write.");
+                    logger.info("  Score unchanged. Skipping write.");
                 }
 
             } catch (err) {
-                console.error(`  🚨 Error evaluating ${docId}:`, err.message);
+                logger.error(`  🚨 Error evaluating ${docId}:`, err.message);
             } finally {
                 // 清理下載的腳本
                 if (fs.existsSync(localGraderPath)) {
@@ -158,14 +159,14 @@ async function runCronGrading() {
         }
 
     } catch (globalErr) {
-        console.error("🚨 Cron grading execution failed:", globalErr);
+        logger.error("🚨 Cron grading execution failed:", globalErr);
     } finally {
         // 清理沙盒
         if (fs.existsSync(sandboxDir)) {
             fs.rmSync(sandboxDir, { recursive: true, force: true });
         }
     }
-    console.log("=== SCHEDULED CRON GRADING RUN COMPLETED ===");
+    logger.info("=== SCHEDULED CRON GRADING RUN COMPLETED ===");
 }
 
 module.exports = {

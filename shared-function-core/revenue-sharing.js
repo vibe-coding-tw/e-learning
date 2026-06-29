@@ -1,3 +1,5 @@
+const logger = require("firebase-functions/logger");
+
 const admin = global.__vibeFirebaseAdmin;
 
 function getAdmin() {
@@ -214,7 +216,7 @@ async function loadRevenueSharePolicy({ db, policyCache, policyId = "" } = {}) {
     const requestedId = normalizeText(policyId) || DEFAULT_REVENUE_SHARE_POLICY.policyId;
     const normalized = DEFAULT_REVENUE_SHARE_POLICY.policyId;
     if (requestedId !== normalized) {
-        console.warn(`[sharing] policy ${requestedId} is deprecated; using ${normalized}.`);
+        logger.warn(`[sharing] policy ${requestedId} is deprecated; using ${normalized}.`);
     }
     if (policyCache.has(normalized)) return policyCache.get(normalized);
 
@@ -235,15 +237,15 @@ async function loadRevenueSharePolicy({ db, policyCache, policyId = "" } = {}) {
                 enabled: raw.enabled !== false
             };
             if (!policy.enabled) {
-                console.warn(`[sharing] policy disabled (${normalized}), fallback to default.`);
+                logger.warn(`[sharing] policy disabled (${normalized}), fallback to default.`);
                 policy = DEFAULT_REVENUE_SHARE_POLICY;
             }
         } else {
-            console.warn(`[sharing] policy not found (${normalized}), fallback to default.`);
+            logger.warn(`[sharing] policy not found (${normalized}), fallback to default.`);
             policy = DEFAULT_REVENUE_SHARE_POLICY;
         }
     } catch (e) {
-        console.warn(`[sharing] load policy failed (${normalized}), fallback to default:`, e.message || e);
+        logger.warn(`[sharing] load policy failed (${normalized}), fallback to default:`, e.message || e);
         policy = DEFAULT_REVENUE_SHARE_POLICY;
     }
 

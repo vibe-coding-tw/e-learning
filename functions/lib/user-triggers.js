@@ -2,6 +2,7 @@ const admin = require("firebase-admin");
 const functionsV1 = require("firebase-functions/v1");
 const { sendWelcomeEmail } = require("vibe-functions-core/email-service");
 const { isAdminEmail } = require("vibe-functions-core/access-utils-core");
+const logger = require("firebase-functions/logger");
 
 function createOnUserCreatedHandler() {
     if (!admin.apps.length) {
@@ -27,17 +28,17 @@ function createOnUserCreatedHandler() {
                     joinedAt: admin.firestore.FieldValue.serverTimestamp(),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
-                console.log(`[onUserCreated] Initialized Firestore record for user ${uid} (${email})`);
+                logger.info(`[onUserCreated] Initialized Firestore record for user ${uid} (${email})`);
             } else if (adminRole === "admin") {
                 await userRef.set({
                     email: email || "",
                     role: "admin",
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
-                console.log(`[onUserCreated] Elevated Firestore role to admin for user ${uid} (${email})`);
+                logger.info(`[onUserCreated] Elevated Firestore role to admin for user ${uid} (${email})`);
             }
         } catch (e) {
-            console.error(`[onUserCreated] Failed to initialize Firestore record for ${uid}:`, e);
+            logger.error(`[onUserCreated] Failed to initialize Firestore record for ${uid}:`, e);
         }
 
         if (email) {

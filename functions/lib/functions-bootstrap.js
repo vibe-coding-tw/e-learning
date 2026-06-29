@@ -1,4 +1,5 @@
 const { setGlobalOptions } = require("firebase-functions/v2");
+const logger = require("firebase-functions/logger");
 
 const initializeFunctionsRuntime = () => {
     if (process.env.NODE_ENV !== 'production' || !process.env.ECPAY_MERCHANT_ID) {
@@ -22,7 +23,7 @@ const initializeFunctionsRuntime = () => {
 
     const missingEnv = requiredEnv.filter((name) => !process.env[name]);
     if (missingEnv.length > 0) {
-        console.error("錯誤：未讀取到綠界設定，請檢查 functions/.env 檔案！");
+        logger.error("錯誤：未讀取到綠界設定，請檢查 functions/.env 檔案！");
     }
 };
 

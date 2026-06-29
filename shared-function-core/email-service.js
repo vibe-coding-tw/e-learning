@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const logger = require("firebase-functions/logger");
 
 let _transporter = null;
 function getTransporter() {
@@ -88,7 +89,7 @@ async function resolveUserLocale(email) {
             return userData.locale || 'en';
         }
     } catch (e) {
-        console.warn("[EmailService] Failed to resolve user locale by email:", e);
+        logger.warn("[EmailService] Failed to resolve user locale by email:", e);
     }
     return 'en';
 }
@@ -142,7 +143,7 @@ async function resolveCourseAndUnitMeta(unitId, locale = 'en') {
             return { courseName, unitName };
         }
     } catch (e) {
-        console.warn("[EmailService] resolveCourseAndUnitMeta failed:", e);
+        logger.warn("[EmailService] resolveCourseAndUnitMeta failed:", e);
     }
 
     return { courseName: '', unitName: normalizeUnitId(filename) };
@@ -423,9 +424,9 @@ async function sendWelcomeEmail(email, displayName, expiryDateStr) {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Welcome email sent to ${email} (locale: ${locale})`);
+        logger.info(`Welcome email sent to ${email} (locale: ${locale})`);
     } catch (error) {
-        console.error('Error sending welcome email:', error);
+        logger.error('Error sending welcome email:', error);
     }
 }
 
@@ -498,9 +499,9 @@ async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc, hasPhy
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Payment success email sent to ${email} for order ${orderId} (locale: ${locale})`);
+        logger.info(`Payment success email sent to ${email} for order ${orderId} (locale: ${locale})`);
     } catch (error) {
-        console.error('Error sending payment email:', error);
+        logger.error('Error sending payment email:', error);
     }
 }
 
@@ -551,9 +552,9 @@ async function sendTrialExpiringEmail(email, displayName, daysLeft) {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Trial expiring email sent to ${email}`);
+        logger.info(`Trial expiring email sent to ${email}`);
     } catch (error) {
-        console.error('Error sending trial email:', error);
+        logger.error('Error sending trial email:', error);
     }
 }
 
@@ -595,9 +596,9 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Course expiring email sent to ${email} for course ${courseName}`);
+        logger.info(`Course expiring email sent to ${email} for course ${courseName}`);
     } catch (error) {
-        console.error('Error sending course expiring email:', error);
+        logger.error('Error sending course expiring email:', error);
     }
 }
 
@@ -641,9 +642,9 @@ async function sendTutorAuthorizationEmail(email, unitName, unitId, assignmentUr
 
     try {
         const info = await transporter.sendMail(mailOptions);
-        console.log(`Tutor authorization email sent to ${email} for unit ${unitId}. MessageId: ${info.messageId}`);
+        logger.info(`Tutor authorization email sent to ${email} for unit ${unitId}. MessageId: ${info.messageId}`);
     } catch (error) {
-        console.error('Error sending tutor authorization email:', error);
+        logger.error('Error sending tutor authorization email:', error);
     }
 }
 
@@ -703,9 +704,9 @@ async function sendAssignmentNotification(tutorEmail, studentName, assignmentTit
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Assignment notification sent to ${tutorEmail}`);
+        logger.info(`Assignment notification sent to ${tutorEmail}`);
     } catch (error) {
-        console.error('Error sending assignment notification:', error);
+        logger.error('Error sending assignment notification:', error);
     }
 }
 
@@ -809,9 +810,9 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Grading notification sent to ${email} (locale: ${locale})`);
+        logger.info(`Grading notification sent to ${email} (locale: ${locale})`);
     } catch (error) {
-        console.error('Error sending grading notification:', error);
+        logger.error('Error sending grading notification:', error);
     }
 }
 
@@ -855,7 +856,7 @@ async function sendStudentLinkedToTutorEmail(email, studentName, unitId, tutorEm
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending student relationship email:', error);
+        logger.error('Error sending student relationship email:', error);
     }
 }
 
@@ -905,7 +906,7 @@ async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending tutor relationship email:', error);
+        logger.error('Error sending tutor relationship email:', error);
     }
 }
 
@@ -948,7 +949,7 @@ async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending admin application notification:', error);
+        logger.error('Error sending admin application notification:', error);
     }
 }
 
@@ -1011,7 +1012,7 @@ async function sendApplicationResultEmail(email, unitId, status, message = "") {
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending application result email:', error);
+        logger.error('Error sending application result email:', error);
     }
 }
 
@@ -1050,7 +1051,7 @@ async function sendAdminAssignmentReminder(adminEmail, pendingList) {
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending admin reminder email:', error);
+        logger.error('Error sending admin reminder email:', error);
     }
 }
 
@@ -1090,7 +1091,7 @@ async function sendStudentPendingTutorAssignmentReminder(email, studentName, uni
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending student pending tutor reminder email:', error);
+        logger.error('Error sending student pending tutor reminder email:', error);
     }
 }
 
@@ -1131,7 +1132,7 @@ async function sendAdminShipmentReminder(adminEmail, pendingList) {
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending admin shipment reminder email:', error);
+        logger.error('Error sending admin shipment reminder email:', error);
     }
 }
 
@@ -1192,7 +1193,7 @@ async function sendAutogradeResultToStudent(email, studentName, assignmentTitle,
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending student autograde email:', error);
+        logger.error('Error sending student autograde email:', error);
     }
 }
 
@@ -1233,7 +1234,7 @@ async function sendAutogradeResultToTutor(email, studentName, assignmentTitle, s
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending tutor autograde email:', error);
+        logger.error('Error sending tutor autograde email:', error);
     }
 }
 
@@ -1277,7 +1278,7 @@ async function sendOrderShippedEmail(email, orderId, itemsDesc = "", logistics =
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending order shipped email:', error);
+        logger.error('Error sending order shipped email:', error);
     }
 }
 
@@ -1328,7 +1329,7 @@ async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderE
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending tutor recommendation candidate email:', error);
+        logger.error('Error sending tutor recommendation candidate email:', error);
     }
 }
 
@@ -1366,7 +1367,7 @@ async function sendAutogradeFailureAlertEmail(adminEmail, reason, payload = {}) 
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending autograde failure alert email:', error);
+        logger.error('Error sending autograde failure alert email:', error);
     }
 }
 

@@ -1,3 +1,5 @@
+const logger = require("firebase-functions/logger");
+
 async function getContentRuntimeConfig(db) {
     try {
         const snap = await db.collection("metadata_settings").doc("content_runtime").get();
@@ -15,7 +17,7 @@ async function getContentRuntimeConfig(db) {
             localeLabels: data.localeLabels && typeof data.localeLabels === "object" && !Array.isArray(data.localeLabels) ? data.localeLabels : {}
         };
     } catch (err) {
-        console.warn("[content-runtime] failed to load config:", err.message || err);
+        logger.warn("[content-runtime] failed to load config:", err.message || err);
         return null;
     }
 }

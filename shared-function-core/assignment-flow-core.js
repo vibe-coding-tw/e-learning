@@ -4,6 +4,7 @@ const { sendAutogradeResultToStudent, sendAutogradeResultToTutor, sendGradingNot
 const { upsertGithubActionsVariable } = require("vibe-functions-core/github-utils");
 const { normalizeLegacyId } = require("vibe-functions-core/id-utils");
 const { normalizeTemplateRepoName } = require("vibe-functions-core/template-utils");
+const logger = require("firebase-functions/logger");
 
 function normalizeText(value = "") {
     return String(value || "").trim();
@@ -258,7 +259,7 @@ async function backfillAutogradeGithubVariables({
     }) : { ok: true };
 
     if (!upsertUserRes.ok || !upsertUnitRes.ok || !upsertUnitKeyRes.ok) {
-        console.warn("[ingestGithubAutograde] Failed to backfill variables:", {
+        logger.warn("[ingestGithubAutograde] Failed to backfill variables:", {
             repositoryFullName: repoFullName,
             backfillUserId,
             backfillUnitId,
@@ -502,7 +503,7 @@ async function gradeAssignment(db, { graderUid, assignmentId, grade, feedback })
                 unitId
             );
         } catch (mailErr) {
-            console.error("[gradeAssignment] Failed to send email notification:", mailErr);
+            logger.error("[gradeAssignment] Failed to send email notification:", mailErr);
         }
     }
 

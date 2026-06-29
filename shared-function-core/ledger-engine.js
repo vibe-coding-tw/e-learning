@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+const logger = require("firebase-functions/logger");
 
 function normalizeText(value = "") {
     return String(value ?? "").trim();
@@ -818,7 +819,7 @@ async function recordLedgerEvent({
                 });
                 generatedReports.push(report);
             } catch (reportErr) {
-                console.warn(`[ledger-engine] generate report failed (${reportType}, ${period}):`, reportErr.message || reportErr);
+                logger.warn(`[ledger-engine] generate report failed (${reportType}, ${period}):`, reportErr.message || reportErr);
             }
         }
         return {

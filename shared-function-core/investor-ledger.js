@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { recordLedgerEvent } = require("./ledger-engine");
+const logger = require("firebase-functions/logger");
 
 const AUTO_BALANCE_SHEET_SNAPSHOT_ID = "auto-current";
 
@@ -1147,7 +1148,7 @@ async function settleAnnualInvestorDividends({
                 });
             }
         } catch (ledgerErr) {
-            console.warn(`[settleAnnualInvestorDividends] Ledger event sync skipped for ${settlementId}:`, ledgerErr.message || ledgerErr);
+            logger.warn(`[settleAnnualInvestorDividends] Ledger event sync skipped for ${settlementId}:`, ledgerErr.message || ledgerErr);
         }
 
         await upsertInvestorBalance({
