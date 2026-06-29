@@ -2611,6 +2611,7 @@ function enhanceAssignmentEntryButtons() {
  */
 function injectAssignmentLinkModal() {
     if (document.getElementById('assignment-link-modal')) return;
+    const _t = (key, fallback) => (typeof window.t === 'function' ? window.t(key, fallback) : fallback);
     const defaultTutorEmail = 'rover.k.chen@gmail.com';
     const modalHTML = `
     <div id="assignment-link-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[70]">
@@ -2619,8 +2620,8 @@ function injectAssignmentLinkModal() {
                 <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
                     🎓
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800">${window.t('tutor_confirm_title', '確認 / 更換授課老師')}</h3>
-                <p class="text-sm text-gray-500 mt-2">${window.t('tutor_confirm_desc', '請確認您目前的授課老師，或輸入新的授課老師 Email 更換。')}<br><span class="text-blue-500 font-medium">${window.t('tutor_confirm_desc_blank_hint', '留空將使用預設導師邀請連結。')}</span></p>
+                <h3 class="text-2xl font-bold text-gray-800">${_t('tutor_confirm_title', '確認 / 更換授課老師')}</h3>
+                <p class="text-sm text-gray-500 mt-2">${_t('tutor_confirm_desc', '請確認您目前的授課老師，或輸入新的授課老師 Email 更換。')}<br><span class="text-blue-500 font-medium">${_t('tutor_confirm_desc_blank_hint', '留空將使用預設導師邀請連結。')}</span></p>
             </div>
             
             <input type="hidden" id="link-course-id">
@@ -2630,20 +2631,20 @@ function injectAssignmentLinkModal() {
             <input type="hidden" id="link-force-mode">
 
             <div class="mb-6">
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">${window.t('tutor_email_label', '授課老師 Email')}</label>
-                <input type="text" id="link-promotion-code" placeholder="${window.t('tutor_email_placeholder', '輸入授課老師 Email（留空使用預設導師）')}"
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">${_t('tutor_email_label', '授課老師 Email')}</label>
+                <input type="text" id="link-promotion-code" placeholder="${_t('tutor_email_placeholder', '輸入授課老師 Email（留空使用預設導師）')}"
                     class="w-full border-2 border-gray-100 bg-gray-50 p-4 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition font-mono text-sm">
-                <p class="text-[10px] text-gray-400 mt-2">${window.t('tutor_email_footnote', '※ 請輸入授課老師的 Email 帳號；留空將使用預設導師（{email}）。').replace('{email}', defaultTutorEmail)}</p>
+                <p class="text-[10px] text-gray-400 mt-2">${_t('tutor_email_footnote', '※ 請輸入授課老師的 Email 帳號；留空將使用預設導師（{email}）。').replace('{email}', defaultTutorEmail)}</p>
             </div>
 
             <div class="flex flex-col gap-3">
                 <button id="btn-bind-tutor" onclick="submitBindTutorAction()"
                     class="group w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    <span>${window.t('tutor_confirm_btn', '確認並前往作業')}</span>
+                    <span>${_t('tutor_confirm_btn', '確認並前往作業')}</span>
                     <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
                 </button>
                 <button onclick="closeAssignmentLinkModal()"
-                    class="w-full py-3 text-gray-400 hover:text-gray-600 transition font-medium text-sm">${window.t('tutor_cancel_btn', '取消')}</button>
+                    class="w-full py-3 text-gray-400 hover:text-gray-600 transition font-medium text-sm">${_t('tutor_cancel_btn', '取消')}</button>
             </div>
         </div>
     </div>

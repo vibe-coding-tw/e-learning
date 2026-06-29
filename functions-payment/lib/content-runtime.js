@@ -290,7 +290,7 @@ function injectCourseRuntimeShell(html = "") {
             obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + "px";
         }
     };
-    logger.info("[Firebase] Course runtime bootstrap initialized");
+    console.log("[Firebase] Course runtime bootstrap initialized");
 </script>
 `;
 
