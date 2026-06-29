@@ -243,6 +243,7 @@ function init() {
     injectMediaOverlay();
     injectDashboardModal();
     initAnimations();
+    injectAssignmentLinkModal();
     enhanceAssignmentEntryButtons();
     const firebaseInitPromise = initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     if (firebaseInitPromise && typeof firebaseInitPromise.then === 'function') {
@@ -2391,9 +2392,7 @@ async function initFirebaseFeatures() {
             if (!globalLessonsData || globalLessonsData.length === 0) {
                 try {
                     const getLessonsFunc = httpsCallable(functions, 'getLessonsMetadata');
-                    const distributorId = localStorage.getItem('vibe_user_preferred_distributor')
-                                       || localStorage.getItem('preferredDistributorId')
-                                       || '';
+                    const distributorId = localStorage.getItem('vibe_user_preferred_distributor') || '';
                     const result = await getLessonsFunc({ distributorId });
                     if (result.data && result.data.lessons) {
                         globalLessonsData = result.data.lessons;
@@ -2522,7 +2521,6 @@ async function initFirebaseFeatures() {
         });
 
         console.log("[Firebase] Initialized.");
-    injectAssignmentLinkModal();
     enhanceAssignmentEntryButtons();
 }
 
@@ -2726,6 +2724,9 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
             // [V20] 已授權的使用者，點擊「前往作業入口」時先顯示導師確認對話框
             // 除非 skipTutorPrompt === true（綁定成功後自動觸發的重試流程）
             if (isAuthorized && !skipTutorPrompt) {
+                if (!document.getElementById('assignment-link-modal')) {
+                    injectAssignmentLinkModal();
+                }
                 document.getElementById('link-course-id').value = resolvedCourseId;
                 document.getElementById('link-unit-id').value = fileName;
                 document.getElementById('link-assignment-id').value = assignmentId;
@@ -2767,7 +2768,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
             alert(window.t ? window.t("alert_login_required", "請先登入後再前往 GitHub 作業。請按右上角登入後再試一次。") : "請先登入後再前往 GitHub 作業。請按右上角登入後再試一次。");
             return;
         }
-        alert(window.t('alert_no_entry', '暫時無法確認您的作業入口，請稍後再試。'));
+        alert(window.t ? window.t('alert_no_entry', '暫時無法確認您的作業入口，請稍後再試。') : '暫時無法確認您的作業入口，請稍後再試。');
         return;
     }
 };
