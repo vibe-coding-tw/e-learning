@@ -1,3 +1,4 @@
+"use strict";
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 
 function getProxyFunctionBaseUrl(functionName, region = "asia-east1") {

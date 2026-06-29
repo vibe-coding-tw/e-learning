@@ -1,3 +1,4 @@
+"use strict";
 // ⚠️ dotenv 必須在所有讀取 process.env 的模組之前載入
 if (process.env.NODE_ENV !== "production" || !process.env.ECPAY_MERCHANT_ID) {
     require("dotenv").config();

@@ -1,3 +1,4 @@
+"use strict";
 const { normalizeLegacyId, unitIdsMatch } = require('./id-utils');
 
 function normalizeText(value = '') {

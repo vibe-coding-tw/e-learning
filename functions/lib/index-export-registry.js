@@ -1,3 +1,4 @@
+"use strict";
 const { registerAdminExports } = require('./index-export-admin');
 const { registerAutogradeExports } = require('./index-export-autograde');
 const { registerPaymentExports } = require('./index-export-payment');

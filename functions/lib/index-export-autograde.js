@@ -1,3 +1,4 @@
+"use strict";
 const admin = require("firebase-admin");
 const { registerProxyExports } = require('./index-export-utils');
 const { gradeAssignment } = require("./assignment-flow");

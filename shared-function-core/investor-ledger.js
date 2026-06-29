@@ -1,3 +1,4 @@
+"use strict";
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { recordLedgerEvent } = require("./ledger-engine");

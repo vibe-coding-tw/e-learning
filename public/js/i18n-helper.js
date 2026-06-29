@@ -198,6 +198,8 @@
             // index.html
             "hero_title": "Vibe Coding",
             "hero_subtitle": "瞄準 AI 教育市場的藍海策略",
+            "hero_badge": "VIBE CODING OVERVIEW",
+            "hero_market_alt": "台灣教育科技市場增長趨勢示意圖",
             "exec_summary_label": "執行摘要：我們正在彌合程式教育與實際應用的鴻溝。",
             "hero_desc": "本方案專注於提供創新且具體可見的 <b>Physical AI</b> 教育。透過實作、AI 輔助程式與業界標準的技術，我們不僅教授程式，更培養 AI 時代不可或缺的<b>邏輯思維與創造力</b>。",
             "learn_more_btn": "深入了解核心策略",
@@ -1243,6 +1245,8 @@
             // index.html
             "hero_title": "Vibe Coding",
             "hero_subtitle": "A Blue Ocean Strategy Targeting the AI Education Market",
+            "hero_badge": "VIBE CODING OVERVIEW",
+            "hero_market_alt": "Taiwan EdTech Market Growth Trend Illustration",
             "exec_summary_label": "Executive Summary: We bridge the gap between programming education and practical application.",
             "hero_desc": "This program focuses on providing innovative and tangible <b>Physical AI</b> education. Through hands-on practice, AI-assisted programming, and industry-standard technologies, we do not just teach coding; we nurture the <b>logical thinking and creativity</b> essential in the AI era.",
             "learn_more_btn": "Understand Core Strategy",

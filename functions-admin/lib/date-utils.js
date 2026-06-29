@@ -1,3 +1,4 @@
+"use strict";
 const { toMillis } = require("vibe-functions-core/order-utils");
 
 function previousYmPeriod(date = new Date()) {

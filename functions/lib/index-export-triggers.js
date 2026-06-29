@@ -1,3 +1,4 @@
+"use strict";
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 
 const registerTriggersExports = (target, createOnUserCreatedTrigger, createMapReplyHandler) => {

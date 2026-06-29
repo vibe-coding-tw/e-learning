@@ -1,3 +1,4 @@
+"use strict";
 const { setGlobalOptions } = require("firebase-functions/v2");
 const logger = require("firebase-functions/logger");
 

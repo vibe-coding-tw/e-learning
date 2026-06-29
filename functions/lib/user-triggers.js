@@ -1,3 +1,4 @@
+"use strict";
 const admin = require("firebase-admin");
 const functionsV1 = require("firebase-functions/v1");
 const { sendWelcomeEmail } = require("vibe-functions-core/email-service");

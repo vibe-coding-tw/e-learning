@@ -1,3 +1,4 @@
+"use strict";
 const admin = require("firebase-admin");
 const { execSync } = require("child_process");
 const fs = require("fs");

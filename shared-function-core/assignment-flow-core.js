@@ -1,3 +1,4 @@
+"use strict";
 const admin = require("firebase-admin");
 const { HttpsError } = require("firebase-functions/v2/https");
 const { sendAutogradeResultToStudent, sendAutogradeResultToTutor, sendGradingNotification } = require("vibe-functions-core/email-service");

@@ -1,3 +1,4 @@
+"use strict";
 const admin = require("firebase-admin");
 global.__vibeFirebaseAdmin = admin;
 const fs = require("fs");

@@ -1,3 +1,4 @@
+"use strict";
 const admin = require("firebase-admin");
 const { defineSecret } = require("firebase-functions/params");
 

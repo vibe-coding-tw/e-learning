@@ -1,3 +1,4 @@
+"use strict";
 const logger = require("firebase-functions/logger");
 
 const admin = global.__vibeFirebaseAdmin;

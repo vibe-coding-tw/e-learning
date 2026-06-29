@@ -1,3 +1,4 @@
+"use strict";
 const { onCall } = require("firebase-functions/v2/https");
 const { registerProxyExports } = require('./index-export-utils');
 const {

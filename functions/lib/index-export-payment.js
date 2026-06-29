@@ -1,3 +1,4 @@
+"use strict";
 const { registerProxyExports } = require('./index-export-utils');
 
 const registerPaymentExports = (target, proxyPaymentCallable) => {
