@@ -925,7 +925,7 @@ const seedDistributorPriceBooksFromLessons = onCall(async (request) => {
     const overwrite = payload.overwrite === true;
     const defaultSalePrice = payload.salePrice != null ? Number(payload.salePrice) : undefined;
 
-    const lessons = await getLessonsForAdmin(payload.distributorId || "");
+    const lessons = await getLessonsForAdmin(distributorId);
     const products = getSeedableDistributorProducts(lessons, distributorCurrency);
 
     let created = 0;
@@ -1151,7 +1151,6 @@ const getDistributorPortalData = onCall(async (request) => {
     const myDistributorId = getUserDistributorScope(userData) || "";
     const canManagePricing = role === "admin" || !!myDistributorId;
     const requestedDistributorId = normalizeText(request.data?.distributorId || "");
-    const lessons = await getLessonsForAdmin("");
     const distributorQuerySnap = await dbRef.collection("distributors").get();
     const allDistributors = [];
     distributorQuerySnap.forEach((doc) => {
@@ -1171,6 +1170,8 @@ const getDistributorPortalData = onCall(async (request) => {
         )
         : ownDistributorId;
 
+    const lessons = await getLessonsForAdmin(selectedDistributorId);
+
     const accessibleDistributors = role === "admin"
         ? allDistributors
         : allDistributors.filter((item) => item.id === ownDistributorId);
@@ -1181,6 +1182,9 @@ const getDistributorPortalData = onCall(async (request) => {
         lessons,
         distributorData.defaultCurrency || userData.defaultCurrency || "TWD"
     );
+
+    const lessonHiddenMap = {};
+    lessons.forEach((l) => { lessonHiddenMap[l.docId] = !!l.hiddenFromCatalog; });
 
     const [orderData, tutorData, settlementData] = selectedDistributorId
         ? await Promise.all([
@@ -1212,6 +1216,7 @@ const getDistributorPortalData = onCall(async (request) => {
         settlement: settlementData,
         seedableProductCount: seedableProducts.length,
         totalLessons: lessons.length,
+        lessonHiddenMap,
         user: {
             uid,
             email: auth.token?.email || userData.email || "",

@@ -23,14 +23,14 @@ export function connectFirebaseEmulators({ auth, db, functions } = {}) {
     if (!isLocalDev()) return;
     if (auth && !connected.auth) {
         connected.auth = true;
-        connectAuthEmulator(auth, "http://127.0.0.1:19099", { disableWarnings: true });
+        connectAuthEmulator(auth, "http://localhost:19099", { disableWarnings: true });
     }
     if (db && !connected.db) {
         connected.db = true;
-        connectFirestoreEmulator(db, "127.0.0.1", 18080);
+        connectFirestoreEmulator(db, "localhost", 18080);
     }
     if (functions && !connected.functions) {
         connected.functions = true;
-        connectFunctionsEmulator(functions, "127.0.0.1", 15001);
+        connectFunctionsEmulator(functions, "localhost", 15001);
     }
 }

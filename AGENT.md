@@ -284,4 +284,28 @@ Done in this session:
 - Added `status_paid_until`, `status_free_trial_until`, `status_trial_expired`, `status_free_course`, `status_not_activated` for enrollment display
 - Fingerprint re-run after changes
 
-> 最後更新：2026-06-27
+### Distributor Portal Bug Fixes & Emulator CORS
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| `seedDistributorPriceBooksFromLessons` uses raw `payload.distributorId` | Not normalized; mismatches Firestore doc ID | `functions-admin/index.js:928`: use normalized `distributorId` variable |
+| `getDistributorPortalData` passed `""` to `getLessonsForAdmin` | Called before `selectedDistributorId` was determined | Move `getLessonsForAdmin(selectedDistributorId)` after distributor selection logic |
+| Price book table missing hidden badge | No `hiddenFromCatalog` data in portal response | Add `lessonHiddenMap` to `getDistributorPortalData` response; render rose badge in `distributor-portal.js:312` |
+| `getSeedableDistributorProducts` required `dealerPrice > 0` | Chicken-and-egg problem with empty price books | Simplified: only filter `hiddenFromCatalog` (removed `resolveLessonPrice` check) |
+| Functions emulator CORS preflight fails | Client on `localhost:15002`, functions on `127.0.0.1:15001` → browser CORS | Changed firebase-local.js to use `localhost` for all emulator connections |
+| Default functions codebase fails to load | `admin-local-callables.js` requires `./distributor-pricing` which was deleted in cleanup | Changed to `require("vibe-functions-core/distributor-pricing")` |
+| `index-export-autograde.js` fails to load | `require("./assignment-flow")` deleted in cleanup | Changed to `require("vibe-functions-core/assignment-flow-core")` |
+| Firestore emulator data lost on restart | Default emulator uses in-memory storage | Added `start-emulator.sh` with `--import`/`--export-on-exit`, exported data to `.emulator-data/`, added to `.gitignore` |
+| `common-scouting-gai` course | New course created via Admin SDK | Added to `metadata_lessons` with `courseUnits`, i18n, `assignmentUrls` |
+
+### Emulator Local Dev Setup
+
+- **Start**: `bash start-emulator.sh` (uses `--import .emulator-data --export-on-exit .emulator-data`)
+- **Persistence**: Data saved to `.emulator-data/` on exit, restored on start. `.emulator-data/` gitignored.
+- **CORS fix**: All emulator connections in `firebase-local.js` use `localhost` instead of `127.0.0.1`
+
+### Seed Data Fixes
+
+- `scripts/seed-scouting-lesson.js`: Added `metadataType: "course"` — required for `isCatalogCourseLesson()` filter in learning-path
+
+> 最後更新：2026-06-30

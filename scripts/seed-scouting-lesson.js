@@ -57,6 +57,7 @@ const lessonFields = {
   lessonIndex: { integerValue: '4' },
   lessonLabel: { stringValue: '第 4 課' },
   orderWeight: { integerValue: '90' },
+  metadataType: { stringValue: 'course' },
   hiddenFromCatalog: { booleanValue: false },
   assignmentUrls: {
     mapValue: {

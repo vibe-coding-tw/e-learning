@@ -1,7 +1,7 @@
 "use strict";
 const admin = require("firebase-admin");
 const { registerProxyExports } = require('./index-export-utils');
-const { gradeAssignment } = require("./assignment-flow");
+const { gradeAssignment } = require("vibe-functions-core/assignment-flow-core");
 
 const registerAutogradeExports = ({ target, proxyAutogradeCallable, proxyAutogradeRequest, onCall }) => {
     registerProxyExports(target, [

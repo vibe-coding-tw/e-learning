@@ -273,7 +273,7 @@ function renderPriceBooks(items = []) {
     if (!tbody) return;
 
     if (!filteredItems.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">${window.t('dp_empty_pricebook_filtered', '尚未載入或沒有符合條件的價格表')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-slate-400 italic">${window.t('dp_empty_pricebook_filtered', '尚未載入或沒有符合條件的價格表')}</td></tr>`;
         const priceBooksSummary = el('portal-pricebook-tabs-summary');
         if (priceBooksSummary) priceBooksSummary.textContent = window.t('dp_no_pricebooks_summary', '目前沒有可顯示的價格表。');
         const title = el('portal-pricebook-tabs-title');
@@ -309,8 +309,7 @@ function renderPriceBooks(items = []) {
                 onclick="window.distributorPortalOpenPriceBookModal('${escapeHtml(id)}')"
             >
                 <td class="px-4 py-4 align-top">
-                    <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(id || '—')}</div>
-                    <div class="mt-1 font-bold text-slate-900">${escapeHtml(book.docId || '—')}</div>
+                    <div class="font-bold text-slate-900">${escapeHtml(book.docId || '—')}${state.lessonHiddenMap[book.docId || ''] ? `<span class="ml-2 inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] font-bold text-rose-700">${window.t('dp_badge_hidden', '隱藏中')}</span>` : ''}</div>
                     <div class="mt-1 text-[11px] text-slate-400">${window.t('dp_label_updated', '更新：')}${escapeHtml(formatDateTime(book.updatedAt))}</div>
                 </td>
                 <td class="px-4 py-4 align-top">
@@ -601,6 +600,7 @@ async function loadPortalData(distributorId = '') {
     state.orders = Array.isArray(state.portal?.orders) ? state.portal.orders : [];
     state.tutors = Array.isArray(state.portal?.tutors) ? state.portal.tutors : [];
     state.settlement = state.portal?.settlement || null;
+    state.lessonHiddenMap = state.portal?.lessonHiddenMap || {};
 
     const role = String(state.portal?.role || 'user');
     const scopeNote = el('portal-scope-note');

@@ -14,7 +14,7 @@ const {
 const {
     resolveDistributorCheckoutQuote,
     findLessonByDocumentId,
-} = require("./distributor-pricing");
+} = require("vibe-functions-core/distributor-pricing");
 
 if (!admin.apps.length) {
     admin.initializeApp();

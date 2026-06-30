@@ -281,11 +281,7 @@ function assertDistributorScope(userData = {}, requestedDistributorId = "", mess
 }
 
 function getSeedableDistributorProducts(lessons = [], distributorCurrency = "TWD") {
-    return lessons.filter((l) => {
-        if (l.hiddenFromCatalog) return false;
-        const price = resolveLessonPrice(l, distributorCurrency);
-        return Number(price.amount || 0) > 0;
-    });
+    return lessons.filter((l) => !l.hiddenFromCatalog);
 }
 
 async function getLessonsForAdmin(distributorId = "") {
