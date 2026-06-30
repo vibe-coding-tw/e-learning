@@ -58,6 +58,13 @@ const lessonFields = {
   lessonLabel: { stringValue: '第 4 課' },
   orderWeight: { integerValue: '90' },
   hiddenFromCatalog: { booleanValue: false },
+  assignmentUrls: {
+    mapValue: {
+      fields: {
+        'common-scouting-gai': { stringValue: 'https://github.com/vibe-coding-classroom/common-scouting-gai' }
+      }
+    }
+  },
   courseUnits: {
     arrayValue: {
       values: [
