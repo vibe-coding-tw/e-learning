@@ -1,6 +1,8 @@
 "use strict";
 const admin = require("firebase-admin");
 const { defineSecret } = require("firebase-functions/params");
+const fs = require("fs");
+const path = require("path");
 
 const { buildI18nFilenameCandidates, normalizeLegacyId, unitIdsMatch } = require("vibe-functions-core/id-utils");
 const logger = require("firebase-functions/logger");
@@ -65,16 +67,6 @@ function resolvePreferredLocales(runtimeConfig = null, req = null) {
 }
 
 async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig, locales) {
-    if (!runtimeConfig?.enabled) return null;
-    const contentRepoToken = CONTENT_REPO_TOKEN.value();
-    if (!contentRepoToken) {
-        logger.warn("[content-runtime] CONTENT_REPO_TOKEN missing.");
-        return null;
-    }
-
-    const repoOwner = runtimeConfig.repoOwner;
-    const repoName = runtimeConfig.repoName;
-    const ref = runtimeConfig.contentVersion || "main";
     const candidate = normalizeCourseFile(candidateFileName);
     const exactPath = normalizeText(candidateFileName).replace(/^\/+/, "");
     const exactPathCandidates = [];
@@ -99,6 +91,37 @@ async function fetchExternalCourseContentHelper(candidateFileName, runtimeConfig
             return `${pathPrefix}/${localeCandidate}`;
         }))
     ]));
+
+    if (process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.FIREBASE_EMULATOR_HUB) {
+        for (const contentPath of tried) {
+            const localPath = path.join("/Users/roverchen/Documents/Apps/content-repo", contentPath);
+            if (fs.existsSync(localPath)) {
+                try {
+                    const content = fs.readFileSync(localPath, "utf8");
+                    logger.info(`[content-runtime] [Emulator] Serve local content from: ${localPath}`);
+                    return {
+                        content,
+                        source: "local-emulator",
+                        locale: contentPath.split("/")[1] || "",
+                        file: contentPath
+                    };
+                } catch (err) {
+                    logger.warn(`[content-runtime] [Emulator] Read local file failed: ${localPath}`, err);
+                }
+            }
+        }
+    }
+
+    if (!runtimeConfig?.enabled) return null;
+    const contentRepoToken = CONTENT_REPO_TOKEN.value();
+    if (!contentRepoToken) {
+        logger.warn("[content-runtime] CONTENT_REPO_TOKEN missing.");
+        return null;
+    }
+
+    const repoOwner = runtimeConfig.repoOwner;
+    const repoName = runtimeConfig.repoName;
+    const ref = runtimeConfig.contentVersion || "main";
 
     for (const contentPath of tried) {
         const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/contents/${contentPath}?ref=${encodeURIComponent(ref)}`;
