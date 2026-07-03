@@ -6,7 +6,7 @@
     <meta name="description" data-i18n-meta="meta_desc_distributor" content="Vibe Coding 經銷商入口 — 管理價格表與訂單出貨狀態">
     <title data-i18n-doc-title="doc_title_distributor_portal">Distributor Portal - Vibe Coding</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <script src="./js/i18n-helper.3a22c1d104ee.js"></script>
+    <script src="./js/i18n-helper.0e89d5adaab3.js"></script>
     <script>
         (function() {
             const w = console.warn;
@@ -31,7 +31,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col" data-i18n-doc-title="doc_title_distributor_portal">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.b14f210da6d7.js"></script>
+    <script type="module" src="./js/nav-component.bce0209caf84.js"></script>
 
     <main class="container mx-auto px-4 py-8 flex-1">
         <div id="portal-loading" class="py-20 text-center">
@@ -165,8 +165,8 @@
                             <thead>
                                 <tr class="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
                                     <th class="px-4 py-3" data-i18n="dp_th_pricebook">價格表 / 商品</th>
-                                    <th class="px-4 py-3" data-i18n="dp_th_price">主價格 / 促銷價</th>
                                     <th class="px-4 py-3" data-i18n="dp_th_version">版本 / 狀態</th>
+                                    <th class="px-4 py-3" data-i18n="dp_th_price">主價格 / 促銷價</th>
                                     <th class="px-4 py-3" data-i18n="dp_th_effective">生效區間</th>
                                 </tr>
                             </thead>
@@ -417,8 +417,47 @@
         </div>
     </div>
 
-    <script type="module" src="./js/distributor-portal.3fcd328c3cef.js"></script>
+        <!-- 可套用商品選擇 Modal -->
+    <div id="portal-seed-modal" class="fixed inset-0 z-[99999] hidden items-center justify-center px-4 py-6" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="portal-seed-title" aria-hidden="true">
+        <div class="absolute inset-0 bg-slate-950/60" onclick="window.distributorPortalCloseSeedModal()"></div>
+        <div class="relative z-[81] w-full max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                <div>
+                    <div class="text-[11px] font-bold uppercase tracking-widest text-slate-400" data-i18n="dp_seed_badge">Seed Products</div>
+                    <h3 id="portal-seed-title" class="mt-1 text-2xl font-black text-slate-900" data-i18n="dp_seed_title">選擇要新增的商品</h3>
+                    <p id="portal-seed-desc" class="mt-1 text-sm text-slate-500" data-i18n="dp_seed_desc">勾選要建立價格表的商品，點擊確認後將以預設售價 0 匯入。</p>
+                </div>
+                <button onclick="window.distributorPortalCloseSeedModal()" class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50" data-i18n="dp_seed_close">
+                    關閉
+                </button>
+            </div>
+            <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
+                <div class="mb-3 flex items-center gap-3">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input id="portal-seed-select-all" type="checkbox" onchange="window.distributorPortalSeedToggleAll()" class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="text-sm font-bold text-slate-700" data-i18n="dp_seed_select_all">全選</span>
+                    </label>
+                    <span id="portal-seed-selected-count" class="text-xs text-slate-400">0 筆已選</span>
+                </div>
+                <div id="portal-seed-list" class="divide-y divide-slate-100 rounded-xl border border-slate-200">
+                    <div class="py-10 text-center text-sm text-slate-400 italic" data-i18n="dp_seed_loading">載入中...</div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                <button onclick="window.distributorPortalCloseSeedModal()" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50" data-i18n="dp_seed_cancel">
+                    取消
+                </button>
+                <button id="portal-seed-submit-btn" onclick="window.distributorPortalSubmitSeed()" class="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed" data-i18n="dp_seed_submit" disabled>
+                    確認匯入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/distributor-portal.5ea364d0a81c.js"></script>
     <div id="footer-placeholder" data-root="."></div>
-    <script src="./js/footer-component.aefa6a662d57.js"></script>
+    <script src="./js/footer-component.274d6201db52.js"></script>
+
+
 </body>
 </html>
