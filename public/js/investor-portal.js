@@ -1728,59 +1728,59 @@ function renderFinanceStatements(data) {
             <table class="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                     <tr class="border-b text-gray-500 font-medium">
-                        <th class="py-2">${window.t ? window.t('financial_items', '項目 (Financial Items)') : '項目 (Financial Items)'}</th>
-                        <th class="py-2 text-right">${window.t ? window.t('amount_twd', '金額 (TWD)') : '金額 (TWD)'}</th>
-                        <th class="py-2 text-right">${window.t ? window.t('ratio', '佔比 (Ratio)') : '佔比 (Ratio)'}</th>
+                        <th class="py-2">${window.t('financial_items')}</th>
+                        <th class="py-2 text-right">${window.t('amount_twd')}</th>
+                        <th class="py-2 text-right">${window.t('ratio')}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y text-gray-700">
                     <tr>
-                        <td class="py-2 font-semibold">${window.t ? window.t('total_revenue', '總營業收入 (Total Revenue)') : '總營業收入 (Total Revenue)'}</td>
+                        <td class="py-2 font-semibold">${window.t('total_revenue')}</td>
                         <td class="py-2 text-right font-semibold">$${totalRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-2 text-right font-semibold">100.00%</td>
                     </tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ ${window.t ? window.t('digital_course', '數位課程 (Digital Course)') : '數位課程 (Digital Course)'}</td>
+                        <td class="py-1.5 pl-4">├ ${window.t('digital_course')}</td>
                         <td class="py-1.5 text-right">$${courseRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalRevenue > 0 ? ((courseRevenue / totalRevenue) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">└ ${window.t ? window.t('physical_hardware', '實體硬體 (Physical Hardware)') : '實體硬體 (Physical Hardware)'}</td>
+                        <td class="py-1.5 pl-4">└ ${window.t('physical_hardware')}</td>
                         <td class="py-1.5 text-right">$${hardwareRevenue.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalRevenue > 0 ? ((hardwareRevenue / totalRevenue) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr>
-                        <td class="py-2 font-semibold">${window.t ? window.t('total_cogs', '營業成本 (Total COGS)') : '營業成本 (Total COGS)'}</td>
+                        <td class="py-2 font-semibold">${window.t('total_cogs')}</td>
                         <td class="py-2 text-right font-semibold">$${totalCOGS.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-2 text-right font-semibold">${totalRevenue > 0 ? ((totalCOGS / totalRevenue) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ ${window.t ? window.t('tutor_share', '導師分潤 (Tutor Share)') : '導師分潤 (Tutor Share)'}</td>
+                        <td class="py-1.5 pl-4">├ ${window.t('tutor_share')}</td>
                         <td class="py-1.5 text-right">$${totalTutorShare.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalTutorShare / totalRevenue) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ ${window.t ? window.t('gateway_fees', '金流交易費 (Gateway Fees)') : '金流交易費 (Gateway Fees)'}</td>
+                        <td class="py-1.5 pl-4">├ ${window.t('gateway_fees')}</td>
                         <td class="py-1.5 text-right">$${totalGatewayFees.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalGatewayFees / totalRevenue) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">└ ${window.t ? window.t('hardware_cogs', '硬體製造成本 (Hardware COGS)') : '硬體製造成本 (Hardware COGS)'}</td>
+                        <td class="py-1.5 pl-4">└ ${window.t('hardware_cogs')}</td>
                         <td class="py-1.5 text-right">$${totalHardwareCOGS.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalRevenue > 0 ? ((totalHardwareCOGS / totalRevenue) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="bg-blue-50/50 font-bold text-blue-900">
-                        <td class="py-2">${window.t ? window.t('gross_profit', '營業毛利 (Gross Profit)') : '營業毛利 (Gross Profit)'}</td>
+                        <td class="py-2">${window.t('gross_profit')}</td>
                         <td class="py-2 text-right">$${grossProfit.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-2 text-right">${grossMarginPct.toFixed(2)}%</td>
                     </tr>
                     <tr>
-                        <td class="py-2 font-semibold">${window.t ? window.t('total_opex', '營業費用 (Total OPEX)') : '營業費用 (Total OPEX)'}</td>
+                        <td class="py-2 font-semibold">${window.t('total_opex')}</td>
                         <td class="py-2 text-right font-semibold">$0.00</td>
                         <td class="py-2 text-right font-semibold">0.00%</td>
                     </tr>
                     <tr class="bg-blue-50/70 font-bold text-blue-950 border-t-2 border-blue-200">
-                        <td class="py-2.5">${window.t ? window.t('net_income', '營業淨利 (EBITDA / Net Income)') : '營業淨利 (EBITDA / Net Income)'}</td>
+                        <td class="py-2.5">${window.t('net_income')}</td>
                         <td class="py-2.5 text-right">$${netOperatingIncome.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-2.5 text-right">${grossMarginPct.toFixed(2)}%</td>
                     </tr>
@@ -1794,62 +1794,62 @@ function renderFinanceStatements(data) {
             <table class="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                     <tr class="border-b text-gray-500 font-medium">
-                        <th class="py-2">${window.t ? window.t('accounting_items', '科目 (Accounting Items)') : '科目 (Accounting Items)'}</th>
-                        <th class="py-2 text-right">${window.t ? window.t('amount_twd', '金額 (TWD)') : '金額 (TWD)'}</th>
-                        <th class="py-2 text-right">${window.t ? window.t('ratio', '佔比 (Ratio)') : '佔比 (Ratio)'}</th>
+                        <th class="py-2">${window.t('accounting_items')}</th>
+                        <th class="py-2 text-right">${window.t('amount_twd')}</th>
+                        <th class="py-2 text-right">${window.t('ratio')}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y text-gray-700">
-                    <tr class="bg-gray-50/50 font-bold"><td class="py-2" colspan="3">【${window.t ? window.t('assets', '資產 (Assets)') : '資產 (Assets)'}】</td></tr>
+                    <tr class="bg-gray-50/50 font-bold"><td class="py-2" colspan="3">【${window.t('assets')}】</td></tr>
                     <tr>
-                        <td class="py-1.5 pl-4">${window.t ? window.t('cash', '現金及約當現金 (Cash)') : '現金及約當現金 (Cash)'}</td>
+                        <td class="py-1.5 pl-4">${window.t('cash')}</td>
                         <td class="py-1.5 text-right">$${totalAssets.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">100.00%</td>
                     </tr>
                     <tr class="font-semibold text-gray-900">
-                        <td class="py-2">${window.t ? window.t('total_assets', '資產總計 (Total Assets)') : '資產總計 (Total Assets)'}</td>
+                        <td class="py-2">${window.t('total_assets')}</td>
                         <td class="py-2 text-right">$${totalAssets.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-2 text-right">100.00%</td>
                     </tr>
-                    <tr class="bg-gray-50/50 font-bold"><td class="py-2" colspan="3">【${window.t ? window.t('liabilities', '負債 (Liabilities)') : '負債 (Liabilities)'}】</td></tr>
+                    <tr class="bg-gray-50/50 font-bold"><td class="py-2" colspan="3">【${window.t('liabilities')}】</td></tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ ${window.t ? window.t('tutor_payable', '應付導師分潤 (Tutor Share Payable)') : '應付導師分潤 (Tutor Share Payable)'}</td>
+                        <td class="py-1.5 pl-4">├ ${window.t('tutor_payable')}</td>
                         <td class="py-1.5 text-right">$${tutorPayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalAssets > 0 ? ((tutorPayable / totalAssets) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ ${window.t ? window.t('gateway_payable', '應付金流手續費 (Gateway Payable)') : '應付金流手續費 (Gateway Payable)'}</td>
+                        <td class="py-1.5 pl-4">├ ${window.t('gateway_payable')}</td>
                         <td class="py-1.5 text-right">$${gatewayPayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalAssets > 0 ? ((gatewayPayable / totalAssets) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">└ ${window.t ? window.t('hardware_payable', '應付履約成本 (Hardware Payable)') : '應付履約成本 (Hardware Payable)'}</td>
+                        <td class="py-1.5 pl-4">└ ${window.t('hardware_payable')}</td>
                         <td class="py-1.5 text-right">$${hardwarePayable.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalAssets > 0 ? ((hardwarePayable / totalAssets) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="font-semibold text-gray-900">
-                        <td class="py-2">${window.t ? window.t('total_liabilities', '負債總計 (Total Liabilities)') : '負債總計 (Total Liabilities)'}</td>
+                        <td class="py-2">${window.t('total_liabilities')}</td>
                         <td class="py-2 text-right">$${totalLiabilities.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-2 text-right">${totalAssets > 0 ? ((totalLiabilities / totalAssets) * 100).toFixed(2) : 0}%</td>
                     </tr>
-                    <tr class="bg-gray-50/50 font-bold"><td class="py-2" colspan="3">【${window.t ? window.t('equity', '權益 (Equity)') : '權益 (Equity)'}】</td></tr>
+                    <tr class="bg-gray-50/50 font-bold"><td class="py-2" colspan="3">【${window.t('equity')}】</td></tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">├ ${window.t ? window.t('paid_in_capital', '原始資本 (Paid-in Capital)') : '原始資本 (Paid-in Capital)'}</td>
+                        <td class="py-1.5 pl-4">├ ${window.t('paid_in_capital')}</td>
                         <td class="py-1.5 text-right">$0.00</td>
                         <td class="py-1.5 text-right">0.00%</td>
                     </tr>
                     <tr class="text-gray-500">
-                        <td class="py-1.5 pl-4">└ ${window.t ? window.t('retained_earnings', '保留盈餘 (Retained Earnings)') : '保留盈餘 (Retained Earnings)'}</td>
+                        <td class="py-1.5 pl-4">└ ${window.t('retained_earnings')}</td>
                         <td class="py-1.5 text-right">$${retainedEarnings.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 text-right">${totalAssets > 0 ? ((retainedEarnings / totalAssets) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="bg-emerald-50/50 font-bold text-emerald-900 border-t border-emerald-200">
-                        <td class="py-2">${window.t ? window.t('total_equity', '權益總額 / 淨資產 (Total Equity)') : '權益總額 / 淨資產 (Total Equity)'}</td>
+                        <td class="py-2">${window.t('total_equity')}</td>
                         <td class="py-2 text-right">$${totalEquity.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-2 text-right">${totalAssets > 0 ? ((totalEquity / totalAssets) * 100).toFixed(2) : 0}%</td>
                     </tr>
                     <tr class="bg-emerald-50/70 font-bold text-emerald-950 border-t-2 border-emerald-200">
-                        <td class="py-2.5">${window.t ? window.t('liabilities_equity', '負債與權益總額 (Liabilities & Equity)') : '負債與權益總額 (Liabilities & Equity)'}</td>
+                        <td class="py-2.5">${window.t('liabilities_equity')}</td>
                         <td class="py-2.5 text-right">$${(totalLiabilities + totalEquity).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-2.5 text-right">100.00%</td>
                     </tr>
@@ -1857,8 +1857,8 @@ function renderFinanceStatements(data) {
             </table>
         </div>
         <div class="mt-4 p-3 bg-emerald-50/40 rounded-xl border border-emerald-100 flex justify-between items-center text-xs font-semibold text-emerald-800">
-            <span>${window.t ? window.t('issued_shares', '發行股份') : '發行股份'}: ${issuedShares.toLocaleString('zh-TW')} ${window.t ? window.t('shares', '股') : '股'}</span>
-            <span>${window.t ? window.t('nav_per_share', '每股淨值 (NAV)') : '每股淨值 (NAV)'}: $${navPerShare.toFixed(5)} TWD</span>
+            <span>${window.t('issued_shares')}: ${issuedShares.toLocaleString('zh-TW')} ${window.t('shares')}</span>
+            <span>${window.t('nav_per_share')}: $${navPerShare.toFixed(5)} TWD</span>
         </div>
     `;
 }

@@ -51,10 +51,10 @@ if (typeof window.notify !== 'function') {
     window.notify = function (message, variant = 'info') {
         const text = String(message || '').trim();
         const toneMap = {
-            success: { bg: 'bg-emerald-600', border: 'border-emerald-700', label: window.t('dash_notify_success', '成功') },
-            warning: { bg: 'bg-amber-500', border: 'border-amber-600', label: window.t('dash_notify_warning', '提醒') },
-            error: { bg: 'bg-rose-600', border: 'border-rose-700', label: window.t('dash_notify_error', '錯誤') },
-            info: { bg: 'bg-slate-900', border: 'border-slate-800', label: window.t('dash_notify_info', '資訊') }
+            success: { bg: 'bg-emerald-600', border: 'border-emerald-700', label: window.t('dash_notify_success') },
+            warning: { bg: 'bg-amber-500', border: 'border-amber-600', label: window.t('dash_notify_warning') },
+            error: { bg: 'bg-rose-600', border: 'border-rose-700', label: window.t('dash_notify_error') },
+            info: { bg: 'bg-slate-900', border: 'border-slate-800', label: window.t('dash_notify_info') }
         };
         const tone = toneMap[String(variant || 'info').toLowerCase()] || toneMap.info;
 
@@ -195,7 +195,7 @@ function parseJsonLoose(value = "{}", fallback = {}) {
     try {
         return JSON.parse(raw);
     } catch (err) {
-        throw new Error(window.t('dash_json_parse_error', 'JSON 解析失敗：{msg}').replace('{msg}', err.message));
+        throw new Error(window.t('dash_json_parse_error').replace('{msg}', err.message));
     }
 }
 
@@ -221,7 +221,7 @@ function setDashboardLog(message = "", { replace = false } = {}) {
     window.__dashboardLogLines = window.__dashboardLogLines.slice(-20);
     host.textContent = window.__dashboardLogLines.length
         ? window.__dashboardLogLines.join('\n')
-        : window.t('dash_log_await', '等待載入系統訊息。');
+        : window.t('dash_log_await');
 }
 
 function applyDashboardSystemConfigToUI(config = {}) {
@@ -289,16 +289,16 @@ window.updateSystemDefaults = async function() {
     try {
         const res = await updateSystemConfigCallable(payload);
         if (res?.data?.success) {
-            setDashboardLog(window.t('dash_defaults_saved', '已儲存系統預設值。'));
+            setDashboardLog(window.t('dash_defaults_saved'));
             await loadDashboardSystemConfig();
             notify(window.t('notify_defaults_updated'), 'success');
         } else {
-            throw new Error(window.t('dash_defaults_update_failed', '更新失敗'));
+            throw new Error(window.t('dash_defaults_update_failed'));
         }
     } catch (err) {
         console.error('updateSystemDefaults error:', err);
-        notify(window.t('dash_defaults_save_failed', '儲存系統預設值失敗：{msg}').replace('{msg}', err.message), 'error');
-        setDashboardLog(window.t('dash_defaults_save_failed_log', '系統預設值儲存失敗：{msg}').replace('{msg}', err?.message || err));
+        notify(window.t('dash_defaults_save_failed').replace('{msg}', err.message), 'error');
+        setDashboardLog(window.t('dash_defaults_save_failed_log').replace('{msg}', err?.message || err));
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -323,16 +323,16 @@ window.saveDashboardLocaleSettings = async function() {
     try {
         const res = await updateSystemConfigCallable(payload);
         if (res?.data?.success) {
-            setDashboardLog(window.t('dash_locale_saved', '已儲存站台 locale 設定。'));
+            setDashboardLog(window.t('dash_locale_saved'));
             await loadDashboardSystemConfig();
-            notify(window.t('dash_locale_updated', '站台 locale 設定已更新'), 'success');
+            notify(window.t('dash_locale_updated'), 'success');
         } else {
-            throw new Error(window.t('dash_defaults_update_failed', '更新失敗'));
+            throw new Error(window.t('dash_defaults_update_failed'));
         }
     } catch (err) {
         console.error('saveDashboardLocaleSettings error:', err);
-        notify(window.t('dash_locale_save_failed', '儲存 locale 設定失敗：{msg}').replace('{msg}', err.message), 'error');
-        setDashboardLog(window.t('dash_locale_save_failed_log', 'locale 設定儲存失敗：{msg}').replace('{msg}', err?.message || err));
+        notify(window.t('dash_locale_save_failed').replace('{msg}', err.message), 'error');
+        setDashboardLog(window.t('dash_locale_save_failed_log').replace('{msg}', err?.message || err));
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -495,7 +495,7 @@ onAuthStateChanged(auth, async (user) => {
         if (forceTutorModeByQuery) {
             writeAdminTutorModeForUid(user.uid, true);
         }
-        if (userDisplay) userDisplay.textContent = window.t('dash_greeting', '您好, {name}').replace('{name}', user.displayName || window.t('dash_greeting_fallback', '使用者'));
+        if (userDisplay) userDisplay.textContent = window.t('dash_greeting').replace('{name}', user.displayName || window.t('dash_greeting_fallback'));
         await loadLessons();
         loadDashboard();
     } else {
@@ -743,19 +743,19 @@ function showAccessDenied(errorType = "") {
 
     if (errorType === "GUEST") {
         // Show Login Prompt
-        if (deniedTitle) deniedTitle.innerText = window.t('dash_hello_guest', "👋 您好！閣下尚未登入");
-        if (deniedMsg) deniedMsg.innerText = window.t('dash_guest_msg', "本頁面為個人學習儀表板，請登入以查看您的數據。");
+        if (deniedTitle) deniedTitle.innerText = window.t('dash_hello_guest');
+        if (deniedMsg) deniedMsg.innerText = window.t('dash_guest_msg');
         if (guestView) guestView.classList.remove('hidden');
         if (adminSetupNote) adminSetupNote.classList.add('hidden');
     } else if (errorType === "ADMIN_ONLY_NO_UNIT") {
-        if (deniedTitle) deniedTitle.innerText = window.t('dash_denied_title_admin_only', "⛔ 僅限管理員");
-        if (deniedMsg) deniedMsg.innerText = window.t('dash_denied_msg_admin_only', "未指定課程單元時，只有管理員可以存取 Dashboard。");
+        if (deniedTitle) deniedTitle.innerText = window.t('dash_denied_title_admin_only');
+        if (deniedMsg) deniedMsg.innerText = window.t('dash_denied_msg_admin_only');
         if (guestView) guestView.classList.add('hidden');
         if (adminSetupNote) adminSetupNote.classList.add('hidden');
     } else {
         // Show Access Denied (Logged in but no permission)
-        if (deniedTitle) deniedTitle.innerText = window.t('dash_denied_title', "⛔ 權限不足");
-        if (deniedMsg) deniedMsg.innerText = window.t('dash_denied_msg', "只有管理員、該單元合格導師，或該單元已付款學生可以存取此頁面。");
+        if (deniedTitle) deniedTitle.innerText = window.t('dash_denied_title');
+        if (deniedMsg) deniedMsg.innerText = window.t('dash_denied_msg');
         if (guestView) guestView.classList.add('hidden');
         if (adminSetupNote) adminSetupNote.classList.remove('hidden');
 
@@ -1204,7 +1204,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
 
     const container = document.getElementById('view-overview');
 
-    let courseTitle = filterCourseId ? (lessonsMap[filterCourseId] || filterCourseId) : window.t('dash_my_learning_profile', "我的學習概況");
+    let courseTitle = filterCourseId ? (lessonsMap[filterCourseId] || filterCourseId) : window.t('dash_my_learning_profile');
     if (filterUnitId) courseTitle += ` - ${formatUnitName(filterUnitId)}`;
 
     // Check for physical products and fulfillment status
@@ -1225,46 +1225,46 @@ function renderStudentDashboard(data, filterUnitId = null) {
     container.innerHTML = `
         <div class="mb-6">
             <h2 class="text-2xl font-bold text-gray-800">${escapeHtml(courseTitle)}</h2>
-            ${filterCourseId && mode !== 'iframe' ? `<a href="dashboard.html" class="text-sm text-blue-600 hover:underline">${window.t('dash_view_all_courses', '← 查看所有課程')}</a>` : ''}
+            ${filterCourseId && mode !== 'iframe' ? `<a href="dashboard.html" class="text-sm text-blue-600 hover:underline">${window.t('dash_view_all_courses')}</a>` : ''}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="card border-l-4 border-blue-500">
-                <p class="text-gray-500 text-sm font-medium">${filterUnitId ? window.t('dash_unit_learning_hours', '本單元學習時數') : window.t('dash_learning_hours', '學習時數')}</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-1">${((myData.totalTime || 0) / 3600).toFixed(1)} <span class="text-sm font-normal text-gray-400">${window.t('dash_hours_unit', 'hours')}</span></h3>
+                <p class="text-gray-500 text-sm font-medium">${filterUnitId ? window.t('dash_unit_learning_hours') : window.t('dash_learning_hours')}</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-1">${((myData.totalTime || 0) / 3600).toFixed(1)} <span class="text-sm font-normal text-gray-400">${window.t('dash_hours_unit')}</span></h3>
             </div>
             <div class="card border-l-4 border-purple-500">
-                <p class="text-gray-500 text-sm font-medium">${window.t('dash_assignments_submitted', '作業繳交')}</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-1">${displayAssignments.length} <span class="text-sm font-normal text-gray-400">${window.t('dash_submitted_unit', 'submitted')}</span></h3>
+                <p class="text-gray-500 text-sm font-medium">${window.t('dash_assignments_submitted')}</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-1">${displayAssignments.length} <span class="text-sm font-normal text-gray-400">${window.t('dash_submitted_unit')}</span></h3>
             </div>
              <div class="card border-l-4 border-green-500">
-                <p class="text-gray-500 text-sm font-medium">${window.t('dash_account_status', '帳號狀態')}</p>
-                <h3 class="text-3xl font-bold text-green-600 mt-1">${window.t('dash_account_active', 'Active')}</h3>
+                <p class="text-gray-500 text-sm font-medium">${window.t('dash_account_status')}</p>
+                <h3 class="text-3xl font-bold text-green-600 mt-1">${window.t('dash_account_active')}</h3>
             </div>
             ${hasPhysical ? `
             <div class="card border-l-4 border-orange-500">
-                <p class="text-gray-500 text-sm font-medium">${window.t('dash_kit_shipment', '實體教材履約')}</p>
-                <h3 class="text-3xl font-bold ${isShipped ? 'text-green-600' : 'text-orange-600'} mt-1">${isShipped ? window.t('dash_shipped', window.t('status_fulfilled')) : window.t('dash_preparing', '準備中')}</h3>
+                <p class="text-gray-500 text-sm font-medium">${window.t('dash_kit_shipment')}</p>
+                <h3 class="text-3xl font-bold ${isShipped ? 'text-green-600' : 'text-orange-600'} mt-1">${isShipped ? window.t('dash_shipped') : window.t('dash_preparing')}</h3>
             </div>
             ` : ''}
         </div>
 
         ${shipmentRecords.length > 0 ? `
         <div class="card mb-8">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">${window.t('dash_my_shipments', '我的履約狀態 (My Fulfillment)')}</h3>
+            <h3 class="text-lg font-bold text-gray-800 mb-4">${window.t('dash_my_shipments')}</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="text-sm text-gray-500 border-b">
-                            <th class="py-3 px-2">${window.t('dash_shipment_order', '訂單')}</th>
-                            <th class="py-3 px-2">${window.t('dash_th_shipping_info', '收件資訊')}</th>
-                            <th class="py-3 px-2">${window.t('dash_shipment_address', '履約地址')}</th>
-                            <th class="py-3 px-2 text-center">${window.t('dash_status', '狀態')}</th>
+                            <th class="py-3 px-2">${window.t('dash_shipment_order')}</th>
+                            <th class="py-3 px-2">${window.t('dash_th_shipping_info')}</th>
+                            <th class="py-3 px-2">${window.t('dash_shipment_address')}</th>
+                            <th class="py-3 px-2 text-center">${window.t('dash_status')}</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm text-gray-700 divide-y">
                         ${shipmentRecords.map(o => {
-                            const notProvided = window.t('not_provided', '未提供');
+                            const notProvided = window.t('not_provided');
                             const receiverName = o.shippingContact?.name || o.logistics?.receiverName || o.logistics?.ReceiverName || notProvided;
                             const receiverPhone = o.shippingContact?.phone || o.logistics?.receiverPhone || o.logistics?.ReceiverCellPhone || o.logistics?.ReceiverPhone || notProvided;
                             const shippingAddress = o.shippingAddress || o.logistics?.storeAddress || o.logistics?.CVSAddress || o.logistics?.ReceiverAddress || notProvided;
@@ -1279,13 +1279,13 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                         <div class="text-[10px] text-gray-400 mt-0.5">${escapeHtml(paidAtText)}</div>
                                     </td>
                                     <td class="py-3 px-2">
-                                        <div class="text-xs text-slate-700 font-semibold">${window.t('dash_shipment_receiver', '收件人')}: ${escapeHtml(receiverName)}</div>
-                                        <div class="text-xs text-slate-600">${window.t('dash_shipment_phone', '電話')}: ${escapeHtml(receiverPhone)}</div>
+                                        <div class="text-xs text-slate-700 font-semibold">${window.t('dash_shipment_receiver')}: ${escapeHtml(receiverName)}</div>
+                                        <div class="text-xs text-slate-600">${window.t('dash_shipment_phone')}: ${escapeHtml(receiverPhone)}</div>
                                     </td>
                                     <td class="py-3 px-2 text-xs text-slate-700 break-all">${escapeHtml(shippingAddress)}</td>
                                     <td class="py-3 px-2 text-center">
                                         <span class="px-2 py-1 rounded text-xs font-bold ${isDone ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
-                                            ${isDone ? window.t('dash_shipped', window.t('status_fulfilled')) : window.t('dash_to_ship', window.t('status_pending_fulfillment'))}
+                                            ${isDone ? window.t('dash_shipped') : window.t('dash_to_ship')}
                                         </span>
                                     </td>
                                 </tr>
@@ -1299,16 +1299,16 @@ function renderStudentDashboard(data, filterUnitId = null) {
 
         <!-- My Assignments -->
         <div class="card">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">${window.t('dash_my_assignments', '我的作業 (My Assignments)')}</h3>
+            <h3 class="text-lg font-bold text-gray-800 mb-4">${window.t('dash_my_assignments')}</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="text-sm text-gray-500 border-b">
-                            <th class="py-3 px-2">${window.t('dash_assignment_name', '作業名稱')}</th>
-                            <th class="py-3 px-2">${window.t('dash_submitted_time', '提交時間')}</th>
-                            <th class="py-3 px-2">${window.t('dash_status', '狀態')}</th>
-                            <th class="py-3 px-2 text-right">${window.t('dash_score', '分數')}</th>
-                            <th class="py-3 px-2 text-right">${window.t('dash_feedback', '評語')}</th>
+                            <th class="py-3 px-2">${window.t('dash_assignment_name')}</th>
+                            <th class="py-3 px-2">${window.t('dash_submitted_time')}</th>
+                            <th class="py-3 px-2">${window.t('dash_status')}</th>
+                            <th class="py-3 px-2 text-right">${window.t('dash_score')}</th>
+                            <th class="py-3 px-2 text-right">${window.t('dash_feedback')}</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm text-gray-700 divide-y">
@@ -1317,12 +1317,12 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                 <td class="py-3 px-2">
                                     <!-- 顯示課程單元名稱（去除前綴）為主標題，特定作業任務為副標題 -->
                                     <div class="font-bold text-gray-800 mb-0.5">${escapeHtml(window.formatUnitName(a.unitId))}</div>
-                                    <div class="text-[10px] text-gray-400">${escapeHtml(a.assignmentTitle || a.title || window.t('dash_assignment_title_fallback', '未指定任務'))}</div>
+                                    <div class="text-[10px] text-gray-400" data-i18n="dash_assignment_title_fallback"></div>
                                 </td>
                                 <td class="py-3 px-2 text-gray-500 text-xs">${a.submittedAt ? new Date(a.submittedAt.seconds * 1000).toLocaleString() : '-'}</td>
                                 <td class="py-3 px-2">
                                     <span class="px-2 py-1 rounded text-xs font-bold ${isAssignmentGraded(a) ? 'bg-green-100 text-green-700' : ((a.currentStatus || a.status) === 'started' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700')}">
-                                        ${isAssignmentGraded(a) ? window.t('dash_graded', '已評分') : resolveAssignmentStatusLabel(a.currentStatus || a.status || 'submitted')}
+                                        ${isAssignmentGraded(a) ? window.t('dash_graded') : resolveAssignmentStatusLabel(a.currentStatus || a.status || 'submitted')}
                                     </span>
                                 </td>
                                 <td class="py-3 px-2 text-right font-bold text-blue-600">${resolveAssignmentGradeDisplay(a)}</td>
@@ -1330,7 +1330,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                     ${a.tutorFeedback ? escapeHtml(a.tutorFeedback) : '-'}
                                 </td>
                             </tr>
-                        `).join('') : `<tr><td colspan="5" class="py-4 text-center text-gray-500">${window.t('dash_no_assignments_submitted', '此課程尚無繳交作業')}</td></tr>`}
+                        `).join('') : `<tr><td colspan="5" class="py-4 text-center text-gray-500">${window.t('dash_no_assignments_submitted')}</td></tr>`}
                     </tbody>
                 </table>
             </div>
@@ -1339,7 +1339,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
         <!-- [V15.11] Student README Placeholder -->
         <div id="github-readme-placeholder-student" class="markdown-embed p-6 mt-8 rounded-3xl border border-slate-200 bg-gray-50 shadow-sm overflow-hidden hidden">
             <div class="flex items-center gap-3 text-slate-400 italic font-medium">
-                <span class="animate-pulse">⏳</span> ${window.t('dash_gh_readme_loading', '正在抓取 GitHub 任務說明 (README.md)...')}
+                <span class="animate-pulse">⏳</span> ${window.t('dash_gh_readme_loading')}
             </div>
         </div>
 
@@ -1363,12 +1363,13 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                     <div class="bg-blue-600 h-2 rounded-full" style="width: ${Math.min(100, (p.total / 3600) * 100)}%"></div> 
                                 </div>
                             </div>
-                        `).join('') : `<p class="text-gray-500">${window.t('dash_no_learning_records', '尚無學習紀錄')}</p>`}
+                        `).join('') : `<p class="text-gray-500">${window.t('dash_no_learning_records')}</p>`}
                      </div>
                 </div>
             </div>
         </div>
     `;
+    if (typeof window.applyI18n === 'function') window.applyI18n();
 
     // Render Chart (Need to adjust chart data if filtering? 
     // Usually chart data comes from myData.videoTime etc. which are totals. 
@@ -1424,7 +1425,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
         assignmentsTabBtn.classList.toggle('hidden', !canViewAssignments);
-        assignmentsTabBtn.textContent = window.t('dash_tab_assignments', 'Assignments');
+        assignmentsTabBtn.textContent = window.t('dash_tab_assignments');
     }
 
 
@@ -1467,7 +1468,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const showSettingsTab = canCurrentUserViewSettingsTab();
     if (settingsTabBtn) {
         settingsTabBtn.classList.toggle('hidden', !showSettingsTab);
-        settingsTabBtn.textContent = window.t('dash_tab_settings', '系統設定');
+        settingsTabBtn.textContent = window.t('dash_tab_settings');
     }
 
     // Stats (Base on filtered students if unit is selected)
@@ -1846,7 +1847,7 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
             const finalUrl = getAssignmentUrlForTutor(assignmentUrlMap, unitId, myEmail);
             if (finalUrl) {
                 if (isLikelyAssignmentLink(finalUrl) && !isValidAssignmentLinkUrl(finalUrl)) {
-                    alert(window.t("alert_invalid_unit_url", "此單元設定的作業連結格式不正確，請到課程設定修正。"));
+                    alert(window.t("alert_invalid_unit_url"));
                     return;
                 }
                 window.open(finalUrl, '_blank');
@@ -1854,7 +1855,7 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
             }
         }
 
-        alert(window.t("alert_missing_unit_url", "此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。"));
+        alert(window.t("alert_missing_unit_url"));
         return;
     }
 
@@ -1875,24 +1876,24 @@ window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null)
             }
 
             if (access.requiresTutorAssignment && !access.assignedTutorEmail) {
-                alert(window.t("alert_assignment_not_assigned", "此單元尚未完成老師指派，作業入口會在老師指派完成後開放。"));
+                alert(window.t("alert_assignment_not_assigned"));
                 return;
             }
 
             const assignmentUrl = access.classroomUrl;
             if (assignmentUrl) {
                 if (isLikelyAssignmentLink(assignmentUrl) && !isValidAssignmentLinkUrl(assignmentUrl)) {
-                    alert(window.t("alert_invalid_tutor_url", "此單元設定的作業連結格式不正確，請通知管理員/老師修正。"));
+                    alert(window.t("alert_invalid_tutor_url"));
                     return;
                 }
                 window.open(assignmentUrl, '_blank');
                 return;
             }
 
-            alert(window.t("alert_missing_unit_url", "此單元尚未設定作業連結，請管理員/老師至「課程設定」中設定。"));
+            alert(window.t("alert_missing_unit_url"));
         } catch (error) {
             console.error('[Dashboard] Failed to resolve assignment link:', error);
-            alert(window.t("alert_fetch_portal_failed", "暫時無法取得作業入口，請稍後再試。"));
+            alert(window.t("alert_fetch_portal_failed"));
         }
     })();
 };
@@ -1988,12 +1989,12 @@ function isAssignmentGraded(assignment) {
 }
 
 function resolveAssignmentStatusLabel(status) {
-    if (status === 'started' || status === 'in_progress') return window.t('status_in_progress', '進行中');
-    if (status === 'submitted') return window.t('status_submitted', '待評分');
-    if (status === 'graded') return window.t('status_graded', '已評分');
-    if (status === 'blocked') return window.t('status_blocked', '🔴 遭遇卡點');
-    if (status === 'coaching') return window.t('status_coaching', '🟡 導師引導中');
-    if (status === 'resolved') return window.t('status_resolved', '🟢 已解決');
+    if (status === 'started' || status === 'in_progress') return window.t('status_in_progress');
+    if (status === 'submitted') return window.t('status_submitted');
+    if (status === 'graded') return window.t('status_graded');
+    if (status === 'blocked') return window.t('status_blocked');
+    if (status === 'coaching') return window.t('status_coaching');
+    if (status === 'resolved') return window.t('status_resolved');
     return status || 'new';
 }
 
@@ -2006,7 +2007,7 @@ window.renderAssignmentsTable = function(assignments, canManageAssignments, cont
     const clickAction = canManageAssignments ? 'modal' : 'url';
 
     if (!assignments || assignments.length === 0) {
-        const emptyMsg = `<tr><td colspan="${showActionCol ? 6 : 5}" class="text-center py-8 text-gray-400">${window.t('dash_no_assignments_submitted', 'No assignments submitted for this unit.')}</td></tr>`;
+        const emptyMsg = `<tr><td colspan="${showActionCol ? 6 : 5}" class="text-center py-8 text-gray-400">${window.t('dash_no_assignments_submitted')}</td></tr>`;
         tableBodies.forEach(tbody => tbody.innerHTML = emptyMsg);
         return;
     }
@@ -2036,7 +2037,7 @@ window.renderAssignmentsTable = function(assignments, canManageAssignments, cont
             rowOnClick = `window.autoGradeAssignment('${a.id}')`;
         } else {
             // clickAction === 'url'
-            rowOnClick = a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : `notify('${window.t('dash_assignment_no_link', 'This assignment has no link.')}', 'warning')`;
+            rowOnClick = a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : `notify('${window.t('dash_assignment_no_link')}', 'warning')`;
         }
         
         return `
@@ -2233,7 +2234,7 @@ function renderPaymentsChart(students) {
     charts.payments = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: [window.t('dash_chart_paid_label', '已付費 (Paid)'), window.t('dash_chart_trial_label', '試用/免費 (Trial/Free)')],
+            labels: [window.t('dash_chart_paid_label'), window.t('dash_chart_trial_label')],
             datasets: [{
                 data: [totalPaid, totalTrial],
                 backgroundColor: ['#10b981', '#ef4444'], // Emerald Green and Red
@@ -2349,8 +2350,8 @@ window.switchTab = function (tabName) {
         const headerEl = document.querySelector('#assignments-header h3');
         if (headerEl) {
             headerEl.textContent = isStudent
-                ? window.t('dash_my_assignments', 'My Assignments')
-                : window.t('dash_assignments_title', 'Assignments');
+                ? window.t('dash_my_assignments')
+                : window.t('dash_assignments_title');
         }
 
         if (!isStudent) {
@@ -2418,15 +2419,15 @@ window.buildRevenueSimulatorHtml = window.buildRevenueSimulatorHtml || function(
         <div class="mb-10 bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 border-b border-blue-100 flex items-center justify-between">
                 <h4 class="text-sm font-black text-blue-900 flex items-center gap-2">
-                    📊 ${window.t('dash_sim_title', '分潤模擬器（唯讀）')}
+                    📊 ${window.t('dash_sim_title')}
                 </h4>
-                <span class="text-[11px] text-blue-500 font-semibold">${window.t('dash_sim_readonly', '不寫入資料庫')}</span>
+                <span class="text-[11px] text-blue-500 font-semibold">${window.t('dash_sim_readonly')}</span>
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                <label class="text-xs font-bold text-gray-600">${window.t('dash_sim_amount', '訂單金額')}
+                <label class="text-xs font-bold text-gray-600">${window.t('dash_sim_amount')}
                     <input id="sim-amount" type="number" min="0" step="1" value="1200" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
                 </label>
-                <label class="text-xs font-bold text-gray-600">${window.t('dash_sim_months', '有效期(月)')}
+                <label class="text-xs font-bold text-gray-600">${window.t('dash_sim_months')}
                     <input id="sim-months" type="number" min="1" step="1" value="12" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
                 </label>
                 <label class="text-xs font-bold text-gray-600">Tutor Rate
@@ -2450,7 +2451,7 @@ window.buildRevenueSimulatorHtml = window.buildRevenueSimulatorHtml || function(
             </div>
             <div class="px-6 pb-6">
                 <button onclick="window.runRevenueSimulation()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
-                    ${window.t('dash_sim_btn', '重新模擬')}
+                    ${window.t('dash_sim_btn')}
                 </button>
             </div>
             <div id="revenue-sim-result" class="px-6 pb-6"></div>
@@ -2588,17 +2589,17 @@ window.markAsShipped = async function(orderId) {
     if (!confirm(window.t('confirm_mark_shipped').replace('{id}', orderId))) return;
 
     try {
-        const markShippedFunc = httpsCallable(functions, 'markOrderShipped');
+        const markShippedFunc = httpsCallable(functions, 'paymentMarkOrderShipped');
         const result = await markShippedFunc({ orderId });
         
         if (result.data?.success) {
-            notify(window.t('dash_order_updated', '訂單狀態已更新！'), 'success');
+            notify(window.t('dash_order_updated'), 'success');
             // Refresh local data state
             const order = (dashboardData.hardwareOrders || []).find(o => o.id === orderId);
             if (order) order.fulfillmentStatus = 'SHIPPED';
             renderLogisticsTab();
         } else {
-            throw new Error(result.data?.error || window.t('dash_order_update_failed', '更新失敗'));
+            throw new Error(result.data?.error || window.t('dash_order_update_failed'));
         }
     } catch (err) {
         console.error("Failed to mark order as shipped:", err);
@@ -2629,7 +2630,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
             <div class="mb-10 bg-orange-50 border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
                 <div class="px-6 py-4 border-b border-orange-100 flex items-center justify-between">
                     <h4 class="text-sm font-black text-orange-900 flex items-center gap-2">
-                        <span class="animate-pulse">🔔</span> ${window.t('dash_tutor_pending_apps', '待處理導師申請 ({count})').replace('{count}', String(pendingApps.length))}
+                        <span class="animate-pulse">🔔</span> ${window.t('dash_tutor_pending_apps').replace('{count}', String(pendingApps.length))}
                     </h4>
                 </div>
                 <div class="p-6 space-y-4">
@@ -2640,18 +2641,18 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                 <div>
                                     <div class="text-sm font-black text-gray-800">${escapeHtml(app.userEmail)}</div>
                                     <div class="text-[10px] font-mono text-gray-400 mt-0.5">${escapeHtml(app.unitId)}</div>
-                                    ${app.source === 'tutor_recommendation' ? `<div class="text-[10px] text-orange-500 mt-0.5">${window.t('dash_tutor_recommended_by', '由老師推薦：{email}').replace('{email}', escapeHtml(app.recommendedByEmail || 'unknown'))}</div>` : ''}
+                                    ${app.source === 'tutor_recommendation' ? `<div class="text-[10px] text-orange-500 mt-0.5">${window.t('dash_tutor_recommended_by').replace('{email}', escapeHtml(app.recommendedByEmail || 'unknown'))}</div>` : ''}
                                     <div class="text-[10px] text-gray-400 mt-0.5">${new Date(app.appliedAt?._seconds * 1000).toLocaleString()}</div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3 w-full sm:w-auto">
                                 <button onclick="handleDecideApplication('${app.id}', 'rejected')"
                                     class="flex-grow sm:flex-none px-6 py-2 border border-gray-200 text-gray-500 rounded-lg text-xs font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-100 transition-all">
-                                    ${window.t('dash_tutor_btn_reject', '拒絕 Reject')}
+                                    ${window.t('dash_tutor_btn_reject')}
                                 </button>
                                 <button onclick="handleDecideApplication('${app.id}', 'approved')"
                                     class="flex-grow sm:flex-none px-8 py-2 bg-blue-500 text-white rounded-lg text-xs font-black hover:bg-orange-600 shadow-sm transition-all active:scale-95">
-                                    ${window.t('dash_tutor_btn_approve', '批准 Approve ✅')}
+                                    ${window.t('dash_tutor_btn_approve')}
                                 </button>
                             </div>
                         </div>
@@ -2685,10 +2686,10 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
             <!-- Intervention Completion Rate -->
             <div class="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 shadow-sm flex items-center justify-between">
                 <div>
-                    <h5 class="text-xs font-extrabold text-indigo-900/60 uppercase tracking-wider mb-2">${window.t('dash_intervention_rate', '自動介入處置率')}</h5>
+                    <h5 class="text-xs font-extrabold text-indigo-900/60 uppercase tracking-wider mb-2">${window.t('dash_intervention_rate')}</h5>
                     <div class="flex items-baseline gap-2">
                         <span class="text-3xl font-black text-indigo-950">${completionRate}%</span>
-                        <span class="text-xs text-indigo-700/70 font-semibold">${window.t('dash_intervention_resolved', '（{resolved}/{total} 已解決）').replace('{resolved}', String(resolvedInts)).replace('{total}', String(totalInts))}</span>
+                        <span class="text-xs text-indigo-700/70 font-semibold">${window.t('dash_intervention_resolved').replace('{resolved}', String(resolvedInts)).replace('{total}', String(totalInts))}</span>
                     </div>
                 </div>
                 <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-xl">🎯</div>
@@ -2697,10 +2698,10 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
             <!-- Active Interventions -->
             <div class="bg-rose-50 border border-rose-100 rounded-3xl p-6 shadow-sm flex items-center justify-between">
                 <div>
-                    <h5 class="text-xs font-extrabold text-rose-900/60 uppercase tracking-wider mb-2">${window.t('dash_intervention_pending', '待處理自動監控')}</h5>
+                    <h5 class="text-xs font-extrabold text-rose-900/60 uppercase tracking-wider mb-2">${window.t('dash_intervention_pending')}</h5>
                     <div class="flex items-baseline gap-2">
                         <span class="text-3xl font-black text-rose-950">${openInts}</span>
-                        <span class="text-xs text-rose-700/70 font-semibold">${window.t('dash_intervention_open_count', '個未關閉警示')}</span>
+                        <span class="text-xs text-rose-700/70 font-semibold">${window.t('dash_intervention_open_count')}</span>
                     </div>
                 </div>
                 <div class="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center text-xl">🚨</div>
@@ -2709,20 +2710,20 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
             <!-- Blocker Distribution -->
             <div class="bg-amber-50 border border-amber-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-2">
-                    <h5 class="text-xs font-extrabold text-amber-900/60 uppercase tracking-wider">${window.t('dash_intervention_blocker_dist', '即時學生卡點分布')}</h5>
+                    <h5 class="text-xs font-extrabold text-amber-900/60 uppercase tracking-wider">${window.t('dash_intervention_blocker_dist')}</h5>
                     <div class="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-sm">💡</div>
                 </div>
                 <div class="grid grid-cols-3 gap-2 text-center text-xs">
                     <div class="bg-white/80 rounded-xl p-2 border border-amber-100/50">
-                        <div class="text-[10px] text-amber-800 font-bold">${window.t('dash_blocker_concept', '觀念不懂')}</div>
+                        <div class="text-[10px] text-amber-800 font-bold">${window.t('dash_blocker_concept')}</div>
                         <div class="text-base font-black text-amber-950 mt-0.5">${blockerCounts.concept}</div>
                     </div>
                     <div class="bg-white/80 rounded-xl p-2 border border-amber-100/50">
-                        <div class="text-[10px] text-amber-800 font-bold">${window.t('dash_blocker_debug', '程式 Bug')}</div>
+                        <div class="text-[10px] text-amber-800 font-bold">${window.t('dash_blocker_debug')}</div>
                         <div class="text-base font-black text-amber-950 mt-0.5">${blockerCounts.debug}</div>
                     </div>
                     <div class="bg-white/80 rounded-xl p-2 border border-amber-100/50">
-                        <div class="text-[10px] text-amber-800 font-bold">${window.t('dash_blocker_env', '環境問題')}</div>
+                        <div class="text-[10px] text-amber-800 font-bold">${window.t('dash_blocker_env')}</div>
                         <div class="text-base font-black text-amber-950 mt-0.5">${blockerCounts.environment}</div>
                     </div>
                 </div>
@@ -2735,7 +2736,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
         <div id="admin-console-header" class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h3 class="text-2xl font-black text-orange-900 flex items-center gap-3">
                 <span class="p-2.5 bg-orange-100 rounded-xl">🛠️</span> 
-                ${window.t('dash_admin_tutor_settings', '合格教師設定 (Tutor Settings)')}
+                ${window.t('dash_admin_tutor_settings')}
             </h3>
 
             <p id="admin-msg" class="text-sm font-bold text-orange-600 animate-pulse"></p>
@@ -2808,22 +2809,22 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                         <div class="flex flex-col ${containerClass} p-6 gap-6 relative">
                             <!-- Section 1: Unit Info -->
                             <div>
-                                <div class="text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">${window.t('dash_admin_course_label', '課程 / COURSE')}</div>
+                                <div class="text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">${window.t('dash_admin_course_label')}</div>
                                 <div class="text-lg font-black text-gray-800">${escapeHtml(displayTitle)}</div>
                                 <div class="text-xs text-gray-400 font-mono mt-1 leading-relaxed">${escapeHtml(normalizedFile.replace(/\.html$/i, ''))}</div>
                             </div>
 
                             <!-- Section 2: Tutor Management -->
                             <div>
-                                <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">${window.t('dash_admin_tutors_label', '合格導師 / Tutors')}</div>
+                                <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">${window.t('dash_admin_tutors_label')}</div>
                                 <div class="bg-white rounded-xl border border-orange-100 overflow-hidden mb-5">
                                     <table class="w-full text-left border-collapse text-[11px]">
                                         <thead>
                                             <tr class="bg-orange-50/50 text-orange-700 border-b border-orange-100 uppercase tracking-tighter font-black">
-                                                <th class="py-2.5 px-4">${window.t('dash_admin_th_name', '姓名 / Name')}</th>
-                                                <th class="py-2.5 px-4">${window.t('dash_admin_th_email', 'Email')}</th>
-                                                <th class="py-2.5 px-4">${window.t('dash_admin_th_qualified', '合格時間 / Qualified At')}</th>
-                                                <th class="py-2.5 px-4 text-right">${window.t('dash_admin_th_action', '操作')}</th>
+                                                <th class="py-2.5 px-4">${window.t('dash_admin_th_name')}</th>
+                                                <th class="py-2.5 px-4">${window.t('dash_admin_th_email')}</th>
+                                                <th class="py-2.5 px-4">${window.t('dash_admin_th_qualified')}</th>
+                                                <th class="py-2.5 px-4 text-right">${window.t('dash_admin_th_action')}</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-orange-50">
@@ -2923,15 +2924,15 @@ window.runRevenueSimulation = function () {
     const fmt = (arr) => arr.length ? arr.map((v, i) => `L${i + 1}: ${v}`).join(' / ') : '0';
     resultEl.innerHTML = `
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">${window.t('dash_sim_total_credit', '總 Credit')}</div><div class="text-xl font-black text-gray-800">TWD ${totalCredit}</div></div>
-            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">${window.t('dash_sim_monthly', '月攤提')}</div><div class="text-xl font-black text-blue-700">TWD ${monthlyPay}</div></div>
-            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">${window.t('dash_sim_validity', '有效期')}</div><div class="text-xl font-black text-gray-800">${months} ${window.t('dash_sim_months_unit', '月')}</div></div>
-            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">${window.t('dash_sim_order_amount', '訂單金額')}</div><div class="text-xl font-black text-gray-800">TWD ${round2(amount)}</div></div>
+            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">${window.t('dash_sim_total_credit')}</div><div class="text-xl font-black text-gray-800">TWD ${totalCredit}</div></div>
+            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">${window.t('dash_sim_monthly')}</div><div class="text-xl font-black text-blue-700">TWD ${monthlyPay}</div></div>
+            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">${window.t('dash_sim_validity')}</div><div class="text-xl font-black text-gray-800">${months} ${window.t('dash_sim_months_unit')}</div></div>
+            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">${window.t('dash_sim_order_amount')}</div><div class="text-xl font-black text-gray-800">TWD ${round2(amount)}</div></div>
         </div>
         <div class="bg-white rounded-xl border p-4 text-sm text-gray-700 space-y-2">
-            <div><span class="font-bold text-indigo-700">Tutor:</span> ${fmt(tutorLevels)}${window.t('dash_sim_tutor_total', '（合計 {total}）').replace('{total}', String(tutorTotal))}</div>
-            <div><span class="font-bold text-emerald-700">Agent:</span> ${fmt(agentLevels)}${window.t('dash_sim_agent_total', '（合計 {total}）').replace('{total}', String(agentTotal))}</div>
-            <div><span class="font-bold text-amber-700">CourseDev:</span> ${fmt(courseLevels)}${window.t('dash_sim_course_total', '（合計 {total}）').replace('{total}', String(courseTotal))}</div>
+            <div><span class="font-bold text-indigo-700">Tutor:</span> ${fmt(tutorLevels)}${window.t('dash_sim_tutor_total').replace('{total}', String(tutorTotal))}</div>
+            <div><span class="font-bold text-emerald-700">Agent:</span> ${fmt(agentLevels)}${window.t('dash_sim_agent_total').replace('{total}', String(agentTotal))}</div>
+            <div><span class="font-bold text-amber-700">CourseDev:</span> ${fmt(courseLevels)}${window.t('dash_sim_course_total').replace('{total}', String(courseTotal))}</div>
         </div>
     `;
 };
@@ -2939,7 +2940,7 @@ window.runRevenueSimulation = function () {
 window.loadRevenuePolicies = async function () {
     const body = document.getElementById('revenue-policy-body');
     if (!body) return;
-    body.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">' + window.t('dash_revenue_loading', '載入中...') + '</div>';
+    body.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">' + window.t('dash_revenue_loading') + '</div>';
     try {
         const fn = httpsCallable(functions, 'getRevenueSharePolicies');
         const res = await fn({});
@@ -2950,7 +2951,8 @@ window.loadRevenuePolicies = async function () {
             policyCountEl.textContent = String(policies.some(p => p && p.enabled !== false) ? 1 : 0);
         }
         if (!policies.length) {
-            body.innerHTML = '<div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">' + window.t('dash_revenue_policy_no_data_fallback', '找不到固定分潤設定，請直接儲存以建立預設值。') + '</div>';
+            body.innerHTML = '<div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" data-i18n="dash_revenue_policy_no_data_fallback"></div>';
+            if (typeof window.applyI18n === 'function') window.applyI18n();
             return;
         }
 
@@ -2970,9 +2972,9 @@ window.loadRevenuePolicies = async function () {
                     <div class="mt-1 text-[12px] leading-5 text-slate-500">${escapeHtml(note)}</div>
                 </div>
                 <div class="flex-shrink-0 flex items-center justify-between sm:justify-end gap-3 rounded-2xl bg-slate-50 px-4 py-2.5 sm:py-2">
-                    <div class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">${window.t('dash_policy_share_ratio', '分潤比例')}</div>
+                    <div class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">${window.t('dash_policy_share_ratio')}</div>
                     <div class="rounded-full px-3 py-1.5 text-[11px] font-black ${accent.bg} ${accent.fg} whitespace-nowrap">
-                        ${window.t('dash_policy_direct_upline', '直推 {direct}% / 上線 {upline}%').replace('{direct}', String(Math.round(directRate * 100))).replace('{upline}', String(Math.round(uplineRate * 100)))}
+                        ${window.t('dash_policy_direct_upline').replace('{direct}', String(Math.round(directRate * 100))).replace('{upline}', String(Math.round(uplineRate * 100)))}
                     </div>
                 </div>
             </div>
@@ -2982,62 +2984,64 @@ window.loadRevenuePolicies = async function () {
             <div class="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
                 <div class="space-y-6">
                     <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
-                        <div class="font-black">${window.t('dash_policy_usage_title', '使用說明')}</div>
+                        <div class="font-black">${window.t('dash_policy_usage_title')}</div>
                         <ul class="mt-2 space-y-1.5 text-[13px] leading-6">
-                            <li>${window.t('dash_policy_usage_1', '• 這組設定會套用到所有訂單與月結，不再區分直銷、代理等多套策略。')}</li>
-                            <li>${window.t('dash_policy_usage_2', '• 「直推」是第一層分潤；「上線」是往上一層遞迴分潤比例。')}</li>
-                            <li>${window.t('dash_policy_usage_3', '• 若某個角色不需要分潤，直接把該欄位設為')} <code>0</code> ${window.t('dash_policy_usage_3b', '即可。')}</li>
+                            <li>${window.t('dash_policy_usage_1')}</li>
+                            <li>${window.t('dash_policy_usage_2')}</li>
+                            <li>${window.t('dash_policy_usage_3')} <code>0</code> ${window.t('dash_policy_usage_3b')}</li>
                         </ul>
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-2">
-                        ${policyRateInput(id, 'policy-tutorRate', tutorRate, window.t('dash_policy_label_tutor_direct', '導師直推分潤'), window.t('dash_policy_note_tutor_direct', '訂單成交時，第一層導師可拿到的比例。'))}
-                        ${policyRateInput(id, 'policy-tutorUplineRate', tutorUplineRate, window.t('dash_policy_label_tutor_upline', '導師上線分潤'), window.t('dash_policy_note_tutor_upline', '導師的上線會依這個比例繼續遞迴分潤。'))}
-                        ${policyRateInput(id, 'policy-agentRate', agentRate, window.t('dash_policy_label_agent_direct', '管道直推分潤'), window.t('dash_policy_note_agent_direct', '若訂單有對應的推廣或代理角色，第一層的比例。'))}
-                        ${policyRateInput(id, 'policy-agentUplineRate', agentUplineRate, window.t('dash_policy_label_agent_upline', '管道上線分潤'), window.t('dash_policy_note_agent_upline', '代理角色的上線遞迴比例。設為 0 即停止往上分。'))}
-                        ${policyRateInput(id, 'policy-courseDevRate', courseDevRate, window.t('dash_policy_label_dev_direct', '開發直推分潤'), window.t('dash_policy_note_dev_direct', '課程開發者的第一層分潤比例。'))}
-                        ${policyRateInput(id, 'policy-courseDevUplineRate', courseDevUplineRate, window.t('dash_policy_label_dev_upline', '開發上線分潤'), window.t('dash_policy_note_dev_upline', '開發者上線的遞迴比例。通常設定得比直推更低。'))}
+                        ${policyRateInput(id, 'policy-tutorRate', tutorRate, window.t('dash_policy_label_tutor_direct'), window.t('dash_policy_note_tutor_direct'))}
+                        ${policyRateInput(id, 'policy-tutorUplineRate', tutorUplineRate, window.t('dash_policy_label_tutor_upline'), window.t('dash_policy_note_tutor_upline'))}
+                        ${policyRateInput(id, 'policy-agentRate', agentRate, window.t('dash_policy_label_agent_direct'), window.t('dash_policy_note_agent_direct'))}
+                        ${policyRateInput(id, 'policy-agentUplineRate', agentUplineRate, window.t('dash_policy_label_agent_upline'), window.t('dash_policy_note_agent_upline'))}
+                        ${policyRateInput(id, 'policy-courseDevRate', courseDevRate, window.t('dash_policy_label_dev_direct'), window.t('dash_policy_note_dev_direct'))}
+                        ${policyRateInput(id, 'policy-courseDevUplineRate', courseDevUplineRate, window.t('dash_policy_label_dev_upline'), window.t('dash_policy_note_dev_upline'))}
                     </div>
 
                 </div>
 
                 <div class="space-y-4">
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                        <div class="text-sm font-black text-slate-900">${window.t('dash_policy_quick_check', '快速檢查')}</div>
+                        <div class="text-sm font-black text-slate-900">${window.t('dash_policy_quick_check')}</div>
                         <div class="mt-4 space-y-3 text-sm text-slate-600">
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">1</span>
-                                <span>${window.t('dash_policy_qc_1', '若只想保留單一固定分潤，所有欄位都在這裡調整即可。')}</span>
+                                <span>${window.t('dash_policy_qc_1')}</span>
                             </div>
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">2</span>
-                                <span>${window.t('dash_policy_qc_2', '把某個欄位設成')} <code>0</code> ${window.t('dash_policy_qc_2b', '就等於關閉該角色的分潤。')}</span>
+                                <span>${window.t('dash_policy_qc_2')} <code>0</code> ${window.t('dash_policy_qc_2b')}</span>
                             </div>
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">3</span>
-                                <span>${window.t('dash_policy_qc_3', '目前系統不再使用其他策略名稱，舊資料也會自動回落到固定設定。')}</span>
+                                <span>${window.t('dash_policy_qc_3')}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div class="text-sm font-black text-slate-900">${window.t('dash_policy_reminder_title', '設定提醒')}</div>
-                        <div class="mt-1 text-xs leading-6 text-slate-500">${window.t('dash_policy_reminder_desc', '這裡是三個角色的固定分潤摘要，先看用途，再看比例。')}</div>
+                        <div class="text-sm font-black text-slate-900">${window.t('dash_policy_reminder_title')}</div>
+                        <div class="mt-1 text-xs leading-6 text-slate-500">${window.t('dash_policy_reminder_desc')}</div>
                         <div class="mt-4 flex flex-col gap-3">
-                            ${policySummary(window.t('dash_role_tutor', '導師'), tutorRate, tutorUplineRate, { bg: 'bg-blue-50', fg: 'text-blue-700' }, window.t('dash_role_tutor_note', '最常使用的主分潤，建議先確認這一組。'))}
-                            ${policySummary(window.t('dash_role_agent', '管道 / Agent'), agentRate, agentUplineRate, { bg: 'bg-emerald-50', fg: 'text-emerald-700' }, window.t('dash_role_agent_note', '如果沒有代理通路，兩個欄位都可以保持 0。'))}
-                            ${policySummary(window.t('dash_role_dev', '課程開發'), courseDevRate, courseDevUplineRate, { bg: 'bg-amber-50', fg: 'text-amber-700' }, window.t('dash_role_dev_note', '適合用來分配內容提供者或課程作者。'))}
+                            ${policySummary(window.t('dash_role_tutor'), tutorRate, tutorUplineRate, { bg: 'bg-blue-50', fg: 'text-blue-700' }, window.t('dash_role_tutor_note'))}
+                            ${policySummary(window.t('dash_role_agent'), agentRate, agentUplineRate, { bg: 'bg-emerald-50', fg: 'text-emerald-700' }, window.t('dash_role_agent_note'))}
+                            ${policySummary(window.t('dash_role_dev'), courseDevRate, courseDevUplineRate, { bg: 'bg-amber-50', fg: 'text-amber-700' }, window.t('dash_role_dev_note'))}
                         </div>
                     </div>
 
                     <button id="btn-save-policy-${id}" onclick="window.saveRevenuePolicy('${escapeHtml(id)}')" class="mt-5 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 active:scale-95">
-                        ${window.t('dash_policy_save_btn', '儲存固定設定')}
+                        ${window.t('dash_policy_save_btn')}
                     </button>
                 </div>
             </div>
         `;
+        if (typeof window.applyI18n === 'function') window.applyI18n();
     } catch (e) {
-        body.innerHTML = `<div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">${window.t('dash_policy_load_fail', '載入失敗：')}${escapeHtml(e.message || 'unknown')}</div>`;
+        body.innerHTML = `<div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">${window.t('dash_policy_load_fail')}${escapeHtml(e.message || 'unknown')}</div>`;
+        if (typeof window.applyI18n === 'function') window.applyI18n();
     }
 };
 
@@ -3074,7 +3078,7 @@ window.saveRevenuePolicy = async function (policyId) {
     try {
         const fn = httpsCallable(functions, 'upsertRevenueSharePolicy');
         await fn(payload);
-        notify(window.t('dash_revenue_saved', '已成功儲存固定分潤設定'), 'success');
+        notify(window.t('dash_revenue_saved'), 'success');
         
         if (btn) {
             btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
@@ -3156,7 +3160,7 @@ window.vibeInjectAdminTutorModeToggle = function() {
     
     const toggleHtml = `
         <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm scale-90 sm:scale-100 origin-right">
-            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">${window.t('dash_tutor_mode_label', '導師模式 / Tutor Mode')}</span>
+            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">${window.t('dash_tutor_mode_label')}</span>
             <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" value="" class="sr-only peer" ${adminTutorMode ? 'checked' : ''} onchange="toggleAdminTutorMode(this.checked)">
                 <div class="w-10 h-5 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
@@ -3229,7 +3233,7 @@ window.autoGradeAssignment = async function (assignmentId) {
         const fn = httpsCallable(functions, 'autoGradeSingleAssignment');
         const result = await fn({ assignmentId });
         if (result?.data?.score !== undefined) {
-            notify(window.t('dash_autograde_complete', '自動批改完成：{score} 分').replace('{score}', String(result.data.score)), result.data.score >= 70 ? 'success' : 'warning');
+            notify(window.t('dash_autograde_complete').replace('{score}', String(result.data.score)), result.data.score >= 70 ? 'success' : 'warning');
         }
         const { filterUnitId: fUnitId, filterCourseId: fCourseId } = getCurrentDashboardContext();
         let displayAssignments = filterAssignmentsForCurrentView(dashboardData?.assignments || []);
@@ -3241,7 +3245,7 @@ window.autoGradeAssignment = async function (assignmentId) {
         renderAssignments(displayAssignments, "", { showGuide: false });
     } catch (e) {
         console.error(e);
-        notify(window.t('dash_autograde_fail', '自動批改失敗：{msg}').replace('{msg}', e.message), 'error');
+        notify(window.t('dash_autograde_fail').replace('{msg}', e.message), 'error');
     } finally {
         if (row) {
             row.style.opacity = '';
@@ -3277,7 +3281,7 @@ window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecom
             assignmentLink: assignmentUrl
         });
 
-        notify(window.t('dash_assignment_link_submitted', '已送出作業連結，管理員已收到審核通知。'), 'success');
+        notify(window.t('dash_assignment_link_submitted'), 'success');
         urlParams.delete('action');
         urlParams.delete('applicationId');
         const cleanedQuery = urlParams.toString();
@@ -3534,7 +3538,7 @@ function buildBusinessPricingOverviewHtml() {
     const rows = filteredLessons.map((lesson) => {
         const courseId = String(lesson.id || lesson.docId || lesson.courseId || '').trim();
         const safeId = courseId.replace(/[^a-z0-9_-]/gi, '-');
-        const title = lesson.title || lesson.courseTitle || lesson.courseName || courseId || window.t('dash_unnamed_course', '未命名課程');
+        const title = lesson.title || lesson.courseTitle || lesson.courseName || courseId || window.t('dash_unnamed_course');
         const displayId = String(
             lesson.courseKey ||
             lesson.entryUnitId ||
@@ -3550,19 +3554,19 @@ function buildBusinessPricingOverviewHtml() {
         const isPhysical = isPhysicalMetadataLesson(lesson);
         
         const badgeClass = 'bg-blue-50 text-blue-700 border border-blue-100';
-        const badgeLabel = window.t('dash_price_badge_label', '🌐 經銷價格表');
+        const badgeLabel = window.t('dash_price_badge_label');
 
         // Type badge (Course vs Hardware)
         const typeBadgeClass = isPhysical 
             ? 'bg-purple-50 text-purple-700 border border-purple-100'
             : 'bg-sky-50 text-sky-700 border border-sky-100';
-        const typeBadgeLabel = isPhysical ? window.t('dash_price_type_hardware', '📦 實體商品 (Hardware)') : window.t('dash_price_type_course', '📘 線上課程 (Course)');
+        const typeBadgeLabel = isPhysical ? window.t('dash_price_type_hardware') : window.t('dash_price_type_course');
 
         // USD Warning Badge
         const hasUsdWarning = pricingState.en.amount === 0 && pricingState.tw.amount > 0;
         const usdWarningBadge = hasUsdWarning 
             ? `<div class="mt-2 text-[10px] inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold bg-rose-50 text-rose-700 border border-rose-100">
-                ${window.t('dash_price_missing_usd', '⚠️ 缺美金定價')}
+                ${window.t('dash_price_missing_usd')}
                </div>` 
             : '';
 
@@ -3590,7 +3594,7 @@ function buildBusinessPricingOverviewHtml() {
                 <td class="py-4 px-6 align-top text-sm text-slate-600">
                     <div class="font-semibold text-slate-800">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.tw, 'zh-TW') : `TWD ${pricingState.tw.amount}`)}</div>
                     <div class="mt-1">${escapeHtml(window.vibePricing?.formatPrice ? window.vibePricing.formatPrice(pricingState.en, 'en') : `USD ${pricingState.en.amount}`)}</div>
-                    <div class="mt-2 text-[11px] text-slate-400">${window.t('dash_business_label_updated', '更新：')}${escapeHtml(updatedAt)}</div>
+                    <div class="mt-2 text-[11px] text-slate-400">${window.t('dash_business_label_updated')}${escapeHtml(updatedAt)}</div>
                 </td>
                 <td class="py-4 px-6 text-right align-top">
                     <button id="btn-save-price-${safeId}" onclick="window.saveLessonPricing('${escapeHtml(courseId)}')" class="px-3.5 py-2 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-700 transition duration-150 active:scale-95 whitespace-nowrap">${window.t('btn_save')}</button>
@@ -3603,10 +3607,10 @@ function buildBusinessPricingOverviewHtml() {
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h4 class="text-sm font-black text-slate-900">${window.t('dash_business_title', '課程與商品定價維護')}</h4>
-                    <p class="text-xs text-slate-500 mt-1">${window.t('dash_business_desc', '資料直接寫入 Firestore 的 <code>dealer_price_books</code>，依 default-usd 與 default-twd 儲存定價。')}</p>
+                    <h4 class="text-sm font-black text-slate-900">${window.t('dash_business_title')}</h4>
+                    <p class="text-xs text-slate-500 mt-1">${window.t('dash_business_desc')}</p>
                 </div>
-                <div class="text-xs text-slate-400 font-medium">${window.t('dash_business_source', '儲存來源：<code>dealer_price_books</code> (default-usd / default-twd)')}</div>
+                <div class="text-xs text-slate-400 font-medium">${window.t('dash_business_source')}</div>
             </div>
             
             <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-slate-50/30">
@@ -3615,30 +3619,30 @@ function buildBusinessPricingOverviewHtml() {
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
                             🔍
                         </span>
-                        <input type="text" id="pricing-search-input" oninput="window.filterPricingTable()" placeholder="${window.t('dash_business_search_placeholder', '搜尋名稱 or ID...')}" class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <input type="text" id="pricing-search-input" oninput="window.filterPricingTable()" placeholder="${window.t('dash_business_search_placeholder')}" class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                     </div>
                     
                     <!-- Filter Button Group -->
                     <div class="flex items-center gap-1 border border-slate-200 rounded-xl p-1 bg-white shadow-sm">
-                        <button onclick="window.setPricingFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'all' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">${window.t('dash_business_filter_all', '全部商品')}</button>
-                        <button onclick="window.setPricingFilter('courses')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'courses' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">${window.t('dash_business_filter_courses', '📘 線上課程')}</button>
-                        <button onclick="window.setPricingFilter('physical')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'physical' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">${window.t('dash_business_filter_physical', '📦 實體硬體')}</button>
+                        <button onclick="window.setPricingFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'all' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">${window.t('dash_business_filter_all')}</button>
+                        <button onclick="window.setPricingFilter('courses')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'courses' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">${window.t('dash_business_filter_courses')}</button>
+                        <button onclick="window.setPricingFilter('physical')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'physical' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-850'}">${window.t('dash_business_filter_physical')}</button>
                     </div>
                 </div>
-                <div class="text-xs text-slate-400 font-medium">${window.t('dash_business_filter_hint', '請在欄位修改後點擊對應列的「儲存變更」')}</div>
+                <div class="text-xs text-slate-400 font-medium">${window.t('dash_business_filter_hint')}</div>
             </div>
 
             <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60">
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">${window.t('dash_business_stat_filtered', '當前篩選品項')}</div>
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-slate-400">${window.t('dash_business_stat_filtered')}</div>
                     <div class="mt-1 text-2xl font-black text-slate-900">${filteredLessons.length}</div>
                 </div>
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-widest font-bold text-emerald-500">${window.t('dash_business_stat_priced', '總有價格品項')}</div>
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-emerald-500">${window.t('dash_business_stat_priced')}</div>
                     <div class="mt-1 text-2xl font-black text-emerald-600">${pricedCount}</div>
                 </div>
                 <div class="rounded-xl bg-white border border-slate-200 p-4">
-                    <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">${window.t('dash_business_stat_policy', '啟用中的分潤策略')}</div>
+                    <div class="text-[11px] uppercase tracking-widest font-bold text-blue-500">${window.t('dash_business_stat_policy')}</div>
                     <div class="mt-1 text-2xl font-black text-blue-600">${activePolicies}</div>
                 </div>
             </div>
@@ -3646,15 +3650,15 @@ function buildBusinessPricingOverviewHtml() {
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100 bg-slate-50">
-                            <th class="py-3 px-6">${window.t('dash_business_th_course', '課程 / Course')}</th>
-                            <th class="py-3 px-6 w-[22%]">${window.t('dash_business_th_twd', 'TWD / tw')}</th>
-                            <th class="py-3 px-6 w-[22%]">${window.t('dash_business_th_usd', 'USD / en')}</th>
-                            <th class="py-3 px-6 w-[20%]">${window.t('dash_business_th_display', '即時顯示')}</th>
-                            <th class="py-3 px-6 text-right w-[12%]">${window.t('dash_business_th_action', '操作')}</th>
+                            <th class="py-3 px-6">${window.t('dash_business_th_course')}</th>
+                            <th class="py-3 px-6 w-[22%]">${window.t('dash_business_th_twd')}</th>
+                            <th class="py-3 px-6 w-[22%]">${window.t('dash_business_th_usd')}</th>
+                            <th class="py-3 px-6 w-[20%]">${window.t('dash_business_th_display')}</th>
+                            <th class="py-3 px-6 text-right w-[12%]">${window.t('dash_business_th_action')}</th>
                         </tr>
                     </thead>
                     <tbody id="business-pricing-table-body" class="divide-y divide-slate-100 text-sm">
-                        ${rows || '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">' + window.t('dash_business_empty', '尚無符合篩選條件的價格資料') + '</td></tr>'}
+                        ${rows || '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">' + window.t('dash_business_empty') + '</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -3778,25 +3782,25 @@ function buildDistributorPriceBookRow(book = {}) {
         <tr class="hover:bg-slate-50/80 transition">
             <td class="py-4 px-4 align-top">
                 <div class="font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(id || '—')}</div>
-                <div class="mt-1 text-[11px] text-slate-400">${window.t('dash_dp_label_updated', '更新：')}${escapeHtml(formatDistributorPriceBookDateTime(book.updatedAt))}</div>
+                <div class="mt-1 text-[11px] text-slate-400">${window.t('dash_dp_label_updated')}${escapeHtml(formatDistributorPriceBookDateTime(book.updatedAt))}</div>
             </td>
             <td class="py-4 px-4 align-top">
                 <div class="font-bold text-slate-900">${escapeHtml(book.docId || '—')}</div>
-                <div class="mt-1 text-[11px] text-slate-400">${window.t('dash_dp_label_distributor', '經銷商：')}${escapeHtml(book.distributorId || '—')}</div>
+                <div class="mt-1 text-[11px] text-slate-400">${window.t('dash_dp_label_distributor')}${escapeHtml(book.distributorId || '—')}</div>
             </td>
             <td class="py-4 px-4 align-top">
                 <div class="font-semibold text-slate-900">${escapeHtml(priceText)}</div>
-                <div class="mt-1 text-[11px] text-slate-500">${window.t('dash_dp_label_promo', '活動價：')}${escapeHtml(promoText)}</div>
+                <div class="mt-1 text-[11px] text-slate-500">${window.t('dash_dp_label_promo')}${escapeHtml(promoText)}</div>
             </td>
             <td class="py-4 px-4 align-top">
                 <div class="text-sm font-bold text-slate-900">${escapeHtml(book.version || 'v1')}</div>
                 <span class="mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${activeBadge}">
-                    ${book.isActive !== false ? window.t('dp_badge_active', '啟用中') : window.t('dp_badge_inactive', '停用')}
+                    ${book.isActive !== false ? window.t('dp_badge_active') : window.t('dp_badge_inactive')}
                 </span>
             </td>
             <td class="py-4 px-4 align-top text-sm text-slate-600">
-                <div>${window.t('dash_dp_label_from', '起：')}${escapeHtml(formatDistributorPriceBookDateTime(book.effectiveFrom))}</div>
-                <div class="mt-1">${window.t('dash_dp_label_to', '迄：')}${escapeHtml(formatDistributorPriceBookDateTime(book.effectiveTo))}</div>
+                <div>${window.t('dash_dp_label_from')}${escapeHtml(formatDistributorPriceBookDateTime(book.effectiveFrom))}</div>
+                <div class="mt-1">${window.t('dash_dp_label_to')}${escapeHtml(formatDistributorPriceBookDateTime(book.effectiveTo))}</div>
             </td>
             <td class="py-4 px-4 align-top text-right">
                 <button data-pricebook-id="${escapeHtml(id)}" onclick="window.populateDistributorPriceBookFormById(this.dataset.pricebookId)" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
@@ -3821,12 +3825,12 @@ function renderDistributorPriceBooksTable() {
     if (summary) {
         const distributorId = window.__selectedDistributorPricebookDistributorId || '';
         summary.textContent = distributorId
-            ? window.t('dash_dp_summary', '目前載入經銷商：{id}，共 {count} 筆價格表。').replace('{id}', distributorId).replace('{count}', String(items.length))
-            : window.t('dash_dp_summary_empty', '輸入經銷商 ID 後即可載入與維護價格表。');
+            ? window.t('dash_dp_summary').replace('{id}', distributorId).replace('{count}', String(items.length))
+            : window.t('dash_dp_summary_empty');
     }
 
     if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400 italic">' + window.t('dash_dp_no_data', '尚未載入或尚無價格表資料') + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400 italic">' + window.t('dash_dp_no_data') + '</td></tr>';
         return;
     }
 
@@ -3883,7 +3887,7 @@ window.loadDistributorPriceBooks = async function() {
         window.__selectedDistributorPricebookDistributorId = '';
         window.__loadedDistributorPriceBooks = [];
         renderDistributorPriceBooksTable();
-        if (summary) summary.textContent = window.t('dash_dp_prompt_id', '請先輸入經銷商 ID。');
+        if (summary) summary.textContent = window.t('dash_dp_prompt_id');
         return;
     }
 
@@ -3920,15 +3924,15 @@ window.saveDistributorPriceBookFromForm = async function() {
     const isActive = !!document.getElementById('distributor-pricebook-active')?.checked;
 
     if (!distributorId || !docId) {
-        alert(window.t('dp_toast_validation_distributor_doc', '請先輸入經銷商 ID 與 Document ID。'));
+        alert(window.t('dp_toast_validation_distributor_doc'));
         return;
     }
     if (!Number.isFinite(salePrice) || salePrice < 0) {
-        alert(window.t('dp_toast_validation_price_negative', '售價必須是非負數字。'));
+        alert(window.t('dp_toast_validation_price_negative'));
         return;
     }
     if (promoPrice != null && (!Number.isFinite(promoPrice) || promoPrice < 0 || promoPrice > salePrice)) {
-        alert(window.t('dp_toast_validation_promo_price', '活動價必須是非負數字，且不可大於售價。'));
+        alert(window.t('dp_toast_validation_promo_price'));
         return;
     }
 
@@ -3955,9 +3959,9 @@ window.saveDistributorPriceBookFromForm = async function() {
         };
         const res = await fn(payload);
         if (!res?.data?.success) {
-            throw new Error(res?.data?.message || window.t('dash_dp_save_failed', '儲存失敗'));
+            throw new Error(res?.data?.message || window.t('dash_dp_save_failed'));
         }
-        notify(window.t('dash_dp_saved', '已儲存經銷商價格表：{id}').replace('{id}', docId), 'success');
+        notify(window.t('dash_dp_saved').replace('{id}', docId), 'success');
         window.__selectedDistributorPricebookDistributorId = distributorId;
         await window.loadDistributorPriceBooks();
         window.populateDistributorPriceBookForm({
@@ -4048,7 +4052,7 @@ window.updateSystemContentVersion = async function() {
         const res = await updateSystemConfigCallable({ contentVersion });
         if (res.data && res.data.success) {
             alert(window.t('alert_version_saved'));
-            setDashboardLog(window.t('dash_content_version_updated', '已更新內容版本：{ver}').replace('{ver}', contentVersion));
+            setDashboardLog(window.t('dash_content_version_updated').replace('{ver}', contentVersion));
             // Reload dashboard data to get the updated contentVersion
             await loadDashboard();
         } else {
@@ -4057,7 +4061,7 @@ window.updateSystemContentVersion = async function() {
     } catch (err) {
         console.error("updateSystemContentVersion error:", err);
         alert(window.t('alert_error_msg').replace('{msg}', err.message));
-        setDashboardLog(window.t('dash_content_version_failed', '更新內容版本失敗：{msg}').replace('{msg}', err?.message || err));
+        setDashboardLog(window.t('dash_content_version_failed').replace('{msg}', err?.message || err));
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -4239,7 +4243,7 @@ async function renderSettingsTab(filterUnitId = null) {
         console.log("[Settings] Current User:", userEmail);
         
         if (!userEmail) {
-            const msg = `<div class="text-center py-20 text-gray-400">${window.t('dash_login_required', '請先登入以查看設定。')}</div>`;
+            const msg = `<div class="text-center py-20 text-gray-400">${window.t('dash_login_required')}</div>`;
             assignmentContainer.innerHTML = msg;
             guideContainer.innerHTML = msg;
             return;
@@ -4284,7 +4288,7 @@ async function renderSettingsTab(filterUnitId = null) {
 
         if (authorizedLessons.length === 0) {
             console.warn("[Settings] No authorized lessons found for user.");
-            const msg = `<div class="text-center py-20 text-gray-400">${window.t('dash_no_courses', '目前尚無獲准管理的課程（需為單元合格導師）。')}</div>`;
+            const msg = `<div class="text-center py-20 text-gray-400">${window.t('dash_no_courses')}</div>`;
             assignmentContainer.innerHTML = msg;
             guideContainer.innerHTML = msg;
             return;
@@ -4393,7 +4397,7 @@ async function renderSettingsTab(filterUnitId = null) {
     } catch (e) {
         console.error("[Settings] Critical Render Failure:", e);
         assignmentContainer.innerHTML = `<div class="text-red-500 p-8 rounded-2xl bg-red-50 border border-red-100">
-            <h4 class="font-black text-sm mb-2">${window.t('dash_settings_render_error', '載入設定時發生錯誤 (Render Failure)')}</h4>
+            <h4 class="font-black text-sm mb-2">${window.t('dash_settings_render_error')}</h4>
             <p class="text-[10px] opacity-75">${e.message}</p>
         </div>`;
     }
@@ -4430,20 +4434,20 @@ window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(
                             <input type="hidden" class="assignment-id-input" value="${escapeHtml(details.email)}">
                             
                             <div class="flex items-center gap-3 mb-1">
-                                <div class="text-[10px] text-blue-400 font-black uppercase tracking-widest">${window.t('dash_assign_method_label', '作業派發方式')}</div>
+                                <div class="text-[10px] text-blue-400 font-black uppercase tracking-widest">${window.t('dash_assign_method_label')}</div>
                                 <select onchange="toggleAssignmentMethod(this)" class="assignment-method-select px-3 py-1 text-xs border border-gray-200 rounded-xl outline-none bg-gray-50/50 transition-all font-sans font-bold text-gray-700">
-                                    <option value="assignment" ${!isNative ? 'selected' : ''}>${window.t('dash_assign_method_link', '作業連結')}</option>
-                                    <option value="native" ${isNative ? 'selected' : ''}>${window.t('dash_assign_method_api', '自建原生 API')}</option>
+                                    <option value="assignment" ${!isNative ? 'selected' : ''}>${window.t('dash_assign_method_link')}</option>
+                                    <option value="native" ${isNative ? 'selected' : ''}>${window.t('dash_assign_method_api')}</option>
                                 </select>
                             </div>
 
                             <!-- Legacy/Generic URL Container -->
                             <div class="method-assignment-container flex gap-2 ${isNative ? 'hidden' : ''}">
-                                <input type="url" placeholder="${window.t('dash_assign_link_placeholder', '作業連結 (e.g. https://github.com/...)')}" value="${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl || '')}"
+                                <input type="url" placeholder="${window.t('dash_assign_link_placeholder')}" value="${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl || '')}"
                                     class="assignment-url-input flex-grow px-4 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
                                 <button onclick="saveAllSettings(this)"
                                     class="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 btn-save-individual">
-                                    ${window.t('btn_save_link', '儲存 🔗')}
+                                    ${window.t('btn_save_link')}
                                 </button>
                             </div>
 
@@ -4451,35 +4455,35 @@ window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(
                             <div class="method-native-container flex flex-col gap-2.5 ${!isNative ? 'hidden' : ''}">
                                 <div class="flex gap-2">
                                     <div class="flex-grow flex flex-col gap-1 w-1/2">
-                                        <span class="text-[9px] text-gray-400 font-bold">${window.t('dash_assign_github_org', 'GitHub 組織名稱 (GitHub Org)')}</span>
-                                        <input type="text" placeholder="${window.t('dash_assign_org_placeholder', '組織名稱 (e.g. vibe-coding-classroom)')}" value="${escapeHtml(details.githubOrg || 'vibe-coding-classroom')}" 
+                                        <span class="text-[9px] text-gray-400 font-bold">${window.t('dash_assign_github_org')}</span>
+                                        <input type="text" placeholder="${window.t('dash_assign_org_placeholder')}" value="${escapeHtml(details.githubOrg || 'vibe-coding-classroom')}"
                                             class="assignment-org-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono font-bold text-gray-700">
                                     </div>
                                     <div class="flex-grow flex flex-col gap-1 w-1/2">
-                                        <span class="text-[9px] text-gray-400 font-bold">${window.t('dash_assign_template_repo', '樣板倉庫名稱 (Template Repo)')}</span>
-                                        <input type="text" placeholder="${window.t('dash_assign_template_placeholder', '樣板名稱 (e.g. common-vscode-setup)')}" value="${escapeHtml(details.templateRepo || normalizeCanonicalRepoSlug(fileName))}"
+                                        <span class="text-[9px] text-gray-400 font-bold">${window.t('dash_assign_template_repo')}</span>
+                                        <input type="text" placeholder="${window.t('dash_assign_template_placeholder')}" value="${escapeHtml(details.templateRepo || normalizeCanonicalRepoSlug(fileName))}"
                                             class="assignment-template-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono font-bold text-gray-700">
                                     </div>
                                 </div>
                                 <div class="flex gap-2 items-end">
                                     <div class="flex-grow flex flex-col gap-1">
-                                        <span class="text-[9px] text-gray-400 font-bold">${window.t('dash_assign_github_token', 'GitHub Token / PAT (選填，留空使用系統 Token)')}</span>
-                                        <input type="password" placeholder="${window.t('dash_assign_token_placeholder', '請輸入 Token (安全儲存且已遮蔽)')}" value="${details.githubToken ? '••••••••••••••••' : ''}" data-raw-token="${escapeHtml(details.githubToken || '')}"
+                                        <span class="text-[9px] text-gray-400 font-bold">${window.t('dash_assign_github_token')}</span>
+                                        <input type="password" placeholder="${window.t('dash_assign_token_placeholder')}" value="${details.githubToken ? '••••••••••••••••' : ''}" data-raw-token="${escapeHtml(details.githubToken || '')}"
                                             class="assignment-token-input w-full px-3 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
                                     </div>
                                     <button onclick="saveAllSettings(this)"
                                         class="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 btn-save-individual h-[34px]">
-                                        ${window.t('btn_save_link', '儲存 🔗')}
+                                        ${window.t('btn_save_link')}
                                     </button>
                                 </div>
                                 ${(details.assignmentUrl || details.legacyAssignmentUrl) ? `
                                 <div class="text-[10px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 mt-1">
-                                    <span>🔗 <b>${window.t('dash_assign_existing_link', '原有作業連結：')}</b><a href="${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl)}" target="_blank" class="text-blue-600 hover:underline font-mono">${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl)}</a></span>
+                                    <span>🔗 <b>${window.t('dash_assign_existing_link')}</b><a href="${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl)}" target="_blank" class="text-blue-600 hover:underline font-mono">${escapeHtml(details.assignmentUrl || details.legacyAssignmentUrl)}</a></span>
                                 </div>
                                 ` : ''}
                             </div>
                         </div>
-                    ` : '<div class="text-xs text-gray-300 italic">' + window.t('dash_assign_no_permission', '🔒 無權限管理此單元連結') + '</div>'}
+                    ` : '<div class="text-xs text-gray-300 italic">' + window.t('dash_assign_no_permission') + '</div>'}
                 </div>
             </div>
         </div>
@@ -4498,7 +4502,7 @@ window.renderGuideRow = window.renderGuideRow || function(courseId, fileName, tu
                     <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                     ${escapeHtml(courseTitle)} / ${escapeHtml(fileName)}
                 </div>
-                <div class="text-sm text-gray-400 italic">${window.t('dash_guide_restricted', '🔒 僅限該單元之「合格導師」閱讀完整教學指引。')}</div>
+                <div class="text-sm text-gray-400 italic">${window.t('dash_guide_restricted')}</div>
             `}
         </div>
     `;
@@ -4603,7 +4607,7 @@ window.saveAllSettings = async function (clickedBtn = null) {
     });
 
     if (invalidEntry) {
-        alert(`${window.t('alert_url_format_error', 'Link format error. Please use a valid assignment link (http/https).')}\n${window.t('dash_unit_label', 'Unit')}：${invalidEntry.unit}\nTutor：${invalidEntry.tutor}`);
+        alert(`${window.t('alert_url_format_error')}\n${window.t('dash_unit_label')}：${invalidEntry.unit}\nTutor：${invalidEntry.tutor}`);
         btns.forEach(btn => {
             btn.disabled = false;
             btn.textContent = originalTexts.get(btn) || window.t('btn_save_changes');
@@ -4638,7 +4642,7 @@ window.saveAllSettings = async function (clickedBtn = null) {
         }
     } catch (e) {
         console.error("Save failed:", e);
-        alert(window.t('dash_save_all_failed', '儲存失敗：{msg}').replace('{msg}', e.message));
+        alert(window.t('dash_save_all_failed').replace('{msg}', e.message));
     } finally {
         btns.forEach(btn => {
             btn.disabled = false;
@@ -4788,7 +4792,7 @@ function renderTutorAlerts(data) {
     `;
 
     if (interventions.length === 0) {
-        html += `<p class="text-xs text-slate-400 italic bg-white border border-slate-100 p-4 rounded-xl">${window.t('dash_no_auto_monitoring', 'No auto-monitoring alerts')}</p>`;
+        html += `<p class="text-xs text-slate-400 italic bg-white border border-slate-100 p-4 rounded-xl">${window.t('dash_no_auto_monitoring')}</p>`;
     } else {
         html += interventions.map(item => {
             const timeStr = item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleString() : 'N/A';
@@ -4801,16 +4805,16 @@ function renderTutorAlerts(data) {
                             <span class="text-[9px] text-slate-400 font-medium whitespace-nowrap">${timeStr}</span>
                         </div>
                         <div class="text-[10px] text-slate-500 capitalize mb-2">
-                            ${window.t('dash_unit_label', 'Unit')}：${escapeHtml(window.formatUnitIdForUI(item.unitId))}
+                            ${window.t('dash_unit_label')}：${escapeHtml(window.formatUnitIdForUI(item.unitId))}
                         </div>
                         <div class="text-xs text-red-700 bg-white/70 p-2.5 rounded-lg border border-red-50/50 mb-3">
-                            <strong>${window.t('dash_block_reason_label', 'Reason')}：</strong> ${escapeHtml(item.triggerReason || window.t('dash_block_reason_default', 'Below threshold'))}
+                            <strong>${window.t('dash_block_reason_label')}：</strong> ${escapeHtml(item.triggerReason || window.t('dash_block_reason_default'))}
                         </div>
                     </div>
                     <div class="flex justify-end">
                         <button ${assignmentId ? `onclick='window.autoGradeAssignment("${escapeHtml(assignmentId)}")'` : 'disabled aria-disabled="true" title="Missing student or assignment id"'} 
                             class="px-4 py-1.5 ${assignmentId ? 'bg-red-600 hover:bg-red-700 active:scale-95' : 'bg-slate-300 cursor-not-allowed'} text-white rounded-lg font-bold text-xs shadow transition">
-                            🧑‍💻 ${assignmentId ? window.t('dash_start_guide', '開始引導') : window.t('dash_missing_data', '資料缺失')}
+                            🧑‍💻 ${assignmentId ? window.t('dash_start_guide') : window.t('dash_missing_data')}
                         </button>
                     </div>
                 </div>
@@ -4825,17 +4829,17 @@ function renderTutorAlerts(data) {
         <div class="space-y-3">
             <h4 class="text-xs font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                <span>${window.t('dash_student_blockers_title', 'Student Blockers')}</span>
+                <span>${window.t('dash_student_blockers_title')}</span>
             </h4>
     `;
 
     if (blockedAssignments.length === 0) {
-        html += `<p class="text-xs text-slate-400 italic bg-white border border-slate-100 p-4 rounded-xl">${window.t('dash_no_student_blockers', 'No student blocker reports yet')}</p>`;
+        html += `<p class="text-xs text-slate-400 italic bg-white border border-slate-100 p-4 rounded-xl">${window.t('dash_no_student_blockers')}</p>`;
     } else {
         html += blockedAssignments.map(a => {
             const timeStr = a.updatedAt ? new Date(a.updatedAt.seconds ? a.updatedAt.seconds * 1000 : a.updatedAt).toLocaleString() : 'N/A';
-            const blockerTypeMap = { concept: window.t('dash_blocker_concept', '觀念不懂'), debug: window.t('dash_blocker_debug', '程式 Bug'), environment: window.t('dash_blocker_env', '環境問題') };
-            const typeLabel = blockerTypeMap[a.latestBlocker?.type] || window.t('dash_blocker_general', '一般卡點');
+            const blockerTypeMap = { concept: window.t('dash_blocker_concept'), debug: window.t('dash_blocker_debug'), environment: window.t('dash_blocker_env') };
+            const typeLabel = blockerTypeMap[a.latestBlocker?.type] || window.t('dash_blocker_general');
             return `
                 <div class="bg-amber-55 border border-amber-100 rounded-xl p-4 flex flex-col justify-between hover:shadow transition">
                     <div>
@@ -4844,17 +4848,17 @@ function renderTutorAlerts(data) {
                             <span class="text-[9px] text-slate-400 font-medium whitespace-nowrap">${timeStr}</span>
                         </div>
                         <div class="text-[10px] text-slate-500 capitalize mb-1">
-                            ${window.t('dash_unit_label', 'Unit')}：${escapeHtml(window.formatUnitIdForUI(a.unitId))}
+                            ${window.t('dash_unit_label')}：${escapeHtml(window.formatUnitIdForUI(a.unitId))}
                         </div>
                         <div class="mb-2"><span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 border border-amber-300 text-amber-800">${typeLabel}</span></div>
                         <div class="text-xs text-slate-700 bg-white/70 p-2.5 rounded-lg border border-amber-50/50 mb-3 whitespace-pre-wrap truncate max-h-[80px]">
-                            ${escapeHtml(a.latestBlocker?.note || window.t('dash_blocker_no_note', '無詳細說明'))}
+                            ${escapeHtml(a.latestBlocker?.note || window.t('dash_blocker_no_note'))}
                         </div>
                     </div>
                     <div class="flex justify-end">
                         <button onclick="window.autoGradeAssignment('${a.id}')"
                             class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-xs shadow transition active:scale-95">
-                            ${window.t('dash_autograde_btn', '💡 自動批改')}
+                            ${window.t('dash_autograde_btn')}
                         </button>
                     </div>
                 </div>

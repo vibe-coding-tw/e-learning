@@ -26,6 +26,13 @@
 
 課程開通與 CTA 判定的對應設定，請另參考 [`docs/courses/course-activation-settings.md`](./course-activation-settings.md)。
 
+### 2.1 i18n Rendering Rules
+
+- 課程 shell、按鈕、提示與狀態文字等靜態文案，應優先使用 `data-i18n` / `data-i18n-html`，由 `i18n-helper.js` 統一套用，不應在渲染時再傳入 fallback 文案。
+- `window.t()` 僅作為 key resolver；若字典缺 key，應直接暴露缺漏並回到字典修正，不得依賴 runtime fallback 字串掩蓋問題。
+- 若 JS 動態插入包含 `data-i18n` 的節點，應在插入後重新執行 `window.applyI18n()`，確保新節點立即套用語系。
+- 動態資料內容仍可透過資料欄位或插值填入，但不得用本地 hardcoded 文案作為 UI 備援。
+
 ## 2. Required Course Shell
 
 所有正式課程內容頁都必須具有以下 UI：

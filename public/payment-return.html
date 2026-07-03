@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" data-i18n-meta="meta_desc_payment_return" content="Vibe Coding 付款結果 — 檢視您的訂單付款狀態">
     <title>付款結果 - Vibe Coding</title>
-    <script src="./js/i18n-helper.3a22c1d104ee.js"></script>
+    <script src="./js/i18n-helper.3dcfe5126a8b.js"></script>
     <script>
         (function() {
             const w = console.warn;
@@ -36,7 +36,7 @@
 
 <body class="bg-gray-50 min-h-screen flex flex-col" data-i18n-doc-title="doc_title_payment_return">
     <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
-    <script type="module" src="./js/nav-component.b14f210da6d7.js"></script>
+    <script type="module" src="./js/nav-component.bce0209caf84.js"></script>
 
     <main class="flex-grow flex items-center justify-center p-6">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full text-center border-t-8 border-green-500">
@@ -70,7 +70,7 @@
     </main>
 
     <div id="footer-placeholder" data-root="."></div>
-    <script src="./js/footer-component.aefa6a662d57.js"></script>
+    <script src="./js/footer-component.274d6201db52.js"></script>
 
     <script type="module">
         // 1. 匯入 Firebase (僅用於監聽登入狀態以更新 UI，非必要可省略，但為了體驗一致性建議保留)
@@ -92,7 +92,7 @@
             // 檢查是否還有購物車資料
             const cart = localStorage.getItem('vibeCodingCart');
             if (cart) {
-                console.log(window.t('pay_clearing_cart_log', "付款完成，正在清空本地購物車..."));
+                console.log(window.t('pay_clearing_cart_log'));
                 localStorage.removeItem('vibeCodingCart');
             }
         }
@@ -130,12 +130,12 @@
             // 簡單的錯誤處理 (如果逆向顯示交易失敗但還是導回來這裡)
             // 注意：RtnCode 1 代表成功
             if (rtnCode && rtnCode !== '1') {
-                document.querySelector('h1').textContent = window.t('pay_failed_header', '付款處理異常');
+                document.querySelector('h1').textContent = window.t('pay_failed_header');
                 document.querySelector('h1').classList.replace('text-gray-800', 'text-red-600');
                 document.querySelector('.check-icon').classList.replace('bg-green-100', 'bg-red-100');
                 document.querySelector('.check-icon svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>';
                 document.querySelector('.check-icon svg').classList.replace('text-green-600', 'text-red-600');
-                document.querySelector('p.text-gray-500').textContent = window.t('pay_failed_desc', '錯誤代碼: {msg}，請聯絡客服。').replace('{msg}', rtnMsg || 'Unknown error');
+                document.querySelector('p.text-gray-500').textContent = window.t('pay_failed_desc').replace('{msg}', rtnMsg || 'Unknown error');
             }
         });
     </script>

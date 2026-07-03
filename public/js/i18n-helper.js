@@ -2277,14 +2277,15 @@
     // 3. 全局字串翻譯函數
     window.detectUiLocale = detectUiLocale;
     window.currentLocale = currentLocale;
-    window.t = function (key, fallback) {
+    window.t = function (key) {
         currentLocale = getActiveLocale();
         window.currentLocale = currentLocale;
         const localeDict = DICTIONARY[resolveDictionaryLocale(currentLocale)];
         if (localeDict && localeDict[key] !== undefined) {
             return localeDict[key];
         }
-        return fallback !== undefined ? fallback : key;
+        if (key) console.warn(`[i18n] Missing key: ${key}`);
+        return key || "";
     };
 
     // 4. 動態翻譯 DOM 元素
