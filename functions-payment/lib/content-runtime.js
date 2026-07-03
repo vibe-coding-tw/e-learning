@@ -16,7 +16,7 @@ const {
 } = require("vibe-functions-core/distributor-pricing");
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
-const COURSE_RUNTIME_VERSION = "20260623-tutor-mode-admin-uid-fix";
+const COURSE_RUNTIME_VERSION = "20260701-fix-undefined-buttons";
 const {
     cleanUnitId,
     findCourseByPageOrUnit,
@@ -277,16 +277,22 @@ function injectCourseRuntimeShell(html = "") {
     let content = String(html || "");
     if (!content) return content;
 
+    const i18nHelperUrl = `/js/i18n-helper.js?v=${COURSE_RUNTIME_VERSION}`;
     const courseSharedUrl = `/js/course-shared.js?v=${COURSE_RUNTIME_VERSION}`;
     const navComponentUrl = `/js/nav-component.js?v=${COURSE_RUNTIME_VERSION}`;
     content = content
+        .replace(/\/js\/i18n-helper(?:\.[a-z0-9]+)?\.js(?:\?[^"'<>]*)?/gi, i18nHelperUrl)
         .replace(/\/js\/course-shared(?:\.[a-z0-9]+)?\.js(?:\?[^"'<>]*)?/gi, courseSharedUrl)
         .replace(/\/js\/nav-component(?:\.[a-z0-9]+)?\.js(?:\?[^"'<>]*)?/gi, navComponentUrl);
 
     const runtimeScripts = [];
+    const hasStableI18nHelperScript = content.includes(i18nHelperUrl);
     const hasStableCourseSharedScript = content.includes(courseSharedUrl);
     const hasStableNavComponentScript = content.includes(navComponentUrl);
 
+    if (!hasStableI18nHelperScript) {
+        runtimeScripts.push(`<script src="${i18nHelperUrl}"></script>`);
+    }
     if (!hasStableCourseSharedScript) {
         runtimeScripts.push(`<script src="${courseSharedUrl}"></script>`);
     }
