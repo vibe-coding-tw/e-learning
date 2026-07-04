@@ -13,13 +13,16 @@ const state = {
     distributorId: '',
     selectedDistributorId: '',
     accessibleDistributors: [],
+    distributors: [],
+    distributorOperators: [],
     priceBooks: [],
     orders: [],
     tutors: [],
     settlement: null,
     priceBookFilter: 'all',
     priceBookSearch: '',
-    selectedPriceBookId: ''
+    selectedPriceBookId: '',
+    editingDistributorId: ''
 };
 
 function el(id) {
@@ -259,6 +262,167 @@ function renderDistributorTabs(distributors = []) {
             </button>
         `;
     }).join('');
+}
+
+function getSelectedDistributor() {
+    const id = String(state.selectedDistributorId || state.distributorId || '').trim();
+    return (state.distributors || []).find((distributor) => String(distributor.id || '').trim() === id) || null;
+}
+
+function formatDistributorRegions(regions = []) {
+    return Array.isArray(regions) && regions.length ? regions.join(', ') : '—';
+}
+
+function formatDistributorOperatorCount(distributorId = '') {
+    const selectedId = String(state.selectedDistributorId || '').trim();
+    if (!distributorId || selectedId !== String(distributorId || '').trim()) return '—';
+    return String((state.distributorOperators || []).filter((item) => String(item.distributorId || '').trim() === selectedId).length);
+}
+
+function populateDistributorForm(distributor = null) {
+    const isEditing = !!distributor?.id;
+    state.editingDistributorId = isEditing ? String(distributor.id || '').trim() : '';
+    setFormValue('portal-distributor-form-id', distributor?.id || '');
+    setFormValue('portal-distributor-form-name', distributor?.name || '');
+    setFormValue('portal-distributor-form-status', String(distributor?.status || 'ACTIVE').toUpperCase());
+    setFormValue('portal-distributor-form-regions', Array.isArray(distributor?.regions) ? distributor.regions.join(', ') : '');
+    setFormValue('portal-distributor-form-currency', distributor?.defaultCurrency || 'TWD');
+    setFormValue('portal-distributor-form-price-policy', String(distributor?.pricePolicyMode || 'GUIDED').toUpperCase());
+    setFormValue('portal-distributor-form-settlement', distributor?.settlementMethod || '');
+    const formState = el('portal-distributor-form-state');
+    if (formState) {
+        formState.textContent = isEditing ? `編輯經銷商：${distributor.id}` : '新增模式';
+    }
+    const idInput = el('portal-distributor-form-id');
+    if (idInput) idInput.readOnly = isEditing;
+    const operatorDistributorInput = el('portal-distributor-operator-distributor-id');
+    if (operatorDistributorInput) operatorDistributorInput.value = distributor?.id || state.selectedDistributorId || '';
+    const operatorSummary = el('portal-distributor-operator-summary');
+    if (operatorSummary) {
+        operatorSummary.textContent = distributor?.id
+            ? `目前選取：${distributor.name || distributor.id}`
+            : '先選擇一個經銷商。';
+    }
+}
+
+function populateDistributorOperatorList(distributorId = '') {
+    const tbody = el('portal-distributor-operator-table-body');
+    const countEl = el('portal-distributor-operator-count');
+    const statusEl = el('portal-distributor-operator-status');
+    if (!tbody) return;
+
+    const items = (state.distributorOperators || []).filter((item) => String(item.distributorId || '').trim() === String(distributorId || '').trim());
+    if (countEl) countEl.textContent = String(items.length);
+    if (statusEl) statusEl.textContent = distributorId ? `選取：${distributorId}` : '—';
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">目前沒有指派的操作者</td></tr>';
+        return;
+    }
+    tbody.innerHTML = items.map((item) => {
+        const uid = String(item.uid || '').trim();
+        return `
+            <tr class="hover:bg-slate-50/80 transition">
+                <td class="px-4 py-4 align-top font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(uid || '—')}</td>
+                <td class="px-4 py-4 align-top text-sm font-semibold text-slate-900">${escapeHtml(item.name || '—')}</td>
+                <td class="px-4 py-4 align-top font-mono text-xs font-semibold text-slate-700 break-all">${escapeHtml(item.email || '—')}</td>
+                <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(String(item.authorizedUnitCount || 0))}</td>
+                <td class="px-4 py-4 align-top">
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="window.distributorPortalUseOperator('${escapeHtml(uid)}')" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">
+                            編輯
+                        </button>
+                        <button onclick="window.distributorPortalUnassignOperator('${escapeHtml(uid)}')" class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50">
+                            解除
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderDistributorManagement() {
+    const section = el('portal-distributor-admin-section');
+    if (!section) return;
+    const isAdmin = String(state.portal?.role || '').trim().toLowerCase() === 'admin';
+    section.classList.toggle('hidden', !isAdmin);
+    if (!isAdmin) return;
+
+    const distributors = Array.isArray(state.distributors) ? state.distributors : [];
+    const selectedId = String(state.selectedDistributorId || '').trim();
+    const selected = distributors.find((distributor) => String(distributor.id || '').trim() === selectedId) || null;
+
+    const summary = el('portal-distributor-admin-summary');
+    if (summary) {
+        summary.textContent = distributors.length
+            ? `共 ${distributors.length} 個經銷商，點擊任一列可切換與編輯。`
+            : '目前沒有經銷商資料。';
+    }
+    const countEl = el('portal-distributor-admin-count');
+    if (countEl) countEl.textContent = String(distributors.length);
+
+    const tbody = el('portal-distributor-table-body');
+    if (tbody) {
+        if (!distributors.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="py-10 text-center text-slate-400 italic">目前沒有經銷商資料</td></tr>';
+        } else {
+            tbody.innerHTML = distributors.map((distributor) => {
+                const id = String(distributor.id || '').trim();
+                const active = id === selectedId;
+                const status = String(distributor.status || 'ACTIVE').toUpperCase();
+                const statusBadge = status === 'ACTIVE'
+                    ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                    : status === 'PAUSED'
+                        ? 'bg-amber-100 text-amber-700 border-amber-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-200';
+                const operatorCount = formatDistributorOperatorCount(id);
+                return `
+                    <tr class="${active ? 'bg-slate-50/80' : 'hover:bg-slate-50/80'} transition cursor-pointer" onclick="window.distributorPortalEditDistributor('${escapeHtml(id)}')">
+                        <td class="px-4 py-4 align-top font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(id || '—')}</td>
+                        <td class="px-4 py-4 align-top">
+                            <div class="font-semibold text-slate-900">${escapeHtml(distributor.name || '—')}</div>
+                            <div class="mt-1 text-[11px] text-slate-400">${escapeHtml(String(distributor.pricePolicyMode || 'GUIDED').toUpperCase())}</div>
+                        </td>
+                        <td class="px-4 py-4 align-top">
+                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${statusBadge}">${escapeHtml(status)}</span>
+                        </td>
+                        <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(formatDistributorRegions(distributor.regions))}</td>
+                        <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(distributor.defaultCurrency || 'TWD')}</td>
+                        <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(operatorCount)}</td>
+                        <td class="px-4 py-4 align-top">
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="window.distributorPortalEditDistributor('${escapeHtml(id)}'); event.stopPropagation();" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">編輯</button>
+                                <button type="button" onclick="window.distributorPortalUseDistributor('${escapeHtml(id)}'); event.stopPropagation();" class="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-50">切換</button>
+                                <button type="button" onclick="window.distributorPortalDeleteDistributor('${escapeHtml(id)}'); event.stopPropagation();" class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50">刪除</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    populateDistributorForm(selected);
+    populateDistributorOperatorList(selectedId);
+}
+
+function resetDistributorForm() {
+    state.editingDistributorId = '';
+    setFormValue('portal-distributor-form-id', '');
+    setFormValue('portal-distributor-form-name', '');
+    setFormValue('portal-distributor-form-status', 'ACTIVE');
+    setFormValue('portal-distributor-form-regions', '');
+    setFormValue('portal-distributor-form-currency', 'TWD');
+    setFormValue('portal-distributor-form-price-policy', 'GUIDED');
+    setFormValue('portal-distributor-form-settlement', '');
+    const formState = el('portal-distributor-form-state');
+    if (formState) formState.textContent = '新增模式';
+    const idInput = el('portal-distributor-form-id');
+    if (idInput) idInput.readOnly = false;
+}
+
+function refreshDistributorAdminUi() {
+    renderDistributorManagement();
 }
 
 function renderPriceBooks(items = []) {
@@ -512,6 +676,7 @@ function renderPortalData() {
     renderOrders(state.orders);
     renderTutors(state.tutors);
     renderSettlement(state.settlement?.rows || []);
+    renderDistributorManagement();
 }
 
 function clearForm() {
@@ -599,20 +764,24 @@ async function loadPortalData(distributorId = '') {
     const payload = distributorId ? { distributorId } : {};
     const res = await fn(payload);
     state.portal = res.data || {};
+    state.distributors = Array.isArray(state.portal?.distributors)
+        ? state.portal.distributors
+        : (Array.isArray(state.portal?.accessibleDistributors) ? state.portal.accessibleDistributors : []);
     state.accessibleDistributors = Array.isArray(state.portal?.accessibleDistributors) ? state.portal.accessibleDistributors : [];
     state.selectedDistributorId = String(state.portal?.selectedDistributorId || state.portal?.myDistributorId || distributorId || '').trim();
     state.distributorId = state.selectedDistributorId || String(state.portal?.myDistributorId || '').trim();
     state.orders = Array.isArray(state.portal?.orders) ? state.portal.orders : [];
     state.tutors = Array.isArray(state.portal?.tutors) ? state.portal.tutors : [];
     state.settlement = state.portal?.settlement || null;
+    state.distributorOperators = Array.isArray(state.portal?.distributorOperators) ? state.portal.distributorOperators : [];
     state.lessonHiddenMap = state.portal?.lessonHiddenMap || {};
 
-    const role = String(state.portal?.role || 'user');
+    const role = String(state.portal?.role || 'user').toLowerCase();
     const scopeNote = el('portal-scope-note');
     if (scopeNote) {
         scopeNote.textContent = state.distributorId
-            ? window.t('dp_scope_note_distributor').replace('{id}', state.distributorId)
-            : window.t('dp_scope_note_no_distributor');
+            ? `目前選取經銷商：${state.distributorId}`
+            : '尚未選取經銷商。';
     }
 
     const distributorInput = el('portal-distributor-id-input');
@@ -621,8 +790,8 @@ async function loadPortalData(distributorId = '') {
         distributorInput.readOnly = role !== 'admin' && !!state.distributorId;
     }
 
-    if (!state.portal?.canManagePricing) {
-        showDenied(window.t('alert_distributor_not_assigned'));
+    if (role !== 'admin') {
+        showDenied(window.t('dp_denied_msg'));
         return;
     }
 
@@ -789,7 +958,190 @@ async function loadDistributorContext(distributorId = '') {
     }
     await loadPortalData(targetDistributorId);
     await loadPriceBooks();
+    renderDistributorManagement();
 }
+
+window.distributorPortalReloadAdminDistributors = async function () {
+    await loadDistributorContext(state.selectedDistributorId || state.distributorId || '');
+};
+
+window.distributorPortalNewDistributor = function () {
+    resetDistributorForm();
+};
+
+window.distributorPortalEditDistributor = async function (distributorId = '') {
+    const target = String(distributorId || '').trim();
+    const distributor = (state.distributors || []).find((item) => String(item.id || '').trim() === target) || null;
+    if (!distributor) {
+        toast('找不到經銷商資料', 'error');
+        return;
+    }
+    state.selectedDistributorId = target;
+    state.distributorId = target;
+    const input = el('portal-distributor-id-input');
+    if (input) input.value = target;
+    await loadDistributorContext(target);
+    populateDistributorForm(distributor);
+    populateDistributorOperatorList(target);
+};
+
+window.distributorPortalUseDistributor = async function (distributorId = '') {
+    const target = String(distributorId || '').trim();
+    if (!target) return;
+    state.selectedDistributorId = target;
+    state.distributorId = target;
+    const input = el('portal-distributor-id-input');
+    if (input) input.value = target;
+    await loadDistributorContext(target);
+};
+
+window.distributorPortalSaveDistributor = async function () {
+    const distributorId = String(getFormValue('portal-distributor-form-id') || '').trim();
+    const name = String(getFormValue('portal-distributor-form-name') || '').trim();
+    const status = String(getFormValue('portal-distributor-form-status') || 'ACTIVE').trim().toUpperCase();
+    const regions = String(getFormValue('portal-distributor-form-regions') || '')
+        .split(/[\n,]/g)
+        .map((value) => value.trim().toUpperCase())
+        .filter(Boolean);
+    const defaultCurrency = String(getFormValue('portal-distributor-form-currency') || 'TWD').trim().toUpperCase();
+    const pricePolicyMode = String(getFormValue('portal-distributor-form-price-policy') || 'GUIDED').trim().toUpperCase();
+    const settlementMethod = String(getFormValue('portal-distributor-form-settlement') || '').trim();
+
+    if (!distributorId || !name) {
+        toast('請輸入經銷商 ID 與名稱', 'error');
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="window.distributorPortalSaveDistributor()"]');
+    const originalText = btn?.textContent || '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '儲存中...';
+    }
+
+    try {
+        const fn = httpsCallable(functions, 'upsertDistributor');
+        await fn({
+            distributorId,
+            name,
+            status,
+            regions,
+            defaultCurrency,
+            pricePolicyMode,
+            settlementMethod
+        });
+        toast('經銷商已儲存', 'success');
+        state.selectedDistributorId = distributorId;
+        state.distributorId = distributorId;
+        await loadDistributorContext(distributorId);
+    } catch (e) {
+        console.error('[DistributorPortal] save distributor failed:', e);
+        toast(e.message || '儲存經銷商失敗', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+};
+
+window.distributorPortalDeleteCurrentDistributor = async function () {
+    const distributorId = String(getFormValue('portal-distributor-form-id') || state.editingDistributorId || state.selectedDistributorId || '').trim();
+    if (!distributorId) {
+        toast('請先選擇要刪除的經銷商', 'error');
+        return;
+    }
+    if (!confirm(`確定要刪除經銷商 ${distributorId} 嗎？`)) return;
+    try {
+        const fn = httpsCallable(functions, 'deleteDistributor');
+        await fn({ distributorId });
+        toast('經銷商已刪除', 'success');
+        state.editingDistributorId = '';
+        await loadPortalData('');
+        await loadPriceBooks();
+    } catch (e) {
+        console.error('[DistributorPortal] delete distributor failed:', e);
+        toast(e.message || '刪除經銷商失敗', 'error');
+    }
+};
+
+window.distributorPortalDeleteDistributor = async function (distributorId = '') {
+    const target = String(distributorId || getFormValue('portal-distributor-form-id') || '').trim();
+    if (!target) return;
+    if (!confirm(`確定要刪除經銷商 ${target} 嗎？`)) return;
+    try {
+        const fn = httpsCallable(functions, 'deleteDistributor');
+        await fn({ distributorId: target });
+        toast('經銷商已刪除', 'success');
+        await loadPortalData('');
+        await loadPriceBooks();
+    } catch (e) {
+        console.error('[DistributorPortal] delete distributor failed:', e);
+        toast(e.message || '刪除經銷商失敗', 'error');
+    }
+};
+
+window.distributorPortalAssignOperator = async function () {
+    const distributorId = String(getFormValue('portal-distributor-operator-distributor-id') || state.selectedDistributorId || '').trim();
+    const identifier = String(getFormValue('portal-distributor-operator-identifier') || '').trim();
+    if (!distributorId || !identifier) {
+        toast('請先選擇經銷商並輸入 UID 或 Email', 'error');
+        return;
+    }
+    const payload = {
+        distributorId
+    };
+    if (identifier.includes('@')) {
+        payload.email = identifier;
+    } else {
+        payload.uid = identifier;
+    }
+    try {
+        const fn = httpsCallable(functions, 'assignDistributorOperator');
+        await fn(payload);
+        toast('操作者已指派', 'success');
+        setFormValue('portal-distributor-operator-identifier', '');
+        await loadDistributorContext(distributorId);
+    } catch (e) {
+        console.error('[DistributorPortal] assign operator failed:', e);
+        toast(e.message || '指派操作者失敗', 'error');
+    }
+};
+
+window.distributorPortalUnassignOperator = async function (uid = '') {
+    const distributorId = String(getFormValue('portal-distributor-operator-distributor-id') || state.selectedDistributorId || '').trim();
+    const identifier = String(uid || getFormValue('portal-distributor-operator-identifier') || '').trim();
+    if (!distributorId || !identifier) {
+        toast('請先選擇經銷商並指定操作者', 'error');
+        return;
+    }
+    const payload = {
+        distributorId,
+        clear: true
+    };
+    if (identifier.includes('@')) {
+        payload.email = identifier;
+    } else {
+        payload.uid = identifier;
+    }
+    if (!confirm(`確定要解除 ${identifier} 的經銷商指派嗎？`)) return;
+    try {
+        const fn = httpsCallable(functions, 'assignDistributorOperator');
+        await fn(payload);
+        toast('操作者已解除指派', 'success');
+        setFormValue('portal-distributor-operator-identifier', '');
+        await loadDistributorContext(distributorId);
+    } catch (e) {
+        console.error('[DistributorPortal] unassign operator failed:', e);
+        toast(e.message || '解除指派失敗', 'error');
+    }
+};
+
+window.distributorPortalUseOperator = function (uid = '') {
+    const identifier = String(uid || '').trim();
+    if (!identifier) return;
+    setFormValue('portal-distributor-operator-identifier', identifier);
+};
 
 async function saveForm() {
     const distributorId = getFormValue('portal-distributor-id-input') || state.selectedDistributorId || state.distributorId;
@@ -888,13 +1240,7 @@ window.distributorPortalDeleteForm = async function () {
 window.distributorPortalLoadPriceBooks = loadPriceBooks;
 window.distributorPortalSaveForm = saveForm;
 window.distributorPortalSelectDistributor = async function (distributorId = '') {
-    const target = String(distributorId || '').trim();
-    if (!target) return;
-    state.selectedDistributorId = target;
-    state.distributorId = target;
-    const input = el('portal-distributor-id-input');
-    if (input) input.value = target;
-    await loadDistributorContext(target);
+    await window.distributorPortalUseDistributor(distributorId);
 };
 window.distributorPortalOpenPriceBookModal = function (priceBookId = '') {
     const normalizedId = String(priceBookId || '').trim();
@@ -1026,6 +1372,10 @@ onAuthStateChanged(auth, async (user) => {
         if (state.distributorId) await loadPriceBooks();
     } catch (e) {
         console.error('[DistributorPortal] bootstrap failed:', e);
-        showDenied(window.t('alert_load_portal_failed').replace('{msg}', e.message || 'unknown error'));
+        if (String(e?.code || '').toLowerCase() === 'permission-denied') {
+            showDenied(window.t('dp_denied_msg'));
+        } else {
+            showDenied(window.t('alert_load_portal_failed').replace('{msg}', e.message || 'unknown error'));
+        }
     }
 });

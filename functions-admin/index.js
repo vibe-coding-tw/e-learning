@@ -160,7 +160,8 @@ const {
     chooseRecommendedDistributor
 } = require("./lib/routing-utils");
 const {
-    getUserDistributorScope
+    getUserDistributorScope,
+    loadDistributorScopedUsers
 } = require("./lib/distributor-utils");
 const {
     isStarterCourseReference,
@@ -218,6 +219,45 @@ const {
 } = require("./lib/admin-utils");
 const { getLessonsMetadata, getDashboardData } = require("./lib/dashboard-data");
 
+
+function normalizeDistributorStatus(value = "") {
+    const normalized = String(value || "").trim().toUpperCase();
+    return ["ACTIVE", "PAUSED", "INACTIVE"].includes(normalized) ? normalized : "ACTIVE";
+}
+
+function normalizePricePolicyMode(value = "") {
+    const normalized = String(value || "").trim().toUpperCase();
+    return ["FREE", "GUIDED", "ADMIN_ONLY"].includes(normalized) ? normalized : "GUIDED";
+}
+
+function parseDistributorRegions(value = "") {
+    const source = Array.isArray(value)
+        ? value
+        : String(value || "").split(/[\n,]/g);
+    const regions = [];
+    source.forEach((item) => {
+        const region = normalizeText(item || "").toUpperCase();
+        if (!region || regions.includes(region)) return;
+        regions.push(region);
+    });
+    return regions;
+}
+
+function buildDistributorPayload(data = {}, existing = {}) {
+    const id = normalizeText(data.distributorId || data.id || existing.id || "");
+    const name = String(data.name || existing.name || "").trim();
+    const status = normalizeDistributorStatus(data.status || existing.status || "ACTIVE");
+    const regions = parseDistributorRegions(data.regions || existing.regions || []);
+    const defaultCurrency = normalizeText(data.defaultCurrency || existing.defaultCurrency || "TWD").toUpperCase() || "TWD";
+    const pricePolicyMode = normalizePricePolicyMode(data.pricePolicyMode || existing.pricePolicyMode || "GUIDED");
+    const settlementMethod = String(data.settlementMethod || existing.settlementMethod || "").trim();
+    return { id, name, status, regions, defaultCurrency, pricePolicyMode, settlementMethod };
+}
+
+function mapDistributorDoc(doc = null) {
+    if (!doc) return null;
+    return { id: doc.id, ...(doc.data ? (doc.data() || {}) : {}) };
+}
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
@@ -1169,6 +1209,143 @@ const updateUserRoutingPreference = onCall(async (request) => {
 
 
 
+const upsertDistributor = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth, "請先登入");
+
+    const dbRef = admin.firestore();
+    const role = await getRole(auth.uid, auth?.token?.email || "");
+    assertAdminRole(role, "僅限管理員新增或修改經銷商");
+
+    const payload = data || {};
+    const existingId = normalizeText(payload.distributorId || payload.id || "");
+    const existingDoc = existingId ? await dbRef.collection("distributors").doc(existingId).get() : null;
+    const existingData = existingDoc && existingDoc.exists ? (existingDoc.data() || {}) : {};
+    const distributor = buildDistributorPayload(payload, existingData);
+
+    assertRequiredValue(distributor.id, "missing-distributor-id");
+    assertRequiredValue(distributor.name, "missing-distributor-name");
+
+    const docRef = dbRef.collection("distributors").doc(distributor.id);
+    const createdAt = existingDoc && existingDoc.exists && existingData.createdAt
+        ? existingData.createdAt
+        : admin.firestore.FieldValue.serverTimestamp();
+
+    await docRef.set({
+        name: distributor.name,
+        status: distributor.status,
+        regions: distributor.regions,
+        defaultCurrency: distributor.defaultCurrency,
+        pricePolicyMode: distributor.pricePolicyMode,
+        settlementMethod: distributor.settlementMethod,
+        updatedBy: auth.uid,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt
+    }, { merge: true });
+
+    return {
+        success: true,
+        distributor: {
+            id: distributor.id,
+            name: distributor.name,
+            status: distributor.status,
+            regions: distributor.regions,
+            defaultCurrency: distributor.defaultCurrency,
+            pricePolicyMode: distributor.pricePolicyMode,
+            settlementMethod: distributor.settlementMethod
+        }
+    };
+});
+
+const deleteDistributor = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth, "請先登入");
+
+    const dbRef = admin.firestore();
+    const role = await getRole(auth.uid, auth?.token?.email || "");
+    assertAdminRole(role, "僅限管理員刪除經銷商");
+
+    const distributorId = normalizeText(data?.distributorId || data?.id || "");
+    assertRequiredValue(distributorId, "missing-distributor-id");
+
+    const [priceBooksSnap, ordersByDistributorSnap, ordersByOwnerSnap, ordersByPartnerSnap, scopedUsers, ruleSnap] = await Promise.all([
+        dbRef.collection("dealer_price_books").where("distributorId", "==", distributorId).limit(1).get(),
+        dbRef.collection("orders").where("distributorId", "==", distributorId).limit(1).get(),
+        dbRef.collection("orders").where("fulfillmentOwnerId", "==", distributorId).limit(1).get(),
+        dbRef.collection("orders").where("fulfillmentPartnerId", "==", distributorId).limit(1).get(),
+        loadDistributorScopedUsers(dbRef, distributorId),
+        dbRef.collection("region_distributor_rules").get()
+    ]);
+
+    const blockingRules = [];
+    ruleSnap.forEach((doc) => {
+        const rule = doc.data() || {};
+        const backupDistributorIds = Array.isArray(rule.backupDistributorIds) ? rule.backupDistributorIds : [];
+        if (normalizeText(rule.defaultDistributorId || "") === distributorId || backupDistributorIds.some((item) => normalizeText(item || "") === distributorId)) {
+            blockingRules.push(doc.id);
+        }
+    });
+
+    const hasOrders = !ordersByDistributorSnap.empty || !ordersByOwnerSnap.empty || !ordersByPartnerSnap.empty;
+    if (!priceBooksSnap.empty || hasOrders || scopedUsers.length > 0 || blockingRules.length > 0) {
+        throw new HttpsError(
+            "failed-precondition",
+            `請先清除關聯資料再刪除：價格表 ${priceBooksSnap.size > 0 ? "有" : "無"}、操作者 ${scopedUsers.length > 0 ? "有" : "無"}、訂單 ${hasOrders ? "有" : "無"}、區域規則 ${blockingRules.length > 0 ? "有" : "無"}。`
+        );
+    }
+
+    await dbRef.collection("distributors").doc(distributorId).delete();
+    return { success: true, distributorId };
+});
+
+const assignDistributorOperator = onCall(async (request) => {
+    const { auth, data } = request;
+    assertAuthenticated(auth, "請先登入");
+
+    const dbRef = admin.firestore();
+    const role = await getRole(auth.uid, auth?.token?.email || "");
+    assertAdminRole(role, "僅限管理員指派經銷商操作者");
+
+    const payload = data || {};
+    const distributorId = normalizeText(payload.distributorId || "");
+    const operatorUid = normalizeText(payload.uid || "");
+    const operatorEmail = normalizeEmail(payload.email || "");
+    const clear = payload.clear === true;
+
+    assertRequiredValue(distributorId, "missing-distributor-id");
+    assertRequiredValue(operatorUid || operatorEmail, "missing-operator-identifier");
+
+    const distributorDoc = await dbRef.collection("distributors").doc(distributorId).get();
+    if (!distributorDoc.exists) {
+        throw new HttpsError("not-found", `distributor-not-found: ${distributorId}`);
+    }
+
+    let userDoc = null;
+    if (operatorUid) {
+        userDoc = await dbRef.collection("users").doc(operatorUid).get();
+    } else if (operatorEmail) {
+        userDoc = await findUserDocByEmail(dbRef, operatorEmail);
+    }
+    if (!userDoc || !userDoc.exists) {
+        throw new HttpsError("not-found", `user-not-found: ${operatorUid || operatorEmail}`);
+    }
+
+    const userRef = userDoc.ref;
+    await userRef.set({
+        distributorId: clear ? "" : distributorId,
+        "commercial.distributorId": clear ? "" : distributorId,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return {
+        success: true,
+        distributorId,
+        uid: userDoc.id,
+        email: (userDoc.data() || {}).email || operatorEmail || "",
+        assigned: !clear
+    };
+});
+
 const getDistributorPortalData = onCall(async (request) => {
     const { auth } = request;
     assertAuthenticated(auth, "請先登入");
@@ -1178,34 +1355,19 @@ const getDistributorPortalData = onCall(async (request) => {
     const userDoc = await dbRef.collection("users").doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     const role = await getRole(uid, auth?.token?.email || "");
-    const myDistributorId = getUserDistributorScope(userData) || "";
-    const canManagePricing = role === "admin" || !!myDistributorId;
+    assertAdminRole(role, "僅限管理員存取經銷商管理頁");
+
     const requestedDistributorId = normalizeText(request.data?.distributorId || "");
     const distributorQuerySnap = await dbRef.collection("distributors").get();
     const allDistributors = [];
     distributorQuerySnap.forEach((doc) => {
-        allDistributors.push({ id: doc.id, ...(doc.data() || {}) });
+        allDistributors.push(mapDistributorDoc(doc));
     });
     allDistributors.sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)));
 
-    const ownDistributorId = myDistributorId || "";
-    const adminRequestedDistributorId = role === "admin" && requestedDistributorId
-        ? requestedDistributorId
-        : "";
-    const selectedDistributorId = role === "admin"
-        ? (
-            adminRequestedDistributorId ||
-            ownDistributorId ||
-            (allDistributors[0]?.id || "")
-        )
-        : ownDistributorId;
+    const selectedDistributorId = requestedDistributorId || (allDistributors[0]?.id || "");
 
     const lessons = await getLessonsForAdmin(selectedDistributorId);
-
-    const accessibleDistributors = role === "admin"
-        ? allDistributors
-        : allDistributors.filter((item) => item.id === ownDistributorId);
-
     const distributorDoc = selectedDistributorId ? await dbRef.collection("distributors").doc(selectedDistributorId).get() : null;
     const distributorData = distributorDoc && distributorDoc.exists ? (distributorDoc.data() || {}) : {};
     const selectedDistributor = selectedDistributorId
@@ -1218,6 +1380,21 @@ const getDistributorPortalData = onCall(async (request) => {
         lessons,
         distributorData.defaultCurrency || userData.defaultCurrency || "TWD"
     );
+    const distributorOperatorsRaw = selectedDistributorId
+        ? await loadDistributorScopedUsers(dbRef, selectedDistributorId)
+        : [];
+    const distributorOperators = distributorOperatorsRaw.map((operator) => ({
+        uid: operator.id || operator.uid || "",
+        email: operator.email || "",
+        name: operator.name || operator.displayName || operator.email || operator.id || "",
+        distributorId: getUserDistributorScope(operator) || "",
+        role: operator.role || "user",
+        tutorCount: operator.tutorConfigs ? Object.keys(operator.tutorConfigs || {}).length : 0,
+        authorizedUnitCount: operator.tutorConfigs
+            ? Object.values(operator.tutorConfigs || {}).filter((cfg) => cfg && cfg.authorized === true).length
+            : 0,
+        updatedAt: operator.updatedAt || null
+    }));
 
     const lessonHiddenMap = {};
     lessons.forEach((l) => { lessonHiddenMap[l.docId] = !!l.hiddenFromCatalog; });
@@ -1236,21 +1413,23 @@ const getDistributorPortalData = onCall(async (request) => {
 
     return {
         success: true,
-        role: role === "admin" ? "admin" : "user",
+        role: "admin",
         isTutor: !!userData.tutorConfigs && Object.keys(userData.tutorConfigs || {}).length > 0,
         uid,
         email: auth.token?.email || userData.email || "",
         name: userData.name || auth.token?.name || "",
-        myDistributorId,
         selectedDistributorId,
-        canManagePricing,
-        accessibleDistributors,
+        canManagePricing: true,
+        canManageDistributors: true,
+        distributors: allDistributors,
+        accessibleDistributors: allDistributors,
         orders: orderData.items,
         orderSummary: orderData.summary,
         tutors: tutorData.items,
         tutorSummary: tutorData.summary,
         settlement: settlementData,
         selectedDistributor,
+        distributorOperators,
         seedableProductCount: seedableProducts.length,
         seedableProducts: seedableProducts.map((p) => ({
             docId: p.docId || "",
@@ -1268,7 +1447,7 @@ const getDistributorPortalData = onCall(async (request) => {
             email: auth.token?.email || userData.email || "",
             name: userData.name || auth.token?.name || "",
             distributorId: selectedDistributorId,
-            role
+            role: "admin"
         }
     };
 });
@@ -2332,6 +2511,9 @@ exports.getDistributorRoutingOptions = getDistributorRoutingOptions;
 exports.resolveDistributorCheckoutQuote = resolveDistributorCheckoutQuoteFn;
 exports.getDistributorPriceBooks = getDistributorPriceBooks;
 exports.getLessonPriceBooks = getLessonPriceBooks;
+exports.upsertDistributor = upsertDistributor;
+exports.deleteDistributor = deleteDistributor;
+exports.assignDistributorOperator = assignDistributorOperator;
 exports.getDistributorPortalData = getDistributorPortalData;
 exports.logActivity = logActivity;
 exports.saveTutorConfigs = saveTutorConfigs;

@@ -6,7 +6,7 @@
     <meta name="description" data-i18n-meta="meta_desc_distributor" content="Vibe Coding 經銷商入口 — 管理價格表與訂單出貨狀態">
     <title data-i18n-doc-title="doc_title_distributor_portal">Distributor Portal - Vibe Coding</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <script src="./js/i18n-helper.0ba4ef989e9d.js"></script>
+    <script src="./js/i18n-helper.ed8e71c08999.js"></script>
     <script>
         (function() {
             const w = console.warn;
@@ -44,12 +44,12 @@
                 <div class="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
                     <i class="fa-solid fa-lock"></i> <span data-i18n="dp_denied_badge">權限不足</span>
                 </div>
-                <h1 class="mt-4 text-3xl font-black text-slate-900" data-i18n="dp_denied_title">Distributor Portal 未授權</h1>
+                <h1 class="mt-4 text-3xl font-black text-slate-900" data-i18n="dp_denied_title">Distributor Portal 只限管理員</h1>
                 <p id="portal-denied-message" class="mt-3 text-slate-600 leading-7" data-i18n="dp_denied_msg">
-                    這個入口只提供給擁有經銷商歸屬的帳號或管理員。
+                    這個入口只提供給管理員使用。
                 </p>
                 <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600" data-i18n="dp_denied_help">
-                    如果你確定自己應該有權限，請請管理員在 `users` 文件中補上 `distributorId` 或 `commercial.distributorId`。
+                    如果你確定自己應該有權限，請請管理員把你的帳號設為 `role=admin`。
                 </div>
             </div>
         </div>
@@ -100,6 +100,172 @@
                     <div id="portal-settlement-paid-total" class="mt-1 text-2xl font-black text-emerald-700">0</div>
                 </div>
             </div>
+
+            <section id="portal-distributor-admin-section" class="hidden rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div class="max-w-3xl">
+                        <div class="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
+                            <i class="fa-solid fa-shield-halved"></i> <span>Admin Only</span>
+                        </div>
+                        <h2 class="mt-4 text-3xl font-black tracking-tight text-slate-900">經銷商管理</h2>
+                        <p class="mt-3 text-slate-600 leading-7">
+                            新增、編輯、刪除經銷商，並指派經銷商操作者。
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="window.distributorPortalNewDistributor()" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition active:scale-95 whitespace-nowrap">
+                            + 新增經銷商
+                        </button>
+                        <button onclick="window.distributorPortalReloadAdminDistributors()" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 whitespace-nowrap">
+                            重新載入
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-900">經銷商清單</h3>
+                                <p id="portal-distributor-admin-summary" class="mt-1 text-xs text-slate-500">尚未載入經銷商資料。</p>
+                            </div>
+                            <div id="portal-distributor-admin-count" class="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">0</div>
+                        </div>
+                        <div class="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                            <table class="w-full border-collapse text-left">
+                                <thead>
+                                    <tr class="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                                        <th class="px-4 py-3">ID</th>
+                                        <th class="px-4 py-3">名稱</th>
+                                        <th class="px-4 py-3">狀態</th>
+                                        <th class="px-4 py-3">地區</th>
+                                        <th class="px-4 py-3">幣別</th>
+                                        <th class="px-4 py-3">操作者</th>
+                                        <th class="px-4 py-3">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="portal-distributor-table-body" class="divide-y divide-slate-100 text-sm">
+                                    <tr><td colspan="7" class="py-10 text-center text-slate-400 italic">尚未載入經銷商清單</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-900">經銷商資料</h3>
+                                <p id="portal-distributor-form-state" class="mt-1 text-xs text-slate-500">新增模式</p>
+                            </div>
+                            <button onclick="window.distributorPortalResetDistributorForm()" class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50">
+                                清空
+                            </button>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1 gap-4">
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">經銷商 ID</div>
+                                <input id="portal-distributor-form-id" type="text" placeholder="dist-001" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">名稱</div>
+                                <input id="portal-distributor-form-name" type="text" placeholder="台北經銷商" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">狀態</div>
+                                <select id="portal-distributor-form-status" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="ACTIVE">ACTIVE</option>
+                                    <option value="PAUSED">PAUSED</option>
+                                    <option value="INACTIVE">INACTIVE</option>
+                                </select>
+                            </label>
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">地區</div>
+                                <input id="portal-distributor-form-regions" type="text" placeholder="TW, US" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">預設幣別</div>
+                                <input id="portal-distributor-form-currency" type="text" value="TWD" placeholder="TWD" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">價格模式</div>
+                                <select id="portal-distributor-form-price-policy" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="GUIDED">GUIDED</option>
+                                    <option value="FREE">FREE</option>
+                                    <option value="ADMIN_ONLY">ADMIN_ONLY</option>
+                                </select>
+                            </label>
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">結算方式</div>
+                                <input id="portal-distributor-form-settlement" type="text" placeholder="standard" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                        </div>
+                        <div class="mt-5 flex flex-wrap gap-2">
+                            <button onclick="window.distributorPortalSaveDistributor()" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700">
+                                儲存經銷商
+                            </button>
+                            <button onclick="window.distributorPortalDeleteCurrentDistributor()" class="rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50">
+                                刪除經銷商
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-900">操作者指派</h3>
+                                <p id="portal-distributor-operator-summary" class="mt-1 text-xs text-slate-500">先選擇一個經銷商。</p>
+                            </div>
+                            <div id="portal-distributor-operator-count" class="rounded-full bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">0</div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1 gap-4">
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">經銷商 ID</div>
+                                <input id="portal-distributor-operator-distributor-id" type="text" readonly class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none">
+                            </label>
+                            <label>
+                                <div class="mb-1 text-[11px] font-bold text-slate-500">操作者 UID / Email</div>
+                                <input id="portal-distributor-operator-identifier" type="text" placeholder="uid 或 email" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                            </label>
+                        </div>
+                        <div class="mt-5 flex flex-wrap gap-2">
+                            <button onclick="window.distributorPortalAssignOperator()" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700">
+                                指派操作者
+                            </button>
+                            <button onclick="window.distributorPortalUnassignOperator()" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                                解除指派
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-900">操作者列表</h3>
+                                <p class="mt-1 text-xs text-slate-500">目前歸屬於選取經銷商的帳號。</p>
+                            </div>
+                            <div id="portal-distributor-operator-status" class="rounded-full bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">—</div>
+                        </div>
+                        <div class="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                            <table class="w-full border-collapse text-left">
+                                <thead>
+                                    <tr class="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                                        <th class="px-4 py-3">UID</th>
+                                        <th class="px-4 py-3">名稱</th>
+                                        <th class="px-4 py-3">Email</th>
+                                        <th class="px-4 py-3">授權單元</th>
+                                        <th class="px-4 py-3">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="portal-distributor-operator-table-body" class="divide-y divide-slate-100 text-sm">
+                                    <tr><td colspan="5" class="py-10 text-center text-slate-400 italic">尚未載入操作者資料</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <section class="rounded-[2rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div class="px-6 py-6 border-b border-slate-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white">
@@ -462,7 +628,7 @@
         </div>
     </div>
 
-    <script type="module" src="./js/distributor-portal.1119419542df.js"></script>
+    <script type="module" src="./js/distributor-portal.495f4e19a2f8.js"></script>
     <div id="footer-placeholder" data-root="."></div>
     <script src="./js/footer-component.274d6201db52.js"></script>
 
