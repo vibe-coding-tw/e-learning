@@ -2243,7 +2243,7 @@ async function initFirebaseFeatures() {
     const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js");
     const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js");
     const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js");
-    const { firebaseConfig, connectFirebaseEmulators } = await import("./firebase-local.js?v=3");
+    const { firebaseConfig, connectFirebaseEmulators } = await import("./firebase-local.js?v=4");
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);

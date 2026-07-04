@@ -13,7 +13,7 @@ if bash "${CHECK_SCRIPT}" >"${CHECK_LOG}" 2>&1; then
   READY=1
 else
   echo "[start_local] Local env not ready yet; starting Firebase emulators for ${PROJECT_ID}..."
-  python3 - "${ROOT_DIR}" "${PROJECT_ID}" "${EMULATOR_LOG}" <<'PY' >/dev/null 2>&1 &
+  nohup python3 - "${ROOT_DIR}" "${PROJECT_ID}" "${EMULATOR_LOG}" <<'PY' >/dev/null 2>&1 &
 import os
 import subprocess
 import sys

@@ -2,7 +2,7 @@ import { app } from "./firebase-init.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-import { connectFirebaseEmulators, isLocalDev } from "./firebase-local.js?v=3";
+import { connectFirebaseEmulators, isLocalDev } from "./firebase-local.js?v=4";
 
 const auth = getAuth(app);
 const db = getFirestore(app);
