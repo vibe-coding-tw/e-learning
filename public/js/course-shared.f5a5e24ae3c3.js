@@ -2270,12 +2270,20 @@ async function initFirebaseFeatures() {
 
         window.__vibeLearningPathCategoryLabelsPromise = (async () => {
             try {
-                const callable = httpsCallable(functions, "getLessonsMetadata");
-                const response = await callable({});
+                const directCallable = httpsCallable(functions, "getLearningPathCategoryLabels");
+                const response = await directCallable({});
                 const data = response?.data || response || {};
                 window.__vibeLearningPathCategoryLabels = data.categoryLabels && typeof data.categoryLabels === "object"
                     ? data.categoryLabels
                     : {};
+                if (!window.__vibeLearningPathCategoryLabels || !Object.keys(window.__vibeLearningPathCategoryLabels).length) {
+                    const fallbackCallable = httpsCallable(functions, "getLessonsMetadata");
+                    const fallbackResponse = await fallbackCallable({});
+                    const fallbackData = fallbackResponse?.data || fallbackResponse || {};
+                    window.__vibeLearningPathCategoryLabels = fallbackData.categoryLabels && typeof fallbackData.categoryLabels === "object"
+                        ? fallbackData.categoryLabels
+                        : {};
+                }
                 return window.__vibeLearningPathCategoryLabels;
             } catch (error) {
                 console.warn("[CourseShared] Failed to load metadata_settings/learning_paths:", error);

@@ -217,7 +217,7 @@ const {
     lookupClassroomInviteBindingAdmin,
     resolveStudentAssignmentAccessAdmin
 } = require("./lib/admin-utils");
-const { getLessonsMetadata, getDashboardData } = require("./lib/dashboard-data");
+const { getLessonsMetadata, getLearningPathCategoryLabels, getDashboardData } = require("./lib/dashboard-data");
 
 
 function normalizeDistributorStatus(value = "") {
@@ -2504,6 +2504,7 @@ const submitTutorRecommendationInviteLink = onCall(async (request) => {
 });
 
 exports.getLessonsMetadata = getLessonsMetadata;
+exports.getLearningPathCategoryLabels = getLearningPathCategoryLabels;
 exports.getDashboardData = getDashboardData;
 exports.updateSystemConfig = updateSystemConfig;
 exports.getSystemConfig = getSystemConfig;

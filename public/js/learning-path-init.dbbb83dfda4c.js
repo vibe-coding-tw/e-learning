@@ -18,6 +18,42 @@ const getLessonsFunc = httpsCallable(functions, "getLessonsMetadata");
 let currentLessons = [];
 let currentPathKey = "common";
 let currentLessonsRequestId = 0;
+const LESSON_LOAD_RETRY_ATTEMPTS = 3;
+const LESSON_LOAD_RETRY_BASE_DELAY_MS = 250;
+const LESSON_AUTO_REFRESH_COOLDOWN_MS = 8000;
+const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const learningPathState = window.__vibeLearningPathState || {
+  loading: false,
+  lastSuccessAt: 0,
+  lastFailureAt: 0,
+  lastRefreshAttemptAt: 0
+};
+window.__vibeLearningPathState = learningPathState;
+let learningPathRefreshTimer = null;
+let learningPathSignalsBound = false;
+
+async function runWithBackoff(task, {
+  attempts = LESSON_LOAD_RETRY_ATTEMPTS,
+  baseDelayMs = LESSON_LOAD_RETRY_BASE_DELAY_MS,
+  factor = 2,
+  label = "request"
+} = {}) {
+  let lastError = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await task(attempt);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1) {
+        const delay = baseDelayMs * Math.pow(factor, attempt);
+        console.warn(`[learning-path] ${label} failed (${attempt + 1}/${attempts}), retrying in ${delay}ms`, error);
+        await sleep(delay);
+      }
+    }
+  }
+  throw lastError;
+}
 
 function getLocalPreferredDistributorId() {
   return localStorage.getItem('vibe_user_preferred_distributor') || '';
@@ -71,9 +107,15 @@ async function resolveLessonsDistributorId() {
 }
 
 window.__getLessonsMetadata = async function () {
-  const distributorId = await resolveLessonsDistributorId();
-  const res = await getLessonsFunc({ distributorId });
-  return res?.data || {};
+  return runWithBackoff(async () => {
+    const distributorId = await resolveLessonsDistributorId();
+    const res = await getLessonsFunc({ distributorId });
+    return res?.data || {};
+  }, {
+    label: "getLessonsMetadata",
+    attempts: LESSON_LOAD_RETRY_ATTEMPTS,
+    baseDelayMs: LESSON_LOAD_RETRY_BASE_DELAY_MS
+  });
 };
 const AUTH_URL = "/auth.html?v=" + Date.now();
 const CART_URL = "cart.html";
@@ -515,17 +557,64 @@ function renderLessons(lessons, pathKey) {
 async function loadLessonsForCurrentDistributor() {
   const requestId = ++currentLessonsRequestId;
   const uiLocale = LP.detectUiLocale?.() || "en";
-  const distributorId = await resolveLessonsDistributorId();
-  if (!auth.currentUser && distributorId) {
-    persistLocalPreferredDistributorId(distributorId);
+  learningPathState.loading = true;
+  try {
+    const result = await runWithBackoff(async () => {
+      const distributorId = await resolveLessonsDistributorId();
+      if (!auth.currentUser && distributorId) {
+        persistLocalPreferredDistributorId(distributorId);
+      }
+      return getLessonsFunc({ distributorId });
+    }, {
+      label: "getLessonsMetadata",
+      attempts: LESSON_LOAD_RETRY_ATTEMPTS,
+      baseDelayMs: LESSON_LOAD_RETRY_BASE_DELAY_MS
+    });
+    if (requestId !== currentLessonsRequestId) return null;
+    currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
+    categoryLabelsMap = LP.normalizeCategoryLabelsMap?.(result?.data?.categoryLabels || {}, uiLocale) || {};
+    window.__vibeLearningPathCategoryLabels = categoryLabelsMap;
+    learningPathState.lastSuccessAt = Date.now();
+    learningPathState.lastFailureAt = 0;
+    renderLessons(currentLessons, currentPathKey);
+    return currentLessons;
+  } catch (error) {
+    learningPathState.lastFailureAt = Date.now();
+    throw error;
+  } finally {
+    learningPathState.loading = false;
   }
-  const result = await getLessonsFunc({ distributorId });
-  if (requestId !== currentLessonsRequestId) return null;
-  currentLessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
-  categoryLabelsMap = LP.normalizeCategoryLabelsMap?.(result?.data?.categoryLabels || {}, uiLocale) || {};
-  window.__vibeLearningPathCategoryLabels = categoryLabelsMap;
-  renderLessons(currentLessons, currentPathKey);
-  return currentLessons;
+}
+
+function refreshLessonsIfEmpty(reason = "signal") {
+  if (learningPathState.loading || currentLessons.length > 0) return;
+  const now = Date.now();
+  if (now - learningPathState.lastRefreshAttemptAt < LESSON_AUTO_REFRESH_COOLDOWN_MS) {
+    return;
+  }
+  learningPathState.lastRefreshAttemptAt = now;
+  clearTimeout(learningPathRefreshTimer);
+  learningPathRefreshTimer = setTimeout(() => {
+    learningPathRefreshTimer = null;
+    if (currentLessons.length > 0 || learningPathState.loading) return;
+    console.info("[learning-path] refreshing empty lesson list after", reason);
+    loadLessonsForCurrentDistributor().catch((error) => {
+      console.warn('[learning-path] Failed to refresh lessons after', reason + ':', error);
+    });
+  }, 150);
+}
+
+function bindLessonAutoRefreshSignals() {
+  if (learningPathSignalsBound) return;
+  learningPathSignalsBound = true;
+
+  window.addEventListener("focus", () => refreshLessonsIfEmpty("focus"));
+  window.addEventListener("online", () => refreshLessonsIfEmpty("online"));
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      refreshLessonsIfEmpty("visibilitychange");
+    }
+  });
 }
 
 async function init() {
@@ -534,6 +623,7 @@ async function init() {
   document.documentElement.lang = uiLocale.startsWith("en") ? "en" : "zh-Hant";
   currentPathKey = LP.normalizeCanonicalLearningPathKey?.(new URLSearchParams(location.search).get("path") || "common") || "common";
   document.title = LP.categoryLabel?.(currentPathKey, categoryLabelsMap) || "";
+  bindLessonAutoRefreshSignals();
   window.updateAuthUI = async function () {
     const cards = document.querySelectorAll(".lesson-card");
     const user = auth.currentUser;
@@ -548,6 +638,7 @@ async function init() {
       await loadLessonsForCurrentDistributor();
     } catch (error) {
       console.warn('[learning-path] Failed to load lessons:', error);
+      refreshLessonsIfEmpty("auth-state");
     }
     await window.updateAuthUI();
   });

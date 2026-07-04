@@ -175,6 +175,18 @@ exports.getLessonsMetadata = onCall({ region: "asia-east1" }, async (request) =>
     }
 });
 
+exports.getLearningPathCategoryLabels = onCall({ region: "asia-east1" }, async () => {
+    try {
+        const settingsSnap = await getDb().collection("metadata_settings").doc("learning_paths").get();
+        const rawCategoryLabels = settingsSnap.exists ? ((settingsSnap.data() || {}).categoryLabels || {}) : {};
+        const categoryLabels = normalizeLearningPathCategoryLabels(rawCategoryLabels);
+        return { categoryLabels };
+    } catch (err) {
+        logger.error("[admin/getLearningPathCategoryLabels] failed:", err);
+        throw new HttpsError("internal", err.message || "Failed to load learning path category labels");
+    }
+});
+
 exports.getDashboardData = onCall({ region: "asia-east1", secrets: [CONTENT_REPO_TOKEN] }, async (request) => {
     const data = request.data || {};
     const auth = request.auth;

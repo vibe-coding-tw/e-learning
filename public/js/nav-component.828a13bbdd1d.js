@@ -108,6 +108,76 @@ const pathKeyCandidatesFromValue = REPO_UTILS.learningPathKeyCandidatesFromValue
     return [...new Set([String(value || "").trim(), canonical, legacyLearningPathKeyFromCanonical(canonical, "zh-TW"), legacyLearningPathKeyFromCanonical(canonical, "en"), locale ? legacyLearningPathKeyFromCanonical(value, locale) : ""].filter(Boolean))];
 };
 
+const MENU_LOAD_RETRY_ATTEMPTS = 3;
+const MENU_LOAD_RETRY_BASE_DELAY_MS = 250;
+const MENU_AUTO_REFRESH_COOLDOWN_MS = 8000;
+const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function runWithBackoff(task, {
+    attempts = MENU_LOAD_RETRY_ATTEMPTS,
+    baseDelayMs = MENU_LOAD_RETRY_BASE_DELAY_MS,
+    factor = 2,
+    label = "request"
+} = {}) {
+    let lastError = null;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+        try {
+            return await task(attempt);
+        } catch (error) {
+            lastError = error;
+            if (attempt < attempts - 1) {
+                const delay = baseDelayMs * Math.pow(factor, attempt);
+                console.warn(`[NavComp] ${label} failed (${attempt + 1}/${attempts}), retrying in ${delay}ms`, error);
+                await sleep(delay);
+            }
+        }
+    }
+    throw lastError;
+}
+
+const learningPathMenuState = window.__vibeLearningPathMenuState || {
+    paths: [],
+    loading: false,
+    lastSuccessAt: 0,
+    lastFailureAt: 0,
+    lastRefreshAttemptAt: 0,
+    lastRootPath: ".",
+    lastLocale: "zh-TW"
+};
+window.__vibeLearningPathMenuState = learningPathMenuState;
+let learningPathMenuRefreshTimer = null;
+let learningPathMenuSignalsBound = false;
+
+function readResolvedLearningPathCategoryLabels() {
+    const direct = window.__vibeLearningPathCategoryLabels;
+    if (direct && typeof direct === "object" && !Array.isArray(direct) && Object.keys(direct).length > 0) {
+        return direct;
+    }
+    return {};
+}
+
+async function fetchLearningPathCategoryLabels() {
+    const cached = readResolvedLearningPathCategoryLabels();
+    if (Object.keys(cached).length > 0) {
+        return cached;
+    }
+    if (window.__vibeLearningPathCategoryLabelsPromise) {
+        try {
+            const fromPromise = await window.__vibeLearningPathCategoryLabelsPromise;
+            if (fromPromise && typeof fromPromise === "object" && !Array.isArray(fromPromise) && Object.keys(fromPromise).length > 0) {
+                return fromPromise;
+            }
+        } catch (error) {
+            console.warn("[NavComp] shared category label promise failed:", error);
+        }
+    }
+    const callable = httpsCallable(functions, "getLearningPathCategoryLabels");
+    const response = await callable({});
+    const categoryLabels = normalizeCategoryLabelsMap(response?.data?.categoryLabels || response?.data || {});
+    window.__vibeLearningPathCategoryLabels = categoryLabels;
+    return categoryLabels;
+}
+
 const normalizeRuntimeLocaleCode = window.__vibeNormalizeLocaleCode || function (value = "") {
     return String(value || "").trim().replace(/_/g, "-");
 };
@@ -463,7 +533,7 @@ function isCatalogCourseLesson(lesson = {}) {
 
     if (isHidden) return false;
     if (isPhysical) return false;
-    if (metadataType !== "course") return false;
+    if (metadataType !== "course" && metadataType !== "lesson") return false;
 
     const hasCourseUnits = Array.isArray(lesson?.courseUnits) && lesson.courseUnits.length > 0;
     const hasEntry = typeof lesson?.entryUnitId === "string" && lesson.entryUnitId.trim().length > 0;
@@ -518,30 +588,15 @@ function buildSupportCollabInternalLinks(resolve, isZh = true) {
 }
 
 async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
+    learningPathMenuState.loading = true;
+    learningPathMenuState.lastLocale = uiLocale;
     try {
-        const getLessons = httpsCallable(functions, "getLessonsMetadata");
-        const res = await getLessons({});
-        const allLessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
-        const lessons = allLessons.filter(isCatalogCourseLesson);
-        const categoryLabels = normalizeCategoryLabelsMap(res?.data?.categoryLabels || {});
-        const keys = new Set(Object.keys(categoryLabels));
-        lessons.forEach((lesson) => {
-            let key = resolveCategoryFromLesson(lesson);
-            if (!key) {
-                const filename = String(
-                    lesson?.contentRef ||
-                    lesson?.entryUnitId ||
-                    lesson?.courseId ||
-                    lesson?.classroomUrl ||
-                    ""
-                ).split("/").pop().split("?")[0];
-                key = resolveCategoryFromFilename(filename);
-            }
-            if (key) {
-                keys.add(key);
-            }
+        const categoryLabels = await runWithBackoff(() => fetchLearningPathCategoryLabels(), {
+            label: "getLearningPathCategoryLabels (nav)",
+            attempts: MENU_LOAD_RETRY_ATTEMPTS,
+            baseDelayMs: MENU_LOAD_RETRY_BASE_DELAY_MS
         });
-        const dynamic = sortCategoryKeys(Array.from(keys), uiLocale).map((key) => ({
+        const dynamic = sortCategoryKeys(Object.keys(categoryLabels), uiLocale).map((key) => ({
             key,
             href: getCategoryHref(key),
             label: resolveLearningPathLabel(key, uiLocale, categoryLabels),
@@ -551,13 +606,15 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
         }));
         window.__vibeLearningPathDebug = {
             locale: uiLocale,
-            lessonsCount: lessons.length,
-            sourceLessonsCount: allLessons.length,
             categoryLabelsCount: Object.keys(categoryLabels).length,
             categories: dynamic.map((x) => x.key),
             generatedAt: new Date().toISOString(),
-            source: "getLessonsMetadata + metadata_lessons"
+            source: "metadata_settings.learning_paths.categoryLabels"
         };
+        learningPathMenuState.paths = dynamic;
+        learningPathMenuState.lastSuccessAt = Date.now();
+        learningPathMenuState.lastFailureAt = 0;
+        learningPathMenuState.loading = false;
         console.info("[NavComp] learning paths generated:", window.__vibeLearningPathDebug);
         return dynamic;
     } catch (e) {
@@ -569,9 +626,49 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
             generatedAt: new Date().toISOString(),
             source: "empty"
         };
+        learningPathMenuState.paths = [];
+        learningPathMenuState.lastFailureAt = Date.now();
+        learningPathMenuState.loading = false;
         console.info("[NavComp] learning paths generated (empty):", window.__vibeLearningPathDebug);
         return [];
     }
+}
+
+function refreshLearningPathMenusIfEmpty(reason = "signal") {
+    const hasPaths = Array.isArray(learningPathMenuState.paths) && learningPathMenuState.paths.length > 0;
+    if (hasPaths || learningPathMenuState.loading) return;
+
+    const now = Date.now();
+    if (now - learningPathMenuState.lastRefreshAttemptAt < MENU_AUTO_REFRESH_COOLDOWN_MS) {
+        return;
+    }
+    learningPathMenuState.lastRefreshAttemptAt = now;
+
+    const rootPath = learningPathMenuState.lastRootPath || ".";
+    const locale = learningPathMenuState.lastLocale || detectUiLocale();
+    console.info("[NavComp] refreshing empty learning path menus after", reason);
+    void loadLearningPathsDynamic(locale)
+        .then((paths) => {
+            if (Array.isArray(paths) && paths.length > 0) {
+                renderLearningPathMenus(rootPath, paths, locale);
+            }
+        })
+        .catch((error) => {
+            console.warn("[NavComp] refreshLearningPathMenusIfEmpty failed:", error);
+        });
+}
+
+function bindLearningPathMenuSignals() {
+    if (learningPathMenuSignalsBound) return;
+    learningPathMenuSignalsBound = true;
+
+    window.addEventListener("focus", () => refreshLearningPathMenusIfEmpty("focus"));
+    window.addEventListener("online", () => refreshLearningPathMenusIfEmpty("online"));
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            refreshLearningPathMenusIfEmpty("visibilitychange");
+        }
+    });
 }
 
 // --- 1. Navigation Rendering Engine ---
@@ -629,8 +726,11 @@ window.renderNav = function (rootPath = '.', options = {}) {
     const brandSuffix = options.brandSuffix || '';
     const isFluid = options.isFluid !== undefined ? options.isFluid : true;
 
+    bindLearningPathMenuSignals();
     const uiLocale = detectUiLocale();
     window.__vibeLocale = uiLocale;
+    learningPathMenuState.lastRootPath = rootPath;
+    learningPathMenuState.lastLocale = uiLocale;
     const runtimeConfig = getRuntimeContentConfig();
     const localeOptions = getLocaleOptions();
     const activeLocale = normalizeRuntimeLocaleCode(uiLocale);
@@ -879,6 +979,12 @@ window.renderNav = function (rootPath = '.', options = {}) {
 
     loadLearningPathsDynamic(uiLocale).then((paths) => {
         renderLearningPathMenus(rootPath, paths, uiLocale);
+        learningPathMenuState.paths = Array.isArray(paths) ? paths : [];
+        learningPathMenuState.lastRootPath = rootPath;
+        learningPathMenuState.lastLocale = uiLocale;
+        if (!paths || !paths.length) {
+            refreshLearningPathMenusIfEmpty("initial-render");
+        }
     });
 };
 

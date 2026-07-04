@@ -580,7 +580,8 @@
     function isCatalogCourseLesson(lesson = {}) {
         const metadataType = String(lesson?.metadataType || "").toLowerCase();
         if (lesson?.hiddenFromCatalog === true) return false;
-        return metadataType === "course" && (Array.isArray(lesson?.courseUnits) || String(lesson?.courseId || "").endsWith(".html"));
+        if (metadataType !== "course" && metadataType !== "lesson") return false;
+        return Array.isArray(lesson?.courseUnits) || String(lesson?.courseId || "").endsWith(".html") || String(lesson?.entryUnitId || "").trim().length > 0;
     }
 
     function buildLearningPathSections(lessons = [], pathKey = "", uiLocale = "zh-TW") {
