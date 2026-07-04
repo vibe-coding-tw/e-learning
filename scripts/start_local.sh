@@ -14,9 +14,7 @@ if bash "${CHECK_SCRIPT}" >"${CHECK_LOG}" 2>&1; then
   READY=1
 else
   echo "[start_local] Local env not ready yet; starting Firebase emulators for ${PROJECT_ID}..."
-  FIREBASE_EMULATOR_PROJECT="${PROJECT_ID}" nohup bash "${START_SCRIPT}" >"${EMULATOR_LOG}" 2>&1 &
-  EMULATOR_PID=$!
-  trap 'kill "${EMULATOR_PID}" 2>/dev/null || true' EXIT
+  FIREBASE_EMULATOR_PROJECT="${PROJECT_ID}" nohup bash "${START_SCRIPT}" >"${EMULATOR_LOG}" 2>&1 </dev/null &
 
   for _ in $(seq 1 180); do
     if bash "${CHECK_SCRIPT}" >"${CHECK_LOG}" 2>&1; then
