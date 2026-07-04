@@ -341,21 +341,138 @@ function normalizeLessonMetadataPatch(payload = {}) {
     return patch;
 }
 
-async function loadDistributorPortalOrders(dbRef, distributorId = "", lessons = []) {
+function resolveDistributorIdFromOrder(orderData = {}) {
+    const candidates = [];
+    const add = (value) => {
+        const normalized = normalizeText(value);
+        if (!normalized || candidates.includes(normalized)) return;
+        candidates.push(normalized);
+    };
+
+    add(orderData.distributorId);
+    add(orderData.fulfillmentPartnerId);
+    add(orderData.partnerDistributorId);
+    add(orderData.distributor?.id);
+    add(orderData.distributor?.distributorId);
+    add(orderData.routing?.distributorId);
+
+    Object.values(orderData.items || {}).forEach((itemData) => {
+        if (!itemData || typeof itemData !== "object" || Array.isArray(itemData)) return;
+        add(itemData.distributorId);
+        add(itemData.fulfillmentPartnerId);
+        add(itemData.partnerDistributorId);
+    });
+
+    return candidates;
+}
+
+function resolveOrderPayerName(orderData = {}) {
+    return normalizeText(
+        orderData.payerName ||
+        orderData.paidByName ||
+        orderData.buyerName ||
+        orderData.customerName ||
+        orderData.name ||
+        orderData.shippingContact?.name ||
+        ""
+    );
+}
+
+function resolveOrderPayerEmail(orderData = {}) {
+    return normalizeText(
+        orderData.payerEmail ||
+        orderData.buyerEmail ||
+        orderData.customerEmail ||
+        orderData.email ||
+        ""
+    );
+}
+
+function resolveOrderPaymentDate(orderData = {}) {
+    return orderData.paidAt || orderData.paymentDate || orderData.createdAt || null;
+}
+
+async function loadDistributorPortalOrders(dbRef, distributorId = "", lessons = [], distributorName = "") {
     const ordersSnap = await dbRef.collection("orders").where("status", "==", "SUCCESS").get();
-    const distributorUsers = await loadDistributorScopedUsers(dbRef, distributorId);
-    const distributorUids = new Set(distributorUsers.map((u) => u.id));
+    const normalizedDistributorId = normalizeText(distributorId);
+    const physicalUnitIds = getPhysicalUnitIdSet(lessons);
     const orders = [];
+
     ordersSnap.forEach((doc) => {
         const orderData = doc.data() || {};
-        if (!distributorUids.has(orderData.uid)) return;
-        const physicalItems = Object.keys(orderData.items || {}).filter((id) => isPhysicalOrderItem(id, orderData.items[id] || {}, getPhysicalUnitIdSet(lessons)));
+        const distributorCandidates = resolveDistributorIdFromOrder(orderData);
+        if (normalizedDistributorId && !distributorCandidates.includes(normalizedDistributorId)) return;
+
+        const items = orderData.items || {};
+        const itemIds = Object.keys(items);
+        const physicalItems = itemIds.filter((id) => isPhysicalOrderItem(id, items[id] || {}, physicalUnitIds));
+        const itemNames = itemIds.map((id) => {
+            const lesson = findLessonByCourseRef(id, lessons);
+            return lesson?.title || items[id]?.name || id;
+        });
+        const logistics = orderData.logistics || {};
+        const shippingContact = {
+            name: normalizeText(orderData.shippingContact?.name || logistics.receiverName || logistics.ReceiverName || ""),
+            phone: normalizeText(orderData.shippingContact?.phone || logistics.receiverPhone || logistics.ReceiverCellPhone || logistics.ReceiverPhone || "")
+        };
+        const shippingAddress = normalizeText(
+            orderData.shippingAddress ||
+            logistics.storeAddress ||
+            logistics.CVSAddress ||
+            logistics.ReceiverAddress ||
+            ""
+        );
+        const distributorIdResolved = distributorCandidates[0] || normalizeText(orderData.distributorId || orderData.fulfillmentPartnerId || "");
+        const fulfillmentStatus = normalizeText(orderData.fulfillmentStatus || "PENDING").toUpperCase();
         orders.push({
-            id: doc.id, ...orderData, physicalItems, physicalCount: physicalItems.length,
+            id: doc.id,
+            orderNumber: normalizeText(orderData.orderNumber || orderData.orderId || doc.id),
+            uid: normalizeText(orderData.uid || ""),
+            payerName: resolveOrderPayerName(orderData),
+            payerEmail: resolveOrderPayerEmail(orderData),
+            distributorId: distributorIdResolved,
+            distributorName: normalizeText(orderData.distributorName || distributorName || distributorIdResolved),
+            amount: Number(orderData.amount || orderData.totalAmount || orderData.paidAmount || 0),
+            currency: normalizeText(orderData.currency || orderData.paymentCurrency || "TWD") || "TWD",
+            paidAt: resolveOrderPaymentDate(orderData),
+            status: normalizeText(orderData.status || "SUCCESS").toUpperCase(),
+            fulfillmentStatus,
+            needsShipment: orderData.needsShipment === true || physicalItems.length > 0,
+            logistics,
+            shippingContact,
+            shippingAddress,
+            items: itemNames,
+            physicalItems,
+            physicalCount: physicalItems.length,
+            hasPhysical: physicalItems.length > 0,
+            priceBookId: normalizeText(orderData.priceBookId || orderData.pricebookId || ""),
+            pricingVersion: normalizeText(orderData.pricingVersion || orderData.version || ""),
+            paymentMethod: normalizeText(orderData.paymentMethod || ""),
             lessonName: (lessons.find((l) => (orderData.items || {})[l.courseId || l.id || l.docId]) || {}).title || ""
         });
     });
-    return orders;
+
+    orders.sort((a, b) => {
+        const aTime = a.paidAt?.toMillis ? a.paidAt.toMillis() : (a.paidAt?.seconds ? a.paidAt.seconds * 1000 : (a.paidAt ? new Date(a.paidAt).getTime() : 0));
+        const bTime = b.paidAt?.toMillis ? b.paidAt.toMillis() : (b.paidAt?.seconds ? b.paidAt.seconds * 1000 : (b.paidAt ? new Date(b.paidAt).getTime() : 0));
+        return bTime - aTime;
+    });
+
+    const summary = orders.reduce((acc, order) => {
+        acc.totalOrders += 1;
+        acc.grossAmount += Number(order.amount || 0);
+        if (order.hasPhysical) {
+            acc.physicalOrderCount += 1;
+            if (String(order.fulfillmentStatus || "").toUpperCase() === "SHIPPED" || String(order.fulfillmentStatus || "").toUpperCase() === "DELIVERED") {
+                acc.shippedCount += 1;
+            } else {
+                acc.pendingShipmentCount += 1;
+            }
+        }
+        return acc;
+    }, { totalOrders: 0, physicalOrderCount: 0, pendingShipmentCount: 0, shippedCount: 0, grossAmount: 0 });
+
+    return { items: orders, summary };
 }
 
 async function loadDistributorPortalTutors(dbRef, distributorId = "") {

@@ -221,7 +221,11 @@ const { getLessonsMetadata, getDashboardData } = require("./lib/dashboard-data")
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
 
-setGlobalOptions({ region: "asia-east1" });
+setGlobalOptions({
+    region: "asia-east1",
+    minInstances: 0,
+    memory: 128
+});
 
 const getStudentAssignmentTutorReport = onCall(async (request) => {
     const data = request?.data || {};
@@ -730,6 +734,20 @@ const upsertLessonPricing = onCall(async (request) => {
     };
 });
 
+async function enrichPriceBooksWithHiddenStatus(db, items) {
+    const lessonsSnap = await db.collection("metadata_lessons").get();
+    const allLessons = [];
+    lessonsSnap.forEach((ds) => {
+        const d = ds.data() || {};
+        allLessons.push({ ...d, docId: d.docId || ds.id, id: ds.id });
+    });
+    return items.map((item) => {
+        const docId = item.docId || item.sourceDocId || "";
+        const lesson = findLessonByDocumentId(allLessons, docId);
+        return { ...item, hiddenFromCatalog: lesson ? lesson.hiddenFromCatalog === true : false };
+    });
+}
+
 const getDistributorPriceBooks = onCall(async (request) => {
     const { auth, data } = request;
     assertAuthenticated(auth);
@@ -744,13 +762,15 @@ const getDistributorPriceBooks = onCall(async (request) => {
         assertRequiredValue(distributorId, "missing-distributor-id");
         assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員查看價格表", auth.token?.email || "");
         const items = await listDistributorPriceBooks(db, distributorId);
-        return { success: true, distributorId, items };
+        const enriched = await enrichPriceBooksWithHiddenStatus(db, items);
+        return { success: true, distributorId, items: enriched };
     }
 
     if (distributorId) {
         assertDistributorScope(userData, distributorId, "僅限該經銷商或管理員查看價格表", auth.token?.email || "");
         const items = await listDistributorPriceBooks(db, distributorId);
-        return { success: true, distributorId, items };
+        const enriched = await enrichPriceBooksWithHiddenStatus(db, items);
+        return { success: true, distributorId, items: enriched };
     }
 
     const snap = await db.collection("dealer_price_books").get();
@@ -763,7 +783,8 @@ const getDistributorPriceBooks = onCall(async (request) => {
         const bKey = `${normalizeText(b.distributorId)}::${normalizeText(b.docId || b.sourceDocId)}::${normalizeText(b.id)}`;
         return aKey.localeCompare(bKey);
     });
-    return { success: true, distributorId: "", items };
+    const enriched = await enrichPriceBooksWithHiddenStatus(db, items);
+    return { success: true, distributorId: "", items: enriched };
 });
 
 const upsertDistributorPriceBook = onCall(async (request) => {
@@ -926,7 +947,15 @@ const seedDistributorPriceBooksFromLessons = onCall(async (request) => {
     const defaultSalePrice = payload.salePrice != null ? Number(payload.salePrice) : undefined;
 
     const lessons = await getLessonsForAdmin(distributorId);
-    const products = getSeedableDistributorProducts(lessons, distributorCurrency);
+    let products = getSeedableDistributorProducts(lessons, distributorCurrency);
+
+    const requestedDocIds = Array.isArray(payload.docIds) ? payload.docIds.map((d) => normalizeText(d)).filter(Boolean) : [];
+    if (requestedDocIds.length > 0) {
+        products = products.filter((p) => {
+            const normalized = normalizeText(p.docId || "");
+            return normalized && requestedDocIds.includes(normalized);
+        });
+    }
 
     let created = 0;
     let updated = 0;
@@ -979,7 +1008,8 @@ const seedDistributorPriceBooksFromLessons = onCall(async (request) => {
         totalProducts: products.length,
         created,
         updated,
-        skipped
+        skipped,
+        requested: requestedDocIds.length > 0 ? requestedDocIds.length : "all"
     };
 });
 
@@ -1178,6 +1208,12 @@ const getDistributorPortalData = onCall(async (request) => {
 
     const distributorDoc = selectedDistributorId ? await dbRef.collection("distributors").doc(selectedDistributorId).get() : null;
     const distributorData = distributorDoc && distributorDoc.exists ? (distributorDoc.data() || {}) : {};
+    const selectedDistributor = selectedDistributorId
+        ? {
+            id: selectedDistributorId,
+            ...(distributorData || {})
+        }
+        : null;
     const seedableProducts = getSeedableDistributorProducts(
         lessons,
         distributorData.defaultCurrency || userData.defaultCurrency || "TWD"
@@ -1188,12 +1224,12 @@ const getDistributorPortalData = onCall(async (request) => {
 
     const [orderData, tutorData, settlementData] = selectedDistributorId
         ? await Promise.all([
-            loadDistributorPortalOrders(dbRef, selectedDistributorId, lessons),
+            loadDistributorPortalOrders(dbRef, selectedDistributorId, lessons, distributorData.name || selectedDistributorId),
             loadDistributorPortalTutors(dbRef, selectedDistributorId),
             loadDistributorPortalSettlement(dbRef, selectedDistributorId)
         ])
         : [
-            { items: [], summary: { totalOrders: 0, pendingShipmentCount: 0, shippedCount: 0, grossAmount: 0 } },
+            { items: [], summary: { totalOrders: 0, physicalOrderCount: 0, pendingShipmentCount: 0, shippedCount: 0, grossAmount: 0 } },
             { items: [], summary: { tutorCount: 0, authorizedUnitCount: 0 } },
             { period: "", rows: [], summary: { period: "", paidTotal: 0, plannedTotal: 0, blockedTotal: 0, rowCount: 0, tutorCount: 0 } }
         ];
@@ -1214,7 +1250,17 @@ const getDistributorPortalData = onCall(async (request) => {
         tutors: tutorData.items,
         tutorSummary: tutorData.summary,
         settlement: settlementData,
+        selectedDistributor,
         seedableProductCount: seedableProducts.length,
+        seedableProducts: seedableProducts.map((p) => ({
+            docId: p.docId || "",
+            title: p.title || "",
+            titleEn: p.titleEn || "",
+            lessonIndex: Number(p.lessonIndex) || 0,
+            level: p.level || "",
+            category: p.category || "",
+            hiddenFromCatalog: p.hiddenFromCatalog === true
+        })),
         totalLessons: lessons.length,
         lessonHiddenMap,
         user: {
