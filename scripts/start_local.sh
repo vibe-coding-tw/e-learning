@@ -3,18 +3,47 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 CHECK_SCRIPT="${ROOT_DIR}/scripts/check-local-env.sh"
-START_SCRIPT="${ROOT_DIR}/start-emulator.sh"
 EMULATOR_LOG="${TMPDIR:-/tmp}/vibe-local-emulator.log"
 CHECK_LOG="${TMPDIR:-/tmp}/vibe-local-env-check.log"
 HOSTING_URL="${LOCAL_HOSTING_URL:-http://127.0.0.1:15002/index.html}"
-PROJECT_ID="${FIREBASE_EMULATOR_PROJECT:-demo-e-learning-942f7}"
+PROJECT_ID="${FIREBASE_EMULATOR_PROJECT:-e-learning-942f7}"
 READY=0
 
 if bash "${CHECK_SCRIPT}" >"${CHECK_LOG}" 2>&1; then
   READY=1
 else
   echo "[start_local] Local env not ready yet; starting Firebase emulators for ${PROJECT_ID}..."
-  FIREBASE_EMULATOR_PROJECT="${PROJECT_ID}" nohup bash "${START_SCRIPT}" >"${EMULATOR_LOG}" 2>&1 </dev/null &
+  python3 - "${ROOT_DIR}" "${PROJECT_ID}" "${EMULATOR_LOG}" <<'PY' >/dev/null 2>&1 &
+import os
+import subprocess
+import sys
+
+root_dir = sys.argv[1]
+project_id = sys.argv[2]
+log_path = sys.argv[3]
+log = open(log_path, "ab", buffering=0)
+env = os.environ.copy()
+env["FIREBASE_EMULATOR_PROJECT"] = project_id
+subprocess.Popen(
+    [
+        "npx",
+        "firebase",
+        "emulators:start",
+        "--project",
+        project_id,
+        "--import",
+        ".emulator-data",
+        "--export-on-exit",
+        ".emulator-data",
+    ],
+    cwd=root_dir,
+    stdout=log,
+    stderr=log,
+    stdin=subprocess.DEVNULL,
+    start_new_session=True,
+    env=env,
+)
+PY
 
   for _ in $(seq 1 180); do
     if bash "${CHECK_SCRIPT}" >"${CHECK_LOG}" 2>&1; then
