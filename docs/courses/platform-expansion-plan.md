@@ -531,7 +531,7 @@ Deferred verification plan (next billing cycle):
    - `Remove *-master-* only after pilot validation succeeds`
 
 Operational note:
-- Course UI ownership and acceptance rules are defined in `docs/course-ui-runtime-spec.md`.
+- Course UI ownership and acceptance rules are defined in `docs/courses/course-ui-runtime-spec.md`.
 - Changes to `public/js/*` require fingerprinting and hosting deployment.
 - Changes to course runtime injection, token validation, or served HTML normalization require deploying `functions:payment:serveCourse`.
 - Changes to external `content-repo` course HTML require updating Firestore `contentVersion` to invalidate content caches.

@@ -118,4 +118,4 @@ Current ledger-facing callable surface:
 - `public/js/course-shared.js` 負責課程 shell 與跨單元 TAB。
 - 課程 HTML 負責目前單元內的 `window.UNITS`、`#sidebar-nav` 與 page menu。
 - 後端與平台 shared JS 都不得以 Firestore `courseUnits` 覆寫單元內 page menu。
-- 完整規格見 `docs/course-ui-runtime-spec.md`。
+- 完整規格見 `docs/courses/course-ui-runtime-spec.md`。

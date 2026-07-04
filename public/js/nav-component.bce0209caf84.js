@@ -18,7 +18,7 @@ async function consumeGoogleRedirectResult() {
     } catch (error) {
         console.error("[NavComp] Google redirect login failed:", error);
         sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
-        alert(window.t ? window.t("alert_login_failed", "Google 登入失敗，請再試一次。") : "Google 登入失敗，請再試一次。");
+        alert(window.t("alert_login_failed"));
     }
 }
 
@@ -36,7 +36,7 @@ async function startGoogleLogin() {
         } catch (redirectError) {
             console.error("[NavComp] Google redirect login failed:", redirectError);
             sessionStorage.removeItem(GOOGLE_LOGIN_IN_PROGRESS_KEY);
-            alert(window.t ? window.t("alert_login_failed_blocked", "Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。") : "Google 登入失敗，請稍後再試。\n若瀏覽器阻擋彈窗或重新導向，請直接按右上角登入按鈕再試一次。");
+            alert(window.t("alert_login_failed_blocked"));
         }
     }
 }
@@ -895,7 +895,7 @@ function injectDashboardModal() {
             <div class="flex justify-between items-center p-4 border-b bg-gray-50/80 backdrop-blur">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">📊</span>
-                    <h3 class="text-lg font-bold text-gray-800">${window.t ? window.t('dash_header_title', '儀表板 (Dashboard)') : '儀表板 (Dashboard)'}</h3>
+                    <h3 class="text-lg font-bold text-gray-800">${window.t('dash_header_title')}</h3>
                 </div>
                 <button onclick="closeDashboardModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>

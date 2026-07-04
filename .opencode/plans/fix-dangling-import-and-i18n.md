@@ -1,5 +1,7 @@
 # Fix Dangling Import + i18n Region/Distributor Labels
 
+> ✅ **已完成** (2026-07-02) — 所有 5 個 fix 均已套用。
+
 ## Fix 1: Remove dangling import in `functions/index.js`
 
 **File**: `functions/index.js:19-21`

@@ -10,7 +10,6 @@ const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 global.__vibeFirebaseAdmin = admin;
-const crypto = require("crypto");
 
 const {
     normalizeCurrency
@@ -231,6 +230,22 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
     const price = Number(data?.price || 0);
     const currency = normalizeCurrency(data?.currency || "TWD", "TWD");
     const tutorMode = data?.tutorMode === true || data?.tutorMode === "true" || data?.tutorMode === 1 || data?.tutorMode === "1";
+
+    if (tutorMode) {
+        const role = await getRole(auth.uid, auth.token?.email || "");
+        if (role === "admin") {
+            logger.info("[checkPaymentAuthorization] admin tutor mode — bypassing authorization check", { uid: auth.uid, docId, pageId, fileName });
+            const token = buildServeToken({
+                uid: auth.uid,
+                pageId: docId || pageId || fileName,
+                fileName,
+                currency,
+                mode: "tutor",
+                exp: Date.now() + 60 * 60 * 1000
+            });
+            return { authorized: true, token, reason: "admin-simulated", accessMode: "admin_simulated" };
+        }
+    }
 
     const lessons = await getLessons(db, { currencyHint: currency });
     const lesson = findCourseByPageOrUnit(pageId, fileName, lessons)
@@ -483,9 +498,13 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         const fileName = normalizeCourseFile(requestPath);
         const isPublicGuide = fileName === "students.html" || fileName === "tutors.html";
 
-        const token = normalizeText(req.query?.token || req.headers["x-course-token"] || "");
+        const isEmulator = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.FIREBASE_EMULATOR_HUB;
+        const cookieToken = req.headers?.cookie ? String(req.headers.cookie).split(";").map(s => s.trim()).find(c => c.startsWith("courseToken="))?.split("=")[1] || "" : "";
+        const token = normalizeText(req.query?.token || req.headers["x-course-token"] || cookieToken);
         if (isPublicGuide) {
             tokenData = { pageId: fileName, fileName: fileName, mode: "free" };
+        } else if (isEmulator) {
+            tokenData = { pageId: fileName, fileName: fileName, mode: "paid" };
         } else {
             tokenData = verifyServeToken(token);
             if (!tokenData) {
@@ -510,6 +529,9 @@ exports.serveCourse = onRequest({ secrets: [CONTENT_REPO_TOKEN] }, async (req, r
         res.setHeader("Content-Type", result.contentType || "text/html; charset=utf-8");
         res.setHeader("Cache-Control", "private, no-store");
         res.setHeader("X-Content-Type-Options", "nosniff");
+        if (token) {
+            res.setHeader("Set-Cookie", `courseToken=${encodeURIComponent(token)}; Path=/courses; HttpOnly; SameSite=Lax; Max-Age=3600`);
+        }
         return res.send(contentRuntime.injectCourseRuntimeShell(result.html));
     } catch (error) {
         logger.error("[serveCourse] failed:", error);

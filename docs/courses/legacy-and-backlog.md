@@ -30,7 +30,7 @@
 ### 課程頁 shell 恢復規則
 
 > 這一節定義的是「前台應該長什麼樣子」，不是 runtime legacy fallback 的權宜寫法。
-> 完整且正式的規格請以 `docs/course-ui-runtime-spec.md` 為準。
+> 完整且正式的規格請以 `docs/courses/course-ui-runtime-spec.md` 為準。
 
 - 課程頁的標準外觀必須由課程 shell 直接產生，不能依賴隱藏的 fallback 才看起來正常。
 - `top-nav`、語言選擇、FAB、TAB、麵包屑都屬於課程頁標準元件，缺一個就代表 shell 還沒恢復完整。

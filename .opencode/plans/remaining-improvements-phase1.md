@@ -1,5 +1,7 @@
 # Remaining Improvements — Phase 1
 
+> ✅ **已完成** (2026-07-02) — 所有 A1-A3、B1-B2、C 均已套用。
+
 ## A1: Remove dead `Object.assign` in `functions-payment/index.js`
 
 **File**: `functions-payment/index.js:525`

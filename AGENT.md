@@ -58,7 +58,7 @@
 
 ## 5. 儀表板與介面行為規則
 
-- 課程頁 UI 必須遵守 `docs/course-ui-runtime-spec.md`。
+- 課程頁 UI 必須遵守 `docs/courses/course-ui-runtime-spec.md`。
 - 課程頁資訊架構必須區分：
   - 上方 TAB：跨課程單元導覽，資料來源為 Firestore `metadata_lessons.courseUnits`。
   - 左側 page menu：目前單元內頁面導覽，資料來源為課程 HTML 的 `window.UNITS` / `#sidebar-nav`。
@@ -236,10 +236,8 @@ This session's improvements:
 
 | Issue | Root Cause | Fix |
 |-------|-----------|-----|
-| No distributors show for US region | `distributors` / `metadata_settings` collections missing from emulator export | Run `node scripts/seed-distributors.js` to copy `distributors`, `region_distributor_rules`, `metadata_settings` from production to local emulator via REST API |
 | `cart.html:1264` TypeError on `userDisplay.textContent` | `nav-component.js` dynamically renders `#user-display`; `onAuthStateChanged` fires before nav renders | Add null guards: `if (userDisplay) userDisplay.textContent = ...` |
 | Distributor `default-usd` not shown for US region | Backend `normalizeRoutingRegionCode("en")` → `"US"`, but frontend filter `"EN".includes("US")` is raw string compare → false | Add `normalizeDistributorRegionCode()` to cart.html mirroring backend normalization, use `dist.regions.some(r => normalize(r) === normalizedInitialRegion)` |
-| Seeding emulator data from production | Emulator export may miss some collections | Use `scripts/seed-distributors.js` which reads via Admin SDK (ADC/gcloud auth) and writes to emulator Firestore REST API |
 
 ### Courses Management: Image Fields
 
@@ -303,9 +301,5 @@ Done in this session:
 - **Start**: `bash start-emulator.sh` (uses `--import .emulator-data --export-on-exit .emulator-data`)
 - **Persistence**: Data saved to `.emulator-data/` on exit, restored on start. `.emulator-data/` gitignored.
 - **CORS fix**: All emulator connections in `firebase-local.js` use `localhost` instead of `127.0.0.1`
-
-### Seed Data Fixes
-
-- `scripts/seed-scouting-lesson.js`: Added `metadataType: "course"` — required for `isCatalogCourseLesson()` filter in learning-path
 
 > 最後更新：2026-06-30

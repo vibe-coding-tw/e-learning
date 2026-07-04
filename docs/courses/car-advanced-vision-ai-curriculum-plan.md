@@ -601,5 +601,5 @@
 - [`docs/car-starter-ble-curriculum-plan.md`](./car-starter-ble-curriculum-plan.md)
 - [`docs/car-basic-esp32-motor-curriculum-plan.md`](./car-basic-esp32-motor-curriculum-plan.md)
 - [`docs/course-management-runbook.md`](../course-management-runbook.md)
-- [`docs/course-ui-runtime-spec.md`](../course-ui-runtime-spec.md)
+- [`docs/courses/course-ui-runtime-spec.md`](./course-ui-runtime-spec.md)
 - [`docs/platform-expansion-plan.md`](../platform-expansion-plan.md)

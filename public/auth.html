@@ -116,7 +116,7 @@
                     await signInWithRedirect(auth, loginProvider);
                 } catch (redirectError) {
                     console.error("[Auth] Google redirect login failed:", redirectError);
-                    showError(window.t('auth_google_login_failed', 'Google 登入失敗，請返回首頁後再試一次。'));
+                    showError(window.t('auth_google_login_failed'));
                 }
             }
         }
@@ -198,8 +198,8 @@
                 }
 
                 if (!fileName) {
-                    alert(window.t('auth_missing_filename', '錯誤：無法解析檔案名稱 (Filename missing)'));
-                    showError(window.t('auth_missing_path', '無法解析課程檔案路徑'));
+                    alert(window.t('auth_missing_filename'));
+                    showError(window.t('auth_missing_path'));
                     return;
                 }
 
@@ -240,22 +240,22 @@
                     window.location.replace(finalUrl);
                 } else {
                     const reason = result?.data?.reason || result?.data?.error || null;
-                    let message = window.t('auth_no_auth_record', '系統查無您的購買紀錄，請確認是否已登入正確帳號。');
+                    let message = window.t('auth_no_auth_record');
                     if (reason === 'missing-context' || reason === 'missing-course') {
-                        message = window.t('auth_invalid_course_id', '課程標識失敗，請確認網址是否正確或聯繫客服。');
+                        message = window.t('auth_invalid_course_id');
                     } else if (reason === 'payment-required') {
-                        message = window.t('auth_payment_required', '此課程尚未授權或付款，請確認是否已完成購買。');
+                        message = window.t('auth_payment_required');
                     } else if (reason === 'unauthenticated') {
-                        message = window.t('auth_google_login_failed', 'Google 登入失敗，請返回首頁後再試一次。');
+                        message = window.t('auth_google_login_failed');
                     } else if (result?.data?.error) {
-                        message = window.t('auth_failed_prefix', '授權失敗：') + result.data.error;
+                        message = window.t('auth_failed_prefix') + result.data.error;
                     }
                     console.warn('[Auth] Authorization failed reason:', reason, result?.data, { courseId, fileName, price, currency, lang });
                     showError(message);
                 }
             } catch (error) {
                 console.error(error);
-                showError(window.t('auth_server_error', '伺服器連線錯誤，請稍後再試。'));
+                showError(window.t('auth_server_error'));
             }
         }
 

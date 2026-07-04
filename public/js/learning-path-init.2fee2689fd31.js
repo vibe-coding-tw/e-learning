@@ -29,6 +29,13 @@ function persistLocalPreferredDistributorId(distributorId = '') {
   localStorage.setItem('vibe_user_preferred_distributor', normalized);
 }
 
+function resolveRegionDefaultDistributorId(userData = {}) {
+  const preferredRegion = String(userData.preferredRegion || userData.region || '').trim().toUpperCase();
+  if (preferredRegion === 'TW') return 'default-twd';
+  if (preferredRegion === 'US') return 'default-usd';
+  return 'default-usd';
+}
+
 function getScopedTutorModeForUid(uid = "") {
   const cleanUid = String(uid || "").trim();
   if (!cleanUid) return false;
@@ -55,15 +62,12 @@ async function resolveLessonsDistributorId() {
       || ''
     ).trim();
     if (preferredDistributorId) return preferredDistributorId;
-
-    const preferredRegion = String(userData.preferredRegion || userData.region || '').trim().toUpperCase();
-    if (preferredRegion === 'TW') return '';
-    if (preferredRegion === 'US') return '';
+    return resolveRegionDefaultDistributorId(userData);
   } catch (error) {
     console.warn('[learning-path] Failed to resolve preferred distributor from Firestore:', error);
   }
 
-  return localPreferredDistributorId;
+  return resolveRegionDefaultDistributorId();
 }
 
 window.__getLessonsMetadata = async function () {
@@ -152,67 +156,86 @@ function updateCardAction(card, status) {
   const widthClass = hasVideoButton ? "flex-1 w-full" : "w-full";
   btn.onclick = null;
   btn.disabled = false;
+  btn.removeAttribute("data-i18n");
+  btn.removeAttribute("data-i18n-html");
+  const syncBtnI18n = () => {
+    if (typeof window.applyI18n === 'function') window.applyI18n();
+  };
 
   const uiLocale = LP.detectUiLocale?.() || "en";
 
   if (!hasPriceData) {
-    btn.textContent = window.t('lp_not_for_sale');
+    btn.dataset.i18n = 'lp_not_for_sale';
+    btn.textContent = '';
     btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
     btn.disabled = true;
+    syncBtnI18n();
     return;
   }
 
   if (isPhysical && coursePrice > 0) {
-    btn.textContent = window.t('lp_addToCartPhysical', '🛒 加入購物車');
+    btn.dataset.i18n = 'lp_addToCartPhysical';
+    btn.textContent = '';
     btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
     btn.onclick = () => {
       if (addToCart(lessonId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
-      else alert(window.t('lp_alreadyInCart', '⚠️ 「{name}」已在購物車中！').replace("{name}", courseName));
+      else alert(window.t('lp_alreadyInCart').replace("{name}", courseName));
     };
+    syncBtnI18n();
     return;
   }
   if (status === "AUTHORIZED") {
-    btn.textContent = window.t('lp_enterCourseBtn', '✅ 進入課程內容');
+    btn.dataset.i18n = 'lp_enterCourseBtn';
+    btn.textContent = '';
     btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition`;
     btn.onclick = () => {
-      if (!classroomUrl) return alert(window.t('lp_coursesConfigMissing', '⚠️ 課程連結尚未備妥，請聯繫客服。'));
+      if (!classroomUrl) return alert(window.t('lp_coursesConfigMissing'));
       const langParam = uiLocale ? `&lang=${encodeURIComponent(uiLocale)}` : "";
       const currencyParam = courseCurrency ? `&currency=${encodeURIComponent(courseCurrency)}` : "";
       window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${encodeURIComponent(authPageId)}&docId=${encodeURIComponent(authPageId)}&price=${coursePrice}${currencyParam}${langParam}`;
     };
+    syncBtnI18n();
     return;
   }
   if (status === "NOT_LOGGED_IN") {
     if (coursePrice > 0) {
-      btn.textContent = window.t('lp_addToCartBtn', '🛒 加入購物車');
+      btn.dataset.i18n = 'lp_addToCartBtn';
+      btn.textContent = '';
       btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
       btn.onclick = () => {
         if (addToCart(lessonId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
-        else alert(window.t('lp_alreadyInCart', '⚠️ 「{name}」已在購物車中！').replace("{name}", courseName));
+        else alert(window.t('lp_alreadyInCart').replace("{name}", courseName));
       };
+      syncBtnI18n();
       return;
     }
 
-    btn.textContent = window.t('lp_loginFreeBtn', '👤 請先登入 (免費)');
+    btn.dataset.i18n = 'lp_loginFreeBtn';
+    btn.textContent = '';
     btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
     btn.onclick = () => {
       if (typeof window.vibeStartGoogleLogin === 'function') window.vibeStartGoogleLogin();
       else signInWithPopup(auth, new GoogleAuthProvider());
     };
+    syncBtnI18n();
     return;
   }
   if (status === "UNAUTHORIZED" || status === "ERROR") {
-    btn.textContent = window.t('lp_addToCartBtn', '🛒 加入購物車');
+    btn.dataset.i18n = 'lp_addToCartBtn';
+    btn.textContent = '';
     btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
     btn.onclick = () => {
       if (addToCart(lessonId, courseName, coursePrice, isPhysical, courseCurrency)) window.location.href = CART_URL;
-      else alert(window.t('lp_alreadyInCart', '⚠️ 「{name}」已在購物車中！').replace("{name}", courseName));
+      else alert(window.t('lp_alreadyInCart').replace("{name}", courseName));
     };
+    syncBtnI18n();
     return;
   }
-  btn.textContent = window.t('lp_loadingText', '載入中...');
+  btn.dataset.i18n = 'lp_loadingText';
+  btn.textContent = '';
   btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
   btn.disabled = true;
+  syncBtnI18n();
 }
 
 async function checkLessonAuthorization(card, user) {
@@ -261,11 +284,6 @@ function openVideo(url = "") {
 function renderLessons(lessons, pathKey) {
   const uiLocale = LP.detectUiLocale?.() || "en";
   const isEn = String(uiLocale || "").toLowerCase().startsWith("en");
-  const t = {
-    coreContentLabel: window.t('lp_coreContentLabel', uiLocale.startsWith('en') ? 'Core Content' : '核心內容'),
-    freeLabel: window.t('lp_freeLabel', uiLocale.startsWith('en') ? 'Free' : '免費'),
-    loadingText: window.t('lp_loadingText', uiLocale.startsWith('en') ? 'Loading...' : '載入中...')
-  };
   const pageTitleText = LP.categoryLabel?.(pathKey, categoryLabelsMap, uiLocale) || "";
 
   const container = document.getElementById("lesson-container");
@@ -284,7 +302,7 @@ function renderLessons(lessons, pathKey) {
   const { rows = [], productRows = [], hardwareRows = [], specsRows = [], isCommonPath = false } = sections;
   const productEntries = productRows.length ? productRows : hardwareRows;
   if (!rows.length && !productEntries.length && !specsRows.length && !isCommonPath) {
-    container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">${window.t('lp_emptyCategory', '目前此分類尚無課程。')}</p>`;
+    container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">${window.t('lp_emptyCategory')}</p>`;
     return;
   }
   const courseHtml = rows.map((lesson) => {
@@ -312,7 +330,7 @@ function renderLessons(lessons, pathKey) {
     const hasPriceData = priceEntry.hasPriceData === true || lesson.dealerPriceBookId != null;
     const disablePreview = lesson.previewDisabled === true;
     const videoButton = (videoUrl && !disablePreview)
-      ? `<button class="video-btn flex-1 w-full py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors">${window.t('lp_previewBtn', '▶ 課程預覽')}</button>`
+      ? `<button class="video-btn flex-1 w-full py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors" data-i18n="lp_previewBtn"></button>`
       : "";
     const actionButtonClass = videoUrl ? "flex-1 w-full" : "w-full";
     const listHtml = contentList.length
@@ -339,20 +357,20 @@ function renderLessons(lessons, pathKey) {
           ${duration ? `<span class="flex-shrink-0 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${duration}</span>` : ""}
         </div>
         <h2 class="text-xl font-bold text-slate-800 mb-2">${displayTitle || lesson.id || lesson.docId || window.t('lp_untitled_course')}</h2>
-        <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3">${displayLessonLabel || window.t('lp_course_unit_badge')}</div>
+        <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 inline-block mb-3" data-i18n="lp_course_unit_badge"></div>
         ${imageHtml}
         <div class="text-sm text-slate-700 mb-3"><span class="mr-2">${icon}</span>${summary || window.t('lp_content_loaded_from_system')}</div>
         <div class="text-sm text-slate-700 mb-4">
-          <strong class="text-slate-900 block mb-1">${t.coreContentLabel}</strong>
+          <strong class="text-slate-900 block mb-1" data-i18n="lp_coreContentLabel"></strong>
           ${listHtml}
         </div>
         ${hasPriceData ? `
         <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-          <span class="text-2xl font-bold text-blue-600">${price === 0 ? t.freeLabel : (LP.formatPrice?.(priceEntry, uiLocale) || String(priceEntry?.amount ?? priceEntry ?? 0))}</span>
+          <span class="text-2xl font-bold text-blue-600">${price === 0 ? '' : (LP.formatPrice?.(priceEntry, uiLocale) || String(priceEntry?.amount ?? priceEntry ?? 0))}</span>
         </div>
         <div class="mt-3 flex flex-col sm:flex-row gap-2">
           ${videoButton}
-          <button class="action-btn ${actionButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>${t.loadingText}</button>
+          <button class="action-btn ${actionButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled data-i18n="lp_loadingText"></button>
         </div>
         ` : ""}
       </div>
@@ -477,15 +495,16 @@ function renderLessons(lessons, pathKey) {
   let pageHtml = "";
   const isCommon = isCommonPath;
   if (isCommon) {
-    if (productHtml) pageHtml += LP.renderSection(window.t('lp_productHeader', '產品'), productHtml);
+    if (productHtml) pageHtml += LP.renderSection(window.t('lp_productHeader'), productHtml);
     if (courseHtml) pageHtml += LP.renderSection("", courseHtml);
-    if (specsHtml) pageHtml += LP.renderSection(window.t('lp_specsHeader', '電腦規格推薦'), specsHtml);
+    if (specsHtml) pageHtml += LP.renderSection(window.t('lp_specsHeader'), specsHtml);
   } else {
     if (courseHtml) pageHtml += LP.renderSection("", courseHtml);
-    if (productHtml) pageHtml += LP.renderSection(window.t('lp_productHeader', '產品'), productHtml);
-    if (specsHtml) pageHtml += LP.renderSection(window.t('lp_specsHeader', '電腦規格推薦'), specsHtml);
+    if (productHtml) pageHtml += LP.renderSection(window.t('lp_productHeader'), productHtml);
+    if (specsHtml) pageHtml += LP.renderSection(window.t('lp_specsHeader'), specsHtml);
   }
   container.innerHTML = pageHtml;
+  if (typeof window.applyI18n === 'function') window.applyI18n();
 
   container.querySelectorAll(".video-btn").forEach((btn, i) => {
     const videoUrl = LP.pickVideo?.(rows[i] || {});
@@ -497,7 +516,7 @@ async function loadLessonsForCurrentDistributor() {
   const requestId = ++currentLessonsRequestId;
   const uiLocale = LP.detectUiLocale?.() || "en";
   const distributorId = await resolveLessonsDistributorId();
-  if (auth.currentUser && distributorId) {
+  if (!auth.currentUser && distributorId) {
     persistLocalPreferredDistributorId(distributorId);
   }
   const result = await getLessonsFunc({ distributorId });

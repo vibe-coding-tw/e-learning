@@ -185,4 +185,4 @@
 - [`docs/course-management-runbook.md`](../course-management-runbook.md)
 - [`docs/legacy-and-backlog.md`](../legacy-and-backlog.md)
 - [`docs/curriculum-migration-plan.md`](./curriculum-migration-plan.md)
-- [`docs/course-ui-runtime-spec.md`](../course-ui-runtime-spec.md)
+- [`docs/courses/course-ui-runtime-spec.md`](./course-ui-runtime-spec.md)

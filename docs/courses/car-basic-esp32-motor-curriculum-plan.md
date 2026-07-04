@@ -414,6 +414,6 @@
 ## 7. 相關文件
 
 - [`docs/course-management-runbook.md`](../course-management-runbook.md)
-- [`docs/course-ui-runtime-spec.md`](../course-ui-runtime-spec.md)
+- [`docs/courses/course-ui-runtime-spec.md`](./course-ui-runtime-spec.md)
 - [`docs/legacy-and-backlog.md`](../legacy-and-backlog.md)
 - [`docs/car-starter-ble-curriculum-plan.md`](./car-starter-ble-curriculum-plan.md)

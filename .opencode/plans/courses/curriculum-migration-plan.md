@@ -287,4 +287,4 @@ pilot 穩定後，再逐段擴大到整條課程線。
 - [`docs/car-basic-esp32-motor-curriculum-plan.md`](./car-basic-esp32-motor-curriculum-plan.md)
 - [`docs/car-advanced-vision-ai-curriculum-plan.md`](./car-advanced-vision-ai-curriculum-plan.md)
 - [`docs/course-management-runbook.md`](../course-management-runbook.md)
-- [`docs/courses/course-ui-runtime-spec.md`](./course-ui-runtime-spec.md)
+- [`docs/course-ui-runtime-spec.md`](../course-ui-runtime-spec.md)

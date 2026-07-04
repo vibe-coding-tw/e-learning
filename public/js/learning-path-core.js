@@ -280,7 +280,7 @@
         }
         const amount = Number(priceEntry?.amount ?? priceEntry ?? 0);
         const currency = String(priceEntry?.currency || "").toUpperCase();
-        if (!amount) return window.t('cart_price_free', 'Free');
+        if (!amount) return window.t('cart_price_free');
         if (!currency) {
             try {
                 return new Intl.NumberFormat(String(locale || "").startsWith("en") ? "en-US" : "zh-TW").format(amount);

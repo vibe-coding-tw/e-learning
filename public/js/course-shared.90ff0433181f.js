@@ -188,7 +188,7 @@ function ensureCourseBreadcrumbShell(file = '', metadataFamily = '') {
     if (!path.startsWith('/courses/') && !seemsCourseFile && !family) return null;
 
     const activeLocale = getActiveCourseLocale();
-    const overviewText = window.t('breadcrumb_overview');
+    const overviewText = _t('breadcrumb_overview');
 
     breadcrumb = document.createElement('div');
     breadcrumb.className = 'ms-breadcrumb';
@@ -213,10 +213,10 @@ function ensureCourseBreadcrumbShell(file = '', metadataFamily = '') {
 
     const bcCurrent = breadcrumb.querySelector('#bc-current');
     if (bcCurrent) {
-        if (family === 'starter') bcCurrent.textContent = window.t('breadcrumb_overview');
-        else if (family === 'basic') bcCurrent.textContent = window.t('breadcrumb_module_overview');
-        else if (family === 'advanced') bcCurrent.textContent = window.t('breadcrumb_module_overview');
-        else if (family === 'prepare') bcCurrent.textContent = window.t('breadcrumb_module_overview');
+        if (family === 'starter') bcCurrent.textContent = _t('breadcrumb_overview');
+        else if (family === 'basic') bcCurrent.textContent = _t('breadcrumb_module_overview');
+        else if (family === 'advanced') bcCurrent.textContent = _t('breadcrumb_module_overview');
+        else if (family === 'prepare') bcCurrent.textContent = _t('breadcrumb_module_overview');
     }
 
     return breadcrumb;
@@ -259,7 +259,6 @@ function init() {
     }
     ensureDashboardFabFallback();
     ensureMobileResponsiveLayout();
-    normalizeStartButtonText();
     cleanUpCourseTitles();
     normalizeTerminology();
     interceptGoToUnit();
@@ -715,11 +714,7 @@ function syncCourseTopNavName(topNav, course, locale = 'zh-TW') {
     if (!topNav) return;
     const navCourseNameId = 'nav-course-name';
     let navCourseNameSpan = document.getElementById(navCourseNameId);
-    const courseName = String(
-        (window.__vibeResolveLocalizedFieldValue
-            ? window.__vibeResolveLocalizedFieldValue(course || {}, 'title', locale, course?.title || course?.titleEn || '')
-            : (String(locale || '').toLowerCase().startsWith('en') ? (course?.titleEn || course?.title || '') : (course?.title || course?.titleEn || '')))
-    ).trim();
+    const courseName = resolveCourseDisplayTitle(course, locale);
 
     if (!courseName) {
         if (navCourseNameSpan) {
@@ -741,6 +736,15 @@ function syncCourseTopNavName(topNav, course, locale = 'zh-TW') {
         topNav.insertBefore(navCourseNameSpan, languageSelector || null);
     }
     navCourseNameSpan.textContent = courseName;
+}
+
+function resolveCourseDisplayTitle(course = {}, locale = 'zh-TW') {
+    if (!course) return '';
+    const isEn = String(locale || '').toLowerCase().startsWith('en');
+    const value = window.__vibeResolveLocalizedFieldValue
+        ? window.__vibeResolveLocalizedFieldValue(course || {}, 'title', locale, course?.title || course?.titleEn || '')
+        : (isEn ? (course?.titleEn || course?.title || '') : (course?.title || course?.titleEn || ''));
+    return String(value || '').trim();
 }
 
 function normalizeCourseTopNav() {
@@ -921,7 +925,7 @@ function normalizeCourseBreadcrumbs() {
 
         let bcModuleLink = document.getElementById('bc-module-link');
         if (!bcModuleLink) {
-            breadcrumb.innerHTML = `<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">${window.t('breadcrumb_overview')}</span>`;
+            breadcrumb.innerHTML = `<a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> › <span id="bc-current">${_t('breadcrumb_overview')}</span>`;
             bcModuleLink = document.getElementById('bc-module-link');
         }
 
@@ -1028,7 +1032,10 @@ function upgradeLegacyUnitToMsLayout() {
         const legacySections = legacyMain ? Array.from(legacyMain.querySelectorAll('.module-section')) : [];
         if (!legacyMain || legacySections.length === 0) return;
 
-        const pageTitle = (document.querySelector('header h1')?.textContent || document.title || window.t('page_title_fallback', '課程單元')).trim();
+        const course = findCourseForCoursePage(file);
+        const pageTitle = course
+            ? resolveCourseDisplayTitle(course, isEn ? 'en' : 'zh-TW')
+            : String(document.querySelector('header h1')?.textContent || document.title || _t('page_title_fallback')).trim();
         const pageSubtitle = (document.querySelector('header p')?.textContent || '').trim();
         const learningPathKey = getLearningPathCategoryKeyForFamily(family);
         const familyLabel = getLearningPathLabelFromSettings(family, isEn ? 'en' : 'zh-TW');
@@ -1041,6 +1048,7 @@ function upgradeLegacyUnitToMsLayout() {
             <div class="divider"></div>
             <a href="${courseHref}" target="_top" class="nav-label nav-label-link">${familyLabel}</a>
         `;
+        syncCourseTopNavName(topNav, course, isEn ? 'en' : 'zh-TW');
 
         const layout = document.createElement('div');
         layout.className = 'ms-layout';
@@ -1049,14 +1057,14 @@ function upgradeLegacyUnitToMsLayout() {
         sidebar.className = 'ms-sidebar';
         sidebar.innerHTML = `
             <div class="ms-sidebar-header">
-                <div class="module-label">${window.t('sidebar_unit_label')}</div>
+                <div class="module-label">${_t('sidebar_unit_label')}</div>
                 <div class="module-title"></div>
-                <div class="meta"><i class="far fa-clock"></i> ${window.t('sidebar_meta_format').replace('{minutes}', '45').replace('{pages}', legacySections.length + 1)}</div>
+                <div class="meta"><i class="far fa-clock"></i> ${_t('sidebar_meta_format').replace('{minutes}', '45').replace('{pages}', legacySections.length + 1)}</div>
             </div>
             <nav class="ms-unit-list" id="sidebar-nav"></nav>
             <div class="sidebar-progress">
                 <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
-                <div class="progress-text" id="progress-text">${window.t('progress_format').replace('{done}', '0').replace('{total}', legacySections.length)}</div>
+                <div class="progress-text" id="progress-text">${_t('progress_format').replace('{done}', '0').replace('{total}', legacySections.length)}</div>
             </div>
         `;
         sidebar.querySelector('.module-title').textContent = pageTitle;
@@ -1067,7 +1075,7 @@ function upgradeLegacyUnitToMsLayout() {
             <div class="ms-breadcrumb">
                 <a href="#">Vibe Coding</a><span>›</span>
                 <a href="${courseHref}">${familyLabel}</a><span>›</span>
-                <span id="bc-current">${window.t('breadcrumb_overview')}</span>
+                <span id="bc-current">${_t('breadcrumb_overview')}</span>
             </div>
         `;
 
@@ -1078,10 +1086,10 @@ function upgradeLegacyUnitToMsLayout() {
             <div class="unit-content">
                 <h1>${pageTitle}</h1>
                 ${pageSubtitle ? `<p>${pageSubtitle}</p>` : ''}
-                <h2>${window.t('heading_unit_contents')}</h2>
+                <h2>${_t('heading_unit_contents')}</h2>
                 <div class="unit-card-list" id="index-unit-list"></div>
                 <div style="margin-top:32px;">
-                    <button class="ms-btn" onclick="goToUnit(1)">${window.t('btn_start_unit')}</button>
+                    <button class="ms-btn" onclick="goToUnit(1)" data-i18n="btn_start_unit"></button>
                 </div>
             </div>
         `;
@@ -1090,7 +1098,7 @@ function upgradeLegacyUnitToMsLayout() {
         const unitTitles = [];
         legacySections.forEach((section, idx) => {
             const pageNo = idx + 1;
-            const title = (section.querySelector('.section-header-left h2')?.textContent || section.querySelector('h2')?.textContent || `${window.t('label_unit')} ${pageNo}`).trim();
+            const title = (section.querySelector('.section-header-left h2')?.textContent || section.querySelector('h2')?.textContent || `${_t('label_unit')} ${pageNo}`).trim();
             unitTitles.push(title);
             const page = document.createElement('div');
             page.className = 'ms-unit-page';
@@ -1111,9 +1119,9 @@ function upgradeLegacyUnitToMsLayout() {
             const prevTarget = pageNo === 1 ? 0 : pageNo - 1;
             const nextTarget = pageNo === legacySections.length ? 0 : pageNo + 1;
             nav.innerHTML = `
-                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;${window.t('nav_prev_page')}</button>
+                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;${_t('nav_prev_page')}</button>
                 <span class="unit-page-indicator">${pageNo} / ${legacySections.length}</span>
-                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? window.t('nav_back_overview') : window.t('nav_next_page')} &nbsp;›</button>
+                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? _t('nav_back_overview') : _t('nav_next_page')} &nbsp;›</button>
             `;
 
             page.appendChild(contentWrap);
@@ -1179,7 +1187,7 @@ function upgradeLegacyUnitToMsLayout() {
             });
 
             const bc = document.getElementById('bc-current');
-            if (bc) bc.textContent = unitNo === 0 ? window.t('breadcrumb_overview') : (unitTitles[unitNo - 1] || window.t('label_unit'));
+            if (bc) bc.textContent = unitNo === 0 ? _t('breadcrumb_overview') : (unitTitles[unitNo - 1] || _t('label_unit'));
             refreshStartUnitUiState();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -1190,7 +1198,7 @@ function upgradeLegacyUnitToMsLayout() {
             const fill = document.getElementById('progress-fill');
             const txt = document.getElementById('progress-text');
             if (fill) fill.style.width = `${Math.round((doneCount / Math.max(total, 1)) * 100)}%`;
-            if (txt) txt.textContent = window.t('progress_format').replace('{done}', doneCount).replace('{total}', total);
+            if (txt) txt.textContent = _t('progress_format').replace('{done}', doneCount).replace('{total}', total);
         }
 
         window.goToUnit(unitTitles.length > 0 ? 1 : 0);
@@ -1650,9 +1658,9 @@ function injectDashboardModal() {
     const modalHTML = `
     <div id="dashboard-modal-overlay" class="fixed inset-0 bg-black/70 hidden flex-col overflow-hidden" style="z-index: 1000002 !important;">
         <div class="flex items-center justify-between px-4 md:px-6 py-3 bg-white/95 border-b border-slate-200">
-            <div class="text-sm md:text-base font-bold text-slate-700">${window.t ? window.t('dash_header_title', '儀表板 (Dashboard)') : '儀表板 (Dashboard)'}</div>
+            <div class="text-sm md:text-base font-bold text-slate-700">${_t('dash_header_title')}</div>
             <button id="dashboard-modal-close-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs md:text-sm font-bold hover:bg-slate-700">
-                ${window.t ? window.t('dash_close_btn', 'Close') : 'Close'}
+                ${_t('dash_close_btn')}
             </button>
         </div>
         <iframe id="dashboard-modal-frame" class="w-full flex-1 bg-white border-0" title="Dashboard"></iframe>
@@ -2291,7 +2299,7 @@ async function initFirebaseFeatures() {
         });
 
         const logActivityFn = httpsCallable(functions, 'logActivity');
-        const submitAssignmentFn = httpsCallable(functions, 'submitAssignment');
+        const submitAssignmentFn = httpsCallable(functions, 'autogradeSubmitAssignment');
 
         // --- Tracking Logic ---
         
@@ -2331,16 +2339,16 @@ async function initFirebaseFeatures() {
         window.firebaseSubmitAssignment = async (data) => {
              const user = auth.currentUser;
              if (!user) {
-                 alert(window.t('alert_login_first', '請先登入 (Please Login First)'));
+                 alert(_t('alert_login_first'));
                  return { success: false, error: "Not Logged In" };
              }
              
              try {
-                 const result = await httpsCallable(functions, 'submitAssignment')(data);
+                 const result = await httpsCallable(functions, 'autogradeSubmitAssignment')(data);
                  return result.data;
              } catch (error) {
                  console.error("Submission Error:", error);
-                 alert(window.t('alert_submit_failed_prefix', '提交失敗：') + error.message);
+                 alert(_t('alert_submit_failed_prefix') + error.message);
                  throw error;
              }
         };
@@ -2431,19 +2439,19 @@ async function initFirebaseFeatures() {
             const unitId = fileName.replace('.html', '');
 
             try {
-                const submitBlocker = httpsCallable(functions, 'submitStudentBlocker');
+                const submitBlocker = httpsCallable(functions, 'autogradeSubmitStudentBlocker');
                 await submitBlocker({
                     assignmentId: unitId,
                     blockerType: type,
                     blockerNote: note
                 });
-                alert(window.t('alert_blocker_reported'));
+                alert(_t('alert_blocker_reported'));
                 location.reload();
             } catch (e) {
                 console.error(e);
-                alert(window.t('alert_submission_failed') + e.message);
+                alert(_t('alert_submission_failed') + e.message);
                 btn.disabled = false;
-                btn.innerText = window.t('btn_submit_blocker');
+                btn.innerText = _t('btn_submit_blocker');
             }
         };
 
@@ -2459,7 +2467,7 @@ async function initFirebaseFeatures() {
             const unitId = fileName.replace('.html', '');
 
             try {
-                const resolveBlocker = httpsCallable(functions, 'resolveStudentBlocker');
+                const resolveBlocker = httpsCallable(functions, 'autogradeResolveStudentBlocker');
                 await resolveBlocker({
                     assignmentId: unitId
                 });
@@ -2491,18 +2499,18 @@ async function initFirebaseFeatures() {
             const unitId = fileName.replace('.html', '');
 
             try {
-                const submitAttempt = httpsCallable(functions, 'submitAttemptSummary');
+                const submitAttempt = httpsCallable(functions, 'autogradeSubmitAttemptSummary');
                 await submitAttempt({
                     assignmentId: unitId,
                     attemptSummary: summary
                 });
-                alert(window.t('alert_attempt_recorded'));
+                alert(_t('alert_attempt_recorded'));
                 location.reload();
             } catch (e) {
                 console.error(e);
-                alert(window.t('alert_submission_failed') + e.message);
+                alert(_t('alert_submission_failed') + e.message);
                 btn.disabled = false;
-                btn.innerText = window.t('btn_submit_attempt');
+                btn.innerText = _t('btn_submit_attempt');
             }
         };
 
@@ -2609,9 +2617,16 @@ function enhanceAssignmentEntryButtons() {
 /**
  * Injects the Assignment Link Modal (for self-binding)
  */
+
+function _t(key) {
+    if (typeof window.t === 'function') {
+        return window.t(key);
+    }
+    return key || "";
+}
+
 function injectAssignmentLinkModal() {
     if (document.getElementById('assignment-link-modal')) return;
-    const _t = (key, fallback) => (typeof window.t === 'function' ? window.t(key, fallback) : fallback);
     const defaultTutorEmail = 'rover.k.chen@gmail.com';
     const modalHTML = `
     <div id="assignment-link-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[70]">
@@ -2620,8 +2635,8 @@ function injectAssignmentLinkModal() {
                 <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
                     🎓
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800">${_t('tutor_confirm_title', '確認 / 更換授課老師')}</h3>
-                <p class="text-sm text-gray-500 mt-2">${_t('tutor_confirm_desc', '請確認您目前的授課老師，或輸入新的授課老師 Email 更換。')}<br><span class="text-blue-500 font-medium">${_t('tutor_confirm_desc_blank_hint', '留空將使用預設導師邀請連結。')}</span></p>
+                <h3 class="text-2xl font-bold text-gray-800">${_t('tutor_confirm_title')}</h3>
+                <p class="text-sm text-gray-500 mt-2">${_t('tutor_confirm_desc')}<br><span class="text-blue-500 font-medium">${_t('tutor_confirm_desc_blank_hint')}</span></p>
             </div>
             
             <input type="hidden" id="link-course-id">
@@ -2631,20 +2646,20 @@ function injectAssignmentLinkModal() {
             <input type="hidden" id="link-force-mode">
 
             <div class="mb-6">
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">${_t('tutor_email_label', '授課老師 Email')}</label>
-                <input type="text" id="link-promotion-code" placeholder="${_t('tutor_email_placeholder', '輸入授課老師 Email（留空使用預設導師）')}"
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">${_t('tutor_email_label')}</label>
+                <input type="text" id="link-promotion-code" placeholder="${_t('tutor_email_placeholder')}"
                     class="w-full border-2 border-gray-100 bg-gray-50 p-4 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition font-mono text-sm">
-                <p class="text-[10px] text-gray-400 mt-2">${_t('tutor_email_footnote', '※ 請輸入授課老師的 Email 帳號；留空將使用預設導師（{email}）。').replace('{email}', defaultTutorEmail)}</p>
+                <p class="text-[10px] text-gray-400 mt-2">${_t('tutor_email_footnote').replace('{email}', defaultTutorEmail)}</p>
             </div>
 
             <div class="flex flex-col gap-3">
                 <button id="btn-bind-tutor" onclick="submitBindTutorAction()"
                     class="group w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    <span>${_t('tutor_confirm_btn', '確認並前往作業')}</span>
+                    <span>${_t('tutor_confirm_btn')}</span>
                     <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
                 </button>
                 <button onclick="closeAssignmentLinkModal()"
-                    class="w-full py-3 text-gray-400 hover:text-gray-600 transition font-medium text-sm">${_t('tutor_cancel_btn', '取消')}</button>
+                    class="w-full py-3 text-gray-400 hover:text-gray-600 transition font-medium text-sm">${_t('tutor_cancel_btn')}</button>
             </div>
         </div>
     </div>
@@ -2659,15 +2674,23 @@ window.closeAssignmentLinkModal = function () {
 window.submitBindTutorAction = async function () {
     const btn = document.getElementById('btn-bind-tutor');
     const codeInput = document.getElementById('link-promotion-code');
+    const courseIdInput = document.getElementById('link-course-id');
+    const unitIdInput = document.getElementById('link-unit-id');
+    const assignmentIdInput = document.getElementById('link-assignment-id');
+    const titleInput = document.getElementById('link-assignment-title');
+    if (!btn || !codeInput || !courseIdInput || !unitIdInput || !assignmentIdInput || !titleInput) {
+        console.warn('[CourseShared] submitBindTutorAction: modal elements not found');
+        return;
+    }
     const rawValue = String(codeInput.value || '').trim();
     const promotionCode = rawValue.includes('@') ? rawValue : rawValue.toUpperCase();
-    const courseId = document.getElementById('link-course-id').value;
-    const unitId = document.getElementById('link-unit-id').value;
-    const assignmentId = document.getElementById('link-assignment-id').value;
-    const title = document.getElementById('link-assignment-title').value;
+    const courseId = String(courseIdInput.value || '').trim();
+    const unitId = String(unitIdInput.value || '').trim();
+    const assignmentId = String(assignmentIdInput.value || '').trim();
+    const title = String(titleInput.value || '').trim();
 
     btn.disabled = true;
-    btn.innerHTML = window.t('btn_verifying_code', '正在驗證代碼...');
+    btn.innerHTML = _t('btn_verifying_code');
 
     try {
         const bindTutorByPromotionCode = httpsCallable(getFunctions(undefined, 'asia-east1'), 'bindTutorByPromotionCode');
@@ -2678,15 +2701,15 @@ window.submitBindTutorAction = async function () {
             // 綁定導師成功後，直接進入原生 API 作業倉庫流程
             openSubmissionModal(assignmentId, title, { skipTutorPrompt: true });
         } else {
-            alert(window.t('alert_bind_failed', '❌ 綁定失敗：') + (result.data.message || window.t('unknown_error', '未知錯誤')));
+            alert(_t('alert_bind_failed') + (result.data.message || _t('unknown_error')));
         }
     } catch (e) {
         console.error("Binding error:", e);
-        alert(window.t('alert_error_prefix', '❌ 錯誤：') + e.message);
+        alert(_t('alert_error_prefix') + e.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = `
-            <span>${window.t('tutor_confirm_btn', '確認並前往作業')}</span>
+            <span>${_t('tutor_confirm_btn')}</span>
             <i class="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
         `;
     }
@@ -2705,7 +2728,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
     const sharedAuth = getCourseSharedAuth();
     const currentUser = sharedAuth?.currentUser || window.__vibeCurrentAuthUser || await (window.__vibeAuthReadyPromise || Promise.resolve(null)).catch(() => null);
     if (!currentUser) {
-        alert(window.t ? window.t("alert_login_required", "請先登入後再前往 GitHub 作業。請按右上角登入後再試一次。") : "請先登入後再前往 GitHub 作業。請按右上角登入後再試一次。");
+        alert(_t("alert_login_required"));
         return;
     }
 
@@ -2724,7 +2747,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
 
             if (!resolvedCourseId) {
                 console.warn('[CourseShared] resolveAssignmentAccess returned no usable courseId:', assignmentAccess);
-                alert(window.t('alert_no_course_data', '已登入，但系統暫時找不到此單元對應的課程資料。請重新整理後再試；若仍無法進入，表示後端課程 metadata 缺少 courseUnits 對應。'));
+                alert(_t('alert_no_course_data'));
                 return;
             }
 
@@ -2734,26 +2757,30 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
                 if (!document.getElementById('assignment-link-modal')) {
                     injectAssignmentLinkModal();
                 }
-                document.getElementById('link-course-id').value = resolvedCourseId;
-                document.getElementById('link-unit-id').value = fileName;
-                document.getElementById('link-assignment-id').value = assignmentId;
-                document.getElementById('link-assignment-title').value = title;
-                // 預填目前已設定的 tutor email 或 promotion code，讓使用者確認或修改
-                document.getElementById('link-promotion-code').value = assignmentAccess?.assignedTutorEmail || assignmentAccess?.assignedPromotionCode || '';
+                const courseIdInput = document.getElementById('link-course-id');
+                const unitIdInput = document.getElementById('link-unit-id');
+                const assignmentIdInput = document.getElementById('link-assignment-id');
+                const assignmentTitleInput = document.getElementById('link-assignment-title');
+                const promoInput = document.getElementById('link-promotion-code');
+                if (courseIdInput) courseIdInput.value = resolvedCourseId;
+                if (unitIdInput) unitIdInput.value = fileName;
+                if (assignmentIdInput) assignmentIdInput.value = assignmentId;
+                if (assignmentTitleInput) assignmentTitleInput.value = title;
+                if (promoInput) promoInput.value = assignmentAccess?.assignedTutorEmail || assignmentAccess?.assignedPromotionCode || '';
 
-                // 原生 API 系統：固定設為 native-api 模式
                 const forceModeInput = document.getElementById('link-force-mode');
                 if (forceModeInput) {
                     forceModeInput.value = 'native-api';
                 }
 
-                document.getElementById('assignment-link-modal').classList.remove('hidden');
+                const modal = document.getElementById('assignment-link-modal');
+                if (modal) modal.classList.remove('hidden');
                 return;
             }
 
             // 未通過導師確認流程，直接執行原生 API 流程
             if (!isAuthorized) {
-                alert(window.t('alert_no_permission', '尚未取得此單元之付款或導師指派授權。'));
+                alert(_t('alert_no_permission'));
                 return;
             }
 
@@ -2772,10 +2799,10 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
         console.error('[CourseShared] openSubmissionModal error:', e);
         const errorCode = String(e?.code || '').toLowerCase();
         if (errorCode.includes('unauthenticated') || errorCode.includes('permission-denied') || /unauthenticated|permission denied|請先登入/i.test(e?.message || '')) {
-            alert(window.t ? window.t("alert_login_required", "請先登入後再前往 GitHub 作業。請按右上角登入後再試一次。") : "請先登入後再前往 GitHub 作業。請按右上角登入後再試一次。");
+        alert(_t("alert_login_required"));
             return;
         }
-        alert(window.t ? window.t('alert_no_entry', '暫時無法確認您的作業入口，請稍後再試。') : '暫時無法確認您的作業入口，請稍後再試。');
+        alert(_t('alert_no_entry'));
         return;
     }
 };
@@ -2798,9 +2825,9 @@ function buildSubmitFailureMessage(rawMessage = '', submitUrl = '') {
     const maybeOrgInviteIssue =
         /付款授權|payment|repository access issue|no longer have access|no access|invitation|組織邀請|organization/i.test(message);
     if (isAssignmentSubmission && maybeOrgInviteIssue) {
-        return window.t('submit_failed_org_invite', '繳交失敗：{msg}\n\n請先完成以下步驟後再提交：\n1. 檢查您的電子信箱或點擊 GitHub 右上角鈴鐺通知\n2. 接受待處理的作業 Repository 邀請 (Collaborator Invitation)\n3. 回到本頁重新提交').replace('{msg}', message || window.t('unknown_error', '尚未完成授權'));
+        return _t('submit_failed_org_invite').replace('{msg}', message || _t('unknown_error'));
     }
-    return window.t('submit_failed_prefix', '繳交失敗：') + (message || 'Unknown error');
+    return _t('submit_failed_prefix') + (message || 'Unknown error');
 }
 
 window.closeSubmissionModal = function () { return; };
@@ -2815,7 +2842,7 @@ window.submitAssignmentAction = async function () {
     const note = document.getElementById('sub-note').value;
 
     if (!url) {
-        alert(window.t('alert_enter_link', '請輸入作業連結！'));
+        alert(_t('alert_enter_link'));
         return;
     }
 
@@ -2826,7 +2853,7 @@ window.submitAssignmentAction = async function () {
     const unitId = fileName;
 
     btn.disabled = true;
-    btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> ${window.t('btn_submitting', '提交中...')}`;
+    btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> ${_t('btn_submitting')}`;
 
     try {
         if (typeof window.firebaseSubmitAssignment !== 'function') {
@@ -2843,7 +2870,7 @@ window.submitAssignmentAction = async function () {
         });
 
         if (result.success) {
-            alert(window.t('alert_submit_success', '作業繳交成功！老師將會收到通知。'));
+            alert(_t('alert_submit_success'));
             closeSubmissionModal();
         } else {
             alert(buildSubmitFailureMessage(result.message, url));
@@ -3168,23 +3195,6 @@ function cleanUpPageNoise() {
     }
 }
 
-function normalizeStartButtonText() {
-    try {
-        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
-
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(btn => {
-            const onclickAttr = btn.getAttribute('onclick') || '';
-            // Only convert the start button that goes to unit 1, not the back buttons that return to unit 1.
-            if (onclickAttr.includes('goToUnit(1)') && !btn.classList.contains('nav-btn-prev')) {
-                    btn.innerHTML = window.t('btn_start_unit');
-                }
-        });
-    } catch (e) {
-        console.warn('[CourseShared] normalizeStartButtonText failed:', e);
-    }
-}
-
 // ==========================================
 // [NEW] Native API Assignment Creation Flow Helpers
 // ==========================================
@@ -3362,7 +3372,7 @@ window.executeNativeCreation = async function(githubUsername) {
     }
 
     try {
-        const createStudentRepository = httpsCallable(getFunctions(undefined, 'asia-east1'), 'createStudentRepository');
+        const createStudentRepository = httpsCallable(getFunctions(undefined, 'asia-east1'), 'autogradeCreateStudentRepository');
         const result = await createStudentRepository({
             unitId: fileName,
             courseId,
@@ -3400,7 +3410,7 @@ window.executeNativeCreation = async function(githubUsername) {
                 window.open(result.data.repositoryUrl, '_blank');
             }, 1500);
         } else {
-            throw new Error(window.t('error_no_repo_link', '無法取得作業 Repository 連結。'));
+            throw new Error(_t('error_no_repo_link'));
         }
     } catch (err) {
         console.error("Repository creation failed:", err);

@@ -274,7 +274,7 @@
 ## 6. 相關文件
 
 - [`docs/course-management-runbook.md`](../course-management-runbook.md)
-- [`docs/course-ui-runtime-spec.md`](../course-ui-runtime-spec.md)
+- [`docs/courses/course-ui-runtime-spec.md`](./course-ui-runtime-spec.md)
 - [`docs/legacy-and-backlog.md`](../legacy-and-backlog.md)
 - [`docs/platform-expansion-plan.md`](../platform-expansion-plan.md)
 - [`docs/unit-repo-collaboration-workflow.md`](../unit-repo-collaboration-workflow.md)

@@ -144,7 +144,7 @@
 > 不再依賴硬編碼單元白名單。
 > 所有執行期資料比對（包含邀請連結、課程授權、單元歸屬）都必須直接查 Firestore，禁止使用程式碼內相容名單或 fallback 白名單。
 > `metadata_lessons` 可同時承載課程與部分商品 metadata，但價格欄位只應視為相容/過渡資訊，正式價格來源是 `dealer_price_books`。
-> 課程 UI 邊界：`metadata_lessons.course_units` 是跨單元結構；左側 page menu 必須由目前單元 HTML 的 `window.UNITS` / `#sidebar-nav` 定義。完整規格見 `docs/course-ui-runtime-spec.md`。
+> 課程 UI 邊界：`metadata_lessons.course_units` 是跨單元結構；左側 page menu 必須由目前單元 HTML 的 `window.UNITS` / `#sidebar-nav` 定義。完整規格見 `docs/courses/course-ui-runtime-spec.md`。
 > 課程開通設定與判定順序，請另參考 [`docs/courses/course-activation-settings.md`](courses/course-activation-settings.md)。
 > 新課程的新增 / 修改 / 停用流程，請參考 [`docs/course-management-runbook.md`](course-management-runbook.md)。
 

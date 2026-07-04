@@ -254,5 +254,5 @@
 - [`docs/platform-expansion-plan.md`](./platform-expansion-plan.md)
 - [`docs/unit-repo-collaboration-workflow.md`](./unit-repo-collaboration-workflow.md)
 - [`docs/autograde-full-automation.md`](./autograde-full-automation.md)
-- [`docs/course-ui-runtime-spec.md`](./course-ui-runtime-spec.md)
+- [`docs/courses/course-ui-runtime-spec.md`](./course-ui-runtime-spec.md)
 - [`docs/examples/unit-contentref-mapping.csv`](../examples/unit-contentref-mapping.csv)
