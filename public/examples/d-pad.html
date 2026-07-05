@@ -124,7 +124,7 @@
 <body>
     <div class="container-wrap">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-xl font-black text-white tracking-tight">D-Pad <span class="text-indigo-500">Controller</span></h1>
+            <h1 class="text-xl font-black text-white tracking-tight">D-Pad 控制</h1>
             <a href="index.html" class="text-gray-500 hover:text-white transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </a>
@@ -132,7 +132,7 @@
 
         <div class="flex gap-3 mb-8">
             <button id="btnConnect" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg transition-all active:scale-95">
-                連線
+                連線 BLE
             </button>
             <div id="status" class="status-badge">等待執行...</div>
         </div>
@@ -195,7 +195,7 @@
         function updateStatus(text, ok = false) {
             statusEl.textContent = text;
             statusEl.className = 'status-badge' + (ok ? ' connected' : '');
-            btnConnect.textContent = isConnected ? '中斷' : '連線';
+            btnConnect.textContent = isConnected ? '斷開' : '連線 BLE';
         }
 
         async function connect() {
@@ -265,5 +265,6 @@
             btn.addEventListener('pointerleave', endHandler);
         });
     </script>
+    <script src="../js/examples-shell.0045182337ea.js"></script>
 </body>
 </html>

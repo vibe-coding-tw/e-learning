@@ -102,6 +102,15 @@ class BLEClient {
     }
 
     /**
+     * Read data from a specific characteristic.
+     * @param {string} uuid
+     */
+    async readFrom(uuid) {
+        const char = await this.getCharacteristic(uuid);
+        return await char.readValue();
+    }
+
+    /**
      * Get a specific characteristic (cached lookup not implemented yet, just fetches)
      * @param {string} uuid 
      */
