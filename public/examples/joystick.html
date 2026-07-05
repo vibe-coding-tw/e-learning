@@ -165,6 +165,7 @@ const DEVICE_ID_KEY = 'ble_joystick_device_id';
 const MAX_CONTROL_VALUE = 255; 
 const DEADZONE_PWM = 15; 
 const SEND_INTERVAL_MS = 60; 
+const isMockBleMode = Boolean(window.__bleExampleMockMode);
 
 const joystickContainer = document.getElementById('joystick');
 const joystickInner = document.getElementById('joystick-inner');
@@ -333,7 +334,7 @@ async function acquireDevice() {
     updateConnectionStatus('尋找中...', 'connecting');
     const storedDeviceId = localStorage.getItem(DEVICE_ID_KEY);
 
-    if (storedDeviceId) {
+    if (!isMockBleMode && storedDeviceId) {
         try {
             const devices = await navigator.bluetooth.getDevices();
             const knownDevice = devices.find(d => d.id === storedDeviceId);
@@ -342,7 +343,7 @@ async function acquireDevice() {
     }
     
     try {
-        const newDevice = await navigator.bluetooth.requestDevice({
+        const newDevice = await window.requestBleDevice({
             filters:[{ namePrefix: 'esp32' }], 
             optionalServices: [SERVICE_UUID] 
         });
@@ -354,7 +355,7 @@ async function acquireDevice() {
 }
 
 async function connectBLE(){
-    if (!navigator.bluetooth) {
+    if (!navigator.bluetooth && !isMockBleMode) {
         updateConnectionStatus('不支援 Web Bluetooth', 'error');
         return;
     }
@@ -402,6 +403,6 @@ btnConnect.addEventListener('click', connectBLE);
 stopMotors(); 
 updateConnectionStatus('未連線', 'disconnected'); 
     </script>
-    <script src="../js/examples-shell.0045182337ea.js"></script>
+    <script src="../js/examples-shell.51bb50ac2431.js"></script>
 </body>
 </html>

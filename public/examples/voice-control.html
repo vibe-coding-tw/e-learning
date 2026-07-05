@@ -126,6 +126,7 @@
             const DEVICE_ID_KEY = 'ble_joystick_device_id';
             const MAX_CONTROL_VALUE = 255;
             const MAX_RETRIES = 5; // 指數退避最大重試次數
+            const isMockBleMode = Boolean(window.__bleExampleMockMode);
 
             // 語音命令對應的馬達控制值 (T, S)
             const COMMANDS = {
@@ -272,7 +273,7 @@
             async function acquireDevice() {
                 statusEl.textContent = '掃描中 (過濾: esp32)...';
                 // 使用 optionalServices 是為了在 filters 不包含服務 UUID 時也能連線
-                const newDevice = await navigator.bluetooth.requestDevice({
+                const newDevice = await window.requestBleDevice({
                     filters:[{ namePrefix: 'esp32' }],
                     optionalServices: [SERVICE_UUID]
                 });
@@ -283,7 +284,7 @@
             }
 
             async function connectBLE(){
-                if (!navigator.bluetooth) {
+                if (!navigator.bluetooth && !isMockBleMode) {
                     statusEl.textContent = '❌ 瀏覽器不支援 Web Bluetooth。';
                     return;
                 }
@@ -398,6 +399,6 @@
             btnConnect.addEventListener('click', connectBLE);
             updateMotorValues(0, 0, "靜止", "text-red-400"); // 確保初始狀態為靜止
         </script>
-        <script src="../js/examples-shell.0045182337ea.js"></script>
+        <script src="../js/examples-shell.51bb50ac2431.js"></script>
     </body>
 </html>

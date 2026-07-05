@@ -26,7 +26,14 @@ class BLEClient {
         window.quantifier?.logEvent('CONNECTION', { status: 'attempt', device: namePrefix });
 
         try {
-            this.device = await navigator.bluetooth.requestDevice({
+            const requestDevice = window.requestBleDevice || (async (options) => {
+                if (!navigator.bluetooth?.requestDevice) {
+                    throw new Error("Web Bluetooth not supported");
+                }
+                return await navigator.bluetooth.requestDevice(options);
+            });
+
+            this.device = await requestDevice({
                 filters: [{ namePrefix: namePrefix }],
                 optionalServices: [serviceUUID]
             });
