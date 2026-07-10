@@ -24,30 +24,28 @@ class BLEClient {
     async connect(serviceUUID, characteristicUUID = null, namePrefix = 'esp32') {
         // Log attempt
         window.quantifier?.logEvent('CONNECTION', { status: 'attempt', device: namePrefix });
+        this._connectionStage = 'requestDevice';
 
         try {
-            const requestDevice = window.requestBleDevice || (async (options) => {
-                if (!navigator.bluetooth?.requestDevice) {
-                    throw new Error("Web Bluetooth not supported");
-                }
-                return await navigator.bluetooth.requestDevice(options);
-            });
-
-            this.device = await requestDevice({
+            this.device = await navigator.bluetooth.requestDevice({
                 filters: [{ namePrefix: namePrefix }],
                 optionalServices: [serviceUUID]
             });
 
+            this._connectionStage = 'gattConnect';
             this.device.addEventListener('gattserverdisconnected', this._handleDisconnect.bind(this));
 
             this.server = await this.device.gatt.connect();
+            this._connectionStage = 'getPrimaryService';
             this.service = await this.server.getPrimaryService(serviceUUID);
 
             if (characteristicUUID) {
+                this._connectionStage = 'getCharacteristic';
                 this.characteristic = await this.service.getCharacteristic(characteristicUUID);
             }
 
             this.connected = true;
+            this._connectionStage = 'connected';
 
             // Log success
             window.quantifier?.logEvent('CONNECTION', { status: 'connected', device: this.device.name });
@@ -55,6 +53,16 @@ class BLEClient {
             return this.device;
 
         } catch (error) {
+            error.stage = this._connectionStage || 'unknown';
+            error.deviceName = this.device?.name || null;
+            if (this.server && typeof this.server.getPrimaryServices === 'function') {
+                try {
+                    const services = await this.server.getPrimaryServices();
+                    error.availableServices = services.map((service) => service.uuid);
+                } catch (serviceError) {
+                    error.availableServicesError = serviceError?.message || String(serviceError);
+                }
+            }
             console.error("BLE Connection Error:", error);
             window.quantifier?.logEvent('CONNECTION', { status: 'error', error: error.message });
             throw error;
@@ -109,21 +117,26 @@ class BLEClient {
     }
 
     /**
-     * Read data from a specific characteristic.
-     * @param {string} uuid
-     */
-    async readFrom(uuid) {
-        const char = await this.getCharacteristic(uuid);
-        return await char.readValue();
-    }
-
-    /**
      * Get a specific characteristic (cached lookup not implemented yet, just fetches)
      * @param {string} uuid 
      */
     async getCharacteristic(uuid) {
         if (!this.service) throw new Error("Service not connected");
         return await this.service.getCharacteristic(uuid);
+    }
+
+    /**
+     * Read data from a specific characteristic
+     * @param {string} uuid 
+     */
+    async readFrom(uuid) {
+        try {
+            const char = await this.getCharacteristic(uuid);
+            return await char.readValue();
+        } catch (error) {
+            console.error(`BLE ReadFrom ${uuid} Error:`, error);
+            throw error;
+        }
     }
 
     /**

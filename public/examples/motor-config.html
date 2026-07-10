@@ -177,66 +177,75 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label for="controlTimeoutT"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">加速超時 (Timeout T)
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">加速超時 (Timeout)
                             ms</label>
                         <input type="number" id="controlTimeoutT" value="" min="0" required placeholder="例如: 500">
                     </div>
                     <div class="space-y-1">
                         <label for="pwmStartKickT"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">啟動推力 (Start Kick)
-                            PWM</label>
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">啟動推力 (Kick PWM)</label>
                         <input type="number" id="pwmStartKickT" value="" min="0" required placeholder="例如: 50">
                     </div>
                     <div class="space-y-1">
                         <label for="rampAccelStepT"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">漸進步長 (Accel Step)
-                            PWM</label>
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">漸進步長 (Ramp Speed)</label>
                         <input type="number" id="rampAccelStepT" value="" min="0" required placeholder="例如: 10">
                     </div>
                     <div class="space-y-1">
                         <label for="pwmEffectiveLimitT"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">輸出上限 (Max Limit)
-                            PWM</label>
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">輸出上限 (PWM Limit)</label>
                         <input type="number" id="pwmEffectiveLimitT" value="" min="0" required placeholder="例如: 255">
                     </div>
                 </div>
             </div>
 
-            <!-- Steering Zone -->
+            <!-- Steering / Trim Zone -->
             <div class="bg-gray-800 p-6 rounded-2xl shadow-xl border border-emerald-500/20 space-y-4">
                 <div class="flex items-center space-x-2 border-b border-gray-700 pb-2 mb-2">
                     <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                     </svg>
-                    <h3 class="text-lg font-bold text-emerald-300">轉向設定 (Steering)</h3>
+                    <h3 class="text-lg font-bold text-emerald-300">轉向 &amp; 微調 (Steering)</h3>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label for="controlTimeoutS"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">轉向超時 (Timeout S)
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">轉向超時 (Timeout)
                             ms</label>
                         <input type="number" id="controlTimeoutS" value="" min="0" required placeholder="例如: 2000">
                     </div>
                     <div class="space-y-1">
-                        <label for="pwmStartKickS"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">啟動推力 (Start Kick)
-                            PWM</label>
-                        <input type="number" id="pwmStartKickS" value="" min="0" required placeholder="例如: 50">
+                        <label for="deadband"
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">死區 (Deadband) PWM</label>
+                        <input type="number" id="deadband" value="" min="0" required placeholder="例如: 10">
                     </div>
                     <div class="space-y-1">
-                        <label for="rampAccelStepS"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">漸進步長 (Accel Step)
-                            PWM</label>
-                        <input type="number" id="rampAccelStepS" value="" min="0" required placeholder="例如: 10">
+                        <label for="driveTrim"
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">驅動微調 (Drive Trim)</label>
+                        <input type="number" id="driveTrim" value="" required placeholder="例如: 0">
                     </div>
                     <div class="space-y-1">
-                        <label for="pwmEffectiveLimitS"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">輸出上限 (Max Limit)
-                            PWM</label>
-                        <input type="number" id="pwmEffectiveLimitS" value="" min="0" required placeholder="例如: 255">
+                        <label for="steeringTrim"
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">轉向微調 (Steering Trim)</label>
+                        <input type="number" id="steeringTrim" value="" required placeholder="例如: 0">
                     </div>
+                </div>
+            </div>
+
+            <!-- Invert Zone -->
+            <div class="bg-gray-800 p-4 rounded-2xl shadow-xl border border-yellow-500/20 space-y-3">
+                <h3 class="text-sm font-bold text-yellow-300 border-b border-gray-700 pb-2">反向設定 (Invert)</h3>
+                <div class="flex items-center gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="driveInverted" class="w-4 h-4 accent-indigo-500">
+                        <span class="text-sm text-gray-300">驅動反向 (Drive Inverted)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="steeringInverted" class="w-4 h-4 accent-emerald-500">
+                        <span class="text-sm text-gray-300">轉向反向 (Steering Inverted)</span>
+                    </label>
                 </div>
             </div>
 
@@ -244,11 +253,11 @@
                 <button id="btnSend"
                     class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold transition duration-150 hover:bg-indigo-700 disabled:opacity-50 shadow-lg"
                     disabled>
-                    讀取/傳送 馬達 Ramping 調校
+                    讀取/傳送 馬達設定
                 </button>
 
                 <p class="text-center text-xs text-gray-500">
-                    點擊上方按鈕讀取/儲存 7 個 4-byte 參數 (共 28 Bytes)
+                    連線後自動從裝置讀取，修改後點擊上方按鈕儲存
                 </p>
             </div>
         </div>
@@ -262,30 +271,35 @@
 
     <!-- 引入 Quantifier 和 BLE Client 模組 -->
     <script src="../js/quantifier.d6e180f13fbd.js"></script>
-    <script src="../js/ble-client.3842d532d1f8.js"></script>
+    <script src="../js/ble-client.b00233280cf9.js"></script>
 
     <script>
-        // --- BLE Configuration ---
-        const MOTOR_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee00dead';
-        const MOTOR_CHARACTERISTIC_UUID = '4fafc203-1fb5-459e-8fcc-c0ffee02dead';
+        // --- BLE Configuration (對齊韌體 protocomm_ble 端點) ---
+        // 與 wifi-config.html 使用同一個 protocomm BLE service
+        const MOTOR_SERVICE_UUID    = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        // protocomm_nimble 將 0xff54 寫入 service_uuid bytes[12:13] → 6e40ff54
+        const MOTOR_CHARACTERISTIC_UUID = '6e40ff54-b5a3-f393-e0a9-e50e24dcca9e';
         const DEVICE_ID_KEY = 'ble_motor_config_device_id';
-        const LITTLE_ENDIAN = true;
 
         // --- DOM Elements ---
         const statusLog = document.getElementById('statusLog');
         const btnConnect = document.getElementById('btnConnect');
         const btnSend = document.getElementById('btnSend');
 
-        // 欄位 ID 陣列
+        // 欄位定義 (對應韌體 motor_config_t 欄位名稱)
         const PARAM_IDS = [
-            { id: 'controlTimeoutT', type: 'Uint16', offset: 0 },
-            { id: 'controlTimeoutS', type: 'Uint16', offset: 2 },
-            { id: 'pwmEffectiveLimitT', type: 'Int32', offset: 4 },
-            { id: 'rampAccelStepT', type: 'Int32', offset: 8 },
-            { id: 'pwmStartKickT', type: 'Int32', offset: 12 },
-            { id: 'pwmEffectiveLimitS', type: 'Int32', offset: 16 },
-            { id: 'rampAccelStepS', type: 'Int32', offset: 20 },
-            { id: 'pwmStartKickS', type: 'Int32', offset: 24 }
+            { id: 'controlTimeoutT',   key: 'throttle_timeout_ms' },
+            { id: 'controlTimeoutS',   key: 'steering_timeout_ms' },
+            { id: 'pwmEffectiveLimitT', key: 'pwm_limit'          },
+            { id: 'rampAccelStepT',    key: 'ramp_speed'          },
+            { id: 'pwmStartKickT',     key: 'kick_pwm'            },
+            { id: 'deadband',          key: 'deadband'            },
+            { id: 'driveTrim',         key: 'drive_trim'          },
+            { id: 'steeringTrim',      key: 'steering_trim'       },
+        ];
+        const BOOL_PARAM_IDS = [
+            { id: 'driveInverted',    key: 'drive_inverted'    },
+            { id: 'steeringInverted', key: 'steering_inverted' },
         ];
 
         // --- Helper Functions ---
@@ -329,30 +343,23 @@
                 logStatus('正在從裝置讀取設定值...', 'info');
                 btnSend.disabled = true;
 
-                // 使用 bleClient 讀取
-                const value = await window.bleClient.read();
-                const dataView = value; // readValue returns DataView
+                // protocomm 協定：先 WRITE 空請求觸發 handler，再 READ 取得 JSON 回應
+                await window.bleClient.writeTo(MOTOR_CHARACTERISTIC_UUID, new Uint8Array([0]));
+                await new Promise(r => setTimeout(r, 100));
 
-                if (value.byteLength !== 28) {
-                    logStatus(`⚠️ 讀取數據長度錯誤: ${value.byteLength} bytes (預期 28 bytes)`, 'error');
-                    return;
-                }
+                const buffer = await window.bleClient.readFrom(MOTOR_CHARACTERISTIC_UUID);
+                const text = new TextDecoder().decode(buffer).replace(/\0+$/g, '').trim();
+                const config = text ? JSON.parse(text) : {};
 
+                // 填入整數欄位
                 PARAM_IDS.forEach(param => {
-                    let val;
-                    const element = document.getElementById(param.id);
-                    const byteSize = (param.type.includes('16') ? 2 : 4);
-                    if (param.offset + byteSize > dataView.byteLength) return;
-
-                    if (param.type === 'Uint16') {
-                        val = dataView.getUint16(param.offset, LITTLE_ENDIAN);
-                    } else if (param.type === 'Uint32') {
-                        val = dataView.getUint32(param.offset, LITTLE_ENDIAN);
-                    } else {
-                        val = dataView.getInt32(param.offset, LITTLE_ENDIAN);
-                    }
-
-                    if (element) element.value = val;
+                    const el = document.getElementById(param.id);
+                    if (el && config[param.key] !== undefined) el.value = config[param.key];
+                });
+                // 填入布林欄位 (checkbox)
+                BOOL_PARAM_IDS.forEach(param => {
+                    const el = document.getElementById(param.id);
+                    if (el) el.checked = !!config[param.key];
                 });
 
                 logStatus('✅ 設定值讀取成功!', 'success');
@@ -403,31 +410,33 @@
                 return;
             }
 
-            const buffer = new ArrayBuffer(28);
-            const dataView = new DataView(buffer);
-
             try {
+                // 從欄位收集數值並組成 JSON
+                const payload = {};
                 PARAM_IDS.forEach(param => {
-                    const element = document.getElementById(param.id);
-                    const value = parseInt(element.value);
+                    const el = document.getElementById(param.id);
+                    const value = parseInt(el?.value);
                     if (isNaN(value)) throw new Error(`欄位 ${param.id} 包含無效數值。`);
-
-                    if (param.type === 'Uint16') {
-                        dataView.setUint16(param.offset, value, LITTLE_ENDIAN);
-                    } else if (param.type === 'Uint32') {
-                        dataView.setUint32(param.offset, value, LITTLE_ENDIAN);
-                    } else {
-                        dataView.setInt32(param.offset, value, LITTLE_ENDIAN);
-                    }
+                    payload[param.key] = value;
+                });
+                BOOL_PARAM_IDS.forEach(param => {
+                    const el = document.getElementById(param.id);
+                    payload[param.key] = el ? el.checked : false;
                 });
 
-                logStatus('傳送 28-byte 馬達 Ramping 調校...', 'info');
+                const jsonStr = JSON.stringify(payload);
+                logStatus('傳送馬達設定 JSON...', 'info');
                 btnSend.disabled = true;
 
-                // 使用 bleClient 寫入
-                await window.bleClient.write(buffer);
+                // protocomm 協定：WRITE JSON payload 觸發 motor_config_handler (同時儲存並套用設定)
+                await window.bleClient.writeTo(MOTOR_CHARACTERISTIC_UUID, new TextEncoder().encode(jsonStr));
+                // 短暫等待 handler 處理完成後讀回確認值
+                await new Promise(r => setTimeout(r, 150));
+                const buffer = await window.bleClient.readFrom(MOTOR_CHARACTERISTIC_UUID);
+                const confirmed = new TextDecoder().decode(buffer).replace(/\0+$/g, '').trim();
+                console.log('[motor-config] confirmed:', confirmed);
 
-                logStatus('✅ 設定已成功傳送! (28 Bytes)', 'success');
+                logStatus('✅ 設定已成功傳送並儲存!', 'success');
 
             } catch (err) {
                 logStatus(`❌ 傳送失敗: ${err.message}`, 'error');
@@ -449,7 +458,6 @@
             clearInputFields();
         }
     </script>
-    <script src="../js/examples-shell.51bb50ac2431.js"></script>
 </body>
 
 </html>

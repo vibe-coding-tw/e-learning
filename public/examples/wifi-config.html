@@ -182,7 +182,7 @@
             </button>
 
             <p class="text-center text-xs text-gray-500 pt-2">
-                傳輸格式：SSID 和密碼將分別傳送
+                傳輸格式：SSID 與密碼會一次送到 <code>wifi-set</code>
             </p>
         </div>
 
@@ -196,13 +196,18 @@
 
     <!-- 引入 Quantifier 和 BLE Client 模組 -->
     <script src="../js/quantifier.d6e180f13fbd.js"></script>
-    <script src="../js/ble-client.3842d532d1f8.js"></script>
+    <script src="../js/ble-client.b00233280cf9.js"></script>
 
     <script>
-        // --- BLE Configuration (已修正 UUID 以匹配 C++ 韌體) ---
+        // --- BLE Configuration (對齊韌體 protocomm_ble 端點) ---
+        const DEVICE_NAME_PREFIX = 'esp32';
         const SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-        const SSID_CHARACTERISTIC_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-        const PASS_CHARACTERISTIC_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+        // protocomm_nimble 將 16-bit endpoint UUID 寫入 service_uuid bytes[12:13]
+        // bytes[12:13] 對應 UUID 字串第一組的最後 2 bytes (即 6e40____ 的後半)
+        // 0xff51 (LE) → byte[12]=0x51, byte[13]=0xff → UUID 第一組 = 6e40ff51
+        const WIFI_SET_CHARACTERISTIC_UUID   = '6e40ff51-b5a3-f393-e0a9-e50e24dcca9e';
+        const WIFI_CLEAR_CHARACTERISTIC_UUID = '6e40ff52-b5a3-f393-e0a9-e50e24dcca9e';
+        const STATUS_CHARACTERISTIC_UUID     = '6e40ff53-b5a3-f393-e0a9-e50e24dcca9e';
 
         const DEVICE_ID_KEY = 'ble_config_device_id';
 
@@ -282,43 +287,63 @@
                     window.bleClient.onDisconnectCallbacks.push(onDisconnect);
                 }
 
-                // 連線到 Service，不指定 Primary Characteristic (因為我們要操作兩個)
-                const device = await window.bleClient.connect(SERVICE_UUID, null);
+                // 連線到 protocomm BLE service
+                const device = await window.bleClient.connect(SERVICE_UUID, null, DEVICE_NAME_PREFIX);
 
-                logStatus('✅ 已連線: ' + device.name, 'success');
                 updateUI(true);
 
-                // [NEW] 連線成功後，嘗試讀取目前的 SSID 與密碼
-                await readConfig();
+                // 連線成功後，讀取目前狀態
+                await readStatus(device);
 
             } catch (err) {
                 console.error('BLE 連線失敗:', err);
-                logStatus(`❌ 連線失敗 (${err.message})`, 'error');
+                if (err?.name === 'AbortError' || err?.name === 'NotFoundError') {
+                    if (err?.stage === 'requestDevice') {
+                        logStatus('⚪ 已取消裝置選擇。', 'info');
+                    } else if (err?.deviceName) {
+                        const serviceList = Array.isArray(err.availableServices) && err.availableServices.length > 0
+                            ? `<br>服務清單：${err.availableServices.join(', ')}`
+                            : (err.availableServicesError ? `<br>讀取服務失敗：${err.availableServicesError}` : '');
+                        const stageInfo = err?.stage ? `<br>階段：${err.stage}` : '';
+                        logStatus(`❌ 已選擇 ${err.deviceName}，但連線失敗 (${err.message})${stageInfo}${serviceList}`, 'error');
+                    } else {
+                        logStatus(`❌ 連線失敗 (${err.message})`, 'error');
+                    }
+                } else if ((err?.message || '').includes('Must be handling a user gesture')) {
+                    logStatus('⚠️ 瀏覽器阻止配對：請用實際滑鼠點擊「連線 BLE」，不要由腳本觸發。', 'error');
+                } else {
+                    logStatus(`❌ 連線失敗 (${err.message})`, 'error');
+                }
                 updateUI(false);
             }
         }
 
         /**
-         * 從裝置讀取目前的 SSID 和密碼
+         * 從裝置讀取目前狀態
+         * protocomm 採用「先 WRITE 觸發 handler，再 READ 取回回應」的協定。
+         * 直接呼叫 readFrom 只會拿到上次快取的值（初次連線時為空）。
          */
-        async function readConfig() {
+        async function readStatus(device) {
             try {
-                logStatus('正在從裝置抓取目前的 Wi-Fi 設定...', 'info');
+                logStatus('正在從裝置抓取目前狀態...', 'info');
+
+                // protocomm 協定：先 WRITE 空請求觸發 status handler，再 READ 取得 JSON 回應
+                await window.bleClient.writeTo(STATUS_CHARACTERISTIC_UUID, new Uint8Array([0]));
+                // 短暫等待 handler 處理完成
+                await new Promise(r => setTimeout(r, 100));
 
                 const decoder = new TextDecoder();
+                const statusBuffer = await window.bleClient.readFrom(STATUS_CHARACTERISTIC_UUID);
+                const statusText = decoder.decode(statusBuffer).replace(/\0+$/g, '').trim();
+                const status = statusText ? JSON.parse(statusText) : {};
 
-                // 1. 讀取 SSID
-                const ssidBuffer = await window.bleClient.readFrom(SSID_CHARACTERISTIC_UUID);
-                ssidInput.value = decoder.decode(ssidBuffer);
-
-                // 2. 讀取密碼
-                const passBuffer = await window.bleClient.readFrom(PASS_CHARACTERISTIC_UUID);
-                passwordInput.value = decoder.decode(passBuffer);
-
-                logStatus('✅ 已同步目前裝置的 SSID 與密碼', 'success');
+                const appName = status.app_name || device?.name || 'unknown';
+                const wifiState = status.wifi_state || 'unknown';
+                const bleState = status.ble_state || 'unknown';
+                logStatus(`✅ 已連線: ${appName} · Wi-Fi ${wifiState} · BLE ${bleState}`, 'success');
             } catch (err) {
-                console.warn('讀取設定失敗 (可能韌體不支援讀取特性):', err);
-                logStatus('⚠️ 已連線，但無法讀取目前設定', 'info');
+                console.warn('讀取狀態失敗 (可能韌體不支援讀取特性):', err);
+                logStatus(`✅ 已連線: ${device?.name || 'ESP32'}，但無法讀取目前狀態`, 'success');
             }
         }
 
@@ -343,20 +368,13 @@
             const encoder = new TextEncoder();
 
             try {
-                logStatus(`傳送 SSID (${ssid}) 和密碼...`, 'info');
+                logStatus(`傳送 Wi-Fi 設定到 ${ssid}...`, 'info');
                 btnSend.disabled = true; // 傳送中禁用按鈕
 
-                // 1. 寫入 SSID
-                await window.bleClient.writeTo(SSID_CHARACTERISTIC_UUID, encoder.encode(ssid));
+                // 韌體的 wifi-set 端點期待單次 payload，使用換行分隔 SSID / Password
+                await window.bleClient.writeTo(WIFI_SET_CHARACTERISTIC_UUID, encoder.encode(`${ssid}\n${password}`));
 
-                // 2. 寫入 PASS (韌體中，寫入 PASS 後會觸發儲存並重啟)
-                await window.bleClient.writeTo(PASS_CHARACTERISTIC_UUID, encoder.encode(password));
-
-                // 傳送完成後，裝置將重啟，因此我們立即斷開連線並提示使用者
-                logStatus('✅ 設定成功傳送! 裝置正在重啟以連線 Wi-Fi。', 'success');
-
-                // 嘗試斷開連線 (雖然裝置會自行斷線)
-                window.bleClient.disconnect();
+                logStatus('✅ 設定已送出，裝置會自行套用並可能重新連線。', 'success');
 
             } catch (err) {
                 logStatus(`❌ 傳送失敗: ${err.message}`, 'error');
@@ -378,7 +396,6 @@
             btnConnect.querySelector('span').textContent = "不支援";
         }
     </script>
-    <script src="../js/examples-shell.51bb50ac2431.js"></script>
 </body>
 
 </html>
