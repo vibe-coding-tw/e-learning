@@ -67,6 +67,7 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             gap: 12px;
+            touch-action: none; /* 防止移動端滑動手勢觸發滾動與 pointercancel */
         }
 
         .control-btn {
@@ -83,6 +84,7 @@
             top: 0;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            touch-action: none; /* 防止移動端手勢干擾 */
         }
 
         .control-btn:active, .control-btn.active {
@@ -164,6 +166,15 @@
             </div>
         </div>
 
+        <!-- 診斷資訊卡 -->
+        <div id="diagCard" class="mt-4 p-4 rounded-2xl border border-gray-800 bg-gray-900/50 text-xs font-mono hidden">
+            <div class="flex justify-between items-center mb-2">
+                <div class="text-gray-600 uppercase tracking-widest text-[10px]">ESP32 Diagnostic</div>
+                <button id="btnReread" class="text-[10px] px-2 py-0.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">重新讀取</button>
+            </div>
+            <div id="diagContent" class="space-y-1 text-gray-400"></div>
+        </div>
+
         <div class="mt-10 pt-10 border-t border-gray-800 hidden md:flex flex-col items-center">
             <p class="text-xs text-gray-500 mb-4">Scan to open on mobile</p>
             <div class="bg-white p-2 rounded-2xl shadow-xl">
@@ -179,21 +190,134 @@
         // 與 wifi-config.html 使用同一個 protocomm BLE service
         const SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
         // protocomm_nimble 將 0xff55 寫入 service_uuid bytes[12:13] → 6e40ff55-b5a3-f393-e0a9-e50e24dcca9e
-        const CHARACTERISTIC_UUID = '6e40ff55-b5a3-f393-e0a9-e50e24dcca9e';
-        const SEND_INTERVAL = 60;
+        const CHARACTERISTIC_UUID     = '6e40ff55-b5a3-f393-e0a9-e50e24dcca9e';
+        const STATUS_CHARACTERISTIC_UUID = '6e40ff53-b5a3-f393-e0a9-e50e24dcca9e';
+        const SEND_INTERVAL = 100; // 心跳定時器放寬至 100ms
 
         let device = null;
+        let service = null;          // 保留 service 參考以供後續讀取診斷
         let characteristic = null;
         let isConnected = false;
         let currentThrottle = 0;
         let currentSteering = 0;
         let sendTimer = null;
 
+        // 狀態管理變數以防止 GATT 重疊寫入
+        let isWriting = false;
+        let pendingSend = false;
+        let lastThrottle = 0;
+        let lastSteering = 0;
+        let lastSendTime = 0;
+        let needReadback = false; // 標記是否需要在下次寫入後讀回診斷
+
         const btnConnect = document.getElementById('btnConnect');
         const statusEl = document.getElementById('status');
         const valTEl = document.getElementById('valT');
         const valSEl = document.getElementById('valS');
         const dpadButtons = document.querySelectorAll('.control-btn');
+        const diagCard = document.getElementById('diagCard');
+        const diagContent = document.getElementById('diagContent');
+
+        /** 將診斷訊息顯示到診斷卡片 */
+        function showDiag(lines) {
+            diagCard.classList.remove('hidden');
+            diagContent.innerHTML = lines.map(l =>
+                `<div class="${l.ok === false ? 'text-red-400' : l.ok === true ? 'text-green-400' : 'text-gray-400'}">${l.text}</div>`
+            ).join('');
+        }
+
+        /** 新增一行診斷訊息（保留已有行，只取代最後一行如果是驉達回應） */
+        function appendDiag(text, cls = 'text-gray-400') {
+            diagCard.classList.remove('hidden');
+            // 移除舊的驉達回應行
+            const last = diagContent.lastElementChild;
+            if (last && (last.textContent.startsWith('✅ ESP32') || last.textContent.startsWith('❌ ESP32') || last.textContent.startsWith('📨'))) {
+                last.remove();
+            }
+            const div = document.createElement('div');
+            div.className = cls;
+            div.textContent = text;
+            diagContent.appendChild(div);
+        }
+
+        /** 連線後讀取 status 端點，顯示 battery_low_lockout、battery_voltage、motor_enabled */
+        async function readESP32Status() {
+            if (!service) return;
+            try {
+                const statusChar = await service.getCharacteristic(STATUS_CHARACTERISTIC_UUID);
+                // protocomm 協定：先 WRITE 空請求觸發 handler，再 READ 取得 JSON 回應
+                await statusChar.writeValue(new Uint8Array([0]));
+                await new Promise(r => setTimeout(r, 150));
+                const buf = await statusChar.readValue();
+                const text = new TextDecoder().decode(buf).replace(/\0+$/g, '').trim();
+                const s = JSON.parse(text);
+
+                const lockout = s.battery_low_lockout;
+                const battV = typeof s.battery_voltage_v === 'number' ? s.battery_voltage_v.toFixed(2) : '?';
+                const motorEnabled = s.motor_enabled;
+
+                showDiag([
+                    { text: `🔋 電池: ${battV}V  ${lockout ? '⚠️ LOW VOLTAGE LOCKOUT — 馬達被鎖定！' : '✅ 正常'}`, ok: !lockout },
+                    { text: `⚙️ 馬達啟用: ${motorEnabled ? '✅ enabled' : '⏸ disabled (尚未收到指令)'}` },
+                    { text: `📶 WiFi: ${s.wifi_state}  BLE: ${s.ble_state}` },
+                ]);
+
+                if (lockout) {
+                    updateStatus('⚠️ 電池欠壓鎖定！馬達無法啟動', false);
+                }
+            } catch (e) {
+                console.warn('[diag] 讀取 status 失敗:', e);
+                showDiag([{ text: `⚠️ 無法讀取 ESP32 status: ${e.message}` }]);
+            }
+        }
+
+        /** 寫入馬達指令後，讀回 motor-control 特徵值的回應以確認 ESP32 是否收到並處理 */
+        async function readMotorResp() {
+            if (!characteristic || !isConnected) return;
+            try {
+                await new Promise(r => setTimeout(r, 80));
+                const buf = await characteristic.readValue();
+                const text = new TextDecoder().decode(buf).replace(/\0+$/g, '').trim();
+                if (!text) return;
+                const resp = JSON.parse(text);
+                const lines = [
+                    {
+                        ok: resp.ok,
+                        text: resp.ok
+                            ? `✅ ESP32 收到: t=${resp.t}, s=${resp.s}`
+                            : `❌ ESP32 拒絕: ${resp.error || '未知錯誤'} ${resp.error === 'low_battery' ? '— 電池欠壓鎖定！' : ''}`
+                    }
+                ];
+                // 保留上方的電池狀態行，新增馬達回應行
+                const existing = diagContent.querySelectorAll('div');
+                if (existing.length > 0) {
+                    // 移除舊的馬達回應行（最後一行如果有的話）
+                    const lastLine = existing[existing.length - 1];
+                    if (lastLine.textContent.startsWith('✅ ESP32') || lastLine.textContent.startsWith('❌ ESP32') || lastLine.textContent.startsWith('📨')) {
+                        lastLine.remove();
+                    }
+                }
+                const div = document.createElement('div');
+                div.className = resp.ok ? 'text-green-400' : 'text-red-400';
+                div.textContent = lines[0].text;
+                diagContent.appendChild(div);
+                diagCard.classList.remove('hidden');
+            } catch (e) {
+                // 讀回失敗表示特徵值不支援 READ，或 BLE 忙碌中
+                const div = document.createElement('div');
+                div.className = 'text-yellow-400';
+                div.textContent = `📨 BLE 已送出，但無法讀回 ESP32 回應 (${e.message?.slice(0, 60)})`;
+                const existing = diagContent.querySelectorAll('div');
+                if (existing.length > 0) {
+                    const lastLine = existing[existing.length - 1];
+                    if (lastLine.textContent.startsWith('✅ ESP32') || lastLine.textContent.startsWith('❌ ESP32') || lastLine.textContent.startsWith('📨')) {
+                        lastLine.remove();
+                    }
+                }
+                diagContent.appendChild(div);
+                diagCard.classList.remove('hidden');
+            }
+        }
 
         function updateStatus(text, ok = false) {
             statusEl.textContent = text;
@@ -222,31 +346,119 @@
                 });
 
                 const server = await device.gatt.connect();
-                const service = await server.getPrimaryService(SERVICE_UUID);
-                const chars = await service.getCharacteristics();
-                characteristic = chars.find(c => c.uuid.toUpperCase() === CHARACTERISTIC_UUID.toUpperCase());
-                if (!characteristic) {
-                    const uuids = chars.map(c => c.uuid).join('\n');
-                    throw new Error(`Not found. Available:\n${uuids}`);
-                }
+                service = await server.getPrimaryService(SERVICE_UUID);
+                // 改為直接獲取特徵值以提高效率
+                characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
 
                 isConnected = true;
+                needReadback = true; // 下次寫入後讀回診斷
                 updateStatus('已連線', true);
                 sendTimer = setInterval(sendData, SEND_INTERVAL);
+
+                // 連線成功後讀取 ESP32 status，顯示電池與馬達狀態
+                readESP32Status();
 
             } catch (err) {
                 updateStatus('失敗: ' + err.message.substring(0, 200));
             }
         }
 
+        // 重構後的傳送控制邏輯，引入鎖定、補發、多種寫入模式相容切換與重試機制
         async function sendData() {
             if (!characteristic || !isConnected) return;
+
+            // 若目前正在寫入，標記待補發並返回，防止 GATT 衝突
+            if (isWriting) {
+                pendingSend = true;
+                return;
+            }
+
+            const now = Date.now();
+            const timeSinceLastSend = now - lastSendTime;
+            const valuesChanged = (currentThrottle !== lastThrottle || currentSteering !== lastSteering);
+
+            // 防洪控制：如果數值沒變，且未達心跳間隔 (200ms)，且無待發指令，則略過發送
+            if (!valuesChanged && timeSinceLastSend < 200 && !pendingSend) {
+                return;
+            }
+
+            isWriting = true;
+            pendingSend = false;
+
             const payload = `${currentThrottle},${currentSteering}`;
-            try {
-                await characteristic.writeValue(new TextEncoder().encode(payload));
-                valTEl.textContent = currentThrottle;
-                valSEl.textContent = currentSteering;
-            } catch (e) {}
+            const encodedPayload = new TextEncoder().encode(payload);
+            const MAX_RETRIES = 3;
+
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    // 強制使用 writeValueWithResponse（GATT Write Request，帶 ACK 確認）。
+                    // 不使用 writeValueWithoutResponse：
+                    //   ESP32 NimBLE 的 protocomm characteristic 只設定了 WRITE（帶回應），
+                    //   Write Command（無回應）會被 NimBLE 層靜默丟棄，handler 不會被呼叫。
+                    if (typeof characteristic.writeValueWithResponse === 'function') {
+                        await characteristic.writeValueWithResponse(encodedPayload);
+                    } else {
+                        // 舊版 Web Bluetooth API 預設也是 write with response
+                        await characteristic.writeValue(encodedPayload);
+                    }
+
+                    lastThrottle = currentThrottle;
+                    lastSteering = currentSteering;
+                    lastSendTime = Date.now();
+
+                    // 成功寫入後才更新頁面數值
+                    valTEl.textContent = currentThrottle;
+                    valSEl.textContent = currentSteering;
+
+                    // 讀回 ESP32 回應（在 isWriting=true 鎖定內執行，防止 GATT race condition）
+                    if (needReadback) {
+                        needReadback = false;
+                        try {
+                            // 等 ESP32 handler 處理完成後再讀回
+                            await new Promise(r => setTimeout(r, 120));
+                            const buf = await characteristic.readValue();
+                            const text = new TextDecoder().decode(buf).replace(/\0+$/g, '').trim();
+                            if (text) {
+                                const resp = JSON.parse(text);
+                                appendDiag(
+                                    resp.ok
+                                        ? `✅ ESP32 收到: t=${resp.t}, s=${resp.s}`
+                                        : `❌ ESP32 拒絕: ${resp.error}${resp.error === 'low_battery' ? ' — 電池欠壓！' : ''}`,
+                                    resp.ok ? 'text-green-400' : 'text-red-400'
+                                );
+                            }
+                        } catch (re) {
+                            appendDiag(`📨 BLE 寫入完成（無法讀回：${re.message?.slice(0, 50)}）`, 'text-yellow-400');
+                        }
+                    }
+
+                    // 成功寫入，直接退出重試迴圈
+                    break;
+                } catch (err) {
+                    console.warn(`BLE write failed (retry ${i + 1}/${MAX_RETRIES}):`, err);
+                    
+                    // 檢查是否為 GATT 斷線
+                    if (err.message && err.message.includes("GATT Server is disconnected")) {
+                        isConnected = false;
+                        characteristic = null;
+                        clearInterval(sendTimer);
+                        updateStatus('已斷線');
+                        break;
+                    }
+                    
+                    // 若還有重試機會，等待短暫時間後再重試
+                    if (i < MAX_RETRIES - 1) {
+                        const delay = (i + 1) * 50; // 50ms, 100ms
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+            }
+
+            isWriting = false;
+            // 若寫入期間有新的控制指令排隊，立刻補發最新值
+            if (pendingSend) {
+                setTimeout(sendData, 10);
+            }
         }
 
         btnConnect.addEventListener('click', connect);
@@ -258,6 +470,8 @@
                 currentThrottle = parseInt(btn.dataset.t);
                 currentSteering = parseInt(btn.dataset.s);
                 btn.classList.add('active');
+                needReadback = true; // 按下按鈕後強制讀回一次 ESP32 回應
+                sendData(); // 立即發送控制數值，不延遲
             };
 
             const endHandler = (e) => {
@@ -265,12 +479,18 @@
                 currentThrottle = 0;
                 currentSteering = 0;
                 btn.classList.remove('active');
+                sendData(); // 立即發送停止指令，確保馬達即時停止
             };
 
             btn.addEventListener('pointerdown', startHandler);
             btn.addEventListener('pointerup', endHandler);
             btn.addEventListener('pointercancel', endHandler);
             btn.addEventListener('pointerleave', endHandler);
+        });
+
+        // 「重新讀取」按鈕：手動重新讀取 ESP32 status，確認馬達是否真的被啟用
+        document.getElementById('btnReread').addEventListener('click', () => {
+            readESP32Status();
         });
     </script>
 </body>

@@ -1,5 +1,11 @@
 # Revisions
 
+## [v1.2.0] - 2026-07-13
+
+### Changed
+- **D-Pad Web Bluetooth Refactor**: Changed the D-Pad controller transmission method to use `writeValueWithResponse` (GATT Write Request) to ensure the ESP32 NimBLE stack triggers the motor control handler, avoiding silent drops of `writeValueWithoutResponse`.
+- **Diagnostics Dashboard**: Integrated a real-time diagnostics card inside `d-pad.html` to show battery voltage, low voltage lockouts, wifi/ble status, and verify the motor's command response ok/error.
+
 ## [v1.1.0] - 2026-07-11
 
 ### Changed
