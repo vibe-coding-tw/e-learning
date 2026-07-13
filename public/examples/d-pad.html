@@ -175,8 +175,11 @@
     </div>
 
     <script>
-        const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee00dead';
-        const CHARACTERISTIC_UUID = '4fafc202-1fb5-459e-8fcc-c0ffee01feed';
+        // --- BLE Configuration (對齊韌體 protocomm_ble 端點) ---
+        // 與 wifi-config.html 使用同一個 protocomm BLE service
+        const SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        // protocomm_nimble 將 0xff55 寫入 service_uuid bytes[12:13] → 6e40ff55-b5a3-f393-e0a9-e50e24dcca9e
+        const CHARACTERISTIC_UUID = '6e40ff55-b5a3-f393-e0a9-e50e24dcca9e';
         const SEND_INTERVAL = 60;
 
         let device = null;
@@ -220,14 +223,19 @@
 
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
-                characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+                const chars = await service.getCharacteristics();
+                characteristic = chars.find(c => c.uuid.toUpperCase() === CHARACTERISTIC_UUID.toUpperCase());
+                if (!characteristic) {
+                    const uuids = chars.map(c => c.uuid).join('\n');
+                    throw new Error(`Not found. Available:\n${uuids}`);
+                }
 
                 isConnected = true;
                 updateStatus('已連線', true);
                 sendTimer = setInterval(sendData, SEND_INTERVAL);
 
             } catch (err) {
-                updateStatus('失敗: ' + err.message.substring(0, 10));
+                updateStatus('失敗: ' + err.message.substring(0, 200));
             }
         }
 
