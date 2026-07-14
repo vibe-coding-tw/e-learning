@@ -1,5 +1,5 @@
 # Distributor Tutor Firestore Schema
-**Version**: 2026.06.05.V1
+**Version**: 2026.07.14.V2 (§2.4 `dealer_price_books` updated to add `promoEffectiveFrom`/`promoEffectiveTo` and mark `effectiveFrom`/`effectiveTo` as legacy — these had already shipped in code/UI but were missing from this doc)
 **Purpose**: Define the Firestore shape required for distributor-owned hardware pricing, tutor-to-distributor binding, and service settlement.
 
 ## 1. Collection Overview
@@ -61,6 +61,8 @@
 
 ### 2.4 `dealer_price_books/{priceBookId}`
 
+> 這份表格是 `dealer_price_books` 的權威（canonical）欄位清單。`distributor-tutor-pricing-engineering-spec.md` §4.4 也有一份同樣的 table，那份只列出跟定價邏輯相關的子集，兩邊如果之後要改欄位，先改這裡再同步過去，不要反過來。
+
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `distributorId` | string | yes | Owner distributor |
@@ -68,8 +70,10 @@
 | `currency` | string | yes | Currency code |
 | `salePrice` | number | yes | Live sale price |
 | `promoPrice` | number | no | Campaign price |
-| `effectiveFrom` | timestamp | yes | Start time |
-| `effectiveTo` | timestamp | no | End time |
+| `effectiveFrom` | timestamp | yes | **Legacy.** Main-price start time; kept in the schema for backward compatibility but not exposed in the price book modal UI (`distributor-portal.html`) — see AGENT.md §11 |
+| `effectiveTo` | timestamp | no | **Legacy.** Main-price end time; same status as `effectiveFrom` above |
+| `promoEffectiveFrom` | timestamp | no | Promo period start; required together with `promoEffectiveTo` whenever `promoPrice` is set. Written/read by `distributor-portal.fe88bf1439ad.js` and shown as "促銷開始" in the price book modal |
+| `promoEffectiveTo` | timestamp | no | Promo period end; same pairing rule as `promoEffectiveFrom` above, shown as "促銷結束" in the modal |
 | `isActive` | boolean | yes | Active flag |
 | `version` | string | yes | Price book version |
 | `updatedBy` | string | yes | Editor UID |

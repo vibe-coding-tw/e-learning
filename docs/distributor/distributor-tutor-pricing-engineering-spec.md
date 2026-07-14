@@ -117,6 +117,8 @@ Tutors are stored inside the `users` collection, with relevant details under `tu
 
 One active price book per distributor per SKU is the default operating model.
 
+> 這裡是給定價邏輯看的子集欄位，不是權威清單。完整欄位定義（含 required 標記）以 `distributor-tutor-firestore-schema.md` §2.4 為準，改欄位請先改那份再同步過來。
+
 | Field | Type | Description |
 | :--- | :--- | :--- |
 | `id` | string | Price book document ID |
