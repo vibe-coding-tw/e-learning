@@ -16,8 +16,8 @@
 ## Subdirectories
 
 - [`courses/README.md`](./courses/README.md)
-- [`distributor/README.md`](./distributor/README.md)
-- [`investor/README.md`](./investor/README.md)
+- [`distributor/`](./distributor/) — 沒有 README.md，直接看各份 spec 文件
+- [`investor/`](./investor/) — 只有 `12m-funding-plan.csv`，沒有 README.md
 - [`examples/`](./examples/)
 
 ## Notes

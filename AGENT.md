@@ -168,8 +168,16 @@ git commit -m "docs: update README"
 
 ## 11. Distributor Portal UI Behavior
 
-- **Page layout (top→bottom)**: Header → Distributor tabs → Stat cards (專屬訂單/待出貨/Tutor數/本期佣金) → 經銷商定價維護 section
-- **Stat cards**: 4 total — 專屬訂單, 待出貨, Tutor數, 本期佣金. 可套用商品 card is in the filter card row within 定價維護 section.
+- **Page layout (top→bottom)**: Header → Distributor tabs (per-distributor selector) → Stat cards (專屬訂單/待出貨/Tutor數/本期佣金) → **Main content tabs** → active tab's section
+- **Main content tabs (2026-07-14)**: `distributor-portal.html` is split into 5 tabs, one section visible at a time — `.portal-maintab-btn` buttons with `data-maintab="admin|pricing|orders|tutor|settlement"` toggle `.portal-maintab-panel[data-maintab-panel="..."]` wrappers via inline `<script>` at the bottom of the file (pure display/hide, does not touch `distributor-portal.fe88bf1439ad.js`):
+  - `admin` → 經銷商管理 (wraps `#portal-distributor-admin-section`)
+  - `pricing` → 經銷商定價維護 (default tab on load)
+  - `orders` → 履約訂單
+  - `tutor` → Tutor 綁定
+  - `settlement` → 月結報表 (previously side-by-side with Tutor 綁定 in one `<section>`; now its own tab/section)
+  - **Admin tab visibility**: the `admin` tab button starts with a `hidden` class. A `MutationObserver` watches `#portal-distributor-admin-section`'s `.hidden` class (toggled by `distributor-portal.fe88bf1439ad.js` based on `state.portal.role === 'admin'`) and mirrors it onto the tab button; if a non-admin somehow lands on the `admin` tab it auto-redirects to `pricing`.
+  - Do not confuse this with the "Distributor tabs" bullet below — that's a *different*, older tab row for switching which distributor's data is displayed, not which content section is shown.
+- **Stat cards**: 4 total — 專屬訂單, 待出貨, Tutor數, 本期佣金. Sits between the distributor-selector tabs and the main content tabs (not inside any one tab's section — visible regardless of which content tab is active). 可套用商品 card is in the filter card row within 定價維護 section/tab.
 - **可套用商品 card**: onClick calls `window.distributorPortalSeedProducts()`, invokes `seedDistributorPriceBooksFromLessons` with `salePrice: 0`. Display formula: `seedableProductCount - priceBooks.length`. Prevent re-seed when count is 0.
 - **Price Book Modal (`#portal-pricebook-modal`)**:
   - Form fields (in order): 經銷商ID, 價格表ID, docId, 幣別, 售價, 活動價, 促銷開始, 促銷結束, 版本, 啟用
