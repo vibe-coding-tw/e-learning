@@ -140,17 +140,17 @@
         </div>
 
         <div class="d-pad-container">
-            <div id="btnUp" class="control-btn" data-t="255" data-s="0">
+            <div id="btnUp" class="control-btn" data-t="1000" data-s="0">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
             </div>
-            <div id="btnLeft" class="control-btn" data-t="0" data-s="-255">
+            <div id="btnLeft" class="control-btn" data-t="0" data-s="-1000">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
             </div>
             <div class="center-dot"></div>
-            <div id="btnRight" class="control-btn" data-t="0" data-s="255">
+            <div id="btnRight" class="control-btn" data-t="0" data-s="1000">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
             </div>
-            <div id="btnDown" class="control-btn" data-t="-255" data-s="0">
+            <div id="btnDown" class="control-btn" data-t="-1000" data-s="0">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
             </div>
         </div>
@@ -192,7 +192,7 @@
         // protocomm_nimble 將 0xff55 寫入 service_uuid bytes[12:13] → 6e40ff55-b5a3-f393-e0a9-e50e24dcca9e
         const CHARACTERISTIC_UUID     = '6e40ff55-b5a3-f393-e0a9-e50e24dcca9e';
         const STATUS_CHARACTERISTIC_UUID = '6e40ff53-b5a3-f393-e0a9-e50e24dcca9e';
-        const SEND_INTERVAL = 100; // 心跳定時器放寬至 100ms
+        const SEND_INTERVAL = 200; // 心跳定時器放寬至 100ms
 
         let device = null;
         let service = null;          // 保留 service 參考以供後續讀取診斷
@@ -208,7 +208,6 @@
         let lastThrottle = 0;
         let lastSteering = 0;
         let lastSendTime = 0;
-        let needReadback = false; // 標記是否需要在下次寫入後讀回診斷
 
         const btnConnect = document.getElementById('btnConnect');
         const statusEl = document.getElementById('status');
@@ -350,8 +349,7 @@
                 // 改為直接獲取特徵值以提高效率
                 characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
 
-                isConnected = true;
-                needReadback = true; // 下次寫入後讀回診斷
+                isConnected = true;  // ← 必須在 sendTimer 啟動前設定，否則 sendData() 直接 return
                 updateStatus('已連線', true);
                 sendTimer = setInterval(sendData, SEND_INTERVAL);
 
@@ -391,16 +389,7 @@
 
             for (let i = 0; i < MAX_RETRIES; i++) {
                 try {
-                    // 強制使用 writeValueWithResponse（GATT Write Request，帶 ACK 確認）。
-                    // 不使用 writeValueWithoutResponse：
-                    //   ESP32 NimBLE 的 protocomm characteristic 只設定了 WRITE（帶回應），
-                    //   Write Command（無回應）會被 NimBLE 層靜默丟棄，handler 不會被呼叫。
-                    if (typeof characteristic.writeValueWithResponse === 'function') {
-                        await characteristic.writeValueWithResponse(encodedPayload);
-                    } else {
-                        // 舊版 Web Bluetooth API 預設也是 write with response
-                        await characteristic.writeValue(encodedPayload);
-                    }
+                    await characteristic.writeValue(encodedPayload);
 
                     lastThrottle = currentThrottle;
                     lastSteering = currentSteering;
@@ -410,37 +399,14 @@
                     valTEl.textContent = currentThrottle;
                     valSEl.textContent = currentSteering;
 
-                    // 讀回 ESP32 回應（在 isWriting=true 鎖定內執行，防止 GATT race condition）
-                    if (needReadback) {
-                        needReadback = false;
-                        try {
-                            // 等 ESP32 handler 處理完成後再讀回
-                            await new Promise(r => setTimeout(r, 120));
-                            const buf = await characteristic.readValue();
-                            const text = new TextDecoder().decode(buf).replace(/\0+$/g, '').trim();
-                            if (text) {
-                                const resp = JSON.parse(text);
-                                appendDiag(
-                                    resp.ok
-                                        ? `✅ ESP32 收到: t=${resp.t}, s=${resp.s}`
-                                        : `❌ ESP32 拒絕: ${resp.error}${resp.error === 'low_battery' ? ' — 電池欠壓！' : ''}`,
-                                    resp.ok ? 'text-green-400' : 'text-red-400'
-                                );
-                            }
-                        } catch (re) {
-                            appendDiag(`📨 BLE 寫入完成（無法讀回：${re.message?.slice(0, 50)}）`, 'text-yellow-400');
-                        }
-                    }
-
                     // 成功寫入，直接退出重試迴圈
                     break;
                 } catch (err) {
                     console.warn(`BLE write failed (retry ${i + 1}/${MAX_RETRIES}):`, err);
-                    
-                    // 檢查是否為 GATT 斷線
-                    if (err.message && err.message.includes("GATT Server is disconnected")) {
+
+                    // 檢查 characteristic 是否已被斷線 handler 清空
+                    if (!characteristic) {
                         isConnected = false;
-                        characteristic = null;
                         clearInterval(sendTimer);
                         updateStatus('已斷線');
                         break;
@@ -470,7 +436,6 @@
                 currentThrottle = parseInt(btn.dataset.t);
                 currentSteering = parseInt(btn.dataset.s);
                 btn.classList.add('active');
-                needReadback = true; // 按下按鈕後強制讀回一次 ESP32 回應
                 sendData(); // 立即發送控制數值，不延遲
             };
 

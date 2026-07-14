@@ -164,6 +164,9 @@ const {
     loadDistributorScopedUsers
 } = require("./lib/distributor-utils");
 const {
+    evaluateDeleteDistributorBlockers
+} = require("./lib/delete-distributor-checks");
+const {
     isStarterCourseReference,
     resolveRegistrationTimestampMs,
     isAdminEmail,
@@ -1268,34 +1271,53 @@ const deleteDistributor = onCall(async (request) => {
     const distributorId = normalizeText(data?.distributorId || data?.id || "");
     assertRequiredValue(distributorId, "missing-distributor-id");
 
-    const [priceBooksSnap, ordersByDistributorSnap, ordersByOwnerSnap, ordersByPartnerSnap, scopedUsers, ruleSnap] = await Promise.all([
-        dbRef.collection("dealer_price_books").where("distributorId", "==", distributorId).limit(1).get(),
-        dbRef.collection("orders").where("distributorId", "==", distributorId).limit(1).get(),
-        dbRef.collection("orders").where("fulfillmentOwnerId", "==", distributorId).limit(1).get(),
-        dbRef.collection("orders").where("fulfillmentPartnerId", "==", distributorId).limit(1).get(),
-        loadDistributorScopedUsers(dbRef, distributorId),
-        dbRef.collection("region_distributor_rules").get()
-    ]);
+    try {
+        const [
+            priceBooksSnap,
+            ordersByDistributorSnap,
+            ordersByOwnerSnap,
+            ordersByPartnerSnap,
+            scopedUsers,
+            defaultRuleSnap,
+            backupRuleSnap
+        ] = await Promise.all([
+            dbRef.collection("dealer_price_books").where("distributorId", "==", distributorId).limit(1).get(),
+            dbRef.collection("orders").where("distributorId", "==", distributorId).limit(1).get(),
+            dbRef.collection("orders").where("fulfillmentOwnerId", "==", distributorId).limit(1).get(),
+            dbRef.collection("orders").where("fulfillmentPartnerId", "==", distributorId).limit(1).get(),
+            loadDistributorScopedUsers(dbRef, distributorId),
+            dbRef.collection("region_distributor_rules").where("defaultDistributorId", "==", distributorId).limit(1).get(),
+            dbRef.collection("region_distributor_rules").where("backupDistributorIds", "array-contains", distributorId).limit(1).get()
+        ]);
 
-    const blockingRules = [];
-    ruleSnap.forEach((doc) => {
-        const rule = doc.data() || {};
-        const backupDistributorIds = Array.isArray(rule.backupDistributorIds) ? rule.backupDistributorIds : [];
-        if (normalizeText(rule.defaultDistributorId || "") === distributorId || backupDistributorIds.some((item) => normalizeText(item || "") === distributorId)) {
-            blockingRules.push(doc.id);
+        const blockers = evaluateDeleteDistributorBlockers({
+            priceBooksSnap,
+            ordersByDistributorSnap,
+            ordersByOwnerSnap,
+            ordersByPartnerSnap,
+            scopedUsers,
+            defaultRuleSnap,
+            backupRuleSnap
+        });
+
+        if (blockers.blocked) {
+            throw new HttpsError(
+                "failed-precondition",
+                `請先清除關聯資料再刪除：價格表 ${blockers.summary.priceBooks}、操作者 ${blockers.summary.operators}、訂單 ${blockers.summary.orders}、區域規則 ${blockers.summary.regionRules}。`
+            );
         }
-    });
 
-    const hasOrders = !ordersByDistributorSnap.empty || !ordersByOwnerSnap.empty || !ordersByPartnerSnap.empty;
-    if (!priceBooksSnap.empty || hasOrders || scopedUsers.length > 0 || blockingRules.length > 0) {
-        throw new HttpsError(
-            "failed-precondition",
-            `請先清除關聯資料再刪除：價格表 ${priceBooksSnap.size > 0 ? "有" : "無"}、操作者 ${scopedUsers.length > 0 ? "有" : "無"}、訂單 ${hasOrders ? "有" : "無"}、區域規則 ${blockingRules.length > 0 ? "有" : "無"}。`
-        );
+        await dbRef.collection("distributors").doc(distributorId).delete();
+        return { success: true, distributorId };
+    } catch (error) {
+        if (error instanceof HttpsError) throw error;
+        logger.error("[deleteDistributor] unexpected failure", {
+            distributorId,
+            message: error?.message || String(error),
+            stack: error?.stack || null
+        });
+        throw new HttpsError("internal", "刪除經銷商時發生未預期錯誤，請稍後重試");
     }
-
-    await dbRef.collection("distributors").doc(distributorId).delete();
-    return { success: true, distributorId };
 });
 
 const assignDistributorOperator = onCall(async (request) => {

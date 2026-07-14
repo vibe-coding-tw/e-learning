@@ -110,6 +110,7 @@
 | `logisticsProvider` | string | no | Shipping / fulfillment integration used for the order |
 | `fulfillmentOwnerType` | string | yes | Usually `distributor` |
 | `fulfillmentOwnerId` | string | yes | Distributor or partner responsible for fulfillment |
+| `fulfillmentPartnerId` | string | no | Legacy compatibility field used by older fulfillment flows; when present it should match the fulfillment owner distributor |
 | `channelType` | string | yes | `direct`, `tutor_referral`, `distributor_storefront`, etc. |
 | `orderType` | string | yes | `hardware`, `service`, `bundle` |
 | `salePrice` | number | yes | Final hardware charge |
