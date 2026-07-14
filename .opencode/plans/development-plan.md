@@ -24,7 +24,10 @@
 e-learning/
 ├── public/                        # Firebase Hosting root (HTML/JS/CSS)
 │   ├── js/                        # Frontend modules (~20 files)
-│   └── graders/                   # Auto-grader scripts (bash)
+│   ├── graders/                   # Auto-grader scripts (bash)
+│   └── examples/                  # 教學範例頁面，含獨立子專案：ESP32-C3 遙控車
+│                                   # (d-pad.html / motor-config.html / wifi-config.html)
+│                                   # 韌體與變更記錄不在本 repo，見 public/examples/README.md
 ├── functions/                     # "default" codebase (proxies, cron, bootstrap)
 ├── functions-autograde/           # "autograde" codebase
 ├── functions-payment/             # "payment" codebase
