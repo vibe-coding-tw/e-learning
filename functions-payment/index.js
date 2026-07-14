@@ -368,6 +368,26 @@ exports.paymentNotify = onRequest(async (req, res) => {
     }
 });
 
+// 履約狀態列舉，對齊 docs/distributor/distributor-fulfillment-operations.md §7「Status Model」。
+// 2026-07-14 從只有 PENDING/SHIPPED/DELIVERED/CANCELLED 四個值擴充成完整 8 個階段，
+// 讓經銷商可以標記「已指派/已接單/包裝中/異常處理中」這些出貨前的中間狀態，
+// 不用只能在「待出貨」跟「已出貨」之間二選一。
+//
+// 這裡刻意只驗證「是不是合法列舉值」，不做嚴格的狀態轉換限制（例如不強制一定要按
+// PENDING→ASSIGNED→ACCEPTED...順序才能到 SHIPPED）：異常回報、人工修正、admin 直接
+// 更正錯誤登打，這些真實運營情境常常需要跳躍或倒退狀態，做成強制單向 FSM 反而會擋到
+// 正常操作。之後如果要收斂成嚴格 FSM，這裡是要改的地方。
+const ALLOWED_FULFILLMENT_STATUSES = new Set([
+    "PENDING",
+    "ASSIGNED",
+    "ACCEPTED",
+    "PACKING",
+    "SHIPPED",
+    "DELIVERED",
+    "EXCEPTION",
+    "CANCELLED"
+]);
+
 exports.paymentUpdateOrderFulfillmentStatus = onCall(async (request) => {
     const { auth, data } = request;
     if (!auth) throw new HttpsError("unauthenticated", "請先登入");
@@ -383,6 +403,12 @@ exports.paymentUpdateOrderFulfillmentStatus = onCall(async (request) => {
 
     if (!orderId) throw new HttpsError("invalid-argument", "missing-order-id");
     if (!fulfillmentStatus) throw new HttpsError("invalid-argument", "missing-fulfillment-status");
+    if (!ALLOWED_FULFILLMENT_STATUSES.has(fulfillmentStatus)) {
+        throw new HttpsError(
+            "invalid-argument",
+            `invalid-fulfillment-status: ${fulfillmentStatus} (allowed: ${Array.from(ALLOWED_FULFILLMENT_STATUSES).join(", ")})`
+        );
+    }
 
     const orderDoc = await db.collection("orders").doc(orderId).get();
     if (!orderDoc.exists) {

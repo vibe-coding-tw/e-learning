@@ -593,9 +593,13 @@
                     <label class="sm:col-span-2">
                         <div class="mb-1 text-[11px] font-bold text-slate-500" data-i18n="dp_fulfillment_status_label">出貨狀態</div>
                         <select id="portal-fulfill-status" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
-                            <option value="PENDING">PENDING (待出貨)</option>
+                            <option value="PENDING">PENDING (待派單)</option>
+                            <option value="ASSIGNED">ASSIGNED (已指派經銷商)</option>
+                            <option value="ACCEPTED">ACCEPTED (經銷商已接單)</option>
+                            <option value="PACKING">PACKING (備貨/包裝中)</option>
                             <option value="SHIPPED">SHIPPED (已出貨)</option>
                             <option value="DELIVERED">DELIVERED (已送達)</option>
+                            <option value="EXCEPTION">EXCEPTION (異常處理中)</option>
                             <option value="CANCELLED">CANCELLED (已取消)</option>
                         </select>
                     </label>
@@ -659,12 +663,15 @@
         </div>
     </div>
 
-    <script type="module" src="./js/distributor-portal.fe88bf1439ad.js"></script>
+    <script type="module" src="./js/distributor-portal.99e23051bff2.js"></script>
 
     <!-- 5 分頁（經銷商管理/定價維護/履約訂單/Tutor 綁定/月結報表）的純前端 tab 切換邏輯。
-         刻意獨立成一段 inline script，不碰 distributor-portal.fe88bf1439ad.js（那是
-         build 產出的 hash 檔名，直接改動下次重新 build 就會被覆蓋）。這裡只做顯示/隱藏，
-         不動任何資料載入邏輯，原本的 render 函式（populate table 等）完全不受影響。 -->
+         刻意獨立成一段 inline script，不直接改上面那個帶 hash 檔名的 script（那是
+         node scripts/fingerprint-static-assets.js 從 public/js/distributor-portal.js
+         自動產生的 fingerprint 產物，唯一編輯來源是無 hash 的 distributor-portal.js，
+         hash 檔名每次 re-fingerprint 都會變，不要手動維護或在註解裡硬編碼）。這裡只做
+         顯示/隱藏，不動任何資料載入邏輯，原本的 render 函式（populate table 等）完全
+         不受影響。 -->
     <script>
         (function () {
             const buttons = Array.prototype.slice.call(document.querySelectorAll('.portal-maintab-btn'));
@@ -689,10 +696,10 @@
             // 預設落在「經銷商定價維護」，這是大部分經銷商登入後最先要用的分頁。
             activate('pricing');
 
-            // 「經銷商管理」分頁只有 admin 能看，可見性由
-            // distributor-portal.fe88bf1439ad.js 非同步判斷角色後，切換
-            // #portal-distributor-admin-section 的 .hidden class 決定（見該檔案
-            // renderAdminSection() 附近）。這裡用 MutationObserver 盯著那個 class，
+            // 「經銷商管理」分頁只有 admin 能看，可見性由 public/js/distributor-portal.js
+            // 非同步判斷角色後，切換 #portal-distributor-admin-section 的 .hidden class
+            // 決定（見該檔案 renderAdminSection() 附近）。這裡用 MutationObserver 盯著那個
+            // class，
             // 同步「經銷商管理」分頁按鈕本身的顯示/隱藏，並在使用者其實不是 admin、
             // 但目前卡在 admin 分頁時，自動導回定價分頁，避免看到空白頁。
             const adminSection = document.getElementById('portal-distributor-admin-section');

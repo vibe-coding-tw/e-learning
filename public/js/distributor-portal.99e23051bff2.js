@@ -203,9 +203,15 @@ function updatePortalOverview() {
     const totalOrders = Number(orderSummary.totalOrders || state.orders.length || 0);
 
     const physicalOrders = state.orders.filter(o => o.hasPhysical);
+    // 2026-07-14：fulfillmentStatus 從 4 個值擴充成 8 個階段（PENDING/ASSIGNED/ACCEPTED/
+    // PACKING/SHIPPED/DELIVERED/EXCEPTION/CANCELLED，見 functions-payment/index.js 的
+    // ALLOWED_FULFILLMENT_STATUSES）。「待出貨」原本只算 status === 'PENDING'，現在改成
+    // 「還沒出貨、也還沒被取消」的任何中間狀態都算，不然新增的 ASSIGNED/ACCEPTED/PACKING/
+    // EXCEPTION 訂單會從這個統計數字裡消失，看起來像是「沒事要處理」但其實還卡在流程中。
+    const FINISHED_FULFILLMENT_STATUSES = new Set(['SHIPPED', 'DELIVERED', 'CANCELLED']);
     const pendingPhysicalCount = physicalOrders.filter(o => {
         const status = String(o.fulfillmentStatus || 'PENDING').toUpperCase();
-        return status === 'PENDING';
+        return !FINISHED_FULFILLMENT_STATUSES.has(status);
     }).length;
 
     setText('portal-order-count', String(totalOrders));
@@ -553,11 +559,15 @@ function renderOrders(items = []) {
 
     tbody.innerHTML = orders.map((order) => {
         const fulfillment = String(order.fulfillmentStatus || 'PENDING').toUpperCase();
-        const fulfillmentBadge = fulfillment === 'SHIPPED'
+        // 徽章顏色：SHIPPED/DELIVERED＝完成（綠）、PENDING/ASSIGNED/ACCEPTED/PACKING＝
+        // 進行中（黃）、EXCEPTION＝需要處理（紅）、CANCELLED 及其他未知值＝灰。
+        const fulfillmentBadge = (fulfillment === 'SHIPPED' || fulfillment === 'DELIVERED')
             ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-            : fulfillment === 'PENDING'
+            : (fulfillment === 'PENDING' || fulfillment === 'ASSIGNED' || fulfillment === 'ACCEPTED' || fulfillment === 'PACKING')
                 ? 'bg-amber-100 text-amber-700 border-amber-200'
-                : 'bg-slate-100 text-slate-600 border-slate-200';
+                : fulfillment === 'EXCEPTION'
+                    ? 'bg-rose-100 text-rose-700 border-rose-200'
+                    : 'bg-slate-100 text-slate-600 border-slate-200';
         const productNames = Array.isArray(order.items) && order.items.length ? order.items.join('、') : '—';
         const payerName = String(order.payerName || '').trim() || '—';
         const distributorName = String(order.distributorName || '').trim() || state.portal?.selectedDistributor?.name || order.distributorId || '—';

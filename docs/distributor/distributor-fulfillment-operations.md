@@ -107,6 +107,8 @@ Suggested fields:
 
 ## 7. Status Model
 
+> **實作狀態（2026-07-14）**：這個表格描述的 8 個狀態值，已經在**現有的** `orders.fulfillmentStatus` 欄位上實作（`functions-payment/index.js` 的 `paymentUpdateOrderFulfillmentStatus`，白名單驗證見 `ALLOWED_FULFILLMENT_STATUSES`），`distributor-portal.html` 的履約狀態下拉選單、待出貨統計、狀態徽章顏色都已對應更新。**但這不等於本文件描述的完整任務派單架構已經實作**——`fulfillment_tasks`／`fulfillment_partners`／`fulfillment_events`／`fulfillment_settlements` 這幾個獨立 collection、經銷商後台、自動派單規則都還是本節第 12 節列的「尚待補齊」，沒有變動。目前只是「一筆訂單有一個更細緻的狀態欄位可以標記到哪個階段」，不是「有一個獨立的派單/任務系統在追蹤每個履約任務」。之後如果真的要做 `fulfillment_tasks` 這一層，狀態值可以直接沿用這裡定義的 8 個，不用重新設計。
+
 | 狀態 | 說明 | 由誰更新 |
 | :--- | :--- | :--- |
 | `PENDING` | 已付款待派單 | 平台 |

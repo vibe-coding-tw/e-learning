@@ -791,8 +791,10 @@ async function enrichPriceBooksWithHiddenStatus(db, items) {
     });
 }
 
-const getDistributorPriceBooks = onCall(async (request) => {
-    const { auth, data } = request;
+// 2026-07-14：抽出成獨立的 core function，讓 onCall（callable，既有前端呼叫端不變）跟
+// 新增的 REST 層（onRequest，見本檔案下方 distributorApi）共用同一份邏輯，避免兩邊各寫
+//一次、之後又對不上。core function 的參數形狀刻意跟 onCall 的 request.{auth,data} 對齊。
+async function getDistributorPriceBooksCore(auth, data) {
     assertAuthenticated(auth);
 
     const db = admin.firestore();
@@ -828,10 +830,11 @@ const getDistributorPriceBooks = onCall(async (request) => {
     });
     const enriched = await enrichPriceBooksWithHiddenStatus(db, items);
     return { success: true, distributorId: "", items: enriched };
-});
+}
 
-const upsertDistributorPriceBook = onCall(async (request) => {
-    const { auth, data } = request;
+const getDistributorPriceBooks = onCall(async (request) => getDistributorPriceBooksCore(request.auth, request.data));
+
+async function upsertDistributorPriceBookCore(auth, data) {
     assertAuthenticated(auth);
 
     const db = admin.firestore();
@@ -897,7 +900,9 @@ const upsertDistributorPriceBook = onCall(async (request) => {
     }, { merge: true });
 
     return { success: true, priceBookId, distributorId, docId };
-});
+}
+
+const upsertDistributorPriceBook = onCall(async (request) => upsertDistributorPriceBookCore(request.auth, request.data));
 
 const deleteDistributorPriceBook = onCall(async (request) => {
     const { auth, data } = request;
@@ -1056,8 +1061,7 @@ const seedDistributorPriceBooksFromLessons = onCall(async (request) => {
     };
 });
 
-const getDistributorRoutingOptions = onCall(async (request) => {
-    const { auth, data } = request;
+async function getDistributorRoutingOptionsCore(auth, data) {
     const dbRef = admin.firestore();
     const runtimeConfig = await getContentRuntimeConfig(dbRef);
     const defaultRegion = runtimeConfig.defaultRegion || "US";
@@ -1122,10 +1126,16 @@ const getDistributorRoutingOptions = onCall(async (request) => {
             bindingUpdatedAt: userData.bindingUpdatedAt || null
         }
     };
-});
+}
 
-const resolveDistributorCheckoutQuoteFn = onCall(async (request) => {
-    const { auth, data } = request;
+// 這一個 core function 同時服務兩個文件裡描述的獨立端點：
+// GET /api/checkout/distributor-resolution 跟 GET /api/checkout/distributor-recommendation。
+// 實作上這兩個 doc 描述的「路由/推薦」邏輯從一開始就是同一個函式算出來的，response 裡的
+// eligibleDistributors 對應 resolution 端點的用途、recommendation 對應 recommendation
+// 端點的用途，一次回傳而不是拆兩個 function，見本檔案下方 distributorApi 的路由註解。
+const getDistributorRoutingOptions = onCall(async (request) => getDistributorRoutingOptionsCore(request.auth, request.data));
+
+async function resolveDistributorCheckoutQuoteCore(auth, data) {
     assertAuthenticated(auth);
     const dbRef = admin.firestore();
     const payload = data || {};
@@ -1148,10 +1158,11 @@ const resolveDistributorCheckoutQuoteFn = onCall(async (request) => {
         priceBookId: payload.priceBookId || ""
     });
     return { success: true, ...quote };
-});
+}
 
-const updateUserRoutingPreference = onCall(async (request) => {
-    const { auth, data } = request;
+const resolveDistributorCheckoutQuoteFn = onCall(async (request) => resolveDistributorCheckoutQuoteCore(request.auth, request.data));
+
+async function updateUserRoutingPreferenceCore(auth, data) {
     assertAuthenticated(auth);
 
     const dbRef = admin.firestore();
@@ -1207,8 +1218,162 @@ const updateUserRoutingPreference = onCall(async (request) => {
         preferredRegion,
         preferredDistributorId: safePreferredDistributorId
     };
-});
+}
 
+const updateUserRoutingPreference = onCall(async (request) => updateUserRoutingPreferenceCore(request.auth, request.data));
+
+// ============================================================================
+// REST API layer — 2026-07-14
+//
+// docs/distributor/distributor-tutor-api-contract.md 描述的是一組 REST endpoints
+// （GET/POST /api/...），但實際前端（distributor-portal.js 等）從頭到尾都是走 Firebase
+// httpsCallable，從來沒有真的存在過對應的 REST 路徑，文件跟實作對不上。
+//
+// 這裡補上文件描述的 REST 路徑，但刻意不動任何既有 callable：兩者都呼叫同一份
+// xxxCore(auth, data) 邏輯（見上面每個 core function），callable 前端呼叫端完全不用改。
+//
+// 已對齊文件、確實可用的路徑：
+//   GET/POST /api/admin/distributors/:distributorId/price-books
+//   GET      /api/checkout/distributor-resolution
+//   GET      /api/checkout/distributor-recommendation
+//   PATCH    /api/users/me/distributor-preference
+//   POST     /api/checkout/quote
+//
+// 文件裡另外兩個 endpoint 刻意沒有實作，因為找不到（或不安全直接曝光）對應的既有邏輯，
+// 不是漏做，是查證後判斷不該在這裡順手補：
+//   POST /api/admin/settlements/run
+//     — 對應的 calculateMonthlySharing()（functions-payment/lib/finance-callables.js）
+//       目前完全沒有被任何 onCall/onSchedule 呼叫，是死碼，而且內部會實際觸發
+//       distributor commission 撥款。在沒有先跟平台方確認過這段邏輯是否可信、是否
+//       該啟用之前，不應該只是為了對齊文件就順手接一個能觸發真實撥款的 REST 入口。
+//   GET /api/admin/tutors/:tutorId
+//     — 全部程式碼找不到 serviceSplitRuleId 欄位的任何讀寫，文件描述的「tutor профиль +
+//       distributor binding 查詢」沒有對應實作；現有的 getTutorConfigs() 語意完全不同
+//       （它是查某堂課的授權 tutor 清單，不是查某個 tutorId 的 profile），硬套會回傳
+//       錯誤語意的資料，比不做還糟。
+//
+// 部署細節：Cloud Function 本身叫 distributorApi，靠 firebase.json 的 hosting rewrite
+// 把 /api/** 導過來（見 firebase.json "rewrites"），region 跟其他 function 一致用
+// asia-east1（setGlobalOptions 已經設好，這裡不用重複指定）。
+
+function mapHttpsErrorToStatus(code) {
+    switch (code) {
+        case "invalid-argument":
+        case "failed-precondition":
+        case "out-of-range":
+            return 400;
+        case "unauthenticated":
+            return 401;
+        case "permission-denied":
+            return 403;
+        case "not-found":
+            return 404;
+        case "already-exists":
+        case "aborted":
+            return 409;
+        default:
+            return 500;
+    }
+}
+
+async function resolveRestAuth(req) {
+    const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer ")) return null;
+    const idToken = authHeader.slice(7).trim();
+    if (!idToken) return null;
+    try {
+        const decoded = await admin.auth().verifyIdToken(idToken);
+        return { uid: decoded.uid, token: decoded };
+    } catch (error) {
+        logger.warn("[distributorApi] invalid bearer token:", error.message || error);
+        return null;
+    }
+}
+
+function sendRestError(res, error) {
+    if (error instanceof HttpsError) {
+        const status = mapHttpsErrorToStatus(error.code);
+        return res.status(status).json({ error: error.message, code: error.code });
+    }
+    logger.error("[distributorApi] unhandled error:", error);
+    return res.status(500).json({ error: error.message || "internal error" });
+}
+
+const distributorApi = onRequest(async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "https://vibe-coding.tw");
+    res.set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") return res.status(204).send("");
+
+    const pathname = String(req.path || "/").replace(/\/+$/, "") || "/";
+
+    try {
+        const auth = await resolveRestAuth(req);
+
+        const priceBooksMatch = pathname.match(/^\/api\/admin\/distributors\/([^/]+)\/price-books$/);
+        if (priceBooksMatch) {
+            const distributorId = decodeURIComponent(priceBooksMatch[1]);
+            if (req.method === "GET") {
+                const result = await getDistributorPriceBooksCore(auth, { distributorId });
+                return res.json(result);
+            }
+            if (req.method === "POST") {
+                const body = req.body || {};
+                const result = await upsertDistributorPriceBookCore(auth, { ...body, distributorId });
+                return res.json(result);
+            }
+            return res.status(405).json({ error: "Method not allowed" });
+        }
+
+        if (pathname === "/api/checkout/distributor-resolution" && req.method === "GET") {
+            const result = await getDistributorRoutingOptionsCore(auth, {
+                region: req.query.region,
+                tutorId: req.query.tutorId,
+                promotionCode: req.query.promotionCode,
+                docId: req.query.docId,
+                customerId: req.query.customerId
+            });
+            // 文件裡這個端點的 response 只描述 distributorId/priceBookId/routingReason 三個
+            // 欄位，但實作是跟 distributor-recommendation 共用的同一份邏輯（見上面 core
+            // function 的註解），回傳內容比文件描述的更完整（eligibleDistributors 等），
+            // 這裡不刻意砍成文件那個窄版形狀，保留完整資訊給呼叫端自己取需要的欄位。
+            return res.json(result);
+        }
+
+        if (pathname === "/api/checkout/distributor-recommendation" && req.method === "GET") {
+            const result = await getDistributorRoutingOptionsCore(auth, {
+                region: req.query.region,
+                tutorId: req.query.tutorId,
+                docId: req.query.docId,
+                customerId: req.query.customerId
+            });
+            return res.json(result);
+        }
+
+        if (pathname === "/api/users/me/distributor-preference" && req.method === "PATCH") {
+            const body = req.body || {};
+            const result = await updateUserRoutingPreferenceCore(auth, body);
+            return res.json(result);
+        }
+
+        if (pathname === "/api/checkout/quote" && req.method === "POST") {
+            const body = req.body || {};
+            const result = await resolveDistributorCheckoutQuoteCore(auth, body);
+            return res.json(result);
+        }
+
+        if (pathname === "/api/admin/settlements/run" || pathname.match(/^\/api\/admin\/tutors\/[^/]+$/)) {
+            return res.status(501).json({
+                error: "not-implemented",
+                message: "This endpoint is documented but intentionally not wired up yet — see the comment above distributorApi in functions-admin/index.js for why."
+            });
+        }
+
+        return res.status(404).json({ error: "not-found", message: `No route for ${req.method} ${pathname}` });
+    } catch (error) {
+        return sendRestError(res, error);
+    }
+});
 
 
 
@@ -2553,6 +2718,7 @@ exports.upsertDistributorPriceBook = upsertDistributorPriceBook;
 exports.deleteDistributorPriceBook = deleteDistributorPriceBook;
 exports.seedDistributorPriceBooksFromLessons = seedDistributorPriceBooksFromLessons;
 exports.updateUserRoutingPreference = updateUserRoutingPreference;
+exports.distributorApi = distributorApi;
 exports.findClassroomInviteBinding = findClassroomInviteBinding;
 exports.findClassroomInviteBindingHttp = findClassroomInviteBindingHttp;
 exports.precheckGithubClassroomAccess = precheckGithubClassroomAccess;
