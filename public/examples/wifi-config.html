@@ -337,9 +337,7 @@
                 const statusText = decoder.decode(statusBuffer).replace(/\0+$/g, '').trim();
                 const status = statusText ? JSON.parse(statusText) : {};
 
-                const appName = status.app_name || device?.name || 'unknown';
                 const wifiState = status.wifi_state || 'unknown';
-                const bleState = status.ble_state || 'unknown';
                 // 只有 wifi_state === 'connected' 時韌體才會填 IP，其餘情況是空字串。
                 const wifiIp = status.wifi_ip || '';
 
@@ -349,15 +347,16 @@
                     ssidInput.value = status.wifi_ssid;
                 }
 
-                // mDNS 主機名稱固定等於 app_name（韌體端 build_mdns_hostname() 直接沿用
-                // board_build_device_name()），不管有沒有連線都能算出來；IP 則只有
-                // wifi_state === 'connected' 才有值。兩個都給，因為 mDNS .local 在某些
-                // 網路環境會解析失敗，IP 是更可靠的備援。
-                const mdnsInfo = appName !== 'unknown'
-                    ? ` · mDNS <b>${appName}.local</b>（http://${appName}.local/）`
-                    : '';
-                const ipInfo = wifiIp ? ` · IP <b>${wifiIp}</b>（http://${wifiIp}/）` : '';
-                logStatus(`✅ 已連線: ${appName} · Wi-Fi ${wifiState} · BLE ${bleState}${mdnsInfo}${ipInfo}`, 'success');
+                // 精簡狀態顯示：只留「BLE 已連線」+ Wi-Fi 目前狀態的白話說明 + IP 連結
+                // （IP 比 mDNS .local 更可靠，見 sendConfig() 註解，所以不重複顯示 mDNS）。
+                const wifiText = {
+                    connected: 'Wi-Fi 已連線',
+                    connecting: 'Wi-Fi 連線中…',
+                    ap: 'Wi-Fi 尚未連線（裝置目前是 AP 廣播模式）',
+                    disconnected: 'Wi-Fi 尚未連線',
+                }[wifiState] || 'Wi-Fi 狀態未知';
+                const ipLine = wifiIp ? `<br><a href="http://${wifiIp}/" target="_blank" class="underline">${wifiIp}</a>` : '';
+                logStatus(`✅ 已連線 · ${wifiText}${ipLine}`, 'success');
             } catch (err) {
                 console.warn('讀取狀態失敗 (可能韌體不支援讀取特性):', err);
                 logStatus(`✅ 已連線: ${device?.name || 'ESP32'}，但無法讀取目前狀態`, 'success');
