@@ -164,3 +164,56 @@
 - Payment provider and logistics provider are separate fields.
 - ECPay can be used as payment only, logistics only, or both.
 - Fulfillment ownership remains with the distributor even when ECPay is used.
+
+## 7. 2026-07-14 現況與待決事項
+
+這節記錄一次平台文件一致性審查（比對 `docs/distributor/` 底下的規格文件跟實際程式碼）後
+新增/確認的實作，以及審查中發現、需要有人拍板才能繼續的事項。詳細變更理由見對應的
+git commit message（`feat(distributor): extend fulfillment status to 8 stages + add REST
+API layer matching api-contract.md`）。
+
+### 7.1 已完成
+
+- **履約狀態擴充**：`orders.fulfillmentStatus` 從 4 個值擴充成完整 8 階段
+  （`PENDING`/`ASSIGNED`/`ACCEPTED`/`PACKING`/`SHIPPED`/`DELIVERED`/`EXCEPTION`/
+  `CANCELLED`，對齊 `distributor-fulfillment-operations.md` §7），`paymentUpdateOrderFulfillmentStatus`
+  加上白名單驗證，`distributor-portal.html` 的下拉選單/待出貨統計/狀態徽章同步更新。
+- **REST API 層**：`distributor-tutor-api-contract.md` 描述的 5 個端點（price-books
+  GET/POST、checkout/distributor-resolution、checkout/distributor-recommendation、
+  users/me/distributor-preference、checkout/quote）已經是真的可以打的 REST 路徑
+  （`functions-admin/index.js` 的 `distributorApi`），內部委派給既有 callable 的同一份
+  邏輯，callable 呼叫端沒有變動。
+
+### 7.2 待決事項（需要有人先做決定，不是純工程任務）
+
+- **`POST /api/admin/settlements/run` 要不要接上**：對應的 `calculateMonthlySharing()`
+  （`functions-payment/lib/finance-callables.js`）目前完全沒被任何 trigger 呼叫，是死碼，
+  而且會實際觸發經銷商佣金撥款。需要負責財務/結算流程的人確認這段邏輯現在能不能用、
+  要不要排程或做成 admin-only 手動觸發，才適合接上 REST 或 callable 入口。
+- **`GET /api/admin/tutors/:tutorId` 要不要真的做**：目前整個 codebase 沒有任何地方讀寫
+  `serviceSplitRuleId`，代表文件描述的「查 tutor profile + distributor binding」這個查詢
+  從來沒被實作過。如果確定要做，這是一個新功能（要決定 response 形狀、要不要曝光
+  `serviceSplitRuleId`），不是照現有邏輯包一層 REST 就能生出來的東西。
+
+### 7.3 已知範圍界線（不是漏做，是刻意先不做）
+
+- 這次只是幫**既有的** `orders.fulfillmentStatus` 單一欄位擴充列舉值。
+  `distributor-fulfillment-operations.md` 描述的完整任務派單架構
+  （`fulfillment_tasks`/`fulfillment_partners`/`fulfillment_events`/
+  `fulfillment_settlements` 四個獨立 collection、經銷商後台、自動派單規則、
+  結算對帳報表）完全沒有動，還是「尚待補齊」。
+- REST API 層只做過語法檢查（`node --check`）跟路由比對邏輯的獨立單元驗證，還沒有在
+  `firebase emulators:start` 或實際部署環境跑過一次真實 HTTP 請求。部署後、正式依賴
+  這層 REST API 之前，建議先手動測一輪。
+
+### 7.4 文件本身的殘留問題（次要，不影響功能）
+
+- `docs/distributor/distributor-tutor-ui-permissions.md` 還在描述「Admin Console /
+  Distributor Storefront / Tutor Dashboard」三個獨立頁面的概念模型，但實際是同一個
+  `distributor-portal.html` 用 tab + 角色隱藏做出來的單頁應用，概念層級對不上，需要
+  之後重寫這份文件的架構描述。
+- `.opencode/plans/courses/curriculum-migration-plan.md` 跟 `docs/courses/curriculum-migration-plan.md`
+  有一行連結路徑分岔（`.opencode/plans/courses/` 底下那批 2026-07-04 的快照檔案已經開始
+  跟 `docs/` 走鐘）。這批快照（`.opencode/plans/docs/`、`.opencode/plans/courses/` 底下
+  共 12 組同名檔案，11 組目前逐位元組相同）建議之後直接砍掉或改成 symlink，不然還會
+  繼續分岔。

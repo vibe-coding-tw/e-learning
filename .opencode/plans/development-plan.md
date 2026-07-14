@@ -59,6 +59,15 @@ e-learning/
 - **B2**: `investor-portal.html` 4 個硬編碼字串改 i18n
 - **C**: Re-fingerprint
 
+### distributor/distributor-tutor-development-tasks.md §7（2026-07-14 新增）
+
+一次文件一致性審查（`docs/` 對照實際程式碼）的後續事項，屬於 P4.3「文件同步機制」的
+一次實例。已完成履約狀態擴充（8 階段）與 REST API 層（對齊 `distributor-tutor-api-contract.md`）。
+還沒決定的：`settlements/run`（背後是會觸發真實撥款的死碼，需要財務流程 owner 拍板）、
+`tutors/:tutorId`（文件描述的功能從未實作，需要先定義要不要做）。另外還有兩處文件本身
+的殘留問題（`distributor-tutor-ui-permissions.md` 概念模型過時、`.opencode/plans/courses/`
+快照開始跟 `docs/courses/` 分岔）尚未處理。詳見該文件 §7。
+
 ---
 
 ## 開發計畫
@@ -101,7 +110,7 @@ e-learning/
 |------|------|--------|
 | P4.1 | 設定 staging Firebase project | high |
 | P4.2 | CI/CD pipeline 強化（pre-deploy lint/test） | medium |
-| P4.3 | 文件同步機制（docs/ 與實際 schema/behavior 一致） | low |
+| P4.3 | 文件同步機制（docs/ 與實際 schema/behavior 一致）— 2026-07-14 對 distributor 相關文件做過一次人工審查與修正，見 `distributor/distributor-tutor-development-tasks.md` §7；還沒有自動化機制，其餘 ~70 份文件未逐一審查 | low |
 | P4.4 | 自動化部署腳本標準化 | low |
 
 ---
