@@ -202,18 +202,34 @@ API layer matching api-contract.md`）。
   （`fulfillment_tasks`/`fulfillment_partners`/`fulfillment_events`/
   `fulfillment_settlements` 四個獨立 collection、經銷商後台、自動派單規則、
   結算對帳報表）完全沒有動，還是「尚待補齊」。
-- REST API 層只做過語法檢查（`node --check`）跟路由比對邏輯的獨立單元驗證，還沒有在
-  `firebase emulators:start` 或實際部署環境跑過一次真實 HTTP 請求。部署後、正式依賴
-  這層 REST API 之前，建議先手動測一輪。
+- REST API 層驗證進度（2026-07-14 更新）：`node --check` 語法檢查、`require()` 模組載入
+  （確認 44 個 export、`distributorApi`/`getDistributorPriceBooks`/`upsertDistributorPriceBook`
+  都存在且是函式）、以及**直接呼叫 `distributorApi(req, res)`（mock req/res，不經
+  Functions Framework）驗證不碰 Firestore 的路由邏輯**（OPTIONS preflight→204、未知路徑→404、
+  `settlements/run`/`tutors/:id` 的 501 stub、price-books 用不支援的 method→405，5 項全部
+  符合預期）都已完成。**還沒驗證到**：price-books GET/POST 實際讀寫、
+  checkout/distributor-resolution、checkout/quote、users/me/distributor-preference 這些會
+  真的碰 Firestore 的路徑，以及 Bearer token 驗證的成功/失敗路徑（`resolveRestAuth` 需要真的
+  Firebase Auth 才能簽發/驗證 token）。這是 sandbox 環境限制（每次 shell 呼叫都是全新、彼此
+  隔離的容器，無法跨呼叫保持 `firebase emulators:start` 常駐），不是選擇不測。部署後、正式
+  依賴這層 REST API 之前，需要使用者自己在本機跑 `bash start-emulator.sh` 做一次完整測試。
 
-### 7.4 文件本身的殘留問題（次要，不影響功能）
+### 7.4 文件本身的殘留問題（次要，不影響功能）— ✅ 2026-07-14 已處理
 
-- `docs/distributor/distributor-tutor-ui-permissions.md` 還在描述「Admin Console /
-  Distributor Storefront / Tutor Dashboard」三個獨立頁面的概念模型，但實際是同一個
-  `distributor-portal.html` 用 tab + 角色隱藏做出來的單頁應用，概念層級對不上，需要
-  之後重寫這份文件的架構描述。
-- `.opencode/plans/courses/curriculum-migration-plan.md` 跟 `docs/courses/curriculum-migration-plan.md`
-  有一行連結路徑分岔（`.opencode/plans/courses/` 底下那批 2026-07-04 的快照檔案已經開始
-  跟 `docs/` 走鐘）。這批快照（`.opencode/plans/docs/`、`.opencode/plans/courses/` 底下
-  共 12 組同名檔案，11 組目前逐位元組相同）建議之後直接砍掉或改成 symlink，不然還會
-  繼續分岔。
+- `docs/distributor/distributor-tutor-ui-permissions.md`：已重寫 §1 Page Map 與 §3.1-3.3，
+  對齊實際的 `distributor-portal.html` 單頁 + 5-tab 架構，並標註「Tutor Dashboard」（tutor
+  自助登入查看自己綁定/收益）從未實作，`tutor` tab 實際上是 distributor/admin 視角的唯讀
+  綁定清單。版本升到 `2026.07.14.V2`。
+- 重新盤點快照重複問題後發現範圍比原本記錄的小：`.opencode/plans/docs/` 底下 4 個檔案在
+  `docs/` 沒有對應同名檔案，不是重複；真正重複的只有 `.opencode/plans/courses/`
+  （10 個檔案 vs `docs/courses/`），其中 9 個逐位元組相同，1 個
+  （`curriculum-migration-plan.md`）有 1 行連結路徑分岔，已修正並補上 canonical-source
+  banner。新增 `.opencode/plans/courses/README.md` 說明這批快照的性質、逐檔比對結果，
+  以及為什麼沒有直接砍掉／改 symlink（sandbox 環境可以建立新 symlink，但無法 `rm`/`unlink`
+  任何既有檔案，`rm`/`os.remove()`/`find -delete`/`unlink` 全部回報 `EPERM`，只有
+  `mv`/rename 可用）——README 裡附了使用者可以在自己機器上執行的 `rm` + `ln -s` 腳本。
+- **新產生的殘留**：驗證 symlink 建立能力時，在 `.opencode/plans/courses/` 底下建立了一個
+  測試用 symlink，事後同樣因為 `EPERM` 刪不掉，已改名成
+  `__symlink_test.md.stale`（跟先前 `distributor-portal.fe88bf1439ad.js.stale` 是同一個
+  sandbox 限制），需要使用者之後手動刪除：
+  `rm .opencode/plans/courses/__symlink_test.md.stale`。

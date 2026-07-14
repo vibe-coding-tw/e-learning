@@ -46,18 +46,10 @@ e-learning/
 
 ## 待執行計畫
 
-### fix-dangling-import-and-i18n.md
-
-移除 `functions/index.js` 的 dangling `registerAdminExports` import，並將 `cart.html` 的 `localizeDistributorName` / `localizeRegionLabel` 改為 `window.t()` i18n 呼叫。共 5 steps + re-fingerprint。
-
-### remaining-improvements-phase1.md
-
-- **A1**: 移除 `functions-payment/index.js` 的 dead `Object.assign`
-- **A2**: 清除 `HttpsError` 死鏈（3 個檔案）
-- **A3**: 將 `functions-autograde/index.js` 的中段 import 移至檔案頂端
-- **B1**: `courses-management.html` 7 個 `alert()` 改 i18n
-- **B2**: `investor-portal.html` 4 個硬編碼字串改 i18n
-- **C**: Re-fingerprint
+> `fix-dangling-import-and-i18n.md` 與 `remaining-improvements-phase1.md` 兩份原本列在此處，
+> 已於 2026-07-02 完成並經 2026-07-14 重新以 `grep` 對照程式碼逐項複驗（dangling import、
+> `Object.assign`、`HttpsError` 死鏈、alert() i18n、cart.html isEn 分支皆已在程式碼中消失/
+> 替換），故從「待執行」移除。內容仍保留在各自檔案中作為歷史紀錄。
 
 ### distributor/distributor-tutor-development-tasks.md §7（2026-07-14 新增）
 
@@ -74,17 +66,20 @@ e-learning/
 
 ### Phase 1 — 立即清理
 
-| Step | 內容 | 檔案 | 依賴 |
-|------|------|------|------|
-| P1.1 | 移除 dangling import | `functions/index.js` | 無 |
-| P1.2 | cart.html i18n 轉換 + 新增 i18n keys | `public/cart.html`, `public/js/i18n-helper.js` | 無 |
-| P1.3 | 移除 dead Object.assign | `functions-payment/index.js` | 無 |
-| P1.4 | 清除 HttpsError 死鏈 | `functions/index.js`, `functions/lib/index-export-registry.js`, `functions/lib/index-export-autograde.js` | 無 |
-| P1.5 | 中段 import 移至頂端 | `functions-autograde/index.js` | 無 |
-| P1.6 | courses-management.html alert i18n | `public/courses-management.html`, `public/js/i18n-helper.js` | 無 |
-| P1.7 | investor-portal.html i18n | `public/investor-portal.html`, `public/js/i18n-helper.js` | 無 |
-| P1.8 | Re-fingerprint | — | P1.2, P1.6, P1.7 |
-| P1.9 | 環境檢查 + emulator smoke test | — | P1.1~P1.8 |
+> ✅ P1.1〜P1.8 已完成（2026-07-02 套用，2026-07-14 複驗程式碼確認無殘留）。P1.9 因 sandbox
+> 環境限制（無法跨 tool call 保持 `firebase emulators:start` 常駐）尚未執行，需使用者本機跑一次。
+
+| Step | 內容 | 檔案 | 依賴 | 狀態 |
+|------|------|------|------|------|
+| P1.1 | 移除 dangling import | `functions/index.js` | 無 | ✅ |
+| P1.2 | cart.html i18n 轉換 + 新增 i18n keys | `public/cart.html`, `public/js/i18n-helper.js` | 無 | ✅ |
+| P1.3 | 移除 dead Object.assign | `functions-payment/index.js` | 無 | ✅ |
+| P1.4 | 清除 HttpsError 死鏈 | `functions/index.js`, `functions/lib/index-export-registry.js`, `functions/lib/index-export-autograde.js` | 無 | ✅ |
+| P1.5 | 中段 import 移至頂端 | `functions-autograde/index.js` | 無 | ✅ |
+| P1.6 | courses-management.html alert i18n | `public/courses-management.html`, `public/js/i18n-helper.js` | 無 | ✅ |
+| P1.7 | investor-portal.html i18n | `public/investor-portal.html`, `public/js/i18n-helper.js` | 無 | ✅ |
+| P1.8 | Re-fingerprint | — | P1.2, P1.6, P1.7 | ✅ |
+| P1.9 | 環境檢查 + emulator smoke test | — | P1.1~P1.8 | ⚠️ 待使用者本機執行 |
 
 ### Phase 2 — 程式碼健康度
 

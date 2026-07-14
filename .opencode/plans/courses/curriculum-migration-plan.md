@@ -1,6 +1,12 @@
 # Curriculum Migration Plan
 **Last updated**: 2026-06-14
 
+> **2026-07-14 note**: this file is a 2026-07-02 point-in-time snapshot copy of
+> `docs/courses/curriculum-migration-plan.md`. **`docs/courses/curriculum-migration-plan.md`
+> is canonical** — check there for the current version. This copy had drifted (one relative
+> link was wrong, fixed 2026-07-14); see `.opencode/plans/courses/README.md` for why these
+> snapshots exist and their known limitations.
+
 這份文件的目的，是在**不影響現有上課進行**的前提下，逐步把既有課程平滑遷移到新的課綱主線。
 
 核心原則：
@@ -287,4 +293,4 @@ pilot 穩定後，再逐段擴大到整條課程線。
 - [`docs/car-basic-esp32-motor-curriculum-plan.md`](./car-basic-esp32-motor-curriculum-plan.md)
 - [`docs/car-advanced-vision-ai-curriculum-plan.md`](./car-advanced-vision-ai-curriculum-plan.md)
 - [`docs/course-management-runbook.md`](../course-management-runbook.md)
-- [`docs/course-ui-runtime-spec.md`](../course-ui-runtime-spec.md)
+- [`docs/courses/course-ui-runtime-spec.md`](../../../docs/courses/course-ui-runtime-spec.md)
