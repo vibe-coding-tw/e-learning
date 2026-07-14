@@ -72,7 +72,7 @@
 | `promoPrice` | number | no | Campaign price |
 | `effectiveFrom` | timestamp | yes | **Legacy.** Main-price start time; kept in the schema for backward compatibility but not exposed in the price book modal UI (`distributor-portal.html`) — see AGENT.md §11 |
 | `effectiveTo` | timestamp | no | **Legacy.** Main-price end time; same status as `effectiveFrom` above |
-| `promoEffectiveFrom` | timestamp | no | Promo period start; required together with `promoEffectiveTo` whenever `promoPrice` is set. Written/read by `distributor-portal.fe88bf1439ad.js` and shown as "促銷開始" in the price book modal |
+| `promoEffectiveFrom` | timestamp | no | Promo period start; required together with `promoEffectiveTo` whenever `promoPrice` is set. Written/read by `public/js/distributor-portal.js` and shown as "促銷開始" in the price book modal |
 | `promoEffectiveTo` | timestamp | no | Promo period end; same pairing rule as `promoEffectiveFrom` above, shown as "促銷結束" in the modal |
 | `isActive` | boolean | yes | Active flag |
 | `version` | string | yes | Price book version |
