@@ -453,6 +453,22 @@
             btn.addEventListener('pointerleave', endHandler);
         });
 
+        // 保險機制：觸控裝置上手指滑出按鈕範圍時，pointerup/pointercancel 有時不會
+        // 正確送達按鈕本身（尤其快速滑動或多點觸控），導致 currentThrottle/currentSteering
+        // 卡在非零值、心跳持續送出「還在按」的指令，馬達鬆手後不會停。
+        // 用 document 層級事件 + 視窗失焦/切分頁都強制送出停止指令，確保鬆手一定停。
+        function forceStopAll() {
+            if (currentThrottle === 0 && currentSteering === 0) return;
+            currentThrottle = 0;
+            currentSteering = 0;
+            dpadButtons.forEach(b => b.classList.remove('active'));
+            sendData();
+        }
+        document.addEventListener('pointerup', forceStopAll);
+        document.addEventListener('pointercancel', forceStopAll);
+        window.addEventListener('blur', forceStopAll);
+        document.addEventListener('visibilitychange', () => { if (document.hidden) forceStopAll(); });
+
         // 「重新讀取」按鈕：手動重新讀取 ESP32 status，確認馬達是否真的被啟用
         document.getElementById('btnReread').addEventListener('click', () => {
             readESP32Status();

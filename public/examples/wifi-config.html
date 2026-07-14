@@ -340,12 +340,24 @@
                 const appName = status.app_name || device?.name || 'unknown';
                 const wifiState = status.wifi_state || 'unknown';
                 const bleState = status.ble_state || 'unknown';
+                // 只有 wifi_state === 'connected' 時韌體才會填 IP，其餘情況是空字串。
+                const wifiIp = status.wifi_ip || '';
 
+                // 密碼基於安全考量，韌體的 status 端點永遠不會回傳，所以只能帶回 SSID，
+                // 密碼欄位保持空白，需要使用者自己重新輸入。
                 if (status.wifi_ssid) {
                     ssidInput.value = status.wifi_ssid;
                 }
 
-                logStatus(`✅ 已連線: ${appName} · Wi-Fi ${wifiState} · BLE ${bleState}`, 'success');
+                // mDNS 主機名稱固定等於 app_name（韌體端 build_mdns_hostname() 直接沿用
+                // board_build_device_name()），不管有沒有連線都能算出來；IP 則只有
+                // wifi_state === 'connected' 才有值。兩個都給，因為 mDNS .local 在某些
+                // 網路環境會解析失敗，IP 是更可靠的備援。
+                const mdnsInfo = appName !== 'unknown'
+                    ? ` · mDNS <b>${appName}.local</b>（http://${appName}.local/）`
+                    : '';
+                const ipInfo = wifiIp ? ` · IP <b>${wifiIp}</b>（http://${wifiIp}/）` : '';
+                logStatus(`✅ 已連線: ${appName} · Wi-Fi ${wifiState} · BLE ${bleState}${mdnsInfo}${ipInfo}`, 'success');
             } catch (err) {
                 console.warn('讀取狀態失敗 (可能韌體不支援讀取特性):', err);
                 logStatus(`✅ 已連線: ${device?.name || 'ESP32'}，但無法讀取目前狀態`, 'success');
@@ -379,7 +391,28 @@
                 // 韌體的 wifi-set 端點期待單次 payload，使用換行分隔 SSID / Password
                 await window.bleClient.writeTo(WIFI_SET_CHARACTERISTIC_UUID, encoder.encode(`${ssid}\n${password}`));
 
-                logStatus('✅ 設定已送出，裝置會自行套用並可能重新連線。', 'success');
+                logStatus('✅ 設定已送出，正在斷開 BLE 讓裝置專心連 Wi-Fi...', 'success');
+
+                // ESP32-C3 只有一顆天線，BLE 和 Wi-Fi 共用無線電、靠時間切片共存。
+                // 如果送出設定後繼續保持 BLE 連線，持續的 BLE 連線會佔用無線電時間，
+                // 干擾 STA 的 WPA 認證交握，導致連線一直逾時重試、永遠連不上
+                // （實測 serial log 出現 "Coexist: Wi-Fi connect fail, apply reconnect
+                // coex policy"）。所以送出設定後主動斷線，把無線電讓給 Wi-Fi 用。
+                // 等待 300ms 讓韌體端把 BLE 回應送完，避免斷線切斷還沒送達的 ACK。
+                await new Promise(r => setTimeout(r, 300));
+                if (window.bleClient.connected) {
+                    window.bleClient.disconnect();
+                    // disconnect() 會觸發 onDisconnect callback，蓋成「❌ 已斷線」的紅字訊息；
+                    // 稍等一下讓那則訊息先跑完，再蓋回這裡真正想呈現的說明文字。
+                    await new Promise(r => setTimeout(r, 150));
+                }
+                logStatus('✅ 設定已送出，BLE 已斷開讓裝置專心連 Wi-Fi。請等待約 15-20 秒後，再按「連線 BLE」重新連線查看是否已連上並取得 IP（瀏覽器需要你手動點擊才能觸發配對選擇視窗，無法自動重連）。', 'success');
+
+                // 清空欄位：SSID 下次連線時 readStatus() 會從裝置狀態自動帶回來；
+                // 密碼基於安全考量，韌體從不透過 status 回傳，所以密碼欄位清空後
+                // 需要使用者自己重新輸入（不是忘記存，是設計上就不回傳明文密碼）。
+                ssidInput.value = '';
+                passwordInput.value = '';
 
             } catch (err) {
                 logStatus(`❌ 傳送失敗: ${err.message}`, 'error');

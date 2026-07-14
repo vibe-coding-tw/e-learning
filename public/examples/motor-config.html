@@ -121,6 +121,29 @@
             box-shadow: inset 2px 2px 4px #171d26, inset -2px -2px 4px #3b4555, 0 0 5px #4f46e5;
         }
 
+        /* D-Pad 即時控制按鈕 */
+        .dpad-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2d3748;
+            border-radius: 14px;
+            font-size: 1.5rem;
+            color: #9ca3af;
+            box-shadow: 3px 3px 6px #171d26, -3px -3px 6px #273142;
+            cursor: pointer;
+            user-select: none;
+            touch-action: none;
+            transition: all 0.1s ease;
+        }
+
+        .dpad-btn:active,
+        .dpad-btn.active {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff;
+            box-shadow: inset 2px 2px 4px #171d26, inset -2px -2px 4px #3b4555;
+        }
+
         /* 返回主選單按鈕 */
         .menu-button {
             display: block;
@@ -162,6 +185,35 @@
             </div>
         </div>
 
+        <!-- D-Pad 即時控制：邊調參數邊測試，不用切換頁面 -->
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-xl border border-purple-500/20 space-y-4 mb-6">
+            <div class="flex items-center justify-between border-b border-gray-700 pb-2 mb-2">
+                <h3 class="text-lg font-bold text-purple-300">即時控制 (D-Pad)</h3>
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider">連線後即可使用</span>
+            </div>
+            <div id="dpad-container" class="relative w-[200px] h-[200px] mx-auto grid grid-cols-3 grid-rows-3 gap-2 opacity-40 pointer-events-none">
+                <div></div>
+                <div id="btnUp" class="dpad-btn col-start-2 row-start-1">▲</div>
+                <div></div>
+                <div id="btnLeft" class="dpad-btn col-start-1 row-start-2">◀</div>
+                <div class="col-start-2 row-start-2 rounded-full bg-gray-900 border border-gray-700"></div>
+                <div id="btnRight" class="dpad-btn col-start-3 row-start-2">▶</div>
+                <div></div>
+                <div id="btnDown" class="dpad-btn col-start-2 row-start-3">▼</div>
+                <div></div>
+            </div>
+            <div class="flex justify-around text-center pt-2">
+                <div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wider">Throttle</div>
+                    <div id="dpadValT" class="text-xl font-mono font-bold text-indigo-400">0</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wider">Steering</div>
+                    <div id="dpadValS" class="text-xl font-mono font-bold text-emerald-400">0</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 設定參數表單 -->
         <div class="space-y-6">
             <!-- Acceleration Zone -->
@@ -189,14 +241,24 @@
                     <div class="space-y-1">
                         <label for="rampAccelStepT"
                             class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">漸進步長 (Ramp Speed)</label>
-                        <input type="number" id="rampAccelStepT" value="" min="0" required placeholder="例如: 10">
+                        <input type="number" id="rampAccelStepT" value="" min="0" required placeholder="例如: 30">
                     </div>
                     <div class="space-y-1">
                         <label for="pwmEffectiveLimitT"
                             class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">輸出上限 (PWM Limit)</label>
-                        <input type="number" id="pwmEffectiveLimitT" value="" min="0" required placeholder="例如: 255">
+                        <input type="number" id="pwmEffectiveLimitT" value="" min="0" required placeholder="例如: 1000">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="driveTrim"
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">驅動微調 (Drive Trim)</label>
+                        <input type="number" id="driveTrim" value="" required placeholder="例如: 0">
                     </div>
                 </div>
+
+                <label class="flex items-center gap-2 cursor-pointer pt-1">
+                    <input type="checkbox" id="driveInverted" class="w-4 h-4 accent-indigo-500">
+                    <span class="text-sm text-gray-300">驅動反向 (Drive Inverted)</span>
+                </label>
             </div>
 
             <!-- Steering / Trim Zone -->
@@ -217,14 +279,19 @@
                         <input type="number" id="controlTimeoutS" value="" min="0" required placeholder="例如: 2000">
                     </div>
                     <div class="space-y-1">
-                        <label for="deadband"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">死區 (Deadband) PWM</label>
-                        <input type="number" id="deadband" value="" min="0" required placeholder="例如: 10">
+                        <label for="pwmStartKickS"
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">啟動推力 (Kick PWM)</label>
+                        <input type="number" id="pwmStartKickS" value="" min="0" required placeholder="例如: 120">
                     </div>
                     <div class="space-y-1">
-                        <label for="driveTrim"
-                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">驅動微調 (Drive Trim)</label>
-                        <input type="number" id="driveTrim" value="" required placeholder="例如: 0">
+                        <label for="rampAccelStepS"
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">漸進步長 (Ramp Speed)</label>
+                        <input type="number" id="rampAccelStepS" value="" min="0" required placeholder="例如: 30">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="pwmEffectiveLimitS"
+                            class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">輸出上限 (PWM Limit)</label>
+                        <input type="number" id="pwmEffectiveLimitS" value="" min="0" required placeholder="例如: 1000">
                     </div>
                     <div class="space-y-1">
                         <label for="steeringTrim"
@@ -232,20 +299,20 @@
                         <input type="number" id="steeringTrim" value="" required placeholder="例如: 0">
                     </div>
                 </div>
+
+                <label class="flex items-center gap-2 cursor-pointer pt-1">
+                    <input type="checkbox" id="steeringInverted" class="w-4 h-4 accent-emerald-500">
+                    <span class="text-sm text-gray-300">轉向反向 (Steering Inverted)</span>
+                </label>
             </div>
 
-            <!-- Invert Zone -->
+            <!-- Shared Zone：兩軸共用的參數，目前只有 deadband -->
             <div class="bg-gray-800 p-4 rounded-2xl shadow-xl border border-yellow-500/20 space-y-3">
-                <h3 class="text-sm font-bold text-yellow-300 border-b border-gray-700 pb-2">反向設定 (Invert)</h3>
-                <div class="flex items-center gap-6">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="driveInverted" class="w-4 h-4 accent-indigo-500">
-                        <span class="text-sm text-gray-300">驅動反向 (Drive Inverted)</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="steeringInverted" class="w-4 h-4 accent-emerald-500">
-                        <span class="text-sm text-gray-300">轉向反向 (Steering Inverted)</span>
-                    </label>
+                <h3 class="text-sm font-bold text-yellow-300 border-b border-gray-700 pb-2">共用設定 (Shared · 同時套用兩軸)</h3>
+                <div class="space-y-1">
+                    <label for="deadband"
+                        class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">死區 (Deadband) PWM</label>
+                    <input type="number" id="deadband" value="" min="0" required placeholder="例如: 20">
                 </div>
             </div>
 
@@ -279,6 +346,9 @@
         const MOTOR_SERVICE_UUID    = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
         // protocomm_nimble 將 0xff54 寫入 service_uuid bytes[12:13] → 6e40ff54-b5a3-f393-e0a9-e50e24dcca9e
         const MOTOR_CHARACTERISTIC_UUID = '6e40ff54-b5a3-f393-e0a9-e50e24dcca9e';
+        // 0xff55 → motor-control 端點（跟 d-pad.html 共用同一個 BLE service，同一次連線即可）
+        const MOTOR_CONTROL_CHARACTERISTIC_UUID = '6e40ff55-b5a3-f393-e0a9-e50e24dcca9e';
+        const DPAD_SEND_INTERVAL = 200;
         const DEVICE_ID_KEY = 'ble_motor_config_device_id';
 
         // --- DOM Elements ---
@@ -293,6 +363,9 @@
             { id: 'pwmEffectiveLimitT', key: 'pwm_limit'          },
             { id: 'rampAccelStepT',    key: 'ramp_speed'          },
             { id: 'pwmStartKickT',     key: 'kick_pwm'            },
+            { id: 'pwmEffectiveLimitS', key: 'steering_pwm_limit' },
+            { id: 'rampAccelStepS',    key: 'steering_ramp_speed' },
+            { id: 'pwmStartKickS',     key: 'steering_kick_pwm'   },
             { id: 'deadband',          key: 'deadband'            },
             { id: 'driveTrim',         key: 'drive_trim'          },
             { id: 'steeringTrim',      key: 'steering_trim'       },
@@ -321,6 +394,7 @@
                 btnSend.disabled = true;
                 btnSend.textContent = '讀取/傳送 馬達 Ramping 調校';
             }
+            updateDpadEnabled(isConnected);
         }
 
         function clearInputFields() {
@@ -444,6 +518,142 @@
                 btnSend.disabled = false;
             }
         }
+
+        // --- D-Pad 即時控制 (與 motor-config 共用同一個 BLE 連線/service，寫到 motor-control 特徵值) ---
+
+        const dpadContainer = document.getElementById('dpad-container');
+        const dpadValT = document.getElementById('dpadValT');
+        const dpadValS = document.getElementById('dpadValS');
+        const dpadButtons = document.querySelectorAll('.dpad-btn');
+
+        let dpadThrottle = 0;
+        let dpadSteering = 0;
+        let dpadSendTimer = null;
+        let dpadIsWriting = false;
+        let dpadPendingSend = false;
+        let dpadLastThrottle = 0;
+        let dpadLastSteering = 0;
+        let dpadLastSendTime = 0;
+
+        const DPAD_MAP = {
+            btnUp:    { t: 1000,  s: 0 },
+            btnDown:  { t: -1000, s: 0 },
+            btnLeft:  { t: 0,     s: -1000 },
+            btnRight: { t: 0,     s: 1000 },
+        };
+
+        async function sendDpadData() {
+            if (!window.bleClient.connected) return;
+
+            // 若正在寫入，標記待補發並返回，防止 GATT 衝突（跟 d-pad.html 同一套邏輯）
+            if (dpadIsWriting) {
+                dpadPendingSend = true;
+                return;
+            }
+
+            const now = Date.now();
+            const timeSinceLastSend = now - dpadLastSendTime;
+            const valuesChanged = (dpadThrottle !== dpadLastThrottle || dpadSteering !== dpadLastSteering);
+
+            if (!valuesChanged && timeSinceLastSend < DPAD_SEND_INTERVAL && !dpadPendingSend) {
+                return;
+            }
+
+            dpadIsWriting = true;
+            dpadPendingSend = false;
+
+            const payload = `${dpadThrottle},${dpadSteering}`;
+            const encodedPayload = new TextEncoder().encode(payload);
+            const MAX_RETRIES = 3;
+
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    await window.bleClient.writeTo(MOTOR_CONTROL_CHARACTERISTIC_UUID, encodedPayload);
+
+                    dpadLastThrottle = dpadThrottle;
+                    dpadLastSteering = dpadSteering;
+                    dpadLastSendTime = Date.now();
+
+                    dpadValT.textContent = dpadThrottle;
+                    dpadValS.textContent = dpadSteering;
+                    break;
+                } catch (err) {
+                    console.warn(`D-Pad write failed (retry ${i + 1}/${MAX_RETRIES}):`, err);
+
+                    if (!window.bleClient.connected) {
+                        break;
+                    }
+                    if (i < MAX_RETRIES - 1) {
+                        await new Promise(resolve => setTimeout(resolve, (i + 1) * 50));
+                    }
+                }
+            }
+
+            dpadIsWriting = false;
+            if (dpadPendingSend) {
+                setTimeout(sendDpadData, 10);
+            }
+        }
+
+        function updateDpadEnabled(isConnected) {
+            if (isConnected) {
+                dpadContainer.classList.remove('opacity-40', 'pointer-events-none');
+                if (!dpadSendTimer) {
+                    dpadSendTimer = setInterval(sendDpadData, DPAD_SEND_INTERVAL);
+                }
+            } else {
+                dpadContainer.classList.add('opacity-40', 'pointer-events-none');
+                clearInterval(dpadSendTimer);
+                dpadSendTimer = null;
+                dpadThrottle = 0;
+                dpadSteering = 0;
+                dpadValT.textContent = '0';
+                dpadValS.textContent = '0';
+            }
+        }
+
+        dpadButtons.forEach(btn => {
+            const cfg = DPAD_MAP[btn.id];
+            if (!cfg) return;
+
+            const startHandler = (e) => {
+                e.preventDefault();
+                if (!window.bleClient.connected) return;
+                dpadThrottle = cfg.t;
+                dpadSteering = cfg.s;
+                btn.classList.add('active');
+                sendDpadData();
+            };
+
+            const endHandler = (e) => {
+                e.preventDefault();
+                dpadThrottle = 0;
+                dpadSteering = 0;
+                btn.classList.remove('active');
+                sendDpadData();
+            };
+
+            btn.addEventListener('pointerdown', startHandler);
+            btn.addEventListener('pointerup', endHandler);
+            btn.addEventListener('pointercancel', endHandler);
+            btn.addEventListener('pointerleave', endHandler);
+        });
+
+        // 保險機制：觸控裝置上手指滑出按鈕範圍時，pointerup/pointercancel 有時不會
+        // 正確送達按鈕本身，導致 dpadThrottle/dpadSteering 卡在非零值、心跳持續送出
+        // 「還在按」的指令，鬆手後馬達不會停。用 document 層級事件 + 視窗失焦/切分頁
+        // 都強制送出停止指令，確保鬆手一定停。
+        function dpadForceStopAll() {
+            if (dpadThrottle === 0 && dpadSteering === 0) return;
+            dpadThrottle = 0;
+            dpadSteering = 0;
+            dpadButtons.forEach(b => b.classList.remove('active'));
+            sendDpadData();
+        }
+        document.addEventListener('pointerup', dpadForceStopAll);
+        document.addEventListener('pointercancel', dpadForceStopAll);
+        window.addEventListener('blur', dpadForceStopAll);
+        document.addEventListener('visibilitychange', () => { if (document.hidden) dpadForceStopAll(); });
 
         // --- Initialization ---
 
