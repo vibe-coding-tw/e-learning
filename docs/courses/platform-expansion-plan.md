@@ -600,8 +600,10 @@ Validation matrix (Phase A):
 
 Validation note (2026-05-26):
 
-- `functions/private_courses/*.html` now uniformly loads hashed runtime asset:
-  - `/js/course-shared.1151b0620be1.js`
+- `functions/private_courses/*.html` now uniformly loads the fingerprinted
+  `/js/course-shared.<hash>.js` runtime asset (hash regenerates on every
+  `node scripts/fingerprint-static-assets.js` run — do not hardcode a specific hash here,
+  it will go stale immediately; this line already had a stale one removed 2026-07-15).
 - This confirms fingerprint pipeline is active for private course pages.
 - Remaining Phase A gate items require live-browser manual confirmation on production routes.
 

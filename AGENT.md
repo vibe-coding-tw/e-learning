@@ -93,7 +93,7 @@
 - **Promotion Code 綁定流程**：學生在開始作業前，必須確認或輸入導師的 Promotion code/Email。驗證成功後：
   - 系統將導師資料寫入 `users.unitAssignments[unitId]` 與 `users.unitAssignmentMeta[unitId]`。
   - 後端會自動調用 `backfillTutorReferralForPaidOrders` 回填歷史已付款訂單的 `referredTutorEmail` 與 `referralLink` 欄位，確保該訂單交易與導師正確關聯。
-- **分潤計算**：每月 1 號的 `calculateMonthlySharing` 排程工作會讀取已成功付款並回填導師之訂單項目，依據對應的 `revenue_share_policies` 計算並分發利潤明細至 `revenue_share_credits`。
+- **分潤計算**：`calculateMonthlySharing`（`functions-payment/lib/finance-callables.js`）實作了讀取已成功付款並回填導師之訂單項目、依據對應的 `revenue_share_policies` 計算並分發利潤明細至 `revenue_share_credits` 的邏輯，**但目前不是排程工作**——它只是一個普通 async function，沒有 `onSchedule` 包裝、沒有任何 trigger 呼叫它，是死碼（2026-07-15 審查確認；先前版本這裡誤寫成「每月 1 號的排程工作」）。是否要接上 REST/callable 入口或恢復排程，需要負責財務/結算流程的人先確認這段邏輯現在能不能用，詳見 `.opencode/plans/distributor/distributor-tutor-development-tasks.md` §7.2。
 - **導師推廣連結**：歷史 `verifyReferralLink` 仍支援解析舊的作業邀請連結並綁定，但在購物車前台已顯示忽略提示。導師推廣請優先引導學員在作業視窗中直接輸入 Promotion code。
 - **作業連結遷移原則**：內部命名與新流程一律維持 `assignment` / `legacyAssignmentUrl`，舊的 `classroom*` / `githubClassroom*` 僅作相容層、歷史資料與 API 契約回傳欄位使用；除非已確認所有 consumer 完成切換，否則不得直接移除 legacy fallback。
 - **ID 歸一化**：在進行任何導師單元設定、鏈結解析與訂單回填比對時，必須對 `unitId` 執行 ID 歸一化（如移除 `.html` 後綴）。

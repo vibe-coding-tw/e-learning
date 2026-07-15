@@ -1,5 +1,17 @@
 # Functions Module Overview
-**Updated**: 2026-06-27
+**Updated**: 2026-07-15
+
+> **2026-07-15 correction**: the module table below (§1) previously listed several modules
+> under `functions/lib/*.js` paths that don't exist there — `revenue-sharing.js`,
+> `ledger-engine.js`, `investor-ledger.js`, `order-utils.js`, `tutor-utils.js` all
+> actually live in `shared-function-core/` (imported as `vibe-functions-core/*` from every
+> codebase, not `functions/lib/`). `functions/emailService.js` doesn't exist — email
+> sending is `shared-function-core/email-service.js`. `shared-reminders/` as a top-level
+> directory doesn't exist — it's a single file, `functions-admin/lib/shared-reminders.js`.
+> `functions-admin/dashboard-utils.js` was missing a path segment — it's
+> `functions-admin/lib/dashboard-utils.js`. Paths below have been corrected against the
+> actual filesystem; verify with `ls` again if this drifts further, since this table is
+> hand-maintained and has gone stale at least once already.
 
 > 這份文件是 `functions/` 內部模組的快速地圖，方便理解哪些 helper 已經拆出去、各模組負責什麼，以及現在 `index.js` 還扮演什麼角色。
 
@@ -17,23 +29,23 @@
 
 | 模組 | 負責範圍 |
 |---|---|
-| `functions/lib/revenue-sharing.js` | 月結分潤、policy snapshot、credit/payout/balance 組裝 |
-| `functions/lib/ledger-engine.js` | 全域 canonical event、double-entry postings、snapshot / report 產生 |
-| `functions/lib/investor-ledger.js` | 投資人事件流水、資產負債快照、valuation snapshot、credit/年度結算、股利與餘額彙整 |
-| `functions/lib/assignment-flow.js` | 作業提交、autograde payload、intervention 同步、history / repo assignment 組裝 |
-| `functions/lib/tutor-utils.js` | 導師 config、申請紀錄、推薦碼、name resolver、dashboard tutor config 彙整 |
-| `functions/lib/order-utils.js` | 訂單 / 物流 / referral link / order normalization / shipment reminder / order authorization |
+| `shared-function-core/revenue-sharing.js`（`vibe-functions-core/revenue-sharing`） | 月結分潤、policy snapshot、credit/payout/balance 組裝 |
+| `shared-function-core/ledger-engine.js`（`vibe-functions-core/ledger-engine`） | 全域 canonical event、double-entry postings、snapshot / report 產生 |
+| `shared-function-core/investor-ledger.js`（`vibe-functions-core/investor-ledger`） | 投資人事件流水、資產負債快照、valuation snapshot、credit/年度結算、股利與餘額彙整 |
+| `shared-function-core/assignment-flow-core.js`（`vibe-functions-core/assignment-flow-core`） | 作業提交、autograde payload、intervention 同步、history / repo assignment 組裝共用邏輯；`functions-admin/lib/assignment-flow.js` 是另一個檔案，放 admin 專屬的組裝邏輯 |
+| `shared-function-core/tutor-utils.js`（`vibe-functions-core/tutor-utils`） | 導師 config、申請紀錄、推薦碼、name resolver、dashboard tutor config 彙整 |
+| `shared-function-core/order-utils.js`（`vibe-functions-core/order-utils`） | 訂單 / 物流 / referral link / order normalization / shipment reminder / order authorization |
 | `functions/lib/proxy-utils.js` | callable / request proxy wrappers，統一轉發 admin / payment / autograde 入口 |
 | `functions/lib/index-export-registry.js` | `functions/index.js` 的資料驅動 export 註冊與少量特殊 handler 組裝 |
 | `functions/lib/functions-bootstrap.js` | `functions/index.js` 的 `.env` 載入、環境檢查與 V2 global options 初始化 |
 | `functions/lib/user-triggers.js` | 新用戶建立後的 Firestore 初始化與 welcome email handler |
 | `functions/lib/ecpay-webhooks.js` | ECPay 綠界回傳 webhooks / redirect handler |
-| `functions-admin/dashboard-utils.js` | dashboard / user row / tutor rows / hardware orders / hidden section 的共用聚合 helper |
-| `functions-admin/index.js` | Admin lessons metadata、system config / cache purge、admin pricing / distributor admin、distributor routing / portal、admin dashboard、student assignment tutor report、debug tutor auth、admin tutor assignment actions、tutor config save/read、assignment access / tutor application admin flow、revenue share policy / investor ledger admin entrypoints |
+| `functions-admin/lib/dashboard-utils.js` | dashboard / user row / tutor rows / hardware orders / hidden section 的共用聚合 helper |
+| `functions-admin/index.js` | Admin lessons metadata、system config / cache purge、admin pricing / distributor admin、distributor routing / portal、admin dashboard、student assignment tutor report、debug tutor auth（2026-07-15 起需要 admin 驗證，見安全修復記錄）、admin tutor assignment actions、tutor config save/read、assignment access / tutor application admin flow、revenue share policy / investor ledger admin entrypoints、`distributorApi` REST 路由（2026-07-14 新增，見 `docs/distributor/distributor-tutor-api-contract.md`） |
 | `functions-payment/lib/content-runtime.js` | course runtime / lesson lookup / runtime injection / metadata_lessons fetch |
 | `functions-payment/index.js` | Payment / shipment / order-fulfillment / serveCourse / payment authorization handlers |
-| `shared-reminders/` | `remindAdminPendingAssignments` / `remindAdminPendingShipments` 的共用 runner，供 `functions/` 與 `functions-admin/` 共用 |
-| `functions/emailService.js` | Email template helper 與各通知流程 |
+| `functions-admin/lib/shared-reminders.js` | `remindAdminPendingAssignments` / `remindAdminPendingShipments`——是單一檔案（不是目錄），目前只有 `functions-admin/index.js` 使用，不是跨 `functions/`/`functions-admin/` 共用 |
+| `shared-function-core/email-service.js`（`vibe-functions-core/email-service`） | Email template helper 與各通知流程；`functions/emailService.js` 這個路徑不存在 |
 
 If a shared ledger layer is introduced later, it should live in a separate helper such as `functions/lib/ledger-engine.js` or a similarly named module, and the domain helpers above should consume it rather than reimplementing event posting logic.
 

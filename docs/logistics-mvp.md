@@ -126,7 +126,7 @@ This section is **expansion design**, not fully finished production functionalit
 
 - **已部分完成**
   - `cart.html` 在英文 / 非中文介面下，已切換為國際地址輸入表單。
-  - `functions/index.js` 的 `initiatePayment` 與 Stripe 分支已支援 `logistics.isInternational` 與國際地址結構。
+  - `functions-payment/index.js`（不是 `functions/index.js`——`initiatePayment` 實際定義在這裡）的 `initiatePayment` 與 Stripe 分支已支援 `logistics.isInternational` 與國際地址結構。
   - `orders.logistics` 已預留國際直郵欄位。
 - **尚未正式完成**
   - EasyPost / Shippo / DHL / FedEx / EMS 等國際物流 API 聚合。
