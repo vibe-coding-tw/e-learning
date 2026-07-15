@@ -45,6 +45,10 @@
 - 過期或未付費使用者不得存取付費單元的作業指引與設定介面。
 - 比對任何單元 ID 時，必須先做歸一化處理，例如移除 `.html` 後綴。
 - 課程卡片僅在該課程下所有關聯單元 `authorized: true` 時才視為「已開通」。
+- **結帳金額與付款 webhook 一律不信任客戶端輸入（2026-07-15 起）**：
+  - `initiatePayment`（`functions-payment/index.js`）不再接受客戶端傳來的 `amount` 或購物車項目的 `price` 作為實際收費依據。每個項目都會呼叫 `resolveDistributorCheckoutQuote()`（`shared-function-core/distributor-pricing.js`，透過 `vibe-functions-core/distributor-pricing` 引入）重新從 `dealer_price_books`／`metadata_lessons` 算出權威價格；任何項目算不出價格就直接拒絕整筆結帳。新增修改結帳金額計算邏輯時，禁止走回「相信客戶端傳來的 price/amount」這條路。
+  - ECPay `paymentNotify` 與 Stripe `stripeWebhook` 都必須驗證簽章才能把訂單標記為 `SUCCESS`：前者是 `CheckMacValue`（`HASH_KEY`/`HASH_IV` 有設定時強制檢查，不可因為 payload 沒帶這個欄位就跳過驗證），後者是 `Stripe-Signature`（`STRIPE_WEBHOOK_SECRET` 未設定時整個端點回 503，不得放行未驗證的請求）。這兩個 webhook 的 handler 直接決定訂單是否被標記為已付款、進而開通課程/商品存取權，修改前務必理解這一點。
+  - 詳見 `.opencode/plans/security-fixes-2026-07-15.md`。
 
 ---
 
@@ -311,4 +315,4 @@ Done in this session:
 - **Persistence**: Data saved to `.emulator-data/` on exit, restored on start. `.emulator-data/` gitignored.
 - **CORS fix**: All emulator connections in `firebase-local.js` use `localhost` instead of `127.0.0.1`
 
-> 最後更新：2026-06-30
+> 最後更新：2026-07-15
