@@ -9,14 +9,15 @@ const { setGlobalOptions } = require("firebase-functions/v2");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 global.__vibeFirebaseAdmin = admin;
 
 const {
     normalizeCurrency
 } = require("./lib/pricing-utils");
 const {
-    resolveCartPrice
-} = require("./lib/pricing-utils");
+    resolveDistributorCheckoutQuote
+} = require("vibe-functions-core/distributor-pricing");
 const {
     APP_BASE_URL,
     PROJECT_ID,
@@ -74,6 +75,36 @@ setGlobalOptions({
 const db = admin.firestore();
 const financeCallables = require("./lib/finance-callables");
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
+const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
+
+// Manual implementation of Stripe's webhook signature scheme (see
+// https://docs.stripe.com/webhooks#verify-manually) — avoids adding the full `stripe`
+// npm SDK as a dependency just for this one check, and mirrors this codebase's existing
+// pattern of doing payment-gateway signature verification by hand (see
+// generateCheckMacValue for ECPay). Header format: "t=<unix seconds>,v1=<hex hmac>[,v0=...]".
+// Signed payload is "<timestamp>.<raw body>", HMAC-SHA256 with the webhook secret.
+function verifyStripeSignature(rawBody, signatureHeader, secret, toleranceSeconds = 300) {
+    if (!rawBody || !signatureHeader || !secret) return false;
+    const parts = String(signatureHeader).split(",").reduce((acc, part) => {
+        const [k, v] = part.split("=");
+        if (k && v) acc[k.trim()] = v.trim();
+        return acc;
+    }, {});
+    const timestamp = parts.t;
+    const v1 = parts.v1;
+    if (!timestamp || !v1) return false;
+
+    const ageSeconds = Math.abs(Math.floor(Date.now() / 1000) - Number(timestamp));
+    if (!Number.isFinite(ageSeconds) || ageSeconds > toleranceSeconds) return false;
+
+    const signedPayload = `${timestamp}.${rawBody.toString("utf8")}`;
+    const expected = crypto.createHmac("sha256", secret).update(signedPayload, "utf8").digest("hex");
+    try {
+        return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(v1, "hex"));
+    } catch (_) {
+        return false;
+    }
+}
 
 exports.initiatePayment = onCall(async (request) => {
     const { data, auth } = request;
@@ -82,31 +113,64 @@ exports.initiatePayment = onCall(async (request) => {
     }
 
     const {
-        amount = 0,
         cartDetails = {},
         logistics = null,
         gateway = "ECPAY",
         returnUrl = `${APP_BASE_URL}/payment-return.html`,
         locale = "zh-TW",
-        currency = ""
+        currency = "",
+        region = "",
+        distributorId: topLevelDistributorId = "",
+        referredTutorEmail = "",
+        referralLink = ""
     } = data || {};
+    // NOTE (2026-07-15 security fix): `amount` used to be accepted directly from the
+    // client and trusted as the checkout total (falling back to a client-supplied
+    // per-item `price` otherwise). Both were fully attacker-controlled — nothing
+    // cross-checked them against `dealer_price_books` / lesson pricing, so a client
+    // could pay any amount for any cart. `amount` is no longer read from `data` at
+    // all; every item's price is re-resolved server-side below via the same
+    // `resolveDistributorCheckoutQuote()` the frontend already calls when building
+    // the cart (see public/cart.html's checkout handler), so the client-supplied
+    // price snapshot is never trusted for the actual charge.
 
     const normalizedItems = JSON.parse(JSON.stringify(cartDetails || {}));
     const itemNames = [];
     let calculatedAmount = 0;
     let detectedCurrency = normalizeUpper(currency || "");
+    const lessons = await getLessons(db, { currencyHint: currency });
 
     for (const [itemId, item] of Object.entries(normalizedItems)) {
         const quantity = Math.max(1, Number(item.quantity || 1));
-        const resolvedItemPrice = resolveCartPrice(item);
-        const itemAmount = Number(resolvedItemPrice.amount || item.price || item.amount || 0);
-        const itemCurrency = normalizeUpper(
-            resolvedItemPrice.currency ||
-            item.currency ||
-            item.price_currency ||
-            item.priceCurrency ||
-            ""
-        );
+        const docId = normalizeText(item.sourceUnitId || item.unitId || itemId);
+        if (!docId) {
+            throw new HttpsError("invalid-argument", `購物車項目缺少 docId：${itemId}`);
+        }
+
+        const quote = await resolveDistributorCheckoutQuote(db, {
+            lessons,
+            docId,
+            region,
+            tutorId: item.referredTutorEmail || referredTutorEmail || "",
+            promotionCode: item.referralLink || referralLink || "",
+            customerId: auth.uid,
+            distributorId: item.distributorId || topLevelDistributorId || "",
+            priceBookId: item.priceBookId || "",
+            locale
+        });
+
+        if (!quote.price || quote.state !== "resolved") {
+            logger.warn("[initiatePayment] price re-resolution failed, rejecting checkout", {
+                uid: auth.uid, itemId, docId, state: quote.state, reason: quote.reason
+            });
+            throw new HttpsError(
+                "failed-precondition",
+                `無法確認商品「${item.name || item.title || itemId}」的目前價格，請重新整理購物車後再試一次。`
+            );
+        }
+
+        const itemAmount = Number(quote.price.amount || 0);
+        const itemCurrency = normalizeUpper(quote.price.currency || "");
 
         if (!detectedCurrency && itemCurrency) {
             detectedCurrency = itemCurrency;
@@ -117,11 +181,21 @@ exports.initiatePayment = onCall(async (request) => {
         }
         detectedCurrency = itemCurrency || detectedCurrency;
 
+        // Overwrite the item's price fields with the server-verified amount so
+        // downstream code (order record, receipts, ECPay item description) can't
+        // be fed back the client's original, unverified snapshot.
+        item.price = itemAmount;
+        item.currency = itemCurrency;
+        item.price_currency = itemCurrency;
+        item.distributorId = quote.distributorId || item.distributorId || "";
+        item.priceBookId = quote.priceBook?.id || item.priceBookId || "";
+        item.pricingVersion = quote.price.pricingVersion || item.pricingVersion || "";
+
         calculatedAmount += itemAmount * quantity;
         itemNames.push(`${item.name || item.title || itemId}x${quantity}`);
     }
 
-    const finalAmount = Math.max(0, Math.round(Number(amount || calculatedAmount) || calculatedAmount));
+    const finalAmount = Math.max(0, Math.round(calculatedAmount));
     detectedCurrency = normalizeUpper(detectedCurrency || currency || "TWD");
     const hasPhysical = hasPhysicalOrderItem(normalizedItems);
     const logisticsInfo = hasPhysical ? normalizeLogisticsData(logistics || {}) : null;
@@ -318,12 +392,26 @@ exports.paymentNotify = onRequest(async (req, res) => {
             return res.status(400).send("0|Missing order id");
         }
 
-        if (HASH_KEY && HASH_IV && payload.CheckMacValue) {
+        // SECURITY (2026-07-15 fix): this used to be `if (HASH_KEY && HASH_IV &&
+        // payload.CheckMacValue)` — if the caller simply omitted CheckMacValue, the
+        // signature check was skipped entirely and the order below was trusted as a
+        // real ECPay notification. Now: if HASH_KEY/HASH_IV are configured (the normal
+        // case), CheckMacValue is REQUIRED and verified; a request missing it is
+        // rejected the same as one with a wrong value. Only when the merchant secrets
+        // themselves aren't configured (e.g. a bare-bones local/dev setup with no
+        // ECPay credentials at all) does this fall back to accepting unverified
+        // requests — matches this codebase's existing "no secret configured" dev
+        // fallback pattern elsewhere, but no longer lets a *configured* deployment be
+        // bypassed by simply leaving the field off.
+        if (HASH_KEY && HASH_IV) {
             const expectedAlgos = ECPAY_CHECK_MAC_ALGO === "sha256"
                 ? ["sha256", "md5"]
                 : ["md5", "sha256"];
-            const expected = expectedAlgos.find((algo) => generateCheckMacValue(payload, HASH_KEY, HASH_IV, algo) === payload.CheckMacValue);
+            const expected = payload.CheckMacValue
+                ? expectedAlgos.find((algo) => generateCheckMacValue(payload, HASH_KEY, HASH_IV, algo) === payload.CheckMacValue)
+                : null;
             if (!expected) {
+                logger.warn("[paymentNotify] rejected: missing or invalid CheckMacValue", { orderId, hasCheckMacValue: !!payload.CheckMacValue });
                 return res.status(400).send("0|Invalid CheckMacValue");
             }
         }
@@ -477,8 +565,30 @@ exports.paymentMarkOrderShipped = onCall(async (request) => {
     }
 });
 
-exports.stripeWebhook = onRequest(async (req, res) => {
+exports.stripeWebhook = onRequest({ secrets: [STRIPE_WEBHOOK_SECRET] }, async (req, res) => {
     try {
+        // SECURITY (2026-07-15 fix): this endpoint used to have NO signature
+        // verification at all — any POST with a matching `orderId` anywhere in the
+        // body would mark that order SUCCESS and grant course/product access, with no
+        // proof it came from Stripe. This is a fail-closed check: if
+        // STRIPE_WEBHOOK_SECRET isn't configured, or the signature doesn't verify,
+        // the request is rejected before anything is read from `req.body` for order
+        // mutation. See verifyStripeSignature() above — manual HMAC check per Stripe's
+        // documented scheme, using req.rawBody (Firebase Functions v2 preserves the
+        // raw request buffer specifically for this purpose; Content-Type must NOT be
+        // JSON-parsed before this check, hence using req.rawBody, not req.body, as the
+        // signed payload).
+        const webhookSecret = STRIPE_WEBHOOK_SECRET.value();
+        if (!webhookSecret) {
+            logger.error("[stripeWebhook] STRIPE_WEBHOOK_SECRET not configured — rejecting all requests. Run `firebase functions:secrets:set STRIPE_WEBHOOK_SECRET` with the signing secret from the Stripe dashboard before Stripe checkout can be used in production.");
+            return res.status(503).json({ received: false, error: "stripe_webhook_not_configured" });
+        }
+        const signatureHeader = req.headers["stripe-signature"];
+        if (!verifyStripeSignature(req.rawBody, signatureHeader, webhookSecret)) {
+            logger.warn("[stripeWebhook] rejected: missing or invalid Stripe-Signature header");
+            return res.status(400).json({ received: false, error: "invalid_signature" });
+        }
+
         const payload = req.body || {};
         const eventType = normalizeText(payload.type || payload.eventType || "");
         const object = payload.data?.object || payload.object || {};

@@ -529,9 +529,27 @@ const bindTutorByPromotionCode = onCall(async (request) => {
     }
 });
 
+// SECURITY (2026-07-15 fix): this was a completely unauthenticated public endpoint
+// that returned any user's full Firestore document (PII + tutorConfigs) by email query
+// param, defaulting to a hardcoded personal email if none was given. Now requires a
+// valid Bearer token (via resolveRestAuth, same helper distributorApi below uses) that
+// resolves to an admin, requires an explicit `email` query param (no default), and no
+// longer returns the full document — only the `tutorConfigs` field this was actually
+// meant to inspect.
 const debugTutorAuth = onRequest(async (req, res) => {
-    const email = req.query.email || "rover.k.chen@gmail.com";
     try {
+        const auth = await resolveRestAuth(req);
+        if (!auth) {
+            return res.status(401).json({ error: "unauthenticated" });
+        }
+        const role = await getRole(auth.uid, auth.token?.email || "");
+        if (role !== "admin") {
+            return res.status(403).json({ error: "admin role required" });
+        }
+        const email = normalizeText(req.query.email || "");
+        if (!email) {
+            return res.status(400).json({ error: "missing required query param: email" });
+        }
         const usersSnap = await db.collection("users").where("email", "==", email).get();
         if (usersSnap.empty) return res.status(404).send("User document not found.");
         const doc = usersSnap.docs[0];
@@ -539,8 +557,7 @@ const debugTutorAuth = onRequest(async (req, res) => {
         return res.status(200).json({
             email,
             docId: doc.id,
-            tutorConfigs: data.tutorConfigs || {},
-            fullDoc: data
+            tutorConfigs: data.tutorConfigs || {}
         });
     } catch (err) {
         return res.status(500).send(err.message);

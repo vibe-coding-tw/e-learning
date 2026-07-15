@@ -51,6 +51,16 @@ e-learning/
 > `Object.assign`、`HttpsError` 死鏈、alert() i18n、cart.html isEn 分支皆已在程式碼中消失/
 > 替換），故從「待執行」移除。內容仍保留在各自檔案中作為歷史紀錄。
 
+### security-fixes-2026-07-15.md（2026-07-15 新增）
+
+全系統審查（程式碼 + 文件，e-learning 與 esp32c3-vehicle 兩個 repo）發現的付款/驗證安全漏洞。
+4 項全部已修復：`initiatePayment` 金額改成後端用 `resolveDistributorCheckoutQuote()` 重新計算、
+ECPay `paymentNotify` 的 `CheckMacValue` 改成強制驗證、`stripeWebhook` 加上簽章驗證（fail closed，
+需要使用者設定 `STRIPE_WEBHOOK_SECRET` secret 才能真正收款）、`debugTutorAuth` 加上 admin 驗證。
+詳見該文件。**使用者待辦**：`firebase functions:secrets:set STRIPE_WEBHOOK_SECRET`（否則
+`stripeWebhook` 會持續回 503，Stripe 付款完全無法使用——這比目前完全沒驗證安全，但代表 Stripe
+金流目前是停用狀態，需要使用者決定何時要啟用）。
+
 ### distributor/distributor-tutor-development-tasks.md §7（2026-07-14 新增）
 
 一次文件一致性審查（`docs/` 對照實際程式碼）的後續事項，屬於 P4.3「文件同步機制」的
