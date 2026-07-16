@@ -1509,6 +1509,13 @@ function applyStartUnitModernTheme() {
                 .unit-nav { padding: 16px !important; }
                 .ms-breadcrumb { padding: 8px 16px !important; }
             }
+            .border-t.pt-3 > span {
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                display: block !important;
+                line-height: 1.5 !important;
+            }
         `;
         document.head.appendChild(style);
     } catch (e) {
@@ -2573,6 +2580,30 @@ function enhanceAssignmentEntryButtons() {
                 overlay.classList.add('hidden');
             }
         });
+
+        // Clean up assignment duplicate descriptions and duplicate assignment numbers in the footer span.
+        const borderT = card.querySelector('.border-t');
+        if (borderT) {
+            const span = borderT.querySelector('span');
+            if (span) {
+                const rawText = span.textContent || '';
+                const idxZh = rawText.indexOf('【');
+                if (idxZh !== -1) {
+                    span.textContent = rawText.substring(0, idxZh).trim();
+                } else {
+                    const idxEn = rawText.indexOf('[');
+                    if (idxEn !== -1) {
+                        span.textContent = rawText.substring(0, idxEn).trim();
+                    } else {
+                        // Fallback using regex if brackets are missing
+                        const match = rawText.match(/^(⏱\s*[\s\S]*?\d+\s*mins?)/iu);
+                        if (match) {
+                            span.textContent = match[1].trim();
+                        }
+                    }
+                }
+            }
+        }
 
         const groupEl = card.parentElement;
         if (groupEl) {

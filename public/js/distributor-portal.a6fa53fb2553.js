@@ -22,8 +22,10 @@ const state = {
     priceBookFilter: 'all',
     priceBookSearch: '',
     selectedPriceBookId: '',
-    editingDistributorId: ''
+    editingDistributorId: '',
+    _adminMode: false
 };
+window.__distributorPortalState = state;
 
 function el(id) {
     return document.getElementById(id);
@@ -244,8 +246,14 @@ function renderDistributorTabs(distributors = []) {
     const summary = el('portal-distributor-tabs-summary');
     if (!tabs || !summary) return;
 
+    const isAdmin = String(state.portal?.role || '').trim().toLowerCase() === 'admin';
+    const isDistributorMode = !state._adminMode;
+    const activeDistributorId = isDistributorMode
+        ? String(state.selectedDistributorId || state.distributorId || '').trim()
+        : '';
+
     const items = Array.isArray(distributors) ? distributors : [];
-    if (!items.length) {
+    if (!items.length && !isAdmin) {
         tabs.innerHTML = `<div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">${window.t('dp_no_distributors_tab')}</div>`;
         summary.textContent = window.t('dp_no_distributors_summary');
         return;
@@ -253,11 +261,13 @@ function renderDistributorTabs(distributors = []) {
 
     summary.textContent = items.length > 1
         ? window.t('dp_distributor_count_multi').replace('{count}', String(items.length))
-        : window.t('dp_distributor_count_single').replace('{name}', distributorLabel(items[0]));
+        : items.length === 1
+            ? window.t('dp_distributor_count_single').replace('{name}', distributorLabel(items[0]))
+            : '';
 
-    tabs.innerHTML = items.map((distributor) => {
+    const distributorButtons = items.map((distributor) => {
         const id = String(distributor.id || '').trim();
-        const active = id && id === String(state.selectedDistributorId || state.distributorId || '').trim();
+        const active = isDistributorMode && id && id === activeDistributorId;
         return `
             <button
                 onclick="window.distributorPortalSelectDistributor('${escapeHtml(id)}')"
@@ -268,6 +278,18 @@ function renderDistributorTabs(distributors = []) {
             </button>
         `;
     }).join('');
+
+    const adminButton = isAdmin
+        ? `<button
+            onclick="window.distributorPortalSwitchToAdmin()"
+            class="rounded-full border px-4 py-2 text-xs font-bold transition ${!isDistributorMode ? 'border-rose-600 bg-rose-600 text-white shadow-sm' : 'border-rose-200 bg-white text-rose-600 hover:bg-rose-50'}"
+            title="經銷商管理"
+          >
+            經銷商管理
+          </button>`
+        : '';
+
+    tabs.innerHTML = distributorButtons + adminButton;
 }
 
 function getSelectedDistributor() {
@@ -285,6 +307,46 @@ function formatDistributorOperatorCount(distributorId = '') {
     return String((state.distributorOperators || []).filter((item) => String(item.distributorId || '').trim() === selectedId).length);
 }
 
+function showDistributorModal(open = true) {
+    const modal = el('portal-distributor-modal');
+    if (!modal) return;
+    modal.classList.toggle('hidden', !open);
+    modal.style.display = open ? 'flex' : 'none';
+    modal.setAttribute('aria-hidden', String(!open));
+    document.body.classList.toggle('modal-open', open);
+    if (open) {
+        setTimeout(() => {
+            const handler = (e) => {
+                if (e.key === 'Escape') {
+                    showDistributorModal(false);
+                    document.removeEventListener('keydown', handler);
+                }
+            };
+            document.addEventListener('keydown', handler);
+        }, 0);
+    }
+}
+
+function showOperatorModal(open = true) {
+    const modal = el('portal-operator-modal');
+    if (!modal) return;
+    modal.classList.toggle('hidden', !open);
+    modal.style.display = open ? 'flex' : 'none';
+    modal.setAttribute('aria-hidden', String(!open));
+    document.body.classList.toggle('modal-open', open);
+    if (open) {
+        setTimeout(() => {
+            const handler = (e) => {
+                if (e.key === 'Escape') {
+                    showOperatorModal(false);
+                    document.removeEventListener('keydown', handler);
+                }
+            };
+            document.addEventListener('keydown', handler);
+        }, 0);
+    }
+}
+
 function populateDistributorForm(distributor = null) {
     const isEditing = !!distributor?.id;
     state.editingDistributorId = isEditing ? String(distributor.id || '').trim() : '';
@@ -295,31 +357,27 @@ function populateDistributorForm(distributor = null) {
     setFormValue('portal-distributor-form-currency', distributor?.defaultCurrency || 'TWD');
     setFormValue('portal-distributor-form-price-policy', String(distributor?.pricePolicyMode || 'GUIDED').toUpperCase());
     setFormValue('portal-distributor-form-settlement', distributor?.settlementMethod || '');
-    const formState = el('portal-distributor-form-state');
-    if (formState) {
-        formState.textContent = isEditing ? `編輯經銷商：${distributor.id}` : '新增模式';
+    const subtitle = el('portal-distributor-modal-subtitle');
+    if (subtitle) {
+        subtitle.textContent = isEditing ? `編輯：${distributor.name || distributor.id}` : '新增模式';
     }
     const idInput = el('portal-distributor-form-id');
     if (idInput) idInput.readOnly = isEditing;
-    const operatorDistributorInput = el('portal-distributor-operator-distributor-id');
-    if (operatorDistributorInput) operatorDistributorInput.value = distributor?.id || state.selectedDistributorId || '';
-    const operatorSummary = el('portal-distributor-operator-summary');
-    if (operatorSummary) {
-        operatorSummary.textContent = distributor?.id
-            ? `目前選取：${distributor.name || distributor.id}`
-            : '先選擇一個經銷商。';
-    }
 }
 
 function populateDistributorOperatorList(distributorId = '') {
-    const tbody = el('portal-distributor-operator-table-body');
-    const countEl = el('portal-distributor-operator-count');
-    const statusEl = el('portal-distributor-operator-status');
+    const tbody = el('portal-distributor-modal-operator-table-body');
+    const countEl = el('portal-distributor-modal-operator-count');
+    const summaryEl = el('portal-distributor-modal-operator-summary');
     if (!tbody) return;
 
     const items = (state.distributorOperators || []).filter((item) => String(item.distributorId || '').trim() === String(distributorId || '').trim());
     if (countEl) countEl.textContent = String(items.length);
-    if (statusEl) statusEl.textContent = distributorId ? `選取：${distributorId}` : '—';
+    if (summaryEl) {
+        summaryEl.textContent = distributorId
+            ? `目前歸屬於 ${distributorId} 的操作者帳號，點擊列可編輯或解除指派。`
+            : '先選擇一個經銷商。';
+    }
     if (!items.length) {
         tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">目前沒有指派的操作者</td></tr>';
         return;
@@ -327,19 +385,15 @@ function populateDistributorOperatorList(distributorId = '') {
     tbody.innerHTML = items.map((item) => {
         const uid = String(item.uid || '').trim();
         return `
-            <tr class="hover:bg-slate-50/80 transition">
+            <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="window.distributorPortalOpenOperatorModal('${escapeHtml(uid)}')">
                 <td class="px-4 py-4 align-top font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(uid || '—')}</td>
                 <td class="px-4 py-4 align-top text-sm font-semibold text-slate-900">${escapeHtml(item.name || '—')}</td>
                 <td class="px-4 py-4 align-top font-mono text-xs font-semibold text-slate-700 break-all">${escapeHtml(item.email || '—')}</td>
                 <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(String(item.authorizedUnitCount || 0))}</td>
                 <td class="px-4 py-4 align-top">
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="window.distributorPortalUseOperator('${escapeHtml(uid)}')" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">
-                            編輯
-                        </button>
-                        <button onclick="window.distributorPortalUnassignOperator('${escapeHtml(uid)}')" class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50">
-                            解除
-                        </button>
+                        <button onclick="window.distributorPortalOpenOperatorModal('${escapeHtml(uid)}'); event.stopPropagation();" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">編輯</button>
+                        <button onclick="window.distributorPortalUnassignOperator('${escapeHtml(uid)}'); event.stopPropagation();" class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50">解除</button>
                     </div>
                 </td>
             </tr>
@@ -355,13 +409,10 @@ function renderDistributorManagement() {
     if (!isAdmin) return;
 
     const distributors = Array.isArray(state.distributors) ? state.distributors : [];
-    const selectedId = String(state.selectedDistributorId || '').trim();
-    const selected = distributors.find((distributor) => String(distributor.id || '').trim() === selectedId) || null;
-
     const summary = el('portal-distributor-admin-summary');
     if (summary) {
         summary.textContent = distributors.length
-            ? `共 ${distributors.length} 個經銷商，點擊任一列可切換與編輯。`
+            ? `共 ${distributors.length} 個經銷商，點擊任一列可編輯經銷商資料與操作者。`
             : '目前沒有經銷商資料。';
     }
     const countEl = el('portal-distributor-admin-count');
@@ -370,11 +421,10 @@ function renderDistributorManagement() {
     const tbody = el('portal-distributor-table-body');
     if (tbody) {
         if (!distributors.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="py-10 text-center text-slate-400 italic">目前沒有經銷商資料</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400 italic">目前沒有經銷商資料</td></tr>';
         } else {
             tbody.innerHTML = distributors.map((distributor) => {
                 const id = String(distributor.id || '').trim();
-                const active = id === selectedId;
                 const status = String(distributor.status || 'ACTIVE').toUpperCase();
                 const statusBadge = status === 'ACTIVE'
                     ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
@@ -383,7 +433,7 @@ function renderDistributorManagement() {
                         : 'bg-slate-100 text-slate-600 border-slate-200';
                 const operatorCount = formatDistributorOperatorCount(id);
                 return `
-                    <tr class="${active ? 'bg-slate-50/80' : 'hover:bg-slate-50/80'} transition cursor-pointer" onclick="window.distributorPortalEditDistributor('${escapeHtml(id)}')">
+                    <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="window.distributorPortalEditDistributor('${escapeHtml(id)}')">
                         <td class="px-4 py-4 align-top font-mono text-xs font-bold text-slate-900 break-all">${escapeHtml(id || '—')}</td>
                         <td class="px-4 py-4 align-top">
                             <div class="font-semibold text-slate-900">${escapeHtml(distributor.name || '—')}</div>
@@ -395,21 +445,11 @@ function renderDistributorManagement() {
                         <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(formatDistributorRegions(distributor.regions))}</td>
                         <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(distributor.defaultCurrency || 'TWD')}</td>
                         <td class="px-4 py-4 align-top text-sm text-slate-600">${escapeHtml(operatorCount)}</td>
-                        <td class="px-4 py-4 align-top">
-                            <div class="flex flex-wrap gap-2">
-                                <button type="button" onclick="window.distributorPortalEditDistributor('${escapeHtml(id)}'); event.stopPropagation();" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">編輯</button>
-                                <button type="button" onclick="window.distributorPortalUseDistributor('${escapeHtml(id)}'); event.stopPropagation();" class="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-50">切換</button>
-                                <button type="button" onclick="window.distributorPortalDeleteDistributor('${escapeHtml(id)}'); event.stopPropagation();" class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50">刪除</button>
-                            </div>
-                        </td>
                     </tr>
                 `;
             }).join('');
         }
     }
-
-    populateDistributorForm(selected);
-    populateDistributorOperatorList(selectedId);
 }
 
 function resetDistributorForm() {
@@ -421,8 +461,8 @@ function resetDistributorForm() {
     setFormValue('portal-distributor-form-currency', 'TWD');
     setFormValue('portal-distributor-form-price-policy', 'GUIDED');
     setFormValue('portal-distributor-form-settlement', '');
-    const formState = el('portal-distributor-form-state');
-    if (formState) formState.textContent = '新增模式';
+    const subtitle = el('portal-distributor-modal-subtitle');
+    if (subtitle) subtitle.textContent = '新增模式';
     const idInput = el('portal-distributor-form-id');
     if (idInput) idInput.readOnly = false;
 }
@@ -977,6 +1017,8 @@ window.distributorPortalReloadAdminDistributors = async function () {
 
 window.distributorPortalNewDistributor = function () {
     resetDistributorForm();
+    populateDistributorOperatorList('');
+    showDistributorModal(true);
 };
 
 window.distributorPortalEditDistributor = async function (distributorId = '') {
@@ -988,11 +1030,9 @@ window.distributorPortalEditDistributor = async function (distributorId = '') {
     }
     state.selectedDistributorId = target;
     state.distributorId = target;
-    const input = el('portal-distributor-id-input');
-    if (input) input.value = target;
-    await loadDistributorContext(target);
     populateDistributorForm(distributor);
     populateDistributorOperatorList(target);
+    showDistributorModal(true);
 };
 
 window.distributorPortalUseDistributor = async function (distributorId = '') {
@@ -1003,6 +1043,29 @@ window.distributorPortalUseDistributor = async function (distributorId = '') {
     const input = el('portal-distributor-id-input');
     if (input) input.value = target;
     await loadDistributorContext(target);
+};
+
+window.distributorPortalCloseDistributorModal = function () {
+    showDistributorModal(false);
+};
+
+window.distributorPortalCloseOperatorModal = function () {
+    showOperatorModal(false);
+};
+
+window.distributorPortalOpenOperatorModal = function (uid = '') {
+    const identifier = String(uid || '').trim();
+    const distributorId = state.editingDistributorId || state.selectedDistributorId || '';
+    setFormValue('portal-distributor-operator-distributor-id', distributorId);
+    setFormValue('portal-distributor-operator-identifier', identifier);
+    const subtitle = el('portal-operator-modal-subtitle');
+    if (subtitle) {
+        subtitle.textContent = identifier ? `編輯：${identifier}` : `指派至 ${distributorId || '—'}`;
+    }
+    showOperatorModal(true);
+    if (!identifier) {
+        setTimeout(() => el('portal-distributor-operator-identifier')?.focus?.(), 100);
+    }
 };
 
 window.distributorPortalSaveDistributor = async function () {
@@ -1043,6 +1106,7 @@ window.distributorPortalSaveDistributor = async function () {
         toast('經銷商已儲存', 'success');
         state.selectedDistributorId = distributorId;
         state.distributorId = distributorId;
+        showDistributorModal(false);
         await loadDistributorContext(distributorId);
     } catch (e) {
         console.error('[DistributorPortal] save distributor failed:', e);
@@ -1067,6 +1131,7 @@ window.distributorPortalDeleteCurrentDistributor = async function () {
         await fn({ distributorId });
         toast('經銷商已刪除', 'success');
         state.editingDistributorId = '';
+        showDistributorModal(false);
         await loadPortalData('');
         await loadPriceBooks();
     } catch (e) {
@@ -1110,8 +1175,9 @@ window.distributorPortalAssignOperator = async function () {
         const fn = httpsCallable(functions, 'assignDistributorOperator');
         await fn(payload);
         toast('操作者已指派', 'success');
-        setFormValue('portal-distributor-operator-identifier', '');
+        showOperatorModal(false);
         await loadDistributorContext(distributorId);
+        populateDistributorOperatorList(distributorId);
     } catch (e) {
         console.error('[DistributorPortal] assign operator failed:', e);
         toast(e.message || '指派操作者失敗', 'error');
@@ -1139,8 +1205,9 @@ window.distributorPortalUnassignOperator = async function (uid = '') {
         const fn = httpsCallable(functions, 'assignDistributorOperator');
         await fn(payload);
         toast('操作者已解除指派', 'success');
-        setFormValue('portal-distributor-operator-identifier', '');
+        showOperatorModal(false);
         await loadDistributorContext(distributorId);
+        populateDistributorOperatorList(distributorId);
     } catch (e) {
         console.error('[DistributorPortal] unassign operator failed:', e);
         toast(e.message || '解除指派失敗', 'error');
@@ -1250,7 +1317,33 @@ window.distributorPortalDeleteForm = async function () {
 window.distributorPortalLoadPriceBooks = loadPriceBooks;
 window.distributorPortalSaveForm = saveForm;
 window.distributorPortalSelectDistributor = async function (distributorId = '') {
+    state._adminMode = false;
+    const mainTabs = el('portal-main-tabs');
+    if (mainTabs) mainTabs.style.display = '';
+    const statCards = el('portal-stat-cards');
+    if (statCards) statCards.style.display = '';
+    const adminPanel = document.querySelector('[data-maintab-panel="admin"]');
+    if (adminPanel) adminPanel.style.display = 'none';
+    renderDistributorTabs(state.accessibleDistributors);
     await window.distributorPortalUseDistributor(distributorId);
+};
+
+window.distributorPortalSwitchToAdmin = function () {
+    state._adminMode = true;
+    const mainTabs = el('portal-main-tabs');
+    if (mainTabs) mainTabs.style.display = 'none';
+    const statCards = el('portal-stat-cards');
+    if (statCards) statCards.style.display = 'none';
+    const adminPanel = document.querySelector('[data-maintab-panel="admin"]');
+    if (adminPanel) adminPanel.style.display = '';
+    document.querySelectorAll('.portal-maintab-panel').forEach((panel) => {
+        if (panel.dataset.maintabPanel !== 'admin') panel.style.display = 'none';
+    });
+    document.querySelectorAll('.portal-maintab-btn').forEach((btn) => {
+        btn.classList.remove('portal-maintab-btn-active');
+        btn.setAttribute('aria-selected', 'false');
+    });
+    renderDistributorTabs(state.accessibleDistributors);
 };
 window.distributorPortalOpenPriceBookModal = function (priceBookId = '') {
     const normalizedId = String(priceBookId || '').trim();

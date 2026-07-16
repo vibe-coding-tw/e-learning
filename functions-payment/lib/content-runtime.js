@@ -16,7 +16,7 @@ const {
 } = require("vibe-functions-core/distributor-pricing");
 
 const CONTENT_REPO_TOKEN = defineSecret("CONTENT_REPO_TOKEN");
-const COURSE_RUNTIME_VERSION = "20260701-fix-undefined-buttons";
+const COURSE_RUNTIME_VERSION = "20260715-remove-duplicate-badge-and-description";
 const {
     cleanUnitId,
     findCourseByPageOrUnit,

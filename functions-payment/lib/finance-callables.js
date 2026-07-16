@@ -463,6 +463,9 @@ const recordOrderRefundEventCallable = onCall(async (request) => {
     return { success: true, ...result };
 });
 
+/* Dead code (2026-07-15 確認)：此函式目前無任何 trigger 或排程呼叫。
+ * 需要財務/結算流程負責人確認後，才能接上 REST/callable 入口或恢復排程。
+ * 詳見 AGENT.md §分潤計算 及 docs/distributor/distributor-tutor-api-contract.md */
 async function calculateMonthlySharing() {
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
