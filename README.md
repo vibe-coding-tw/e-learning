@@ -156,7 +156,9 @@ npm run firestore:bootstrap -- --apply --overwrite
 
 ---
 
-## ⚙️ 環境變數 (`functions/.env`)
+## ⚙️ 環境變數
+
+### `functions/.env`
 
 | 類別 | 變數 |
 |---|---|
@@ -164,6 +166,21 @@ npm run firestore:bootstrap -- --apply --overwrite
 | 郵件 | `MAIL_USER`, `MAIL_PASS` |
 | 站點 | `APP_BASE_URL`, `ADMIN_EMAIL` |
 | GitHub | `GITHUB_WEBHOOK_SECRET` |
+
+### `functions-admin/.env`
+
+| 類別 | 變數 |
+|---|---|
+| 金流 | `CHECK_MAC_ALGO` (local: `sha256`, production: via `functions:config:set`) |
+| 站點 | `ADMIN_EMAIL` |
+
+### `functions-autograde/.env`
+
+| 類別 | 變數 |
+|---|---|
+| GitHub | `GITHUB_WEBHOOK_SECRET`, `GITHUB_ORG_ADMIN_TOKEN` |
+
+> 以上三個 codebase 皆已加入 `require("dotenv").config()`，local 開發時會自動讀取對應 `.env`。生產環境仍使用 Firebase Secrets / Functions config。
 
 ---
 

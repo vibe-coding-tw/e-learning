@@ -1,5 +1,5 @@
 # Functions Module Overview
-**Updated**: 2026-07-15
+**Updated**: 2026-07-17
 
 > **2026-07-15 correction**: the module table below (§1) previously listed several modules
 > under `functions/lib/*.js` paths that don't exist there — `revenue-sharing.js`,
@@ -22,6 +22,8 @@
 - 啟動時先呼叫 bootstrap helper，處理 `.env` 載入與 V2 global options
 - 透過單一 registry 呼叫，集中註冊大量 admin / payment / autograde proxy 入口
 - 掛載少量特殊 handler，例如 `gradeAssignment`、`onUserCreated`、`mapReply`
+
+> **dotenv 狀態（2026-07-17）**：`functions/` 透過 `functions-bootstrap.js` 載入 `.env`；`functions-admin/` 與 `functions-autograde/` 則直接在 `index.js` 頂端呼叫 `require("dotenv").config()`。四個 codebase 皆已支援本地 `.env` 載入。
 
 真正的共用 helper 已逐步拆到下列模組：
 

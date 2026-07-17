@@ -244,6 +244,10 @@ This session's improvements:
 - #11: Added §14 CSS naming conventions to AGENT.md (Tailwind-first, kebab-case custom classes)
 - #12: Converted inline `onclick` to `addEventListener` for dashboard tab buttons, copy-UID code elements (dashboard + investor-portal), cart convenience store buttons
 - Fixed `rover.k.chen@gmail.com` auto-activating all courses: removed hardcoded email force-tutor-mode in `getScopedTutorModeForUid` (3 locations) and removed `admin-simulated` backend bypass in `order-flow.js`
+- Added `dotenv` to `functions-admin` and `functions-autograde` for local emulator `.env` loading (matching `functions/` which uses `functions-bootstrap.js`)
+- Fixed `autoGradeSingleAssignment` to use `GITHUB_API_TOKEN.value()` (Firebase Secret) instead of `process.env.GITHUB_API_TOKEN`
+- Fixed `formatTaipeiDateTime` import in `admin-utils.js` — was importing from `./date-utils` (which doesn't export it), corrected to `./shared-reminders`
+- Removed hardcoded `rover.k.chen@gmail.com` fallbacks in `tutor-handlers.js` and `assignment-handlers.js` — now uses `process.env.ADMIN_EMAIL || ""`
 
 ### Distributor & Cart Page Fix Patterns
 
@@ -315,4 +319,4 @@ Done in this session:
 - **Persistence**: Data saved to `.emulator-data/` on exit, restored on start. `.emulator-data/` gitignored.
 - **CORS fix**: All emulator connections in `firebase-local.js` use `localhost` instead of `127.0.0.1`
 
-> 最後更新：2026-07-15
+> 最後更新：2026-07-17

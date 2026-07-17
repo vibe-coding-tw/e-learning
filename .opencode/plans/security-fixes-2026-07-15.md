@@ -1,5 +1,7 @@
 # Payment Security Fixes — 2026-07-15
 
+> **Status: COMPLETED (2026-07-15)** — All 4 fixes applied and deployed.
+
 **Context**: found during a full-system audit (code + docs, both `e-learning` and the
 sibling `esp32c3-vehicle` repo). Two general-purpose research passes read every
 `functions-payment`/`functions-admin` handler and cross-checked docs against code. This
