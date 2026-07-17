@@ -1,4 +1,5 @@
 "use strict";
+require("dotenv").config();
 const admin = require("firebase-admin");
 if (!admin.apps.length) {
     admin.initializeApp({ projectId: "e-learning-942f7" });

@@ -166,7 +166,7 @@ const bindTutorByPromotionCode = onCall(async (request) => {
             }
         }
 
-        const DEFAULT_TUTOR_EMAIL = "rover.k.chen@gmail.com";
+        const DEFAULT_TUTOR_EMAIL = process.env.ADMIN_EMAIL || "";
         const normalizedInput = promoCodeRaw;
         const promotionCode = normalizedInput.toUpperCase();
         const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedInput);

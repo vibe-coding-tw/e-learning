@@ -478,7 +478,7 @@ const applyForTutorRole = onCall(async (request) => {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    const adminEmail = process.env.ADMIN_EMAIL || "rover.k.chen@gmail.com";
+    const adminEmail = process.env.ADMIN_EMAIL || "";
     await sendAdminNewApplicationEmail(adminEmail, email, canonicalUnitId);
 
     return { success: true, applicationId: newAppRef.id };
@@ -523,7 +523,7 @@ const submitTutorRecommendationInviteLink = onCall(async (request) => {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    const adminEmail = process.env.ADMIN_EMAIL || "rover.k.chen@gmail.com";
+    const adminEmail = process.env.ADMIN_EMAIL || "";
     await sendAdminNewApplicationEmail(adminEmail, appData.userEmail || auth.token.email || "", appData.unitId || "");
 
     return { success: true, status: "pending" };

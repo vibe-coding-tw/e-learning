@@ -1,4 +1,5 @@
 "use strict";
+require("dotenv").config();
 const admin = require("firebase-admin");
 global.__vibeFirebaseAdmin = admin;
 const crypto = require("crypto");
@@ -862,7 +863,7 @@ exports.autoGradeSingleAssignment = onCall({ secrets: [GITHUB_API_TOKEN] }, asyn
     await assertAdminOrAssignedTutor(db, auth.uid);
     const sandboxDir = "/tmp/autograde_sandbox";
     const hostingUrl = "https://e-learning-942f7.web.app";
-    const token = process.env.GITHUB_API_TOKEN || "";
+    const token = GITHUB_API_TOKEN.value();
 
     const docSnap = await db.collection("assignments").doc(assignmentId).get();
     if (!docSnap.exists) {

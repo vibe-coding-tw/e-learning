@@ -10,7 +10,7 @@ const { resolveNameFromUserData, getEffectiveTutorConfig, getUserTutorConfig, ha
 const { sendStudentLinkedToTutorEmail, sendTutorLinkedToStudentEmail, sendStudentPendingTutorAssignmentReminder, sendAdminShipmentReminder } = require("vibe-functions-core/email-service");
 const { normalizeAmount, normalizeCurrency } = require("vibe-functions-core/pricing-utils");
 const { runPendingAssignmentReminder, runPendingShipmentReminder } = require("./shared-reminders");
-const { formatTaipeiDateTime } = require("./date-utils");
+const { formatTaipeiDateTime } = require("./shared-reminders");
 const { getUserDistributorScope, countAuthorizedTutorUnits, loadDistributorScopedUsers } = require("./distributor-utils");
 const { findLessonByDocumentId, resolvePriceBookAmount, resolveLessonPrice, listDistributorPriceBooks, normalizeMoney, normalizePriceBookDoc, normalizeRegionCode, resolveDistributorForCheckout } = require("./distributor-pricing");
 const { normalizeRoutingRegionCode, distributorMatchesRegion, collectDistributorRegions } = require("./routing-utils");
