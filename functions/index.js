@@ -34,24 +34,23 @@ exports.getContentRuntimeConfig = onCall(async () => {
     };
 });
 
-// 2026-07-15: 移除了原本包住這段的 `if (process.env.FUNCTIONS_EMULATOR)`。真正的
-// `firebase deploy` 不會設定 FUNCTIONS_EMULATOR 這個環境變數（那是 emulator 專用），
-// 代表這段 registerIndexExports() 呼叫（掛上 autograde/payment/admin 的 proxy
-// functions、onUserCreated trigger、mapReply webhook）在正式環境下從來不會執行——
-// 這個 codebase 部署到 production 時，只有上面的 getContentRuntimeConfig 是活的，
-// 其餘全部消失。這個 guard 是 2026-06-25 commit 976999d6（"emulator guard"）加的，
-// 找不到說明為什麼要限制在 emulator 環境；同一個 commit 也順帶引入了已在稍早
-// fix-dangling-import-and-i18n.md 那次修復移除的 dangling registerAdminExports
-// import，兩者疑似是同一次誤改。全系統審查（2026-07-15）判斷這是意外/誤解，不是
-// 刻意設計，改回無條件呼叫。
-registerIndexExports({
-    target: exports,
-    proxyAutogradeCallable,
-    proxyAutogradeRequest,
-    proxyPaymentCallable,
-    proxyAdminCallable,
-    proxyAdminRequest,
-    onCall,
-    createOnUserCreatedTrigger,
-    createMapReplyHandler
-});
+// Emulator-only: proxy functions duplicate names in admin/payment codebases.
+// In production, each codebase deploys independently — having the same function
+// name in multiple codebases causes `firebase deploy` to reject with
+// "More than one codebase claims following functions". The real implementations
+// live in functions-admin / functions-payment; the proxies here are only needed
+// so the emulator can route calls between codebases via HTTP.
+const isEmulator = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.FIREBASE_EMULATOR_HUB;
+if (isEmulator) {
+    registerIndexExports({
+        target: exports,
+        proxyAutogradeCallable,
+        proxyAutogradeRequest,
+        proxyPaymentCallable,
+        proxyAdminCallable,
+        proxyAdminRequest,
+        onCall,
+        createOnUserCreatedTrigger,
+        createMapReplyHandler
+    });
+}
