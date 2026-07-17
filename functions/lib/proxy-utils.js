@@ -1,14 +1,29 @@
 "use strict";
+const path = require("path");
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
+
+function isEmulator() {
+    return process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.FIREBASE_EMULATOR_HUB;
+}
 
 function getProxyFunctionBaseUrl(functionName, region = "asia-east1") {
     const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || "e-learning-942f7";
-    const isEmulator = process.env.FUNCTIONS_EMULATOR === "true" || !!process.env.FIREBASE_EMULATOR_HUB;
-    if (isEmulator) {
+    if (isEmulator()) {
         const emulatorHost = process.env.FUNCTIONS_EMULATOR_HOST || "127.0.0.1:15001";
         return `http://${emulatorHost}/${projectId}/${region}/${functionName}`;
     }
     return `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
+}
+
+let _adminModuleCache = null;
+function getAdminModule() {
+    if (_adminModuleCache) return _adminModuleCache;
+    try {
+        _adminModuleCache = require(path.resolve(__dirname, "../../functions-admin"));
+        return _adminModuleCache;
+    } catch (_) {
+        return null;
+    }
 }
 
 function normalizeHttpsErrorCode(code = "") {
@@ -44,6 +59,16 @@ function extractCallableError(payload) {
 }
 
 function callThroughProxy(functionName, request, failurePrefix, region = "asia-east1") {
+    if (isEmulator()) {
+        const adminMod = getAdminModule();
+        if (adminMod && typeof adminMod[functionName] === "function") {
+            const handler = adminMod[functionName];
+            if (typeof handler.run === "function") {
+                return handler.run(request);
+            }
+            return handler(request);
+        }
+    }
     return fetch(getProxyFunctionBaseUrl(functionName, region), {
         method: "POST",
         headers: {
@@ -99,6 +124,18 @@ function proxyAdminCallable(functionName) {
 
 function proxyAdminRequest(functionName) {
     return onRequest(async (req, res) => {
+        if (isEmulator()) {
+            const adminMod = getAdminModule();
+            if (adminMod && typeof adminMod[functionName] === "function") {
+                const handler = adminMod[functionName];
+                if (typeof handler.run === "function") {
+                    await handler.run(req, res);
+                    return;
+                }
+                await handler(req, res);
+                return;
+            }
+        }
         const headers = {
             "Content-Type": req.get("content-type") || "application/json",
             "Authorization": req.get("authorization") || req.get("Authorization") || ""
